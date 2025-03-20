@@ -16,23 +16,23 @@
 #include "formula/callable_objects.hpp"
 
 #include "config.hpp"
-#include "formula/function.hpp"
-#include "map/map.hpp"
+#include "deprecation.hpp"
 #include "display_context.hpp"
+#include "formula/function.hpp"
+#include "game_board.hpp"
+#include "game_events/pump.hpp"
+#include "game_version.hpp"
+#include "log.hpp"
+#include "map/map.hpp"
+#include "play_controller.hpp"
+#include "recall_list_manager.hpp"
+#include "resources.hpp"
 #include "team.hpp"
+#include "tod_manager.hpp"
 #include "units/attack_type.hpp"
 #include "units/formula_manager.hpp"
-#include "units/unit.hpp"
 #include "units/types.hpp"
-#include "log.hpp"
-#include "recall_list_manager.hpp"
-#include "deprecation.hpp"
-#include "game_board.hpp"
-#include "game_version.hpp"
-#include "resources.hpp"
-#include "tod_manager.hpp"
-#include "play_controller.hpp"
-#include "game_events/pump.hpp"
+#include "units/unit.hpp"
 
 static lg::log_domain log_scripting_formula("scripting/formula");
 #define LOG_SF LOG_STREAM(info, log_scripting_formula)
@@ -76,7 +76,8 @@ void location_callable::serialize_to_string(std::string& str) const
 	str += s.str();
 }
 
-attack_type_callable::attack_type_callable(const attack_type& attack) : att_(attack.shared_from_this())
+attack_type_callable::attack_type_callable(const attack_type& attack)
+	: att_(attack.shared_from_this())
 {
 	type_ = ATTACK_TYPE_C;
 }
@@ -200,14 +201,15 @@ int attack_type_callable::do_compare(const formula_callable* callable) const
 	return 0;
 }
 
-unit_callable::unit_callable(const unit& u) : loc_(u.get_location()), u_(u)
+unit_callable::unit_callable(const unit& u)
+	: loc_(u.get_location())
+	, u_(u)
 {
 	type_ = UNIT_C;
 }
 
 variant unit_callable::get_value(const std::string& key) const
 {
-
 	if(key == "x") {
 		if(loc_ == map_location::null_location()) {
 			return variant();
@@ -318,7 +320,8 @@ variant unit_callable::get_value(const std::string& key) const
 		return variant(unit_alignments::get_string(u_.alignment()));
 	} else if(key == "facing") {
 		return variant(map_location::write_direction(u_.facing()));
-	} else if(key == "resistance" || key == "movement_cost" || key == "vision_cost" || key == "jamming_cost" || key == "defense") {
+	} else if(key == "resistance" || key == "movement_cost" || key == "vision_cost" || key == "jamming_cost"
+		|| key == "defense") {
 		const auto& mt = u_.movement_type();
 		config cfg;
 		bool needs_flip = false;
@@ -359,10 +362,8 @@ variant unit_callable::get_value(const std::string& key) const
 		return variant();
 	} else if(key == "wml_vars") {
 		return variant(std::make_shared<config_callable>(u_.variables()));
-	} else if(key == "n"      || key == "s"       || key == "ne"      || key == "se"      || key == "nw" || key == "sw" ||
-	          key == "lawful" || key == "neutral" || key == "chaotic" || key == "liminal" ||
-	          key == "male"   || key == "female")
-	{
+	} else if(key == "n" || key == "s" || key == "ne" || key == "se" || key == "nw" || key == "sw" || key == "lawful"
+		|| key == "neutral" || key == "chaotic" || key == "liminal" || key == "male" || key == "female") {
 		return variant(key);
 	}
 
@@ -471,7 +472,8 @@ variant unit_type_callable::get_value(const std::string& key) const
 	} else if(key == "total_movement" || key == "max_moves" || key == "moves") {
 		return variant(u_.movement());
 	} else if(key == "undead") {
-		return variant(u_.musthave_status("unpoisonable") && u_.musthave_status("undrainable") && u_.musthave_status("unplagueable"));
+		return variant(u_.musthave_status("unpoisonable") && u_.musthave_status("undrainable")
+			&& u_.musthave_status("unplagueable"));
 	} else if(key == "unpoisonable") {
 		return variant(u_.musthave_status("unpoisonable"));
 	} else if(key == "unslowable") {
@@ -527,16 +529,37 @@ struct fai_variant_visitor
 	: public boost::static_visitor<variant>
 #endif
 {
-	variant operator()(bool b) const               { return variant(b ? 1 : 0); }
-	variant operator()(int i) const                { return variant(i); }
-	variant operator()(unsigned long long i) const { return variant(i); }
-	variant operator()(double i) const             { return variant(i * 1000, variant::DECIMAL_VARIANT); }
+	variant operator()(bool b) const
+	{
+		return variant(b ? 1 : 0);
+	}
+	variant operator()(int i) const
+	{
+		return variant(i);
+	}
+	variant operator()(unsigned long long i) const
+	{
+		return variant(i);
+	}
+	variant operator()(double i) const
+	{
+		return variant(i * 1000, variant::DECIMAL_VARIANT);
+	}
 	// TODO: Should comma-separated lists of stuff be returned as a list?
 	// The challenge is to distinguish them from ordinary strings that happen to contain a comma
 	// (or should we assume that such strings will be translatable?).
-	variant operator()(const std::string& s) const { return variant(s); }
-	variant operator()(const t_string& s) const    { return variant(s.str()); }
-	variant operator()(utils::monostate) const         { return variant(); }
+	variant operator()(const std::string& s) const
+	{
+		return variant(s);
+	}
+	variant operator()(const t_string& s) const
+	{
+		return variant(s.str());
+	}
+	variant operator()(utils::monostate) const
+	{
+		return variant();
+	}
 };
 
 variant config_callable::get_value(const std::string& key) const
@@ -566,14 +589,14 @@ variant config_callable::get_value(const std::string& key) const
 			build[child_key].push_back(cfg_child);
 		}
 
-		std::map<variant,variant> result;
+		std::map<variant, variant> result;
 		for(auto& p : build) {
 			result[variant(p.first)] = variant(p.second);
 		}
 
 		return variant(result);
 	} else if(key == "__attributes") {
-		std::map<variant,variant> result;
+		std::map<variant, variant> result;
 		for(const auto& [key, value] : cfg_.attribute_range()) {
 			result[variant(key)] = value.apply_visitor(fai_variant_visitor());
 		}
@@ -611,7 +634,10 @@ int config_callable::do_compare(const formula_callable* callable) const
 	return cfg_.hash().compare(cfg_callable->get_config().hash());
 }
 
-terrain_callable::terrain_callable(const display_context& dc, const map_location& loc) : loc_(loc), t_(dc.map().get_terrain_info(loc)), owner_(dc.village_owner(loc))
+terrain_callable::terrain_callable(const display_context& dc, const map_location& loc)
+	: loc_(loc)
+	, t_(dc.map().get_terrain_info(loc))
+	, owner_(dc.village_owner(loc))
 {
 	type_ = TERRAIN_C;
 }
@@ -680,7 +706,8 @@ int terrain_callable::do_compare(const formula_callable* callable) const
 	return loc_.do_compare(other_loc);
 }
 
-const gamemap& gamemap_callable::get_gamemap() const {
+const gamemap& gamemap_callable::get_gamemap() const
+{
 	return board_.map();
 }
 
@@ -853,14 +880,14 @@ void set_var_callable::get_inputs(formula_input_vector& inputs) const
 
 variant set_var_callable::execute_self(variant ctxt)
 {
-	//if(infinite_loop_guardian_.set_var_check()) {
+	// if(infinite_loop_guardian_.set_var_check()) {
 	if(auto obj = ctxt.try_convert<formula_callable>()) {
 		LOG_SF << "Setting variable: " << key_ << " -> " << value_.to_debug_string();
 		obj->mutate_value(key_, value_);
 		return variant(true);
 	}
 	//}
-	//too many calls in a row - possible infinite loop
+	// too many calls in a row - possible infinite loop
 	ERR_SF << "ERROR #" << 5001 << " while executing 'set_var' formula function";
 
 	return variant(std::make_shared<safe_call_result>(fake_ptr(), 5001));
@@ -935,7 +962,7 @@ void safe_call_result::get_inputs(formula_input_vector& inputs) const
 	}
 }
 
-void gamestate_callable::get_inputs(formula_input_vector &inputs) const
+void gamestate_callable::get_inputs(formula_input_vector& inputs) const
 {
 	add_input(inputs, "turn_number");
 	add_input(inputs, "time_of_day");
@@ -945,7 +972,7 @@ void gamestate_callable::get_inputs(formula_input_vector &inputs) const
 	add_input(inputs, "map");
 }
 
-variant gamestate_callable::get_value(const std::string &key) const
+variant gamestate_callable::get_value(const std::string& key) const
 {
 	if(key == "turn_number") {
 		return variant(resources::tod_manager->turn());
@@ -972,7 +999,7 @@ variant gamestate_callable::get_value(const std::string &key) const
 	return variant();
 }
 
-void event_callable::get_inputs(formula_input_vector &inputs) const
+void event_callable::get_inputs(formula_input_vector& inputs) const
 {
 	add_input(inputs, "event");
 	add_input(inputs, "event_id");
@@ -985,7 +1012,7 @@ void event_callable::get_inputs(formula_input_vector &inputs) const
 	add_input(inputs, "second_weapon");
 }
 
-variant event_callable::get_value(const std::string &key) const
+variant event_callable::get_value(const std::string& key) const
 {
 	if(key == "event") {
 		return variant(event_info.name);

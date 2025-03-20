@@ -18,45 +18,46 @@
 #include "config.hpp"
 #include "font/pango/escape.hpp"
 #include "gettext.hpp"
-#include "picture.hpp"
 #include "log.hpp"
+#include "picture.hpp"
 #include "serialization/chrono.hpp"
 #include "serialization/string_utils.hpp"
 
 static lg::log_domain log_addons_client("addons-client");
-#define ERR_AC LOG_STREAM(err ,  log_addons_client)
-#define LOG_AC LOG_STREAM(info,  log_addons_client)
+#define ERR_AC LOG_STREAM(err, log_addons_client)
+#define LOG_AC LOG_STREAM(info, log_addons_client)
 
-namespace {
-	void resolve_deps_recursive(const addons_list& addons, const std::string& base_id, std::set<std::string>& dest)
-	{
-		addons_list::const_iterator it = addons.find(base_id);
-		if(it == addons.end()) {
-			LOG_AC << "resolve_deps_recursive(): " << base_id << " not in add-ons list";
-			return;
+namespace
+{
+void resolve_deps_recursive(const addons_list& addons, const std::string& base_id, std::set<std::string>& dest)
+{
+	addons_list::const_iterator it = addons.find(base_id);
+	if(it == addons.end()) {
+		LOG_AC << "resolve_deps_recursive(): " << base_id << " not in add-ons list";
+		return;
+	}
+
+	const std::vector<std::string>& base_deps = it->second.depends;
+
+	if(base_deps.empty()) {
+		return;
+	}
+
+	for(const std::string& dep : base_deps) {
+		if(base_id == dep) {
+			LOG_AC << dep << " depends upon itself; breaking circular dependency";
+			continue;
+		} else if(dest.find(dep) != dest.end()) {
+			LOG_AC << dep << " already in dependency tree; breaking circular dependency";
+			continue;
 		}
 
-		const std::vector<std::string>& base_deps = it->second.depends;
+		dest.insert(dep);
 
-		if(base_deps.empty()) {
-			return;
-		}
-
-		for(const std::string& dep : base_deps) {
-			if(base_id == dep) {
-				LOG_AC << dep << " depends upon itself; breaking circular dependency";
-				continue;
-			} else if(dest.find(dep) != dest.end()) {
-				LOG_AC << dep << " already in dependency tree; breaking circular dependency";
-				continue;
-			}
-
-			dest.insert(dep);
-
-			resolve_deps_recursive(addons, dep, dest);
-		}
+		resolve_deps_recursive(addons, dep, dest);
 	}
 }
+} // namespace
 
 void addon_info_translation::read(const config& cfg)
 {
@@ -237,7 +238,8 @@ std::string addon_info::display_icon() const
 	// otherwise display errors will spam the log while the add-ons manager is open
 	if(ret.empty()) {
 		ret = "misc/blank-hex.png";
-	} if(!image::exists(image::locator{ret}) && !ret.empty()) {
+	}
+	if(!image::exists(image::locator{ret}) && !ret.empty()) {
 		ERR_AC << "add-on '" << id << "' has an icon which cannot be found: '" << ret << "'";
 		ret = "misc/blank-hex.png";
 	} else if(ret.find("units/") != std::string::npos && ret.find_first_of('~') == std::string::npos) {
@@ -251,7 +253,7 @@ std::string addon_info::display_icon() const
 
 std::string addon_info::display_type() const
 {
-	switch (type) {
+	switch(type) {
 	case ADDON_SP_CAMPAIGN:
 		return _("addon_type^Campaign");
 	case ADDON_SP_SCENARIO:
@@ -300,7 +302,7 @@ void read_addons_list(const config& cfg, addons_list& dest)
 
 	/** @todo FIXME: get rid of this legacy "campaign"/"campaigns" silliness
 	 */
-	const config::const_child_itors &addon_cfgs = cfg.child_range("campaign");
+	const config::const_child_itors& addon_cfgs = cfg.child_range("campaign");
 	for(const config& addon_cfg : addon_cfgs) {
 		const std::string& id = addon_cfg["name"].str();
 		if(dest.find(id) != dest.end()) {

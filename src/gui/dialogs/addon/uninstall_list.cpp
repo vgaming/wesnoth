@@ -20,7 +20,6 @@
 #include "gui/widgets/toggle_button.hpp"
 #include "gui/widgets/window.hpp"
 
-
 namespace gui2::dialogs
 {
 
@@ -32,8 +31,7 @@ void addon_uninstall_list::pre_show()
 	keyboard_capture(&list);
 	selections_.clear();
 
-	for(const auto & entry : titles_map_)
-	{
+	for(const auto& entry : titles_map_) {
 		const std::string& id = entry.first;
 		const std::string& title = entry.second;
 
@@ -63,8 +61,7 @@ void addon_uninstall_list::post_show()
 
 	for(unsigned k = 0; k < rows; ++k) {
 		const grid* g = list.get_row_grid(k);
-		const toggle_button& checkbox
-				= g->find_widget<const toggle_button>("checkbox");
+		const toggle_button& checkbox = g->find_widget<const toggle_button>("checkbox");
 		selections_[ids_[k]] = checkbox.get_value_bool();
 	}
 }
@@ -73,8 +70,7 @@ std::vector<std::string> addon_uninstall_list::selected_addons() const
 {
 	std::vector<std::string> retv;
 
-	for(const auto & entry : selections_)
-	{
+	for(const auto& entry : selections_) {
 		if(entry.second) {
 			retv.push_back(entry.first);
 		}
@@ -83,4 +79,4 @@ std::vector<std::string> addon_uninstall_list::selected_addons() const
 	return retv;
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

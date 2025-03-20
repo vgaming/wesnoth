@@ -17,9 +17,9 @@
 
 #include "generators/default_map_generator.hpp"
 
-#include "gui/dialogs/editor/generator_settings.hpp"
 #include "generators/default_map_generator_job.hpp"
 #include "gettext.hpp"
+#include "gui/dialogs/editor/generator_settings.hpp"
 #include "log.hpp"
 #include "map/map.hpp"
 #include "seed_rng.hpp"
@@ -27,12 +27,13 @@
 static lg::log_domain log_engine("engine");
 #define DBG_NG LOG_STREAM(debug, log_engine)
 
-namespace {
-	const int max_island = 10;
-	const int max_coastal = 5;
-}
+namespace
+{
+const int max_island = 10;
+const int max_coastal = 5;
+} // namespace
 
-generator_data::generator_data(const config &cfg)
+generator_data::generator_data(const config& cfg)
 	: width(std::max(0, cfg["map_width"].to_int(40)))
 	, height(std::max(0, cfg["map_height"].to_int(40)))
 	, default_width(width)
@@ -56,18 +57,24 @@ default_map_generator::default_map_generator(const config& cfg)
 {
 }
 
-bool default_map_generator::allow_user_config() const { return true; }
+bool default_map_generator::allow_user_config() const
+{
+	return true;
+}
 
 void default_map_generator::user_config()
 {
 	gui2::dialogs::generator_settings::execute(data_);
 }
 
-std::string default_map_generator::name() const { return "default"; }
+std::string default_map_generator::name() const
+{
+	return "default";
+}
 
 std::string default_map_generator::config_name() const
 {
-	if (auto c = cfg_.optional_child("scenario"))
+	if(auto c = cfg_.optional_child("scenario"))
 		return c["name"];
 
 	return std::string();
@@ -78,7 +85,8 @@ std::string default_map_generator::create_map(utils::optional<uint32_t> randomse
 	return generate_map(nullptr, randomseed);
 }
 
-std::string default_map_generator::generate_map(std::map<map_location,std::string>* labels, utils::optional<uint32_t> randomseed)
+std::string default_map_generator::generate_map(
+	std::map<map_location, std::string>* labels, utils::optional<uint32_t> randomseed)
 {
 	uint32_t seed;
 	if(randomseed) {
@@ -106,7 +114,8 @@ std::string default_map_generator::generate_map(std::map<map_location,std::strin
 		++job_data.width;
 	}
 
-	job_data.iterations = (data_.iterations * data_.width * data_.height)/(data_.default_width * data_.default_height);
+	job_data.iterations
+		= (data_.iterations * data_.width * data_.height) / (data_.default_width * data_.default_height);
 	job_data.island_size = 0;
 	job_data.nvillages = (data_.nvillages * data_.width * data_.height) / 1000;
 	job_data.island_off_center = 0;
@@ -117,12 +126,12 @@ std::string default_map_generator::generate_map(std::map<map_location,std::strin
 		job_data.max_lakes /= 9;
 
 		// The radius of the island should be up to half the width of the map
-		const int island_radius = 50 + ((max_island - data_.island_size) * 50)/(max_island - max_coastal);
-		job_data.island_size = (island_radius * (data_.width/2))/100;
+		const int island_radius = 50 + ((max_island - data_.island_size) * 50) / (max_island - max_coastal);
+		job_data.island_size = (island_radius * (data_.width / 2)) / 100;
 	} else if(data_.island_size > 0) {
 		// The radius of the island should be up to twice the width of the map
-		const int island_radius = 40 + ((max_coastal - data_.island_size) * 40)/max_coastal;
-		job_data.island_size = (island_radius * data_.width * 2)/100;
+		const int island_radius = 40 + ((max_coastal - data_.island_size) * 40) / max_coastal;
+		job_data.island_size = (island_radius * data_.width * 2) / 100;
 		job_data.island_off_center = std::min(data_.width, data_.height);
 		DBG_NG << "calculated coastal params...";
 	}
@@ -131,8 +140,8 @@ std::string default_map_generator::generate_map(std::map<map_location,std::strin
 	std::string map;
 
 	// Keep a copy of labels as it can be written to by the map generator func
-	std::map<map_location,std::string> labels_copy;
-	std::map<map_location,std::string>* labels_ptr = labels ? &labels_copy : nullptr;
+	std::map<map_location, std::string> labels_copy;
+	std::map<map_location, std::string>* labels_ptr = labels ? &labels_copy : nullptr;
 
 	// Iinitilize the job outside the loop so that we really get a different result every time we run the loop.
 	default_map_generator_job job(seed);
@@ -174,25 +183,20 @@ config default_map_generator::create_scenario(utils::optional<uint32_t> randomse
 
 	DBG_NG << "got scenario data...";
 
-	std::map<map_location,std::string> labels;
+	std::map<map_location, std::string> labels;
 	DBG_NG << "generating map...";
 
-	try{
+	try {
 		res["map_data"] = generate_map(&labels, randomseed);
-	}
-	catch (const mapgen_exception& exc){
+	} catch(const mapgen_exception& exc) {
 		res["map_data"] = "";
 		res["error_message"] = exc.message;
 	}
 	DBG_NG << "done generating map..";
 
-	for(std::map<map_location,std::string>::const_iterator i =
-			labels.begin(); i != labels.end(); ++i) {
-
-		if(i->first.x >= 0 && i->first.y >= 0 &&
-				i->first.x < static_cast<long>(data_.width) &&
-				i->first.y < static_cast<long>(data_.height)) {
-
+	for(std::map<map_location, std::string>::const_iterator i = labels.begin(); i != labels.end(); ++i) {
+		if(i->first.x >= 0 && i->first.y >= 0 && i->first.x < static_cast<long>(data_.width)
+			&& i->first.y < static_cast<long>(data_.height)) {
 			config& label = res.add_child("label");
 			label["text"] = i->second;
 			label["category"] = _("Villages");

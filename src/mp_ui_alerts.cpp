@@ -43,7 +43,8 @@ void game_created(const std::string& scenario, const std::string& name)
 	}
 
 	if(prefs::get().game_created_notif()) {
-		const std::string message = VGETTEXT("A game ($name|, $scenario|) has been created", {{"name", name}, {"scenario", scenario}});
+		const std::string message
+			= VGETTEXT("A game ($name|, $scenario|) has been created", {{"name", name}, {"scenario", scenario}});
 		desktop::notifications::send(_("Wesnoth"), message, desktop::notifications::OTHER);
 	}
 }
@@ -169,8 +170,9 @@ void turn_changed(const std::string& player_name)
 	if(prefs::get().turn_changed_notif()) {
 		utils::string_map player;
 		player["name"] = player_name;
-		desktop::notifications::send(_("Turn changed"), VGETTEXT("$name has taken control", player), desktop::notifications::TURN_CHANGED);
+		desktop::notifications::send(
+			_("Turn changed"), VGETTEXT("$name has taken control", player), desktop::notifications::TURN_CHANGED);
 	}
 }
 
-} // end namespace mp_ui_alerts
+} // namespace mp::ui_alerts

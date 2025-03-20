@@ -20,7 +20,8 @@
 
 #include <windows.h>
 
-namespace {
+namespace
+{
 
 bool win32_parse_single_arg(const char*& next, const char* end, std::string& res)
 {
@@ -71,7 +72,7 @@ std::vector<std::string> win32_read_argv(const std::string& input)
 	return res;
 }
 
-}
+} // namespace
 
 #endif
 

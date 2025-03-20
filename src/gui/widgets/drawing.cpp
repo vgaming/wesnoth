@@ -16,8 +16,8 @@
 #define GETTEXT_DOMAIN "wesnoth-lib"
 
 #include "gui/widgets/drawing.hpp"
-#include "gui/core/widget_definition.hpp"
 #include "gui/core/register_widget.hpp"
+#include "gui/core/widget_definition.hpp"
 
 #include "gettext.hpp"
 #include "wml_exception.hpp"
@@ -37,8 +37,7 @@ drawing::drawing(const implementation::builder_drawing& builder)
 
 point drawing::calculate_best_size() const
 {
-	return best_size_ != point() ? best_size_
-									  : styled_widget::calculate_best_size();
+	return best_size_ != point() ? best_size_ : styled_widget::calculate_best_size();
 }
 
 void drawing::request_reduce_width(const unsigned maximum_width)
@@ -129,8 +128,7 @@ std::unique_ptr<widget> builder_drawing::build() const
 
 	widget->set_drawing_data(draw);
 
-	DBG_GUI_G << "Window builder: placed drawing '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed drawing '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

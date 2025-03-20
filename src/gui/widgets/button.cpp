@@ -49,16 +49,16 @@ button::button(const implementation::builder_button& builder)
 	, success_(false)
 {
 	connect_signal<event::MOUSE_ENTER>(
-			std::bind(&button::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
+		std::bind(&button::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
 	connect_signal<event::MOUSE_LEAVE>(
-			std::bind(&button::signal_handler_mouse_leave, this, std::placeholders::_2, std::placeholders::_3));
+		std::bind(&button::signal_handler_mouse_leave, this, std::placeholders::_2, std::placeholders::_3));
 
-	connect_signal<event::LEFT_BUTTON_DOWN>(std::bind(
-			&button::signal_handler_left_button_down, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::LEFT_BUTTON_DOWN>(
+		std::bind(&button::signal_handler_left_button_down, this, std::placeholders::_2, std::placeholders::_3));
 	connect_signal<event::LEFT_BUTTON_UP>(
-			std::bind(&button::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
-	connect_signal<event::LEFT_BUTTON_CLICK>(std::bind(
-			&button::signal_handler_left_button_click, this, std::placeholders::_2, std::placeholders::_3));
+		std::bind(&button::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::LEFT_BUTTON_CLICK>(
+		std::bind(&button::signal_handler_left_button_click, this, std::placeholders::_2, std::placeholders::_3));
 }
 
 void button::set_active(const bool active)
@@ -86,15 +86,15 @@ void button::set_state(const state_t state)
 	}
 }
 
-void button::set_success(bool success) {
+void button::set_success(bool success)
+{
 	success_ = success;
-	if (success) {
+	if(success) {
 		set_state(SUCCESS);
 	}
 }
 
-void button::signal_handler_mouse_enter(const event::ui_event event,
-										 bool& handled)
+void button::signal_handler_mouse_enter(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -102,12 +102,11 @@ void button::signal_handler_mouse_enter(const event::ui_event event,
 	handled = true;
 }
 
-void button::signal_handler_mouse_leave(const event::ui_event event,
-										 bool& handled)
+void button::signal_handler_mouse_leave(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
-	if (success_) {
+	if(success_) {
 		set_state(SUCCESS);
 	} else {
 		set_state(ENABLED);
@@ -115,8 +114,7 @@ void button::signal_handler_mouse_leave(const event::ui_event event,
 	handled = true;
 }
 
-void button::signal_handler_left_button_down(const event::ui_event event,
-											  bool& handled)
+void button::signal_handler_left_button_down(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -129,8 +127,7 @@ void button::signal_handler_left_button_down(const event::ui_event event,
 	handled = true;
 }
 
-void button::signal_handler_left_button_up(const event::ui_event event,
-											bool& handled)
+void button::signal_handler_left_button_up(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -138,8 +135,7 @@ void button::signal_handler_left_button_up(const event::ui_event event,
 	handled = true;
 }
 
-void button::signal_handler_left_button_click(const event::ui_event event,
-											   bool& handled)
+void button::signal_handler_left_button_click(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -171,15 +167,18 @@ button_definition::resolution::resolution(const config& cfg)
 	: resolution_definition(cfg)
 {
 	// Note the order should be the same as the enum state_t in button.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("button_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("button_definition][resolution", "state_disabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_pressed", missing_mandatory_wml_tag("button_definition][resolution", "state_pressed")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_focused", missing_mandatory_wml_tag("button_definition][resolution", "state_focused")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("button_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_disabled", missing_mandatory_wml_tag("button_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_pressed", missing_mandatory_wml_tag("button_definition][resolution", "state_pressed")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_focused", missing_mandatory_wml_tag("button_definition][resolution", "state_focused")));
 	// state_success is optional, so error message not needed.
-	if (cfg.optional_child("state_success")) {
+	if(cfg.optional_child("state_success")) {
 		state.emplace_back(cfg.mandatory_child("state_success"));
 	}
-
 }
 
 // }---------- BUILDER -----------{
@@ -200,8 +199,7 @@ std::unique_ptr<widget> builder_button::build() const
 
 	widget->set_retval(get_retval(retval_id_, retval_, id));
 
-	DBG_GUI_G << "Window builder: placed button '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed button '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

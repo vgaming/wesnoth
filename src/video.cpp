@@ -52,15 +52,15 @@ texture render_texture_ = {};
 /** The current offscreen render target. */
 texture current_render_target_ = {};
 
-bool headless_ = false; /**< running with no window at all */
-bool testing_ = false; /**< running unit tests */
+bool headless_ = false;               /**< running with no window at all */
+bool testing_ = false;                /**< running unit tests */
 point test_resolution_ = {1024, 768}; /**< resolution for unit tests */
 int refresh_rate_ = 0;
 point game_canvas_size_ = {0, 0};
 int pixel_scale_ = 1;
 rect input_area_ = {};
 
-} // anon namespace
+} // namespace
 
 namespace video
 {
@@ -69,14 +69,13 @@ namespace video
 void render_screen(); // exposed and used only in draw_manager.cpp
 
 // Internal functions
-static void init_window(bool hidden=false);
+static void init_window(bool hidden = false);
 static void init_test_window();
 static void init_fake();
 static void init_test();
 static bool update_framebuffer();
 static bool update_test_framebuffer();
 static point draw_offset();
-
 
 void init(fake type)
 {
@@ -150,7 +149,7 @@ void init_fake()
 	LOG_DP << "running headless";
 	headless_ = true;
 	refresh_rate_ = 1;
-	game_canvas_size_ = {800,600};
+	game_canvas_size_ = {800, 600};
 }
 
 void init_test()
@@ -163,7 +162,7 @@ void init_test()
 /** Returns true if the buffer was changed */
 bool update_test_framebuffer()
 {
-	if (!window) {
+	if(!window) {
 		throw("trying to update test framebuffer with no window");
 	}
 
@@ -171,25 +170,20 @@ bool update_test_framebuffer()
 
 	// TODO: code unduplication
 	// Build or update the current render texture.
-	if (render_texture_) {
+	if(render_texture_) {
 		int w, h;
 		SDL_QueryTexture(render_texture_, nullptr, nullptr, &w, &h);
-		if (w != test_resolution_.x || h != test_resolution_.y) {
+		if(w != test_resolution_.x || h != test_resolution_.y) {
 			// Delete it and let it be recreated.
 			LOG_DP << "destroying old render texture";
 			render_texture_.reset();
 		}
 	}
-	if (!render_texture_) {
+	if(!render_texture_) {
 		LOG_DP << "creating offscreen render texture";
 		render_texture_.assign(SDL_CreateTexture(
-			*window,
-			window->pixel_format(),
-			SDL_TEXTUREACCESS_TARGET,
-			test_resolution_.x, test_resolution_.y
-		));
-		LOG_DP << "updated render target to " << test_resolution_.x
-			<< "x" << test_resolution_.y;
+			*window, window->pixel_format(), SDL_TEXTUREACCESS_TARGET, test_resolution_.x, test_resolution_.y));
+		LOG_DP << "updated render target to " << test_resolution_.x << "x" << test_resolution_.y;
 		changed = true;
 	}
 
@@ -205,11 +199,11 @@ bool update_test_framebuffer()
 
 bool update_framebuffer()
 {
-	if (!window) {
+	if(!window) {
 		throw error("trying to update framebuffer with no window");
 	}
 
-	if (testing_) {
+	if(testing_) {
 		return update_test_framebuffer();
 	}
 
@@ -225,29 +219,25 @@ bool update_framebuffer()
 
 	// Find max valid pixel scale at current output size.
 	point osize(window->get_output_size());
-	int max_scale = std::min(
-		osize.x / pref_constants::min_window_width,
-		osize.y / pref_constants::min_window_height);
+	int max_scale = std::min(osize.x / pref_constants::min_window_width, osize.y / pref_constants::min_window_height);
 	max_scale = std::min(max_scale, pref_constants::max_pixel_scale);
 
 	// Determine best pixel scale according to preference and window size
 	int scale = 1;
-	if (prefs::get().auto_pixel_scale()) {
+	if(prefs::get().auto_pixel_scale()) {
 		// Try to match the default size (1280x720) but do not reduce below
-		int def_scale = std::min(
-			osize.x / pref_constants::def_window_width,
-			osize.y / pref_constants::def_window_height);
+		int def_scale
+			= std::min(osize.x / pref_constants::def_window_width, osize.y / pref_constants::def_window_height);
 		scale = std::min(max_scale, def_scale);
 		// Otherwise reduce to keep below the max window size (1920x1080).
-		int min_scale = std::min(
-			osize.x / (pref_constants::max_window_width+1) + 1,
-			osize.y / (pref_constants::max_window_height+1) + 1);
+		int min_scale = std::min(osize.x / (pref_constants::max_window_width + 1) + 1,
+			osize.y / (pref_constants::max_window_height + 1) + 1);
 		scale = std::max(scale, min_scale);
 	} else {
 		scale = std::min(max_scale, prefs::get().pixel_scale());
 	}
 	// Cache it for easy access.
-	if (pixel_scale_ != scale) {
+	if(pixel_scale_ != scale) {
 		pixel_scale_ = scale;
 		changed = true;
 	}
@@ -255,11 +245,10 @@ bool update_framebuffer()
 	// Update logical size if it doesn't match the current resolution and scale.
 	point lsize(window->get_logical_size());
 	point wsize(window->get_size());
-	if (lsize.x != osize.x / scale || lsize.y != osize.y / scale) {
-		if (!prefs::get().auto_pixel_scale() && scale < prefs::get().pixel_scale()) {
-			LOG_DP << "reducing pixel scale from desired "
-				<< prefs::get().pixel_scale() << " to maximum allowable "
-				<< scale;
+	if(lsize.x != osize.x / scale || lsize.y != osize.y / scale) {
+		if(!prefs::get().auto_pixel_scale() && scale < prefs::get().pixel_scale()) {
+			LOG_DP << "reducing pixel scale from desired " << prefs::get().pixel_scale() << " to maximum allowable "
+				   << scale;
 		}
 		LOG_DP << "pixel scale: " << scale;
 		LOG_DP << "overriding logical size";
@@ -281,10 +270,10 @@ bool update_framebuffer()
 	game_canvas_size_ = lsize;
 
 	// Build or update the current render texture.
-	if (render_texture_) {
+	if(render_texture_) {
 		int w, h;
 		SDL_QueryTexture(render_texture_, nullptr, nullptr, &w, &h);
-		if (w != osize.x || h != osize.y) {
+		if(w != osize.x || h != osize.y) {
 			// Delete it and let it be recreated.
 			LOG_DP << "destroying old render texture";
 			render_texture_.reset();
@@ -293,14 +282,10 @@ bool update_framebuffer()
 			render_texture_.set_draw_size(lsize);
 		}
 	}
-	if (!render_texture_) {
+	if(!render_texture_) {
 		LOG_DP << "creating offscreen render texture";
-		render_texture_.assign(SDL_CreateTexture(
-			*window,
-			window->pixel_format(),
-			SDL_TEXTUREACCESS_TARGET,
-			osize.x, osize.y
-		));
+		render_texture_.assign(
+			SDL_CreateTexture(*window, window->pixel_format(), SDL_TEXTUREACCESS_TARGET, osize.x, osize.y));
 		// This isn't really necessary, but might be nice to have attached
 		render_texture_.set_draw_size(lsize);
 		changed = true;
@@ -313,14 +298,11 @@ bool update_framebuffer()
 	input_area_ = {{}, wsize};
 
 	rect active_area = to_output(draw_area());
-	if (active_area.size() != osize) {
+	if(active_area.size() != osize) {
 		LOG_DP << "render target offset: LT " << active_area.origin() << " RB "
-		       << osize - active_area.size() - active_area.origin();
+			   << osize - active_area.size() - active_area.origin();
 		// Translate active_area into display coordinates as input_area_
-		input_area_ = {
-			(active_area.origin() * wsize) / osize,
-			(active_area.origin() * wsize) / osize
-		};
+		input_area_ = {(active_area.origin() * wsize) / osize, (active_area.origin() * wsize) / osize};
 		LOG_DP << "input area: " << input_area_;
 	}
 
@@ -329,8 +311,7 @@ bool update_framebuffer()
 
 void init_test_window()
 {
-	LOG_DP << "creating test window " << test_resolution_.x
-		<< "x" << test_resolution_.y;
+	LOG_DP << "creating test window " << test_resolution_.x << "x" << test_resolution_.y;
 
 	uint32_t window_flags = 0;
 	window_flags |= SDL_WINDOW_HIDDEN;
@@ -340,10 +321,7 @@ void init_test_window()
 	renderer_flags |= SDL_RENDERER_TARGETTEXTURE;
 	// All we need is to be able to render to texture.
 
-	window.reset(new sdl::window(
-		"", 0, 0, test_resolution_.x, test_resolution_.y,
-		window_flags, renderer_flags
-	));
+	window.reset(new sdl::window("", 0, 0, test_resolution_.x, test_resolution_.y, window_flags, renderer_flags));
 
 	update_test_framebuffer();
 }
@@ -408,7 +386,7 @@ bool has_window()
 
 point output_size()
 {
-	if (testing_) {
+	if(testing_) {
 		return test_resolution_;
 	}
 	// As we are rendering via an abstraction, we should never need this.
@@ -417,7 +395,7 @@ point output_size()
 
 point window_size()
 {
-	if (testing_) {
+	if(testing_) {
 		return test_resolution_;
 	}
 	return window->get_size();
@@ -499,31 +477,29 @@ int current_refresh_rate()
 
 void force_render_target(const texture& t)
 {
-	if (SDL_SetRenderTarget(get_renderer(), t)) {
-		ERR_DP << "failed to set render target to "
-			<< static_cast<void*>(t.get()) << ' '
-			<< t.draw_size() << " / " << t.get_raw_size();
+	if(SDL_SetRenderTarget(get_renderer(), t)) {
+		ERR_DP << "failed to set render target to " << static_cast<void*>(t.get()) << ' ' << t.draw_size() << " / "
+			   << t.get_raw_size();
 		ERR_DP << "last SDL error: " << SDL_GetError();
 		throw error("failed to set render target");
 	}
 	current_render_target_ = t;
 
-	if (testing_) {
+	if(testing_) {
 		return;
 	}
 
 	// The scale factor gets reset when the render target changes,
 	// so make sure it gets set back appropriately.
-	if (!t) {
+	if(!t) {
 		DBG_DP << "rendering to window / screen";
 		window->set_logical_size(game_canvas_size_);
-	} else if (t == render_texture_) {
+	} else if(t == render_texture_) {
 		DBG_DP << "rendering to primary buffer";
 		window->set_logical_size(game_canvas_size_);
 	} else {
-		DBG_DP << "rendering to custom target "
-			<< static_cast<void*>(t.get()) << ' '
-			<< t.draw_size() << " / " << t.get_raw_size();
+		DBG_DP << "rendering to custom target " << static_cast<void*>(t.get()) << ' ' << t.draw_size() << " / "
+			   << t.get_raw_size();
 		window->set_logical_size(t.w(), t.h());
 	}
 }
@@ -564,9 +540,9 @@ void render_screen()
 	// current render target. It could be adapted otherwise... but let's not.
 	if(SDL_GetRenderTarget(*window) != render_texture_) {
 		ERR_DP << "trying to render screen, but current render texture is "
-			<< static_cast<void*>(SDL_GetRenderTarget(*window))
-			<< " | " << static_cast<void*>(current_render_target_.get())
-			<< ". It should be " << static_cast<void*>(render_texture_.get());
+			   << static_cast<void*>(SDL_GetRenderTarget(*window)) << " | "
+			   << static_cast<void*>(current_render_target_.get()) << ". It should be "
+			   << static_cast<void*>(render_texture_.get());
 		throw error("tried to render screen from wrong render target");
 	}
 
@@ -591,7 +567,7 @@ void render_screen()
 
 surface read_pixels(SDL_Rect* r)
 {
-	if (!window) {
+	if(!window) {
 		WRN_DP << "trying to read pixels with no window";
 		return surface();
 	}
@@ -600,22 +576,19 @@ surface read_pixels(SDL_Rect* r)
 	texture& target = current_render_target_;
 
 	// Make doubly sure.
-	if (target != SDL_GetRenderTarget(*window)) {
+	if(target != SDL_GetRenderTarget(*window)) {
 		SDL_Texture* t = SDL_GetRenderTarget(*window);
-		ERR_DP << "render target " << static_cast<void*>(target.get())
-			<< ' ' << target.draw_size() << " / " << target.get_raw_size()
-			<< " doesn't match window render target "
-			<< static_cast<void*>(t);
+		ERR_DP << "render target " << static_cast<void*>(target.get()) << ' ' << target.draw_size() << " / "
+			   << target.get_raw_size() << " doesn't match window render target " << static_cast<void*>(t);
 		throw error("unexpected render target while reading pixels");
 	}
 
 	// Intersect the draw area with the given rect.
 	rect r_clipped = draw_area();
-	if (r) {
+	if(r) {
 		r_clipped.clip(*r);
-		if (r_clipped != *r) {
-			DBG_DP << "modifying pixel read area from " << *r
-			       << " to " << r_clipped;
+		if(r_clipped != *r) {
+			DBG_DP << "modifying pixel read area from " << *r << " to " << r_clipped;
 			*r = r_clipped;
 		}
 	}
@@ -767,7 +740,7 @@ std::vector<point> get_available_resolutions(const bool include_current)
 
 point current_resolution()
 {
-	if (testing_) {
+	if(testing_) {
 		return test_resolution_;
 	}
 	return point(window->get_size()); // Convert from plain SDL_Point
@@ -775,7 +748,7 @@ point current_resolution()
 
 bool is_fullscreen()
 {
-	if (testing_) {
+	if(testing_) {
 		return true;
 	}
 	return (window->get_flags() & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0;
@@ -783,15 +756,15 @@ bool is_fullscreen()
 
 void set_fullscreen(bool fullscreen)
 {
-	if (headless_ || testing_) {
+	if(headless_ || testing_) {
 		return;
 	}
 
 	// Only do anything if the current value differs from the desired value
-	if (window && is_fullscreen() != fullscreen) {
-		if (fullscreen) {
+	if(window && is_fullscreen() != fullscreen) {
+		if(fullscreen) {
 			window->full_screen();
-		} else if (prefs::get().maximized()) {
+		} else if(prefs::get().maximized()) {
 			window->to_window();
 			window->maximize();
 		} else {
@@ -869,7 +842,7 @@ std::pair<float, float> get_dpi()
 		}
 #endif
 	}
-	return { hdpi, vdpi };
+	return {hdpi, vdpi};
 }
 
 std::vector<std::pair<std::string, std::string>> renderer_report()
@@ -889,9 +862,7 @@ std::vector<std::pair<std::string, std::string>> renderer_report()
 			renderer_name += " (hw)";
 		}
 
-		std::string renderer_max = std::to_string(ri.max_texture_width) +
-								   'x' +
-								   std::to_string(ri.max_texture_height);
+		std::string renderer_max = std::to_string(ri.max_texture_width) + 'x' + std::to_string(ri.max_texture_height);
 
 		res.emplace_back("Renderer", renderer_name);
 		res.emplace_back("Maximum texture size", renderer_max);

@@ -41,9 +41,9 @@ class reports;
 class team;
 struct overlay;
 
-
-namespace wb {
-	class manager;
+namespace wb
+{
+class manager;
 }
 
 #include "animated.hpp"
@@ -53,33 +53,34 @@ namespace wb {
 #include "game_config.hpp"
 #include "gui/core/top_level_drawable.hpp"
 #include "halo.hpp"
-#include "picture.hpp" //only needed for enums (!)
 #include "key.hpp"
-#include "time_of_day.hpp"
+#include "picture.hpp" //only needed for enums (!)
 #include "sdl/rect.hpp"
 #include "sdl/surface.hpp"
 #include "sdl/texture.hpp"
 #include "theme.hpp"
+#include "time_of_day.hpp"
 #include "widgets/button.hpp"
 
 #include <boost/circular_buffer.hpp>
 
 #include <bitset>
-#include <functional>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <list>
 #include <map>
 #include <memory>
 #include <vector>
 
-namespace display_direction {
-	/**
-	 * @note needs to be defined after includes
-	 *       as it uses std::string
-	 */
-	const std::string& get_direction(std::size_t n);
-}
+namespace display_direction
+{
+/**
+ * @note needs to be defined after includes
+ *       as it uses std::string
+ */
+const std::string& get_direction(std::size_t n);
+} // namespace display_direction
 
 struct submerge_data
 {
@@ -108,12 +109,21 @@ public:
 	 * the display object represents the game gui which handles themewml and drawing the map.
 	 * A display object only exists during a game or while the mapeditor is running.
 	 */
-	static display* get_singleton() { return singleton_ ;}
+	static display* get_singleton()
+	{
+		return singleton_;
+	}
 
-	bool show_everything() const { return !dont_show_all_ && !is_blindfolded(); }
+	bool show_everything() const
+	{
+		return !dont_show_all_ && !is_blindfolded();
+	}
 
 	/** The playing team is the team whose turn it is. */
-	std::size_t playing_team_index() const { return playing_team_index_; }
+	std::size_t playing_team_index() const
+	{
+		return playing_team_index_;
+	}
 
 	/**
 	 * The viewing team is the team currently viewing the game. It's the team whose gold and income
@@ -123,7 +133,10 @@ public:
 	 *
 	 * The value returned is a 0-based index into the vector returned by dc_->teams().
 	 */
-	std::size_t viewing_team_index() const { return viewing_team_index_; }
+	std::size_t viewing_team_index() const
+	{
+		return viewing_team_index_;
+	}
 
 	const team& playing_team() const;
 	const team& viewing_team() const;
@@ -137,7 +150,7 @@ public:
 	 * Sets the team controlled by the player using the computer.
 	 * Data from this team will be displayed in the game status.
 	 */
-	void set_viewing_team_index(std::size_t team, bool observe=false);
+	void set_viewing_team_index(std::size_t team, bool observe = false);
 
 	/**
 	 * sets the team whose turn it currently is
@@ -147,7 +160,10 @@ public:
 	/**
 	 * Cancels all the exclusive draw requests.
 	 */
-	void clear_exclusive_draws() { exclusive_unit_draw_requests_.clear(); }
+	void clear_exclusive_draws()
+	{
+		exclusive_unit_draw_requests_.clear();
+	}
 
 	/**
 	 * Allows a unit to request to be the only one drawn in its hex. Useful for situations where
@@ -195,7 +211,10 @@ public:
 		return *dc_;
 	}
 
-	halo::manager& get_halo_manager() { return halo_man_; }
+	halo::manager& get_halo_manager()
+	{
+		return halo_man_;
+	}
 
 	/**
 	 * Applies r,g,b coloring to the map.
@@ -213,14 +232,31 @@ public:
 	 * Used for special effects like flashes.
 	 */
 	void adjust_color_overlay(int r, int g, int b);
-	tod_color get_color_overlay() const { return color_adjust_; }
+	tod_color get_color_overlay() const
+	{
+		return color_adjust_;
+	}
 
-	virtual bool in_game() const { return false; }
-	virtual bool in_editor() const { return false; }
+	virtual bool in_game() const
+	{
+		return false;
+	}
+	virtual bool in_editor() const
+	{
+		return false;
+	}
 
-	/** Virtual functions shadowed in game_display. These are needed to generate reports easily, without dynamic casting. Hope to factor out eventually. */
-	virtual const map_location & displayed_unit_hex() const { return map_location::null_location(); }
-	virtual const std::set<std::string>& observers() const { static const std::set<std::string> fake_obs = std::set<std::string> (); return fake_obs; }
+	/** Virtual functions shadowed in game_display. These are needed to generate reports easily, without dynamic
+	 * casting. Hope to factor out eventually. */
+	virtual const map_location& displayed_unit_hex() const
+	{
+		return map_location::null_location();
+	}
+	virtual const std::set<std::string>& observers() const
+	{
+		static const std::set<std::string> fake_obs = std::set<std::string>();
+		return fake_obs;
+	}
 
 	/**
 	 * mapx is the width of the portion of the display which shows the game area.
@@ -250,7 +286,7 @@ public:
 	rect map_outside_area() const;
 
 	/** Check if the bbox of the hex at x,y has pixels outside the area rectangle. */
-	static bool outside_area(const SDL_Rect& area, const int x,const int y);
+	static bool outside_area(const SDL_Rect& area, const int x, const int y);
 
 	/**
 	 * Function which returns the width of a hex in pixels,
@@ -258,13 +294,19 @@ public:
 	 * (i.e. not entirely from tip to tip -- use hex_size()
 	 * to get the distance from tip to tip)
 	 */
-	static int hex_width() { return (zoom_*3)/4; }
+	static int hex_width()
+	{
+		return (zoom_ * 3) / 4;
+	}
 
 	/**
 	 * Function which returns the size of a hex in pixels
 	 * (from top tip to bottom tip or left edge to right edge).
 	 */
-	static int hex_size(){ return zoom_; }
+	static int hex_size()
+	{
+		return zoom_;
+	}
 
 	/** Returns the current zoom factor. */
 	static double get_zoom_factor()
@@ -306,14 +348,23 @@ public:
 	 */
 	map_location minimap_location_on(int x, int y);
 
-	const map_location& selected_hex() const { return selectedHex_; }
-	const map_location& mouseover_hex() const { return mouseoverHex_; }
+	const map_location& selected_hex() const
+	{
+		return selectedHex_;
+	}
+	const map_location& mouseover_hex() const
+	{
+		return mouseoverHex_;
+	}
 
 	virtual void select_hex(map_location hex);
 	virtual void highlight_hex(map_location hex);
 
 	/** Function to invalidate the game status displayed on the sidebar. */
-	void invalidate_game_status() { invalidateGameStatus_ = true; }
+	void invalidate_game_status()
+	{
+		invalidateGameStatus_ = true;
+	}
 
 	/** Functions to get the on-screen positions of hexes. */
 	point get_location(const map_location& loc) const;
@@ -325,32 +376,46 @@ public:
 	 * Rectangular area of hexes, allowing to decide how the top and bottom
 	 * edges handles the vertical shift for each parity of the x coordinate
 	 */
-	struct rect_of_hexes{
+	struct rect_of_hexes
+	{
 		int left;
 		int right;
 		int top[2]; // for even and odd values of x, respectively
 		int bottom[2];
 
 		/**  very simple iterator to walk into the rect_of_hexes */
-		struct iterator {
-			iterator(const map_location &loc, const rect_of_hexes &rect)
-				: loc_(loc), rect_(rect){}
+		struct iterator
+		{
+			iterator(const map_location& loc, const rect_of_hexes& rect)
+				: loc_(loc)
+				, rect_(rect)
+			{
+			}
 
 			/** increment y first, then when reaching bottom, increment x */
 			iterator& operator++();
-			bool operator==(const iterator &that) const { return that.loc_ == loc_; }
-			bool operator!=(const iterator &that) const { return that.loc_ != loc_; }
-			const map_location& operator*() const {return loc_;}
+			bool operator==(const iterator& that) const
+			{
+				return that.loc_ == loc_;
+			}
+			bool operator!=(const iterator& that) const
+			{
+				return that.loc_ != loc_;
+			}
+			const map_location& operator*() const
+			{
+				return loc_;
+			}
 
 			typedef std::forward_iterator_tag iterator_category;
 			typedef map_location value_type;
 			typedef int difference_type;
-			typedef const map_location *pointer;
-			typedef const map_location &reference;
+			typedef const map_location* pointer;
+			typedef const map_location& reference;
 
-			private:
-				map_location loc_;
-				const rect_of_hexes &rect_;
+		private:
+			map_location loc_;
+			const rect_of_hexes& rect_;
 		};
 		typedef iterator const_iterator;
 
@@ -362,7 +427,10 @@ public:
 	const rect_of_hexes hexes_under_rect(const rect& r) const;
 
 	/** Returns the rectangular area of visible hexes */
-	const rect_of_hexes get_visible_hexes() const {return hexes_under_rect(map_area());}
+	const rect_of_hexes get_visible_hexes() const
+	{
+		return hexes_under_rect(map_area());
+	}
 
 	/** Returns true if location (x,y) is covered in shroud. */
 	bool shrouded(const map_location& loc) const;
@@ -374,20 +442,23 @@ public:
 	surface screenshot(bool map_screenshot = false);
 
 	/** Marks everything for rendering including all tiles and sidebar.
-	  * Also calls redraw observers. */
+	 * Also calls redraw observers. */
 	void queue_rerender();
 
 	/** Queues repainting to the screen, but doesn't rerender. */
 	void queue_repaint();
 
 	/** Adds a redraw observer, a function object to be called when a
-	  * full rerender is queued. */
+	 * full rerender is queued. */
 	void add_redraw_observer(const std::function<void(display&)>& f);
 
 	/** Clear the redraw observers */
 	void clear_redraw_observers();
 
-	theme& get_theme() { return theme_; }
+	theme& get_theme()
+	{
+		return theme_;
+	}
 	void set_theme(const std::string& new_theme);
 
 	/**
@@ -415,7 +486,7 @@ public:
 	void unhide_buttons();
 
 	/** Update the given report. Actual drawing is done in draw_report(). */
-	void refresh_report(const std::string& report_name, const config * new_cfg=nullptr);
+	void refresh_report(const std::string& report_name, const config* new_cfg = nullptr);
 
 	/**
 	 * Draw the specified report.
@@ -427,7 +498,7 @@ public:
 	void draw_report(const std::string& report_name, bool test_run = false);
 
 	/** Draw all reports in the given region.
-	  * Returns true if something was drawn, false otherwise. */
+	 * Returns true if something was drawn, false otherwise. */
 	bool draw_reports(const rect& region);
 
 	void draw_minimap_units();
@@ -463,7 +534,10 @@ public:
 
 	void reset_standing_animations();
 
-	terrain_builder& get_builder() {return *builder_;}
+	terrain_builder& get_builder()
+	{
+		return *builder_;
+	}
 
 	void update_fps_label();
 	void clear_fps_label();
@@ -473,7 +547,7 @@ public:
 	void rebuild_all();
 
 	const theme::action* action_pressed();
-	const theme::menu*   menu_pressed();
+	const theme::menu* menu_pressed();
 
 	void set_diagnostic(const std::string& msg);
 
@@ -501,10 +575,16 @@ public:
 	/** Sets the zoom amount to the default. */
 	void toggle_default_zoom();
 
-	bool view_locked() const { return view_locked_; }
+	bool view_locked() const
+	{
+		return view_locked_;
+	}
 
 	/** Sets whether the map view is locked (e.g. so the user can't scroll away) */
-	void set_view_locked(bool value) { view_locked_ = value; }
+	void set_view_locked(bool value)
+	{
+		view_locked_ = value;
+	}
 
 	enum SCROLL_TYPE { SCROLL, WARP, ONSCREEN, ONSCREEN_WARP };
 
@@ -515,7 +595,8 @@ public:
 	 * force : scroll even if preferences tell us not to,
 	 * or the view is locked.
 	 */
-	void scroll_to_tile(const map_location& loc, SCROLL_TYPE scroll_type=ONSCREEN, bool check_fogged=true,bool force = true);
+	void scroll_to_tile(
+		const map_location& loc, SCROLL_TYPE scroll_type = ONSCREEN, bool check_fogged = true, bool force = true);
 
 	/**
 	 * Scroll such that location loc1 is on-screen.
@@ -523,27 +604,35 @@ public:
 	 * but this is not guaranteed. For ONSCREEN scrolls add_spacing
 	 * sets the desired minimum distance from the border in hexes.
 	 */
-	void scroll_to_tiles(map_location loc1, map_location loc2,
-	                     SCROLL_TYPE scroll_type=ONSCREEN, bool check_fogged=true,
-	                     double add_spacing=0.0, bool force=true);
+	void scroll_to_tiles(map_location loc1,
+		map_location loc2,
+		SCROLL_TYPE scroll_type = ONSCREEN,
+		bool check_fogged = true,
+		double add_spacing = 0.0,
+		bool force = true);
 
 	/** Scroll to fit as many locations on-screen as possible, starting with the first. */
 	void scroll_to_tiles(const std::vector<map_location>& locs,
-	                     SCROLL_TYPE scroll_type=ONSCREEN, bool check_fogged=true,
-	                     bool only_if_possible=false,
-	                     double add_spacing=0.0, bool force=true);
+		SCROLL_TYPE scroll_type = ONSCREEN,
+		bool check_fogged = true,
+		bool only_if_possible = false,
+		double add_spacing = 0.0,
+		bool force = true);
 
 	/** Expose the event, so observers can be notified about map scrolling. */
-	events::generic_event &scroll_event() const { return scroll_event_; }
+	events::generic_event& scroll_event() const
+	{
+		return scroll_event_;
+	}
 
 	/** Check if a tile is fully visible on screen. */
 	bool tile_fully_on_screen(const map_location& loc) const;
 
 	/** Checks if location @a loc or one of the adjacent tiles is visible on screen. */
-	bool tile_nearly_on_screen(const map_location &loc) const;
+	bool tile_nearly_on_screen(const map_location& loc) const;
 
 	/** Prevent the game display from drawing.
-	  * Used while story screen is showing to prevent flicker. */
+	 * Used while story screen is showing to prevent flicker. */
 	void set_prevent_draw(bool pd = true);
 	bool get_prevent_draw();
 
@@ -556,7 +645,8 @@ public:
 	 * @param vreverse Whether to flip the image vertically.
 	 * @return The data necessary for showing the submerged effect for units and map overlays (aka items).
 	 */
-	static submerge_data get_submerge_data(const rect& dest, double submerge, const point& size, uint8_t alpha, bool hreverse, bool vreverse);
+	static submerge_data get_submerge_data(
+		const rect& dest, double submerge, const point& size, uint8_t alpha, bool hreverse, bool vreverse);
 
 private:
 	bool prevent_draw_ = false;
@@ -570,7 +660,7 @@ public:
 	void set_fade(const color_t& color);
 
 private:
-	color_t fade_color_ = {0,0,0,0};
+	color_t fade_color_ = {0, 0, 0, 0};
 
 public:
 	/*-------------------------------------------------------*/
@@ -601,7 +691,7 @@ private:
 	void update_render_textures();
 
 	/** Draw/redraw the off-map background area.
-	  * This updates both render textures. */
+	 * This updates both render textures. */
 	void render_map_outside_area();
 
 	/** Perform rendering of invalidated items. */
@@ -633,8 +723,8 @@ public:
 
 	/** Announce a message prominently. */
 	void announce(const std::string& msg,
-	              const color_t& color = font::GOOD_COLOR,
-	              const announce_options& options = announce_options());
+		const color_t& color = font::GOOD_COLOR,
+		const announce_options& options = announce_options());
 
 	/**
 	 * Schedule the minimap for recalculation.
@@ -655,7 +745,10 @@ private:
 public:
 	virtual const time_of_day& get_time_of_day(const map_location& loc = map_location::null_location()) const = 0;
 
-	virtual bool has_time_area() const {return false;}
+	virtual bool has_time_area() const
+	{
+		return false;
+	}
 
 	void blindfold(bool flag);
 	bool is_blindfolded() const;
@@ -680,8 +773,8 @@ private:
 	int blindfold_ctr_;
 
 protected:
-	//TODO sort
-	const display_context * dc_;
+	// TODO sort
+	const display_context* dc_;
 	halo::manager halo_man_;
 	std::weak_ptr<wb::manager> wb_;
 
@@ -712,11 +805,9 @@ protected:
 
 	void draw_overlays_at(const map_location& loc);
 
-	enum TERRAIN_TYPE { BACKGROUND, FOREGROUND};
+	enum TERRAIN_TYPE { BACKGROUND, FOREGROUND };
 
-	void get_terrain_images(const map_location &loc,
-					const std::string& timeid,
-					TERRAIN_TYPE terrain_type);
+	void get_terrain_images(const map_location& loc, const std::string& timeid, TERRAIN_TYPE terrain_type);
 
 	std::vector<texture> get_fog_shroud_images(const map_location& loc, image::TYPE image_type);
 
@@ -725,7 +816,7 @@ protected:
 	static void fill_images_list(const std::string& prefix, std::vector<std::string>& images);
 
 	std::size_t viewing_team_index_;
-	bool dont_show_all_; //const team *viewpoint_;
+	bool dont_show_all_; // const team *viewpoint_;
 	/**
 	 * Position of the top-left corner of the viewport, in pixels.
 	 *
@@ -752,7 +843,7 @@ protected:
 	int diagnostic_label_;
 	bool invalidateGameStatus_;
 	const std::unique_ptr<map_labels> map_labels_;
-	reports * reports_object_;
+	reports* reports_object_;
 
 	/** Event raised when the map is being scrolled */
 	mutable events::generic_event scroll_event_;
@@ -790,7 +881,6 @@ protected:
 	bool animate_water_;
 
 private:
-
 	texture get_flag(const map_location& loc);
 
 	/** Animated flags for each team */
@@ -806,12 +896,15 @@ public:
 	 * The font size is adjusted to the zoom factor.
 	 */
 	void draw_text_in_hex(const map_location& loc,
-		const drawing_layer layer, const std::string& text, std::size_t font_size,
-		color_t color, double x_in_hex=0.5, double y_in_hex=0.5);
+		const drawing_layer layer,
+		const std::string& text,
+		std::size_t font_size,
+		color_t color,
+		double x_in_hex = 0.5,
+		double y_in_hex = 0.5);
 
 protected:
-
-	//TODO sort
+	// TODO sort
 	std::size_t playing_team_index_;
 
 	/**
@@ -863,15 +956,15 @@ public:
 	 * @param loc                The hex the image belongs to, needed for the drawing order.
 	 * @param draw_func          The draw operation to be run.
 	 */
-	void drawing_buffer_add(const drawing_layer layer, const map_location& loc, decltype(draw_helper::do_draw) draw_func);
+	void drawing_buffer_add(
+		const drawing_layer layer, const map_location& loc, decltype(draw_helper::do_draw) draw_func);
 
 protected:
-
 	/** Draws the drawing_buffer_ and clears it. */
 	void drawing_buffer_commit();
 
 	/** Redraws all panels intersecting the given region.
-	  * Returns true if something was drawn, false otherwise. */
+	 * Returns true if something was drawn, false otherwise. */
 	bool draw_all_panels(const rect& region);
 
 private:
@@ -882,19 +975,17 @@ protected:
 	/** Used to indicate to drawing functions that we are doing a map screenshot */
 	bool map_screenshot_;
 
-public: //operations for the arrow framework
-
+public: // operations for the arrow framework
 	void add_arrow(arrow&);
 
 	void remove_arrow(arrow&);
 
 	/** Called by arrow objects when they change. You should not need to call this directly. */
-	void update_arrow(arrow & a);
+	void update_arrow(arrow& a);
 
 protected:
-
 	// Tiles lit for showing where unit(s) can reach
-	typedef std::map<map_location,unsigned int> reach_map;
+	typedef std::map<map_location, unsigned int> reach_map;
 	reach_map reach_map_;
 	reach_map reach_map_old_;
 	bool reach_map_changed_;
@@ -963,22 +1054,27 @@ private:
 	std::vector<std::tuple<int, int, int>> fps_history_;
 
 protected:
-	static display * singleton_;
+	static display* singleton_;
 };
 
 struct blindfold
 {
-	blindfold(display& d, bool lock=true) : display_(d), blind(lock) {
+	blindfold(display& d, bool lock = true)
+		: display_(d)
+		, blind(lock)
+	{
 		if(blind) {
 			display_.blindfold(true);
 		}
 	}
 
-	~blindfold() {
+	~blindfold()
+	{
 		unblind();
 	}
 
-	void unblind() {
+	void unblind()
+	{
 		if(blind) {
 			display_.blindfold(false);
 			display_.queue_rerender();

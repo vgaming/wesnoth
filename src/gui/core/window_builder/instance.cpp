@@ -26,7 +26,8 @@ namespace implementation
 {
 
 builder_instance::builder_instance(const config& cfg)
-	: builder_widget(cfg), configuration(cfg)
+	: builder_widget(cfg)
+	, configuration(cfg)
 {
 }
 

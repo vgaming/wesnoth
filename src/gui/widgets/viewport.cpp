@@ -17,8 +17,8 @@
 
 #include "gui/widgets/viewport.hpp"
 
-#include "gui/auxiliary/iterator/walker.hpp"
 #include "gettext.hpp"
+#include "gui/auxiliary/iterator/walker.hpp"
 #include "utils/const_clone.hpp"
 #include "wml_exception.hpp"
 
@@ -45,11 +45,9 @@ struct viewport_implementation
 	 *
 	 * @tparam W                  A pointer to the pane.
 	 */
-	template <class W>
-	static utils::const_clone_ptr<widget, W>
-	find_at(W viewport, point coordinate, const bool must_be_active)
+	template<class W>
+	static utils::const_clone_ptr<widget, W> find_at(W viewport, point coordinate, const bool must_be_active)
 	{
-
 		/*
 		 * First test whether the mouse is at the pane.
 		 */
@@ -67,9 +65,8 @@ struct viewport_implementation
 		return viewport->widget_->find_at(coordinate, must_be_active);
 	}
 
-	template <class W>
-	static utils::const_clone_ptr<widget, W>
-	find(W viewport, const std::string_view id, const bool must_be_active)
+	template<class W>
+	static utils::const_clone_ptr<widget, W> find(W viewport, const std::string_view id, const bool must_be_active)
 	{
 		if(viewport->widget::find(id, must_be_active)) {
 			return viewport;
@@ -79,8 +76,8 @@ struct viewport_implementation
 	}
 };
 
-viewport::viewport(const implementation::builder_viewport& builder,
-					 const builder_widget::replacements_map& replacements)
+viewport::viewport(
+	const implementation::builder_viewport& builder, const builder_widget::replacements_map& replacements)
 	: widget(builder)
 	, widget_(builder.widget_->build(replacements))
 {
@@ -125,8 +122,7 @@ widget* viewport::find_at(const point& coordinate, const bool must_be_active)
 	return viewport_implementation::find_at(this, coordinate, must_be_active);
 }
 
-const widget* viewport::find_at(const point& coordinate,
-								  const bool must_be_active) const
+const widget* viewport::find_at(const point& coordinate, const bool must_be_active) const
 {
 	return viewport_implementation::find_at(this, coordinate, must_be_active);
 }

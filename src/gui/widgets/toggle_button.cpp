@@ -17,11 +17,11 @@
 
 #include "gui/widgets/toggle_button.hpp"
 
+#include "gui/core/log.hpp"
 #include "gui/core/register_widget.hpp"
+#include "gui/core/window_builder/helper.hpp"
 #include "gui/widgets/settings.hpp"
 #include "gui/widgets/window.hpp"
-#include "gui/core/log.hpp"
-#include "gui/core/window_builder/helper.hpp"
 #include "sound.hpp"
 #include "wml_exception.hpp"
 
@@ -44,18 +44,15 @@ toggle_button::toggle_button(const implementation::builder_toggle_button& builde
 	, retval_(retval::NONE)
 	, icon_name_(builder.icon_name)
 {
-	connect_signal<event::MOUSE_ENTER>(std::bind(
-			&toggle_button::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
-	connect_signal<event::MOUSE_LEAVE>(std::bind(
-			&toggle_button::signal_handler_mouse_leave, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::MOUSE_ENTER>(
+		std::bind(&toggle_button::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::MOUSE_LEAVE>(
+		std::bind(&toggle_button::signal_handler_mouse_leave, this, std::placeholders::_2, std::placeholders::_3));
 
 	connect_signal<event::LEFT_BUTTON_CLICK>(std::bind(
-			&toggle_button::signal_handler_left_button_click, this, std::placeholders::_2, std::placeholders::_3));
+		&toggle_button::signal_handler_left_button_click, this, std::placeholders::_2, std::placeholders::_3));
 	connect_signal<event::LEFT_BUTTON_DOUBLE_CLICK>(std::bind(
-			&toggle_button::signal_handler_left_button_double_click,
-			this,
-			std::placeholders::_2,
-			std::placeholders::_3));
+		&toggle_button::signal_handler_left_button_double_click, this, std::placeholders::_2, std::placeholders::_3));
 }
 
 unsigned toggle_button::num_states() const
@@ -93,7 +90,7 @@ bool toggle_button::get_active() const
 
 unsigned toggle_button::get_state() const
 {
-	return state_ +  COUNT * state_num_;
+	return state_ + COUNT * state_num_;
 }
 
 void toggle_button::update_canvas()
@@ -103,8 +100,7 @@ void toggle_button::update_canvas()
 
 	// set icon in canvases
 	std::vector<canvas>& canvases = styled_widget::get_canvases();
-	for(auto & canvas : canvases)
-	{
+	for(auto& canvas : canvases) {
 		canvas.set_variable("icon", wfl::variant(icon_name_));
 	}
 
@@ -125,7 +121,7 @@ void toggle_button::set_value(unsigned selected, bool fire_event)
 	if(!get_window()) {
 		return;
 	}
-	if (fire_event) {
+	if(fire_event) {
 		fire(event::NOTIFY_MODIFIED, *this, nullptr);
 	}
 }
@@ -148,24 +144,21 @@ void toggle_button::set_state(const state_t state)
 	}
 }
 
-void toggle_button::signal_handler_mouse_enter(const event::ui_event event,
-												bool& handled)
+void toggle_button::signal_handler_mouse_enter(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 	set_state(FOCUSED);
 	handled = true;
 }
 
-void toggle_button::signal_handler_mouse_leave(const event::ui_event event,
-												bool& handled)
+void toggle_button::signal_handler_mouse_leave(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 	set_state(ENABLED);
 	handled = true;
 }
 
-void toggle_button::signal_handler_left_button_click(const event::ui_event event,
-													  bool& handled)
+void toggle_button::signal_handler_left_button_click(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -176,8 +169,7 @@ void toggle_button::signal_handler_left_button_click(const event::ui_event event
 	handled = true;
 }
 
-void toggle_button::signal_handler_left_button_double_click(
-		const event::ui_event event, bool& handled)
+void toggle_button::signal_handler_left_button_double_click(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -208,11 +200,13 @@ toggle_button_definition::resolution::resolution(const config& cfg)
 {
 	// Note the order should be the same as the enum state_t in
 	// toggle_button.hpp.
-	for(const auto& c : cfg.child_range("state"))
-	{
-		state.emplace_back(VALIDATE_WML_CHILD(c, "enabled", missing_mandatory_wml_tag("toggle_button_definition][resolution][state", "enabled")));
-		state.emplace_back(VALIDATE_WML_CHILD(c, "disabled", missing_mandatory_wml_tag("toggle_button_definition][resolution][state", "disabled")));
-		state.emplace_back(VALIDATE_WML_CHILD(c, "focused", missing_mandatory_wml_tag("toggle_button_definition][resolution][state", "focused")));
+	for(const auto& c : cfg.child_range("state")) {
+		state.emplace_back(VALIDATE_WML_CHILD(
+			c, "enabled", missing_mandatory_wml_tag("toggle_button_definition][resolution][state", "enabled")));
+		state.emplace_back(VALIDATE_WML_CHILD(
+			c, "disabled", missing_mandatory_wml_tag("toggle_button_definition][resolution][state", "disabled")));
+		state.emplace_back(VALIDATE_WML_CHILD(
+			c, "focused", missing_mandatory_wml_tag("toggle_button_definition][resolution][state", "focused")));
 	}
 }
 
@@ -235,8 +229,7 @@ std::unique_ptr<widget> builder_toggle_button::build() const
 
 	widget->set_retval(get_retval(retval_id_, retval_, id));
 
-	DBG_GUI_G << "Window builder: placed toggle button '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed toggle button '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

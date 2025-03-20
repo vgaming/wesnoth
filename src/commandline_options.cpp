@@ -18,14 +18,14 @@
 #include "config.hpp"
 #include "formatter.hpp"
 #include "lexical_cast.hpp"
-#include "serialization/string_utils.hpp"  // for split
+#include "serialization/string_utils.hpp" // for split
 
-#include <boost/any.hpp>                // for any
+#include <boost/any.hpp> // for any
 #include <boost/program_options/cmdline.hpp>
-#include <boost/program_options/errors.hpp>  // for validation_error, etc
+#include <boost/program_options/errors.hpp> // for validation_error, etc
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/positional_options.hpp>
-#include <boost/program_options/value_semantic.hpp>  // for value, etc
+#include <boost/program_options/value_semantic.hpp> // for value, etc
 #include <boost/program_options/variables_map.hpp>  // for variables_map, etc
 
 #include <array>
@@ -33,10 +33,11 @@
 
 namespace po = boost::program_options;
 
-class two_strings : public std::pair<std::string,std::string> {};
+class two_strings : public std::pair<std::string, std::string>
+{
+};
 
-static void validate(boost::any& v, const std::vector<std::string>& values,
-              two_strings*, int)
+static void validate(boost::any& v, const std::vector<std::string>& values, two_strings*, int)
 {
 	two_strings ret_val;
 	if(values.size() != 2) {
@@ -48,21 +49,16 @@ static void validate(boost::any& v, const std::vector<std::string>& values,
 }
 
 bad_commandline_resolution::bad_commandline_resolution(const std::string& resolution)
-	: error(formatter() << "Invalid resolution \"" << resolution
-						 << "\" (WIDTHxHEIGHT expected)")
+	: error(formatter() << "Invalid resolution \"" << resolution << "\" (WIDTHxHEIGHT expected)")
 {
 }
 
-bad_commandline_tuple::bad_commandline_tuple(const std::string& str,
-											 const std::string& expected_format)
-	: error(formatter() << "Invalid value set \"" << str
-						 << "\" (" << expected_format << " expected)")
+bad_commandline_tuple::bad_commandline_tuple(const std::string& str, const std::string& expected_format)
+	: error(formatter() << "Invalid value set \"" << str << "\" (" << expected_format << " expected)")
 {
 }
-
 
 #define IMPLY_TERMINAL " Implies --no-log-to-file"
-
 
 commandline_options::commandline_options(const std::vector<std::string>& args)
 	: campaign()
@@ -172,150 +168,206 @@ commandline_options::commandline_options(const std::vector<std::string>& args)
 	// When adding items don't forget to update doc/man/wesnoth.6
 	// Options are sorted alphabetically by --long-option.
 	po::options_description general_opts("General options");
-	general_opts.add_options()
-		("all-translations", "Show all translations, even incomplete ones.")
-		("clock", "Adds the option to show a clock for testing the drawing timer.")
-		("core", po::value<std::string>(), "overrides the loaded core with the one whose id is specified.")
-		("data-dir", po::value<std::string>(), "overrides the data directory with the one specified.")
-		("data-path", "prints the path of the data directory and exits." IMPLY_TERMINAL)
-		("debug,d", "enables additional command mode options in-game.")
-		("debug-lua", "enables some Lua debugging mechanisms")
-		("strict-lua", "disallow deprecated Lua API calls")
-		("allow-insecure", "Allows sending a plaintext password over an unencrypted connection. Should only ever be used for local testing.")
-		("addon-server-info", "Shows a button on the add-ons manager to query the add-ons server for various information.")
+	general_opts.add_options()("all-translations", "Show all translations, even incomplete ones.")(
+		"clock", "Adds the option to show a clock for testing the drawing timer.")(
+		"core", po::value<std::string>(), "overrides the loaded core with the one whose id is specified.")(
+		"data-dir", po::value<std::string>(), "overrides the data directory with the one specified.")(
+		"data-path", "prints the path of the data directory and exits." IMPLY_TERMINAL)("debug,d",
+		"enables additional command mode options in-game.")("debug-lua", "enables some Lua debugging mechanisms")(
+		"strict-lua", "disallow deprecated Lua API calls")("allow-insecure",
+		"Allows sending a plaintext password over an unencrypted connection. Should only ever be used for local "
+		"testing.")("addon-server-info",
+		"Shows a button on the add-ons manager to query the add-ons server for various information.")
 #ifdef DEBUG_WINDOW_LAYOUT_GRAPHS
-		("debug-dot-level", po::value<std::string>(), "sets the level of the debug dot files. <arg> should be a comma separated list of levels. These files are used for debugging the widgets especially the for the layout engine. When enabled the engine will produce dot files which can be converted to images with the dot tool. Available levels: size (generate the size info of the widget), state (generate the state info of the widget).")
-		("debug-dot-domain", po::value<std::string>(), "sets the domain of the debug dot files. <arg> should be a comma separated list of domains. See --debug-dot-level for more info. Available domains: show (generate the data when the dialog is about to be shown), layout (generate the data during the layout phase - might result in multiple files). The data can also be generated when the F12 is pressed in a dialog.")
+		("debug-dot-level", po::value<std::string>(),
+			"sets the level of the debug dot files. <arg> should be a comma separated list of levels. These files are "
+			"used for debugging the widgets especially the for the layout engine. When enabled the engine will produce "
+			"dot files which can be converted to images with the dot tool. Available levels: size (generate the size "
+			"info of the widget), state (generate the state info of the widget).")("debug-dot-domain",
+			po::value<std::string>(),
+			"sets the domain of the debug dot files. <arg> should be a comma separated list of domains. See "
+			"--debug-dot-level for more info. Available domains: show (generate the data when the dialog is about to "
+			"be shown), layout (generate the data during the layout phase - might result in multiple files). The data "
+			"can also be generated when the F12 is pressed in a dialog.")
 #endif
-		("editor,e", po::value<std::string>()->implicit_value(std::string()), "starts the in-game map editor directly. If file <arg> is specified, equivalent to -e --load <arg>.")
-		("help,h", "prints this message and exits." IMPLY_TERMINAL)
-		("language,L", po::value<std::string>(), "uses language <arg> (symbol) this session. Example: --language ang_GB@latin")
-		("load,l", po::value<std::string>(), "loads the save <arg> from the standard save game directory. When launching the map editor via -e, the map <arg> is loaded, relative to the current directory. If it is a directory, the editor will start with a load map dialog opened there.")
-		("noaddons", "disables the loading of all add-ons.")
-		("nocache", "disables caching of game data.")
-		("nomusic", "runs the game without music.")
-		("nosound", "runs the game without sounds and music.")
-		("password", po::value<std::string>(), "uses <password> when connecting to a server, ignoring other preferences.")
-		("plugin", po::value<std::string>(), "load a script which defines a wesnoth plugin. Lua file should return a function which will be run as a coroutine and periodically woken up with updates.")
-		("render-image", po::value<two_strings>()->multitoken(), "takes two arguments: <image> <output>. Like screenshot, but instead of a map, takes a valid Wesnoth 'image path string' with image path functions, and writes it to a .png file." IMPLY_TERMINAL)
-		("generate-spritesheet", po::value<std::string>(), "generates a spritesheet from all png images in the given path, recursively (one sheet per directory)")
-    ("report,R", "initializes game directories, prints build information suitable for use in bug reports, and exits." IMPLY_TERMINAL)
-		("rng-seed", po::value<unsigned int>(), "seeds the random number generator with number <arg>. Example: --rng-seed 0")
-		("screenshot", po::value<two_strings>()->multitoken(), "takes two arguments: <map> <output>. Saves a screenshot of <map> to <output> without initializing a screen. Editor must be compiled in for this to work." IMPLY_TERMINAL)
-		("server,s", po::value<std::string>()->implicit_value(std::string()), "connects to the host <arg> if specified or to the first host in your preferences.")
-		("strict-validation", "makes validation errors fatal")
-		("translations-over", po::value<unsigned int>(), "Specify the standard for determining whether a translation is complete.")
-		("unsafe-scripts", "makes the \'package\' package available to Lua scripts, so that they can load arbitrary packages. Do not do this with untrusted scripts! This action gives ua the same permissions as the Wesnoth executable.")
-		("usercache-dir", po::value<std::string>(), "sets the path of the cache directory to $HOME/<arg> or My Documents\\My Games\\<arg> for Windows. You can specify also an absolute path outside the $HOME or My Documents\\My Games directory. Defaults to $HOME/.cache/wesnoth on X11 and to the userdata-dir on other systems.")
-		("usercache-path", "prints the path of the cache directory and exits.")
-		("userdata-dir", po::value<std::string>(), "sets the path of the userdata directory. You can use ~ to denote $HOME or My Documents\\My Games on Windows.")
-		("userdata-path", "prints the path of the userdata directory and exits." IMPLY_TERMINAL)
-		("username", po::value<std::string>(), "uses <username> when connecting to a server, ignoring other preferences.")
-		("validcache", "assumes that the cache is valid. (dangerous)")
-		("version,v", "prints the game's version number and exits." IMPLY_TERMINAL)
-		("simple-version", "prints the game's version number and nothing else." IMPLY_TERMINAL)
-		("with-replay", "replays the file loaded with the --load option.")
-		;
+			("editor,e", po::value<std::string>()->implicit_value(std::string()),
+				"starts the in-game map editor directly. If file <arg> is specified, equivalent to -e --load <arg>.")(
+				"help,h", "prints this message and exits." IMPLY_TERMINAL)("language,L", po::value<std::string>(),
+				"uses language <arg> (symbol) this session. Example: --language ang_GB@latin")("load,l",
+				po::value<std::string>(),
+				"loads the save <arg> from the standard save game directory. When launching the map editor via -e, the "
+				"map <arg> is loaded, relative to the current directory. If it is a directory, the editor will start "
+				"with a load map dialog opened there.")("noaddons", "disables the loading of all add-ons.")(
+				"nocache", "disables caching of game data.")("nomusic", "runs the game without music.")(
+				"nosound", "runs the game without sounds and music.")("password", po::value<std::string>(),
+				"uses <password> when connecting to a server, ignoring other preferences.")("plugin",
+				po::value<std::string>(),
+				"load a script which defines a wesnoth plugin. Lua file should return a function which will be run as "
+				"a coroutine and periodically woken up with updates.")("render-image",
+				po::value<two_strings>()->multitoken(),
+				"takes two arguments: <image> <output>. Like screenshot, but instead of a map, takes a valid Wesnoth "
+				"'image path string' with image path functions, and writes it to a .png file." IMPLY_TERMINAL)(
+				"generate-spritesheet", po::value<std::string>(),
+				"generates a spritesheet from all png images in the given path, recursively (one sheet per directory)")(
+				"report,R",
+				"initializes game directories, prints build information suitable for use in bug reports, and "
+				"exits." IMPLY_TERMINAL)("rng-seed", po::value<unsigned int>(),
+				"seeds the random number generator with number <arg>. Example: --rng-seed 0")("screenshot",
+				po::value<two_strings>()->multitoken(),
+				"takes two arguments: <map> <output>. Saves a screenshot of <map> to <output> without initializing a "
+				"screen. Editor must be compiled in for this to work." IMPLY_TERMINAL)("server,s",
+				po::value<std::string>()->implicit_value(std::string()),
+				"connects to the host <arg> if specified or to the first host in your preferences.")(
+				"strict-validation", "makes validation errors fatal")("translations-over", po::value<unsigned int>(),
+				"Specify the standard for determining whether a translation is complete.")("unsafe-scripts",
+				"makes the \'package\' package available to Lua scripts, so that they can load arbitrary packages. Do "
+				"not do this with untrusted scripts! This action gives ua the same permissions as the Wesnoth "
+				"executable.")("usercache-dir", po::value<std::string>(),
+				"sets the path of the cache directory to $HOME/<arg> or My Documents\\My Games\\<arg> for Windows. You "
+				"can specify also an absolute path outside the $HOME or My Documents\\My Games directory. Defaults to "
+				"$HOME/.cache/wesnoth on X11 and to the userdata-dir on other systems.")("usercache-path",
+				"prints the path of the cache directory and exits.")("userdata-dir", po::value<std::string>(),
+				"sets the path of the userdata directory. You can use ~ to denote $HOME or My Documents\\My Games on "
+				"Windows.")("userdata-path", "prints the path of the userdata directory and exits." IMPLY_TERMINAL)(
+				"username", po::value<std::string>(),
+				"uses <username> when connecting to a server, ignoring other preferences.")(
+				"validcache", "assumes that the cache is valid. (dangerous)")(
+				"version,v", "prints the game's version number and exits." IMPLY_TERMINAL)(
+				"simple-version", "prints the game's version number and nothing else." IMPLY_TERMINAL)(
+				"with-replay", "replays the file loaded with the --load option.");
 
 	po::options_description campaign_opts("Campaign options");
-	campaign_opts.add_options()
-		("campaign,c", po::value<std::string>()->implicit_value(std::string()), "goes directly to the campaign with id <arg>. A selection menu will appear if no id was specified.")
-		("campaign-difficulty", po::value<int>(), "The difficulty of the specified campaign (1 to max). If none specified, the campaign difficulty selection widget will appear.")
-		("campaign-scenario", po::value<std::string>(),"The id of the scenario from the specified campaign. The default is the first scenario.")
-		("campaign-skip-story", "Skip [story] tags of the specified campaign.")
-		;
+	campaign_opts.add_options()("campaign,c", po::value<std::string>()->implicit_value(std::string()),
+		"goes directly to the campaign with id <arg>. A selection menu will appear if no id was specified.")(
+		"campaign-difficulty", po::value<int>(),
+		"The difficulty of the specified campaign (1 to max). If none specified, the campaign difficulty selection "
+		"widget will appear.")("campaign-scenario", po::value<std::string>(),
+		"The id of the scenario from the specified campaign. The default is the first scenario.")(
+		"campaign-skip-story", "Skip [story] tags of the specified campaign.");
 
 	po::options_description display_opts("Display options");
-	display_opts.add_options()
-		("fps", "displays the number of frames per second the game is currently running at, in a corner of the screen. Min/avg/max don't take the FPS limiter into account, act does.")
-		("fullscreen,f", "runs the game in full screen mode.")
-		("max-fps", po::value<int>(), "the maximum fps the game tries to run at. Values should be between 1 and 1000, the default is the display's refresh rate.")
-		("new-widgets", "there is a new WIP widget toolkit this switch enables the new toolkit (VERY EXPERIMENTAL don't file bug reports since most are known). Parts of the library are deemed stable and will work without this switch.")
-		("resolution,r", po::value<std::string>(), "sets the screen resolution. <arg> should have format XxY. Example: --resolution 800x600")
-		("windowed,w", "runs the game in windowed mode.")
-		;
+	display_opts.add_options()("fps",
+		"displays the number of frames per second the game is currently running at, in a corner of the screen. "
+		"Min/avg/max don't take the FPS limiter into account, act does.")(
+		"fullscreen,f", "runs the game in full screen mode.")("max-fps", po::value<int>(),
+		"the maximum fps the game tries to run at. Values should be between 1 and 1000, the default is the display's "
+		"refresh rate.")("new-widgets",
+		"there is a new WIP widget toolkit this switch enables the new toolkit (VERY EXPERIMENTAL don't file bug "
+		"reports since most are known). Parts of the library are deemed stable and will work without this switch.")(
+		"resolution,r", po::value<std::string>(),
+		"sets the screen resolution. <arg> should have format XxY. Example: --resolution 800x600")(
+		"windowed,w", "runs the game in windowed mode.");
 
 	po::options_description logging_opts("Logging options");
-	logging_opts.add_options()
-		("logdomains", po::value<std::string>()->implicit_value(std::string()), "lists defined log domains (only the ones containing <arg> filter if such is provided) and exits." IMPLY_TERMINAL)
-		("log-error", po::value<std::vector<std::string>>()->composing(), "sets the severity level of the specified log domain(s) to 'error'. <arg> should be given as a comma-separated list of domains, wildcards are allowed. Example: --log-error=network,gui/*,engine/enemies")
-		("log-warning", po::value<std::vector<std::string>>()->composing(), "sets the severity level of the specified log domain(s) to 'warning'. Similar to --log-error.")
-		("log-info", po::value<std::vector<std::string>>()->composing(), "sets the severity level of the specified log domain(s) to 'info'. Similar to --log-error.")
-		("log-debug", po::value<std::vector<std::string>>()->composing(), "sets the severity level of the specified log domain(s) to 'debug'. Similar to --log-error.")
-		("log-none", po::value<std::vector<std::string>>()->composing(), "sets the severity level of the specified log domain(s) to 'none'. Similar to --log-error.")
-		("log-precise", "shows the timestamps in log output with more precision.")
-		("no-log-to-file", "log output is written only to standard error rather than to a file. The environment variable WESNOTH_NO_LOG_FILE can also be set as an alternative.")
-		("log-to-file", "log output is written to the log file instead of standard error. Cancels the effect of --no-log-to-file whether implicit or explicit.")
-		("no-log-sanitize", "disables the anonymization that's normally applied when logging, for example replacing usernames with USER.")
+	logging_opts.add_options()("logdomains", po::value<std::string>()->implicit_value(std::string()),
+		"lists defined log domains (only the ones containing <arg> filter if such is provided) and "
+		"exits." IMPLY_TERMINAL)("log-error", po::value<std::vector<std::string>>()->composing(),
+		"sets the severity level of the specified log domain(s) to 'error'. <arg> should be given as a comma-separated "
+		"list of domains, wildcards are allowed. Example: --log-error=network,gui/*,engine/enemies")("log-warning",
+		po::value<std::vector<std::string>>()->composing(),
+		"sets the severity level of the specified log domain(s) to 'warning'. Similar to --log-error.")("log-info",
+		po::value<std::vector<std::string>>()->composing(),
+		"sets the severity level of the specified log domain(s) to 'info'. Similar to --log-error.")("log-debug",
+		po::value<std::vector<std::string>>()->composing(),
+		"sets the severity level of the specified log domain(s) to 'debug'. Similar to --log-error.")("log-none",
+		po::value<std::vector<std::string>>()->composing(),
+		"sets the severity level of the specified log domain(s) to 'none'. Similar to --log-error.")(
+		"log-precise", "shows the timestamps in log output with more precision.")("no-log-to-file",
+		"log output is written only to standard error rather than to a file. The environment variable "
+		"WESNOTH_NO_LOG_FILE can also be set as an alternative.")("log-to-file",
+		"log output is written to the log file instead of standard error. Cancels the effect of --no-log-to-file "
+		"whether implicit or explicit.")("no-log-sanitize",
+		"disables the anonymization that's normally applied when logging, for example replacing usernames with USER.")
 #ifdef _WIN32
-		("wnoconsole", "For Windows, when used with --no-log-to-file, results in output being written to cerr/cout instead of CONOUT. Otherwise, does nothing.")
+		("wnoconsole",
+			"For Windows, when used with --no-log-to-file, results in output being written to cerr/cout instead of "
+			"CONOUT. Otherwise, does nothing.")
 #endif
 		;
 
 	po::options_description multiplayer_opts("Multiplayer options");
-	multiplayer_opts.add_options()
-		("multiplayer,m", "Starts a multiplayer game. There are additional options that can be used as explained below:")
-		("ai-config", po::value<std::vector<std::string>>()->composing(), "selects a configuration file to load for this side. <arg> should have format side:value")
-		("algorithm", po::value<std::vector<std::string>>()->composing(), "selects a non-standard algorithm to be used by the AI controller for this side. <arg> should have format side:value")
-		("controller", po::value<std::vector<std::string>>()->composing(), "selects the controller for this side. <arg> should have format side:value")
-		("era", po::value<std::string>(), "selects the era to be played in by its id.")
-		("exit-at-end", "exit Wesnoth at the end of the scenario.")
-		("ignore-map-settings", "do not use map settings.")
-		("label", po::value<std::string>(), "sets the label for AIs.") // TODO: is the description precise? this option was undocumented before.
-		("multiplayer-repeat",  po::value<unsigned int>(), "repeats a multiplayer game after it is finished <arg> times.")
-		("nogui", "runs the game without the GUI." IMPLY_TERMINAL)
-		("parm", po::value<std::vector<std::string>>()->composing(), "sets additional parameters for this side. <arg> should have format side:name:value.")
-		("scenario", po::value<std::string>(), "selects a multiplayer scenario. The default scenario is \"multiplayer_The_Freelands\".")
-		("side", po::value<std::vector<std::string>>()->composing(), "selects a faction of the current era for this side by id. <arg> should have format side:value.")
-		("turns", po::value<std::string>(), "sets the number of turns. By default no turn limit is set.")
-		;
+	multiplayer_opts.add_options()("multiplayer,m",
+		"Starts a multiplayer game. There are additional options that can be used as explained below:")("ai-config",
+		po::value<std::vector<std::string>>()->composing(),
+		"selects a configuration file to load for this side. <arg> should have format side:value")("algorithm",
+		po::value<std::vector<std::string>>()->composing(),
+		"selects a non-standard algorithm to be used by the AI controller for this side. <arg> should have format "
+		"side:value")("controller", po::value<std::vector<std::string>>()->composing(),
+		"selects the controller for this side. <arg> should have format side:value")("era", po::value<std::string>(),
+		"selects the era to be played in by its id.")("exit-at-end", "exit Wesnoth at the end of the scenario.")(
+		"ignore-map-settings", "do not use map settings.")("label", po::value<std::string>(),
+		"sets the label for AIs.") // TODO: is the description precise? this option was undocumented before.
+		("multiplayer-repeat", po::value<unsigned int>(),
+			"repeats a multiplayer game after it is finished <arg> times.")("nogui",
+			"runs the game without the GUI." IMPLY_TERMINAL)("parm", po::value<std::vector<std::string>>()->composing(),
+			"sets additional parameters for this side. <arg> should have format side:name:value.")("scenario",
+			po::value<std::string>(),
+			"selects a multiplayer scenario. The default scenario is \"multiplayer_The_Freelands\".")("side",
+			po::value<std::vector<std::string>>()->composing(),
+			"selects a faction of the current era for this side by id. <arg> should have format side:value.")(
+			"turns", po::value<std::string>(), "sets the number of turns. By default no turn limit is set.");
 
 	po::options_description testing_opts("Testing options");
-	testing_opts.add_options()
-		("test,t", po::value<std::string>()->implicit_value(std::string()), "runs the game in a small test scenario. If specified, scenario <arg> will be used instead.")
-		("unit,u", po::value<std::vector<std::string>>(), "runs a unit test scenario. The GUI is not shown and the exit code of the program reflects the victory / defeat conditions of the scenario.\n\t0 - PASS\n\t1 - FAIL\n\t3 - FAIL (INVALID REPLAY)\n\t4 - FAIL (ERRORED REPLAY)\n\t5 - FAIL (BROKE STRICT)\n\t6 - FAIL (WML EXCEPTION)\n\tMultiple tests can be run by giving this option multiple times, in this case the test run will stop immediately after any test which doesn't PASS and the return code will be the status of the test that caused the stop." IMPLY_TERMINAL)
-		("showgui", "don't run headlessly (for debugging a failing test)")
-		("log-strict", po::value<std::string>(), "sets the strict level of the logger. any messages sent to log domains of this level or more severe will cause the unit test to fail regardless of the victory result.")
-		("nobanner", "suppress startup banner.")
-		("noreplaycheck", "don't try to validate replay of unit test.")
-		("mp-test", "load the test mp scenarios.")
-		;
+	testing_opts.add_options()("test,t", po::value<std::string>()->implicit_value(std::string()),
+		"runs the game in a small test scenario. If specified, scenario <arg> will be used instead.")("unit,u",
+		po::value<std::vector<std::string>>(),
+		"runs a unit test scenario. The GUI is not shown and the exit code of the program reflects the victory / "
+		"defeat conditions of the scenario.\n\t0 - PASS\n\t1 - FAIL\n\t3 - FAIL (INVALID REPLAY)\n\t4 - FAIL (ERRORED "
+		"REPLAY)\n\t5 - FAIL (BROKE STRICT)\n\t6 - FAIL (WML EXCEPTION)\n\tMultiple tests can be run by giving this "
+		"option multiple times, in this case the test run will stop immediately after any test which doesn't PASS and "
+		"the return code will be the status of the test that caused the stop." IMPLY_TERMINAL)(
+		"showgui", "don't run headlessly (for debugging a failing test)")("log-strict", po::value<std::string>(),
+		"sets the strict level of the logger. any messages sent to log domains of this level or more severe will cause "
+		"the unit test to fail regardless of the victory result.")("nobanner", "suppress startup banner.")(
+		"noreplaycheck", "don't try to validate replay of unit test.")("mp-test", "load the test mp scenarios.");
 
 	po::options_description parsing_opts("WML parsing options");
-	parsing_opts.add_options()
-		("use-schema,S", po::value<std::string>(), "specify a schema to validate WML against (defaults to the core schema).")
-		("validate,V", po::value<std::string>(), "validate a specified WML file against a schema." IMPLY_TERMINAL)
-		("validate-addon", po::value<std::string>()->value_name("addon_id"), "validate the specified addon's WML against the schema. Requires the user to play the campaign (in the GUI) to trigger the validation.")
-		("validate-core", "validate the core WML against the schema.")
-		("validate-schema", po::value<std::string>(), "validate a specified WML schema." IMPLY_TERMINAL)
-		("diff,D", po::value<two_strings>()->multitoken(), "diff two preprocessed WML documents." IMPLY_TERMINAL)
-		("output,o", po::value<std::string>(), "output to specified file")
-		("patch,P", po::value<two_strings>()->multitoken(), "apply a patch to a preprocessed WML document." IMPLY_TERMINAL)
-		("preprocess,p", po::value<two_strings>()->multitoken(), "requires two arguments: <file/folder> <target directory>. Preprocesses a specified file/folder. The preprocessed file(s) will be written in the specified target directory: a plain cfg file and a processed cfg file." IMPLY_TERMINAL)
-		("preprocess-string", po::value<std::string>(), "preprocesses the given string." IMPLY_TERMINAL)
-		("preprocess-defines", po::value<std::string>(), "comma separated list of defines to be used by '--preprocess' command. If 'SKIP_CORE' is in the define list the data/core won't be preprocessed. Example: --preprocess-defines=FOO,BAR")
-		("preprocess-input-macros", po::value<std::string>(), "used only by the '--preprocess' command. Specifies source file <arg> that contains [preproc_define]s to be included before preprocessing.")
-		("preprocess-output-macros", po::value<std::string>()->implicit_value(std::string()), "used only by the '--preprocess' command. Will output all preprocessed macros in the target file <arg>. If the file is not specified the output will be file '_MACROS_.cfg' in the target directory of preprocess's command.")
-		;
+	parsing_opts.add_options()("use-schema,S", po::value<std::string>(),
+		"specify a schema to validate WML against (defaults to the core schema).")("validate,V",
+		po::value<std::string>(), "validate a specified WML file against a schema." IMPLY_TERMINAL)("validate-addon",
+		po::value<std::string>()->value_name("addon_id"),
+		"validate the specified addon's WML against the schema. Requires the user to play the campaign (in the GUI) to "
+		"trigger the validation.")("validate-core", "validate the core WML against the schema.")(
+		"validate-schema", po::value<std::string>(), "validate a specified WML schema." IMPLY_TERMINAL)("diff,D",
+		po::value<two_strings>()->multitoken(), "diff two preprocessed WML documents." IMPLY_TERMINAL)("output,o",
+		po::value<std::string>(), "output to specified file")("patch,P", po::value<two_strings>()->multitoken(),
+		"apply a patch to a preprocessed WML document." IMPLY_TERMINAL)("preprocess,p",
+		po::value<two_strings>()->multitoken(),
+		"requires two arguments: <file/folder> <target directory>. Preprocesses a specified file/folder. The "
+		"preprocessed file(s) will be written in the specified target directory: a plain cfg file and a processed cfg "
+		"file." IMPLY_TERMINAL)("preprocess-string", po::value<std::string>(),
+		"preprocesses the given string." IMPLY_TERMINAL)("preprocess-defines", po::value<std::string>(),
+		"comma separated list of defines to be used by '--preprocess' command. If 'SKIP_CORE' is in the define list "
+		"the data/core won't be preprocessed. Example: --preprocess-defines=FOO,BAR")("preprocess-input-macros",
+		po::value<std::string>(),
+		"used only by the '--preprocess' command. Specifies source file <arg> that contains [preproc_define]s to be "
+		"included before preprocessing.")("preprocess-output-macros",
+		po::value<std::string>()->implicit_value(std::string()),
+		"used only by the '--preprocess' command. Will output all preprocessed macros in the target file <arg>. If the "
+		"file is not specified the output will be file '_MACROS_.cfg' in the target directory of preprocess's "
+		"command.");
 
-	//hidden_.add_options()
+	// hidden_.add_options()
 	//	("example-hidden-option", "")
 	//	;
-	visible_.add(general_opts).add(campaign_opts).add(display_opts).add(logging_opts).add(multiplayer_opts).add(testing_opts).add(parsing_opts);
+	visible_.add(general_opts)
+		.add(campaign_opts)
+		.add(display_opts)
+		.add(logging_opts)
+		.add(multiplayer_opts)
+		.add(testing_opts)
+		.add(parsing_opts);
 
 	all_.add(visible_).add(hidden_);
 
 	po::positional_options_description positional;
-	positional.add("data-dir",1);
+	positional.add("data-dir", 1);
 
 	po::variables_map vm;
 	const int parsing_style = po::command_line_style::default_style ^ po::command_line_style::allow_guessing;
 
-	const auto parsed_options = po::command_line_parser(args_)
-		.options(all_)
-		.positional(positional)
-		.style(parsing_style)
-		.run();
+	const auto parsed_options
+		= po::command_line_parser(args_).options(all_).positional(positional).style(parsing_style).run();
 
 	po::store(parsed_options, vm);
 
@@ -411,30 +463,25 @@ commandline_options::commandline_options(const std::vector<std::string>& args)
 		nobanner = true;
 	if(vm.count("parm"))
 		multiplayer_parm = parse_to_uint_string_string_tuples_(vm["parm"].as<std::vector<std::string>>());
-	if(vm.count("preprocess"))
-	{
+	if(vm.count("preprocess")) {
 		preprocess = true;
 		preprocess_path = vm["preprocess"].as<two_strings>().first;
 		preprocess_target = vm["preprocess"].as<two_strings>().second;
 	}
-	if(vm.count("preprocess-string"))
-	{
+	if(vm.count("preprocess-string")) {
 		preprocess_source_string = vm["preprocess-string"].as<std::string>();
 	}
-	if(vm.count("diff"))
-	{
+	if(vm.count("diff")) {
 		do_diff = true;
 		diff_left = vm["diff"].as<two_strings>().first;
 		diff_right = vm["diff"].as<two_strings>().second;
 	}
-	if(vm.count("patch"))
-	{
+	if(vm.count("patch")) {
 		do_patch = true;
 		diff_left = vm["patch"].as<two_strings>().first;
 		diff_right = vm["patch"].as<two_strings>().second;
 	}
-	if(vm.count("output"))
-	{
+	if(vm.count("output")) {
 		output_file = vm["output"].as<std::string>();
 	}
 	if(vm.count("preprocess-defines"))
@@ -449,15 +496,13 @@ commandline_options::commandline_options(const std::vector<std::string>& args)
 		rng_seed = vm["rng-seed"].as<unsigned int>();
 	if(vm.count("scenario"))
 		multiplayer_scenario = vm["scenario"].as<std::string>();
-	if(vm.count("render-image"))
-	{
+	if(vm.count("render-image")) {
 		render_image = vm["render-image"].as<two_strings>().first;
 		render_image_dst = vm["render-image"].as<two_strings>().second;
 	}
 	if(vm.count("generate-spritesheet"))
 		generate_spritesheet = vm["generate-spritesheet"].as<std::string>();
-	if(vm.count("screenshot"))
-	{
+	if(vm.count("screenshot")) {
 		screenshot = true;
 		screenshot_map_file = vm["screenshot"].as<two_strings>().first;
 		screenshot_output_file = vm["screenshot"].as<two_strings>().second;
@@ -478,8 +523,7 @@ commandline_options::commandline_options(const std::vector<std::string>& args)
 		multiplayer_side = parse_to_uint_string_tuples_(vm["side"].as<std::vector<std::string>>());
 	if(vm.count("test"))
 		test = vm["test"].as<std::string>();
-	if(vm.count("unit"))
-	{
+	if(vm.count("unit")) {
 		unit_test = vm["unit"].as<std::vector<std::string>>();
 		headless_unit_test = true;
 	}
@@ -515,8 +559,7 @@ commandline_options::commandline_options(const std::vector<std::string>& args)
 		validate_with = vm["use-schema"].as<std::string>();
 	if(vm.count("version"))
 		version = true;
-	if(vm.count("simple-version"))
-	{
+	if(vm.count("simple-version")) {
 		simple_version = true;
 		nobanner = true;
 	}
@@ -540,24 +583,24 @@ commandline_options::commandline_options(const std::vector<std::string>& args)
 		translation_percent = std::clamp<unsigned int>(vm["translations-over"].as<unsigned int>(), 0, 100);
 
 	// Parse log domain severity following the command line order.
-	for (const auto& option : parsed_options.options) {
-		if (!option.value.empty()) {
-			if (option.string_key == "log-error") {
-				parse_log_domains_(option.value.front(),lg::err().get_severity());
-			} else if (option.string_key == "log-warning") {
-				parse_log_domains_(option.value.front(),lg::warn().get_severity());
-			} else if (option.string_key == "log-info") {
-				parse_log_domains_(option.value.front(),lg::info().get_severity());
-			} else if (option.string_key == "log-debug") {
-				parse_log_domains_(option.value.front(),lg::debug().get_severity());
-			} else if (option.string_key == "log-none") {
-				parse_log_domains_(option.value.front(),lg::severity::LG_NONE);
+	for(const auto& option : parsed_options.options) {
+		if(!option.value.empty()) {
+			if(option.string_key == "log-error") {
+				parse_log_domains_(option.value.front(), lg::err().get_severity());
+			} else if(option.string_key == "log-warning") {
+				parse_log_domains_(option.value.front(), lg::warn().get_severity());
+			} else if(option.string_key == "log-info") {
+				parse_log_domains_(option.value.front(), lg::info().get_severity());
+			} else if(option.string_key == "log-debug") {
+				parse_log_domains_(option.value.front(), lg::debug().get_severity());
+			} else if(option.string_key == "log-none") {
+				parse_log_domains_(option.value.front(), lg::severity::LG_NONE);
 			}
 		}
 	}
 }
 
-void commandline_options::parse_log_domains_(const std::string &domains_string, const lg::severity severity)
+void commandline_options::parse_log_domains_(const std::string& domains_string, const lg::severity severity)
 {
 	if(std::vector<std::string> domains = utils::split(domains_string, ','); !domains.empty()) {
 		if(!log) {
@@ -569,9 +612,10 @@ void commandline_options::parse_log_domains_(const std::string &domains_string, 
 	}
 }
 
-void commandline_options::parse_log_strictness (const std::string & severity) {
-	static const std::array<const lg::logger*, 4> loggers {{&lg::err(), &lg::warn(), &lg::info(), &lg::debug()}};
-	for(const lg::logger * l : loggers ) {
+void commandline_options::parse_log_strictness(const std::string& severity)
+{
+	static const std::array<const lg::logger*, 4> loggers{{&lg::err(), &lg::warn(), &lg::info(), &lg::debug()}};
+	for(const lg::logger* l : loggers) {
 		if(severity == l->get_name()) {
 			lg::set_strict_severity(*l);
 			return;
@@ -581,7 +625,7 @@ void commandline_options::parse_log_strictness (const std::string & severity) {
 	lg::set_strict_severity(lg::severity::LG_NONE);
 }
 
-void commandline_options::parse_resolution_ (const std::string& resolution_string)
+void commandline_options::parse_resolution_(const std::string& resolution_string)
 {
 	const std::vector<std::string> tokens = utils::split(resolution_string, 'x');
 	if(tokens.size() != 2) {
@@ -593,22 +637,22 @@ void commandline_options::parse_resolution_ (const std::string& resolution_strin
 	try {
 		xres = std::stoi(tokens[0]);
 		yres = std::stoi(tokens[1]);
-	} catch(const std::invalid_argument &) {
+	} catch(const std::invalid_argument&) {
 		throw bad_commandline_resolution(resolution_string);
 	}
 
 	resolution = std::pair(xres, yres);
 }
 
-std::vector<std::pair<unsigned int,std::string>> commandline_options::parse_to_uint_string_tuples_(const std::vector<std::string> &strings, char separator)
+std::vector<std::pair<unsigned int, std::string>> commandline_options::parse_to_uint_string_tuples_(
+	const std::vector<std::string>& strings, char separator)
 {
-	std::vector<std::pair<unsigned int,std::string>> vec;
+	std::vector<std::pair<unsigned int, std::string>> vec;
 
 	using namespace std::literals;
-	const std::string expected_format
-			= "UINT"s + separator + "STRING";
+	const std::string expected_format = "UINT"s + separator + "STRING";
 
-	for(const std::string &s : strings) {
+	for(const std::string& s : strings) {
 		std::vector<std::string> tokens = utils::split(s, separator);
 		if(tokens.size() != 2) {
 			throw bad_commandline_tuple(s, expected_format);
@@ -617,7 +661,7 @@ std::vector<std::pair<unsigned int,std::string>> commandline_options::parse_to_u
 		unsigned int temp;
 		try {
 			temp = lexical_cast<unsigned int>(tokens[0]);
-		} catch (const bad_lexical_cast &) {
+		} catch(const bad_lexical_cast&) {
 			throw bad_commandline_tuple(s, expected_format);
 		}
 
@@ -626,15 +670,15 @@ std::vector<std::pair<unsigned int,std::string>> commandline_options::parse_to_u
 	return vec;
 }
 
-std::vector<std::tuple<unsigned int,std::string,std::string>> commandline_options::parse_to_uint_string_string_tuples_(const std::vector<std::string> &strings, char separator)
+std::vector<std::tuple<unsigned int, std::string, std::string>>
+commandline_options::parse_to_uint_string_string_tuples_(const std::vector<std::string>& strings, char separator)
 {
-	std::vector<std::tuple<unsigned int,std::string,std::string>> vec;
+	std::vector<std::tuple<unsigned int, std::string, std::string>> vec;
 
 	using namespace std::literals;
-	const std::string expected_format
-			= "UINT"s + separator + "STRING" + separator + "STRING";
+	const std::string expected_format = "UINT"s + separator + "STRING" + separator + "STRING";
 
-	for(const std::string &s : strings) {
+	for(const std::string& s : strings) {
 		const std::vector<std::string> tokens = utils::split(s, separator);
 		if(tokens.size() != 3) {
 			throw bad_commandline_tuple(s, expected_format);
@@ -643,7 +687,7 @@ std::vector<std::tuple<unsigned int,std::string,std::string>> commandline_option
 		unsigned int temp;
 		try {
 			temp = lexical_cast<unsigned int>(tokens[0]);
-		} catch (const bad_lexical_cast &) {
+		} catch(const bad_lexical_cast&) {
 			throw bad_commandline_tuple(s, expected_format);
 		}
 
@@ -652,14 +696,15 @@ std::vector<std::tuple<unsigned int,std::string,std::string>> commandline_option
 	return vec;
 }
 
-std::ostream& operator<<(std::ostream &os, const commandline_options& cmdline_opts)
+std::ostream& operator<<(std::ostream& os, const commandline_options& cmdline_opts)
 {
 	os << "Usage: " << cmdline_opts.args0_ << " [<options>] [<data-directory>]\n";
 	os << cmdline_opts.visible_;
 	return os;
 }
 
-config commandline_options::to_config() const {
+config commandline_options::to_config() const
+{
 	config ret;
 	if(server) {
 		ret["server"] = *server;

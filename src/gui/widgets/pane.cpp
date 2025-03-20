@@ -17,13 +17,13 @@
 
 #include "gui/widgets/pane.hpp"
 
+#include "gettext.hpp"
 #include "gui/auxiliary/iterator/walker.hpp"
+#include "gui/core/event/message.hpp"
 #include "gui/core/log.hpp"
 #include "gui/widgets/grid.hpp"
 #include "gui/widgets/window.hpp"
 #include "utils/const_clone.hpp"
-#include "gui/core/event/message.hpp"
-#include "gettext.hpp"
 
 #include "wml_exception.hpp"
 
@@ -52,11 +52,9 @@ struct pane_implementation
 	 *
 	 * @tparam W                  A pointer to the pane.
 	 */
-	template <class W>
-	static utils::const_clone_ptr<widget, W>
-	find_at(W pane, point coordinate, const bool must_be_active)
+	template<class W>
+	static utils::const_clone_ptr<widget, W> find_at(W pane, point coordinate, const bool must_be_active)
 	{
-
 		/*
 		 * First test whether the mouse is at the pane.
 		 */
@@ -87,9 +85,8 @@ struct pane_implementation
 	 *
 	 * @tparam W                  A pointer to the pane.
 	 */
-	template <class W>
-	static utils::const_clone_ptr<grid, W>
-	get_grid(W pane, const unsigned id)
+	template<class W>
+	static utils::const_clone_ptr<grid, W> get_grid(W pane, const unsigned id)
 	{
 		for(auto& item : pane->items_) {
 			if(item.id == id) {
@@ -108,21 +105,18 @@ pane::pane(const implementation::builder_pane& builder)
 	, item_id_generator_(0)
 	, placer_(placer_base::build(builder.grow_dir, builder.parallel_items))
 {
-	connect_signal<event::REQUEST_PLACEMENT>(
-			std::bind(
-					&pane::signal_handler_request_placement, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-			event::dispatcher::back_pre_child);
+	connect_signal<event::REQUEST_PLACEMENT>(std::bind(&pane::signal_handler_request_placement, this,
+												 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+		event::dispatcher::back_pre_child);
 }
 
-unsigned pane::create_item(const widget_data& item_data,
-							const std::map<std::string, std::string>& tags)
+unsigned pane::create_item(const widget_data& item_data, const std::map<std::string, std::string>& tags)
 {
 	item item{item_id_generator_++, tags, std::unique_ptr<grid>{static_cast<grid*>(item_builder_->build().release())}};
 
 	item.item_grid->set_parent(this);
 
-	for(const auto & data : item_data)
-	{
+	for(const auto& data : item_data) {
 		styled_widget* control = item.item_grid.get()->find_widget<styled_widget>(data.first, false, false);
 
 		if(control) {
@@ -130,7 +124,7 @@ unsigned pane::create_item(const widget_data& item_data,
 		}
 	}
 
-    const auto item_id = item.id;
+	const auto item_id = item.id;
 	items_.push_back(std::move(item));
 
 	event::message message;
@@ -156,8 +150,7 @@ void pane::layout_initialize(const bool full_initialization)
 
 	widget::layout_initialize(full_initialization);
 
-	for(auto & item : items_)
-	{
+	for(auto& item : items_) {
 		if(item.item_grid->get_visible() != widget::visibility::invisible) {
 			item.item_grid->layout_initialize(full_initialization);
 		}
@@ -168,8 +161,7 @@ void pane::impl_draw_children()
 {
 	DBG_GUI_D << LOG_HEADER;
 
-	for(auto & item : items_)
-	{
+	for(auto& item : items_) {
 		if(item.item_grid->get_visible() != widget::visibility::invisible) {
 			item.item_grid->draw_children();
 		}
@@ -185,8 +177,7 @@ void pane::sort(const compare_functor_t& compare_functor)
 
 void pane::filter(const filter_functor_t& filter_functor)
 {
-	for(auto & item : items_)
-	{
+	for(auto& item : items_) {
 		item.item_grid->set_visible(filter_functor(item));
 	}
 
@@ -202,8 +193,7 @@ widget* pane::find_at(const point& coordinate, const bool must_be_active)
 	return pane_implementation::find_at(this, coordinate, must_be_active);
 }
 
-const widget* pane::find_at(const point& coordinate,
-							  const bool must_be_active) const
+const widget* pane::find_at(const point& coordinate, const bool must_be_active) const
 {
 	return pane_implementation::find_at(this, coordinate, must_be_active);
 }
@@ -241,8 +231,7 @@ void pane::place_children()
 {
 	prepare_placement();
 	unsigned index = 0;
-	for(auto & item : items_)
-	{
+	for(auto& item : items_) {
 		if(item.item_grid->get_visible() == widget::visibility::invisible) {
 			continue;
 		}
@@ -257,8 +246,7 @@ void pane::set_origin_children()
 {
 	prepare_placement();
 	unsigned index = 0;
-	for(auto & item : items_)
-	{
+	for(auto& item : items_) {
 		if(item.item_grid->get_visible() == widget::visibility::invisible) {
 			continue;
 		}
@@ -273,8 +261,7 @@ void pane::place_or_set_origin_children()
 {
 	prepare_placement();
 	unsigned index = 0;
-	for(auto & item : items_)
-	{
+	for(auto& item : items_) {
 		if(item.item_grid->get_visible() == widget::visibility::invisible) {
 			continue;
 		}
@@ -294,8 +281,7 @@ void pane::prepare_placement() const
 	assert(placer_.get());
 	placer_->initialize();
 
-	for(const auto & item : items_)
-	{
+	for(const auto& item : items_) {
 		if(item.item_grid->get_visible() == widget::visibility::invisible) {
 			continue;
 		}
@@ -304,19 +290,15 @@ void pane::prepare_placement() const
 	}
 }
 
-void pane::signal_handler_request_placement(dispatcher& dispatcher,
-											 const event::ui_event event,
-											 bool& handled)
+void pane::signal_handler_request_placement(dispatcher& dispatcher, const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
 	widget* wgt = dynamic_cast<widget*>(&dispatcher);
 	if(wgt) {
-		for(auto & item : items_)
-		{
+		for(auto& item : items_) {
 			if(item.item_grid->has_widget(*wgt)) {
 				if(item.item_grid->get_visible() != widget::visibility::invisible) {
-
 					/*
 					 * This time we call init layout but also the linked widget
 					 * update this makes things work properly for the
@@ -355,7 +337,8 @@ builder_pane::builder_pane(const config& cfg)
 	: builder_widget(cfg)
 	, grow_dir(*grow_direction::get_enum(cfg["grow_direction"].str()))
 	, parallel_items(cfg["parallel_items"].to_int())
-	, item_definition(new builder_grid(VALIDATE_WML_CHILD(cfg, "item_definition", missing_mandatory_wml_tag("pane", "item_definition"))))
+	, item_definition(new builder_grid(
+		  VALIDATE_WML_CHILD(cfg, "item_definition", missing_mandatory_wml_tag("pane", "item_definition"))))
 {
 	VALIDATE(parallel_items > 0, _("Need at least 1 parallel item."));
 }

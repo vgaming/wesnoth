@@ -33,7 +33,6 @@ checkup::checkup()
 
 checkup::~checkup()
 {
-
 }
 
 ignored_checkup::ignored_checkup()
@@ -52,7 +51,8 @@ bool ignored_checkup::local_checkup(const config& /*expected_data*/, config& rea
 }
 
 synced_checkup::synced_checkup(config& buffer)
-	: buffer_(buffer), pos_(0)
+	: buffer_(buffer)
+	, pos_(0)
 {
 }
 
@@ -63,15 +63,12 @@ synced_checkup::~synced_checkup()
 bool synced_checkup::local_checkup(const config& expected_data, config& real_data)
 {
 	assert(real_data.empty());
-	if(buffer_.child_count("result") > pos_)
-	{
-		//copying objects :o
-		real_data = buffer_.mandatory_child("result",pos_);
-		pos_ ++;
+	if(buffer_.child_count("result") > pos_) {
+		// copying objects :o
+		real_data = buffer_.mandatory_child("result", pos_);
+		pos_++;
 		return real_data == expected_data;
-	}
-	else
-	{
+	} else {
 		assert(buffer_.child_count("result") == pos_);
 		buffer_.add_child("result", expected_data);
 		pos_++;
@@ -79,32 +76,32 @@ bool synced_checkup::local_checkup(const config& expected_data, config& real_dat
 	}
 }
 
-
 namespace
 {
-	struct checkup_choice : public mp_sync::user_choice
+struct checkup_choice : public mp_sync::user_choice
+{
+	checkup_choice(const config& cfg)
+		: cfg_(cfg)
 	{
-		checkup_choice(const config& cfg) : cfg_(cfg)
-		{
-		}
-		virtual ~checkup_choice()
-		{
-		}
-		virtual config random_choice(int /*side*/) const override
-		{
-			throw "not implemented";
-		}
-		virtual bool is_visible() const override
-		{
-			return false;
-		}
-		virtual config query_user(int /*side*/) const override
-		{
-			return cfg_;
-		}
-		const config& cfg_;
-	};
-}
+	}
+	virtual ~checkup_choice()
+	{
+	}
+	virtual config random_choice(int /*side*/) const override
+	{
+		throw "not implemented";
+	}
+	virtual bool is_visible() const override
+	{
+		return false;
+	}
+	virtual config query_user(int /*side*/) const override
+	{
+		return cfg_;
+	}
+	const config& cfg_;
+};
+} // namespace
 
 mp_debug_checkup::mp_debug_checkup()
 {

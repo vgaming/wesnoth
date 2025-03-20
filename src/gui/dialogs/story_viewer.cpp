@@ -19,7 +19,6 @@
 
 #include "display.hpp"
 #include "formula/variant.hpp"
-#include "sdl/point.hpp"
 #include "gui/core/timer.hpp"
 #include "gui/widgets/button.hpp"
 #include "gui/widgets/grid.hpp"
@@ -29,6 +28,7 @@
 #include "gui/widgets/settings.hpp"
 #include "gui/widgets/stacked_widget.hpp"
 #include "gui/widgets/window.hpp"
+#include "sdl/point.hpp"
 #include "sound.hpp"
 #include "variable.hpp"
 
@@ -88,10 +88,10 @@ void story_viewer::pre_show()
 	// Special callback handle key presses
 	connect_signal_pre_key_press(*this, std::bind(&story_viewer::key_press_callback, this, std::placeholders::_5));
 
-	connect_signal_mouse_left_click(find_widget<button>("next"),
-		std::bind(&story_viewer::nav_button_callback, this, DIR_FORWARD));
-	connect_signal_mouse_left_click(find_widget<button>("prev"),
-		std::bind(&story_viewer::nav_button_callback, this, DIR_BACKWARDS));
+	connect_signal_mouse_left_click(
+		find_widget<button>("next"), std::bind(&story_viewer::nav_button_callback, this, DIR_FORWARD));
+	connect_signal_mouse_left_click(
+		find_widget<button>("prev"), std::bind(&story_viewer::nav_button_callback, this, DIR_BACKWARDS));
 
 	find_widget<scroll_label>("part_text")
 		.connect_signal<event::LEFT_BUTTON_CLICK>(
@@ -158,7 +158,7 @@ void story_viewer::display_part()
 		const bool tile_v = layer.tile_vertically();
 
 		// By default, no scaling will be applied.
-		std::string width_formula  = "(image_original_width)";
+		std::string width_formula = "(image_original_width)";
 		std::string height_formula = "(image_original_height)";
 
 		// Background layers are almost always centered. In case of tiling, we want the full
@@ -186,9 +186,9 @@ void story_viewer::display_part()
 		}
 
 		if(layer.scale_vertically() && preserve_ratio) {
-			width_formula  = "(min((image_original_width  * height / image_original_height), width))";
+			width_formula = "(min((image_original_width  * height / image_original_height), width))";
 		} else if(layer.scale_horizontally() || tile_h) {
-			width_formula  = "(width)";
+			width_formula = "(width)";
 		}
 
 		image["x"] = x_formula;
@@ -269,16 +269,15 @@ void story_viewer::display_part()
 	std::string new_panel_mode;
 
 	switch(current_part_->story_text_location()) {
-
-		case storyscreen::part::BLOCK_TOP:
-			new_panel_mode = "top";
-			break;
-		case storyscreen::part::BLOCK_MIDDLE:
-			new_panel_mode = "center";
-			break;
-		case storyscreen::part::BLOCK_BOTTOM:
-			new_panel_mode = "bottom";
-			break;
+	case storyscreen::part::BLOCK_TOP:
+		new_panel_mode = "top";
+		break;
+	case storyscreen::part::BLOCK_MIDDLE:
+		new_panel_mode = "center";
+		break;
+	case storyscreen::part::BLOCK_BOTTOM:
+		new_panel_mode = "bottom";
+		break;
 	}
 
 	text_stack.set_vertical_alignment(new_panel_mode);
@@ -298,7 +297,7 @@ void story_viewer::display_part()
 	if(part_text.empty() || !has_background) {
 		// No text or no background for this part, hide the background layer.
 		text_stack.select_layer(LAYER_TEXT);
-	} else if(text_stack.current_layer() != -1)  {
+	} else if(text_stack.current_layer() != -1) {
 		// If the background layer was previously hidden, re-show it.
 		text_stack.select_layer(-1);
 	}
@@ -380,7 +379,8 @@ void story_viewer::draw_floating_image(floating_image_list::const_iterator image
 		const auto& draw_delay = floating_image.display_delay();
 		if(draw_delay != std::chrono::milliseconds{0}) {
 			// This must be a non-repeating timer
-			timer_id_ = add_timer(draw_delay, std::bind(&story_viewer::draw_floating_image, this, image_iter, this_part_index), false);
+			timer_id_ = add_timer(
+				draw_delay, std::bind(&story_viewer::draw_floating_image, this, image_iter, this_part_index), false);
 			return;
 		}
 	}
@@ -410,7 +410,7 @@ void story_viewer::nav_button_callback(NAV_DIRECTION direction)
 
 	assert(fade_state_ == NOT_FADING);
 
-	part_index_ = (direction == DIR_FORWARD ? part_index_ + 1 : part_index_ -1);
+	part_index_ = (direction == DIR_FORWARD ? part_index_ + 1 : part_index_ - 1);
 
 	// If we've viewed all the parts, close the dialog.
 	if(part_index_ >= controller_.max_parts()) {
@@ -429,15 +429,9 @@ void story_viewer::nav_button_callback(NAV_DIRECTION direction)
 
 void story_viewer::key_press_callback(const SDL_Keycode key)
 {
-	const bool next_keydown =
-		   key == SDLK_SPACE
-		|| key == SDLK_RETURN
-		|| key == SDLK_KP_ENTER
-		|| key == SDLK_RIGHT;
+	const bool next_keydown = key == SDLK_SPACE || key == SDLK_RETURN || key == SDLK_KP_ENTER || key == SDLK_RIGHT;
 
-	const bool back_keydown =
-		   key == SDLK_BACKSPACE
-		|| key == SDLK_LEFT;
+	const bool back_keydown = key == SDLK_BACKSPACE || key == SDLK_LEFT;
 
 	if(next_keydown) {
 		nav_button_callback(DIR_FORWARD);
@@ -499,9 +493,9 @@ void story_viewer::update()
 	flag_stack_as_dirty();
 
 	if(fade_state_ == FADING_IN) {
-		fade_step_ ++;
+		fade_step_++;
 	} else if(fade_state_ == FADING_OUT) {
-		fade_step_ --;
+		fade_step_--;
 	}
 
 	set_next_draw();
@@ -512,4 +506,4 @@ void story_viewer::flag_stack_as_dirty()
 	find_widget<stacked_widget>("text_and_control_stack").queue_redraw();
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

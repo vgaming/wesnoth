@@ -25,23 +25,22 @@
 #include "gui/widgets/window.hpp"
 
 #include "desktop/clipboard.hpp"
-#include "serialization/markup.hpp"
 #include "game_events/manager.hpp"
-#include "serialization/parser.hpp" // for write()
 #include "serialization/markup.hpp"
+#include "serialization/parser.hpp" // for write()
 
+#include "ai/manager.hpp"
 #include "gettext.hpp"
 #include "recall_list_manager.hpp"
 #include "team.hpp"
-#include "units/unit.hpp"
 #include "units/map.hpp"
-#include "ai/manager.hpp"
+#include "units/unit.hpp"
 
 #include "display_context.hpp"
 #include "video.hpp"
 
-#include <vector>
 #include <functional>
+#include <vector>
 
 namespace
 {
@@ -62,7 +61,7 @@ inline std::string config_to_string(const config& cfg, const std::string& only_c
 	return config_to_string(filtered);
 }
 
-}
+} // namespace
 
 namespace gui2::dialogs
 {
@@ -126,7 +125,7 @@ private:
 	}
 	unsigned int page_characters = 10000 / video::get_pixel_scale();
 	std::string data;
-	std::vector<std::pair<std::size_t,int>> pages;
+	std::vector<std::pair<std::size_t, int>> pages;
 };
 
 class stuff_list_adder
@@ -219,7 +218,8 @@ private:
 class single_mode_controller
 {
 public:
-	single_mode_controller(gamestate_inspector::controller& c) : c(c)
+	single_mode_controller(gamestate_inspector::controller& c)
+		: c(c)
 	{
 	}
 
@@ -298,10 +298,14 @@ public:
 class gamestate_inspector::controller
 {
 	friend class single_mode_controller;
+
 public:
 	controller(model& m, view& v, const config& vars, const game_events::manager& events, const display_context& dc)
-		: model_(m), view_(v)
-		, vars_(vars), events_(events), dc_(dc)
+		: model_(m)
+		, view_(v)
+		, vars_(vars)
+		, events_(events)
+		, dc_(dc)
 	{
 	}
 
@@ -363,14 +367,14 @@ public:
 	}
 
 	template<typename C>
-	void set_node_callback(const std::vector<int>& node_path, void (C::* fcn)(tree_view_node&))
+	void set_node_callback(const std::vector<int>& node_path, void (C::*fcn)(tree_view_node&))
 	{
 		C& sub_controller = *get_controller<C>();
 		callbacks.emplace(node_path, std::bind(fcn, sub_controller, std::placeholders::_1));
 	}
 
 	template<typename C, typename T>
-	void set_node_callback(const std::vector<int>& node_path, void (C::* fcn)(tree_view_node&, T), T param)
+	void set_node_callback(const std::vector<int>& node_path, void (C::*fcn)(tree_view_node&, T), T param)
 	{
 		C& sub_controller = *get_controller<C>();
 		callbacks.emplace(node_path, std::bind(fcn, sub_controller, std::placeholders::_1, param));
@@ -388,24 +392,16 @@ public:
 			std::bind(&gamestate_inspector::controller::handle_stuff_list_item_clicked, this, std::placeholders::_1));
 
 		connect_signal_mouse_left_click(
-				*copy_button,
-				std::bind(&gamestate_inspector::controller::handle_copy_button_clicked,
-					this));
+			*copy_button, std::bind(&gamestate_inspector::controller::handle_copy_button_clicked, this));
+
+		connect_signal_mouse_left_click(*lua_button,
+			std::bind(&gamestate_inspector::controller::handle_lua_button_clicked, this, std::ref(window)));
 
 		connect_signal_mouse_left_click(
-				*lua_button,
-				std::bind(&gamestate_inspector::controller::handle_lua_button_clicked,
-					this, std::ref(window)));
+			*left_button, std::bind(&gamestate_inspector::controller::handle_page_button_clicked, this, false));
 
 		connect_signal_mouse_left_click(
-				*left_button,
-				std::bind(&gamestate_inspector::controller::handle_page_button_clicked,
-					this, false));
-
-		connect_signal_mouse_left_click(
-				*right_button,
-				std::bind(&gamestate_inspector::controller::handle_page_button_clicked,
-					this, true));
+			*right_button, std::bind(&gamestate_inspector::controller::handle_page_button_clicked, this, true));
 
 		left_button->set_visible(widget::visibility::invisible);
 		right_button->set_visible(widget::visibility::invisible);
@@ -414,28 +410,14 @@ public:
 
 	void build_stuff_list(window& window)
 	{
-		set_node_callback(
-			view_.stuff_list_entry(nullptr, "basic")
-				.widget("name", "variables")
-				.add(),
+		set_node_callback(view_.stuff_list_entry(nullptr, "basic").widget("name", "variables").add(),
 			&variable_mode_controller::show_list);
+		set_node_callback(view_.stuff_list_entry(nullptr, "basic").widget("name", "events").add(),
+			&event_mode_controller::show_list, false);
+		set_node_callback(view_.stuff_list_entry(nullptr, "basic").widget("name", "menu items").add(),
+			&event_mode_controller::show_list, true);
 		set_node_callback(
-			view_.stuff_list_entry(nullptr, "basic")
-				.widget("name", "events")
-				.add(),
-			&event_mode_controller::show_list,
-			false);
-		set_node_callback(
-			view_.stuff_list_entry(nullptr, "basic")
-				.widget("name", "menu items")
-				.add(),
-			&event_mode_controller::show_list,
-			true);
-		set_node_callback(
-			view_.stuff_list_entry(nullptr, "basic")
-				.widget("name", "units")
-				.add(),
-			&unit_mode_controller::show_list);
+			view_.stuff_list_entry(nullptr, "basic").widget("name", "units").add(), &unit_mode_controller::show_list);
 		int sides = dc_.teams().size();
 		for(int side = 1; side <= sides; side++) {
 			std::ostringstream label;
@@ -444,12 +426,8 @@ public:
 			if(!name.empty()) {
 				label << " (" << name << ")";
 			}
-			set_node_callback(
-				view_.stuff_list_entry(nullptr, "basic")
-					.widget("name", label.str())
-					.add(),
-				&team_mode_controller::show_list,
-				side);
+			set_node_callback(view_.stuff_list_entry(nullptr, "basic").widget("name", label.str()).add(),
+				&team_mode_controller::show_list, side);
 		}
 		// Expand initially selected node
 		callbacks[{0}](window.find_widget<tree_view>("stuff_list").get_root_node().get_child_at(0));
@@ -467,23 +445,28 @@ private:
 	const display_context& dc_;
 };
 
-gamestate_inspector::model& single_mode_controller::model() {
+gamestate_inspector::model& single_mode_controller::model()
+{
 	return c.model_;
 }
 
-gamestate_inspector::view& single_mode_controller::view() {
+gamestate_inspector::view& single_mode_controller::view()
+{
 	return c.view_;
 }
 
-const config& single_mode_controller::vars() const {
+const config& single_mode_controller::vars() const
+{
 	return c.vars_;
 }
 
-const game_events::manager& single_mode_controller::events() const {
+const game_events::manager& single_mode_controller::events() const
+{
 	return c.events_;
 }
 
-const display_context& single_mode_controller::dc() const {
+const display_context& single_mode_controller::dc() const
+{
 	return c.dc_;
 }
 
@@ -501,26 +484,18 @@ void variable_mode_controller::show_list(tree_view_node& node)
 		return;
 	}
 
-	for(const auto& attr : vars().attribute_range())
-	{
-		c.set_node_callback(
-			view().stuff_list_entry(&node, "basic")
-				.widget("name", attr.first)
-				.add(),
+	for(const auto& attr : vars().attribute_range()) {
+		c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", attr.first).add(),
 			&variable_mode_controller::show_var);
 	}
 
 	std::map<std::string, std::size_t> wml_array_sizes;
 
-	for(const auto [key, cfg] : vars().all_children_view())
-	{
+	for(const auto [key, cfg] : vars().all_children_view()) {
 		std::ostringstream cur_str;
 		cur_str << "[" << key << "][" << wml_array_sizes[key] << "]";
 
-		this->c.set_node_callback(
-			view().stuff_list_entry(&node, "basic")
-				.widget("name", cur_str.str())
-				.add(),
+		this->c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", cur_str.str()).add(),
 			&variable_mode_controller::show_array);
 		wml_array_sizes[key]++;
 	}
@@ -554,14 +529,11 @@ void event_mode_controller::show_list(tree_view_node& node, bool is_wmi)
 		return;
 	}
 
-	for(const auto & cfg : events.child_range(is_wmi ? "menu_item" : "event"))
-	{
+	for(const auto& cfg : events.child_range(is_wmi ? "menu_item" : "event")) {
 		std::string name = is_wmi ? cfg["id"] : cfg["name"];
 		bool named_event = !is_wmi && !cfg["id"].empty();
 
-		auto progress = view()
-			.stuff_list_entry(&node, named_event ? "named_event" : "basic")
-			.widget("name", name);
+		auto progress = view().stuff_list_entry(&node, named_event ? "named_event" : "basic").widget("name", name);
 
 		if(named_event) {
 			std::ostringstream out;
@@ -571,7 +543,6 @@ void event_mode_controller::show_list(tree_view_node& node, bool is_wmi)
 
 		c.set_node_callback(progress.add(), &event_mode_controller::show_event, is_wmi);
 	}
-
 }
 
 void event_mode_controller::show_event(tree_view_node& node, bool is_wmi)
@@ -582,7 +553,6 @@ void event_mode_controller::show_event(tree_view_node& node, bool is_wmi)
 
 static stuff_list_adder add_unit_entry(stuff_list_adder& progress, const unit& u, const display_context& dc)
 {
-
 	color_t team_color = game_config::tc_info(dc.get_team(u.side()).color())[0];
 	std::stringstream s;
 
@@ -648,26 +618,18 @@ void unit_mode_controller::show_unit(tree_view_node& node)
 		return;
 	}
 
-	for(const auto& attr : u->variables().attribute_range())
-	{
+	for(const auto& attr : u->variables().attribute_range()) {
 		c.set_node_callback(
-			view().stuff_list_entry(&node, "basic")
-				.widget("name", attr.first)
-				.add(),
-			&unit_mode_controller::show_var);
+			view().stuff_list_entry(&node, "basic").widget("name", attr.first).add(), &unit_mode_controller::show_var);
 	}
 
 	std::map<std::string, std::size_t> wml_array_sizes;
 
-	for(const auto [key, cfg] : u->variables().all_children_view())
-	{
+	for(const auto [key, cfg] : u->variables().all_children_view()) {
 		std::ostringstream cur_str;
 		cur_str << "[" << key << "][" << wml_array_sizes[key] << "]";
 
-		this->c.set_node_callback(
-			view().stuff_list_entry(&node, "basic")
-				.widget("name", cur_str.str())
-				.add(),
+		this->c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", cur_str.str()).add(),
 			&unit_mode_controller::show_array);
 		wml_array_sizes[key]++;
 	}
@@ -710,29 +672,13 @@ void team_mode_controller::show_list(tree_view_node& node, int side)
 	}
 
 	c.set_node_callback(
-		view().stuff_list_entry(&node, "basic")
-			.widget("name", "ai")
-			.add(),
-		&team_mode_controller::show_ai,
-		side);
+		view().stuff_list_entry(&node, "basic").widget("name", "ai").add(), &team_mode_controller::show_ai, side);
+	c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", "recall list").add(),
+		&team_mode_controller::show_recall, side);
 	c.set_node_callback(
-		view().stuff_list_entry(&node, "basic")
-			.widget("name", "recall list")
-			.add(),
-		&team_mode_controller::show_recall,
-		side);
-	c.set_node_callback(
-		view().stuff_list_entry(&node, "basic")
-			.widget("name", "units")
-			.add(),
-		&team_mode_controller::show_units,
-		side);
-	c.set_node_callback(
-		view().stuff_list_entry(&node, "basic")
-			.widget("name", "variables")
-			.add(),
-		&team_mode_controller::show_vars,
-		side);
+		view().stuff_list_entry(&node, "basic").widget("name", "units").add(), &team_mode_controller::show_units, side);
+	c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", "variables").add(),
+		&team_mode_controller::show_vars, side);
 }
 
 void team_mode_controller::show_ai(tree_view_node& node, int side)
@@ -743,36 +689,16 @@ void team_mode_controller::show_ai(tree_view_node& node, int side)
 		return;
 	}
 
-	c.set_node_callback(
-		view().stuff_list_entry(&node, "basic")
-			.widget("name", "engines")
-			.add(),
-		&team_mode_controller::show_ai_components,
-		side);
-	c.set_node_callback(
-		view().stuff_list_entry(&node, "basic")
-			.widget("name", "stages")
-			.add(),
-		&team_mode_controller::show_ai_components,
-		side);
-	c.set_node_callback(
-		view().stuff_list_entry(&node, "basic")
-			.widget("name", "aspects")
-			.add(),
-		&team_mode_controller::show_ai_components,
-		side);
-	c.set_node_callback(
-		view().stuff_list_entry(&node, "basic")
-			.widget("name", "goals")
-			.add(),
-		&team_mode_controller::show_ai_components,
-		side);
-	c.set_node_callback(
-		view().stuff_list_entry(&node, "basic")
-			.widget("name", "component structure")
-			.add(),
-		&team_mode_controller::show_ai_tree,
-		side);
+	c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", "engines").add(),
+		&team_mode_controller::show_ai_components, side);
+	c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", "stages").add(),
+		&team_mode_controller::show_ai_components, side);
+	c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", "aspects").add(),
+		&team_mode_controller::show_ai_components, side);
+	c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", "goals").add(),
+		&team_mode_controller::show_ai_components, side);
+	c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", "component structure").add(),
+		&team_mode_controller::show_ai_tree, side);
 }
 
 void team_mode_controller::show_ai_components(tree_view_node& node, int side)
@@ -818,8 +744,7 @@ void team_mode_controller::show_ai_tree(tree_view_node&, int side)
 void team_mode_controller::show_units(tree_view_node&, int side)
 {
 	std::ostringstream s;
-	for(unit_map::const_iterator i = dc().units().begin(); i != dc().units().end();
-		++i) {
+	for(unit_map::const_iterator i = dc().units().begin(); i != dc().units().end(); ++i) {
 		if(i->side() != side) {
 			continue;
 		}
@@ -829,11 +754,9 @@ void team_mode_controller::show_units(tree_view_node&, int side)
 		}
 
 		s << "\nid=\"" << i->id() << "\" (" << i->type_id() << ")\n"
-		  << "L" << i->level() << "; " << i->experience() << '/'
-		  << i->max_experience() << " XP; " << i->hitpoints() << '/'
-		  << i->max_hitpoints() << " HP\n";
-		for(const auto & str : i->get_traits_list())
-		{
+		  << "L" << i->level() << "; " << i->experience() << '/' << i->max_experience() << " XP; " << i->hitpoints()
+		  << '/' << i->max_hitpoints() << " HP\n";
+		for(const auto& str : i->get_traits_list()) {
 			s << "\t" << str << std::endl;
 		}
 		s << std::endl;
@@ -851,29 +774,19 @@ void team_mode_controller::show_vars(tree_view_node& node, int side)
 
 	const team& t = dc().get_team(side);
 
-	for(const auto& attr : t.variables().attribute_range())
-	{
-		c.set_node_callback(
-			view().stuff_list_entry(&node, "basic")
-				.widget("name", attr.first)
-				.add(),
-			&team_mode_controller::show_var,
-			side);
+	for(const auto& attr : t.variables().attribute_range()) {
+		c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", attr.first).add(),
+			&team_mode_controller::show_var, side);
 	}
 
 	std::map<std::string, std::size_t> wml_array_sizes;
 
-	for(const auto [key, cfg] : t.variables().all_children_view())
-	{
+	for(const auto [key, cfg] : t.variables().all_children_view()) {
 		std::ostringstream cur_str;
 		cur_str << "[" << key << "][" << wml_array_sizes[key] << "]";
 
-		this->c.set_node_callback(
-			view().stuff_list_entry(&node, "basic")
-				.widget("name", cur_str.str())
-				.add(),
-			&team_mode_controller::show_array,
-			side);
+		this->c.set_node_callback(view().stuff_list_entry(&node, "basic").widget("name", cur_str.str()).add(),
+			&team_mode_controller::show_array, side);
 		wml_array_sizes[key]++;
 	}
 }
@@ -902,7 +815,8 @@ void team_mode_controller::show_array(tree_view_node& node, int side)
 
 REGISTER_DIALOG(gamestate_inspector)
 
-gamestate_inspector::gamestate_inspector(const config& vars, const game_events::manager& events, const display_context& dc, const std::string& title)
+gamestate_inspector::gamestate_inspector(
+	const config& vars, const game_events::manager& events, const display_context& dc, const std::string& title)
 	: modal_dialog(window_id())
 	, title_(title)
 	, vars_(vars)
@@ -924,4 +838,4 @@ void gamestate_inspector::pre_show()
 	view_->update(*model_);
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

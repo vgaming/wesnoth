@@ -32,8 +32,8 @@
 #endif
 #define WIN32_LEAN_AND_MEAN
 
-#include <windows.h>
 #include <shellapi.h> // ShellExecute()
+#include <windows.h>
 
 #endif
 
@@ -41,7 +41,8 @@ static lg::log_domain log_desktop("desktop");
 #define ERR_DU LOG_STREAM(err, log_desktop)
 #define LOG_DU LOG_STREAM(info, log_desktop)
 
-namespace desktop {
+namespace desktop
+{
 
 bool open_object([[maybe_unused]] const std::string& path_or_url)
 {
@@ -67,7 +68,10 @@ bool open_object([[maybe_unused]] const std::string& path_or_url)
 		_exit(1); // This shouldn't happen.
 	}
 
-	std::thread t { [child](){ int status; waitpid(child, &status, 0); } };
+	std::thread t{[child]() {
+		int status;
+		waitpid(child, &status, 0);
+	}};
 	t.detach();
 
 	return true;
@@ -78,7 +82,8 @@ bool open_object([[maybe_unused]] const std::string& path_or_url)
 
 	std::wstring u16path = unicode_cast<std::wstring>(path_or_url);
 
-	const ptrdiff_t res = reinterpret_cast<ptrdiff_t>(ShellExecute(nullptr, L"open", u16path.c_str(), nullptr, nullptr, SW_SHOW));
+	const ptrdiff_t res
+		= reinterpret_cast<ptrdiff_t>(ShellExecute(nullptr, L"open", u16path.c_str(), nullptr, nullptr, SW_SHOW));
 	if(res <= 32) {
 		ERR_DU << "open_object(): ShellExecute() failed (" << res << ")";
 		return false;
@@ -94,4 +99,4 @@ bool open_object([[maybe_unused]] const std::string& path_or_url)
 #endif
 }
 
-}
+} // namespace desktop

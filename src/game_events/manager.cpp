@@ -35,50 +35,47 @@ static lg::log_domain log_event_handler("event_handler");
 
 namespace
 {
-	// Event handlers can't be destroyed as long as at least one of these locks exist.
-	class event_handler_list_lock
+// Event handlers can't be destroyed as long as at least one of these locks exist.
+class event_handler_list_lock
+{
+public:
+	event_handler_list_lock()
 	{
-	public:
-		event_handler_list_lock()
-		{
-			++num_locks_;
-		}
+		++num_locks_;
+	}
 
-		~event_handler_list_lock()
-		{
-			--num_locks_;
-		}
+	~event_handler_list_lock()
+	{
+		--num_locks_;
+	}
 
-		static bool none()
-		{
-			return num_locks_ == 0u;
-		}
-	private:
-		static unsigned int num_locks_;
-	};
+	static bool none()
+	{
+		return num_locks_ == 0u;
+	}
 
-	unsigned int event_handler_list_lock::num_locks_ = 0u;
-}
+private:
+	static unsigned int num_locks_;
+};
+
+unsigned int event_handler_list_lock::num_locks_ = 0u;
+} // namespace
 
 namespace game_events
 {
 /** Create an event handler. */
 void manager::add_event_handler_from_wml(const config& handler, game_lua_kernel& lk, bool is_menu_item)
 {
-	auto new_handler = event_handlers_->add_event_handler(
-		handler["name"],
-		handler["id"],
-		!handler["first_time_only"].to_bool(true),
-		handler["priority"].to_double(0.),
-		is_menu_item
-	);
+	auto new_handler = event_handlers_->add_event_handler(handler["name"], handler["id"],
+		!handler["first_time_only"].to_bool(true), handler["priority"].to_double(0.), is_menu_item);
 	if(new_handler.valid()) {
 		new_handler->read_filters(handler);
 
 		// Strip out anything that's used by the event system itself.
 		config args;
 		for(const auto& [attr, val] : handler.attribute_range()) {
-			if(attr == "id" || attr == "name" || attr == "first_time_only" || attr == "priority" || attr.compare(0, 6, "filter") == 0) {
+			if(attr == "id" || attr == "name" || attr == "first_time_only" || attr == "priority"
+				|| attr.compare(0, 6, "filter") == 0) {
 				continue;
 			}
 			args[attr] = val;
@@ -91,19 +88,19 @@ void manager::add_event_handler_from_wml(const config& handler, game_lua_kernel&
 		new_handler->set_arguments(args);
 		new_handler->register_wml_event(lk);
 		DBG_EH << "Registered WML event "
-			<< (new_handler->names_raw().empty() ? "" : "'" + new_handler->names_raw() + "'")
-			<< (new_handler->id().empty() ? "" : "{id=" + new_handler->id() + "}")
-			<< (new_handler->repeatable() ? " (repeating" : " (first time only")
-			<< "; priority " + std::to_string(new_handler->priority())
-			<< (is_menu_item ? "; menu item)" : ")")
-			<< " with the following actions:\n"
-			<< args.debug();
+			   << (new_handler->names_raw().empty() ? "" : "'" + new_handler->names_raw() + "'")
+			   << (new_handler->id().empty() ? "" : "{id=" + new_handler->id() + "}")
+			   << (new_handler->repeatable() ? " (repeating" : " (first time only")
+			   << "; priority " + std::to_string(new_handler->priority()) << (is_menu_item ? "; menu item)" : ")")
+			   << " with the following actions:\n"
+			   << args.debug();
 	} else {
 		LOG_EH << "Content of failed event:\n" << handler.debug();
 	}
 }
 
-pending_event_handler manager::add_event_handler_from_lua(const std::string& name, const std::string& id, bool repeat, double priority, bool is_menu_item)
+pending_event_handler manager::add_event_handler_from_lua(
+	const std::string& name, const std::string& id, bool repeat, double priority, bool is_menu_item)
 {
 	return event_handlers_->add_event_handler(name, id, repeat, priority, is_menu_item);
 }
@@ -213,18 +210,17 @@ void manager::execute_on_events(const std::string& event_id, const manager::even
 		// Ensure that event handlers won't be cleaned up while we're iterating them.
 		event_handler_list_lock lock;
 
-		for (unsigned i = 0; i < active_handlers.size(); ++i) {
+		for(unsigned i = 0; i < active_handlers.size(); ++i) {
 			handler_ptr handler = nullptr;
 
 			try {
 				handler = active_handlers.at(i);
-			}
-			catch (const std::out_of_range&) {
+			} catch(const std::out_of_range&) {
 				continue;
 			}
 
 			// Shouldn't happen, but we're just being safe.
-			if (!handler || handler->disabled()) {
+			if(!handler || handler->disabled()) {
 				continue;
 			}
 

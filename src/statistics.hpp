@@ -18,8 +18,8 @@
 #include "statistics_record.hpp"
 
 class unit;
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
 
 class statistics_t
@@ -36,21 +36,23 @@ public:
 
 	void advance_unit(const unit& u);
 
-	void reset_turn_stats(const std::string & save_id);
-	stats calculate_stats(const std::string & save_id);
+	void reset_turn_stats(const std::string& save_id);
+	stats calculate_stats(const std::string& save_id);
 	/** Stats (and name) for each scenario. The pointers are never nullptr. */
-	typedef std::vector< std::pair<const std::string *, const stats *>> levels;
+	typedef std::vector<std::pair<const std::string*, const stats*>> levels;
 	/** Returns a list of names and stats for each scenario in the current campaign. */
-	levels level_stats(const std::string & save_id);
+	levels level_stats(const std::string& save_id);
 	/// returns the stats for the given side in the current scenario.
-	stats& get_stats(const std::string &save_id);
+	stats& get_stats(const std::string& save_id);
 
-	static int sum_str_int_map(const std::map<std::string,int>& m);
-	static int sum_cost_str_int_map(const std::map<std::string,int>& m);
+	static int sum_str_int_map(const std::map<std::string, int>& m);
+	static int sum_cost_str_int_map(const std::map<std::string, int>& m);
+
 private:
 	statistics_record::campaign_stats_t& record_;
 
-	auto& master_stats() {
+	auto& master_stats()
+	{
 		return record_.master_record;
 	}
 };
@@ -66,8 +68,8 @@ struct statistics_attack_context
 	void attack_expected_damage(double attacker_inflict, double defender_inflict);
 	void attack_result(hit_result res, int cth, int damage, int drain);
 	void defend_result(hit_result res, int cth, int damage, int drain);
-private:
 
+private:
 	/// never nullptr
 	statistics_t* stats_;
 

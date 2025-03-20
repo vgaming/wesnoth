@@ -17,11 +17,10 @@
 
 #include "gui/dialogs/editor/generate_map.hpp"
 
-
+#include "generators/map_generator.hpp"
 #include "gui/widgets/button.hpp"
 #include "gui/widgets/listbox.hpp"
 #include "gui/widgets/window.hpp"
-#include "generators/map_generator.hpp"
 #include "lexical_cast.hpp"
 
 #include <functional>
@@ -64,8 +63,7 @@ void editor_generate_map::do_settings()
 
 map_generator* editor_generate_map::get_selected_map_generator()
 {
-	assert(static_cast<std::size_t>(current_map_generator_)
-		   < map_generators_.size());
+	assert(static_cast<std::size_t>(current_map_generator_) < map_generators_.size());
 	return map_generators_[current_map_generator_].get();
 }
 
@@ -84,8 +82,7 @@ void editor_generate_map::pre_show()
 	keyboard_capture(&list);
 
 	widget_data lrow;
-	for(const auto & gen : map_generators_)
-	{
+	for(const auto& gen : map_generators_) {
 		assert(gen);
 		lrow["generator_name"]["label"] = gen->config_name();
 		// lrow["generator_id"]["label"] = gen->name();
@@ -97,30 +94,26 @@ void editor_generate_map::pre_show()
 		}
 	}
 
-	if (last_map_generator_ != nullptr) {
+	if(last_map_generator_ != nullptr) {
 		// We need to call this manually because it won't be called by
 		// list.select_row() even if we set the callback before
 		// calling it
 		this->do_generator_selected();
 	}
 
-	connect_signal_notify_modified(list,
-		std::bind(&editor_generate_map::do_generator_selected, this));
+	connect_signal_notify_modified(list, std::bind(&editor_generate_map::do_generator_selected, this));
 
 	button& settings_button = find_widget<button>("settings");
-	connect_signal_mouse_left_click(
-			settings_button,
-			std::bind(&editor_generate_map::do_settings,this));
+	connect_signal_mouse_left_click(settings_button, std::bind(&editor_generate_map::do_settings, this));
 }
 
 utils::optional<uint32_t> editor_generate_map::get_seed()
 {
 	try {
 		return lexical_cast<uint32_t>(random_seed_);
-	}
-	catch(const bad_lexical_cast& ) {
+	} catch(const bad_lexical_cast&) {
 		return utils::nullopt;
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

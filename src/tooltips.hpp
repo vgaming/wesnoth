@@ -20,7 +20,8 @@
 
 #include <string>
 
-namespace tooltips {
+namespace tooltips
+{
 
 class manager : public gui2::top_level_drawable
 {
@@ -35,7 +36,7 @@ public:
 
 void clear_tooltips();
 void clear_tooltips(const SDL_Rect& rect);
-int  add_tooltip(const SDL_Rect& rect, const std::string& message, const std::string& action ="");
+int add_tooltip(const SDL_Rect& rect, const std::string& message, const std::string& action = "");
 bool update_tooltip(int id, const SDL_Rect& rect, const std::string& message);
 void remove_tooltip(int id);
 void process(int mousex, int mousey);
@@ -45,4 +46,4 @@ void process(int mousex, int mousey);
 // (only possible action are opening help page for the moment)
 bool click(int mousex, int mousey);
 
-}
+} // namespace tooltips

@@ -15,8 +15,8 @@
 
 #pragma once
 
-#include <cstdint>
 #include <SDL2/SDL.h>
+#include <cstdint>
 
 /**
  * Class that keeps track of all the keys on the keyboard.
@@ -27,10 +27,10 @@
  */
 class CKey
 {
-	const uint8_t *key_list;
+	const uint8_t* key_list;
 
 public:
 	CKey();
 	bool operator[](int k) const;
-	static bool is_uncomposable(const SDL_KeyboardEvent &event);
+	static bool is_uncomposable(const SDL_KeyboardEvent& event);
 };

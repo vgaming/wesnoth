@@ -21,6 +21,7 @@
 #include "editor/action/action.hpp"
 #include "filesystem.hpp"
 #include "formula/string_utils.hpp"
+#include "game_config_view.hpp"
 #include "gettext.hpp"
 #include "gui/dialogs/message.hpp"
 #include "gui/dialogs/transient_message.hpp"
@@ -31,7 +32,6 @@
 #include "serialization/preprocessor.hpp"
 #include "team.hpp"
 #include "units/unit.hpp"
-#include "game_config_view.hpp"
 
 #include <boost/regex.hpp>
 
@@ -57,8 +57,9 @@ editor_team_info::editor_team_info(const team& t)
 
 const std::size_t map_context::max_action_stack_size_ = 100;
 
-namespace {
-	static const int editor_team_default_gold = 100;
+namespace
+{
+static const int editor_team_default_gold = 100;
 }
 
 map_context::map_context(const editor_map& map, bool pure_map, const config& schedule, const std::string& addon_id)
@@ -98,11 +99,13 @@ map_context::map_context(const editor_map& map, bool pure_map, const config& sch
 static std::string get_map_location(const std::string& file_contents, const std::string& attr)
 {
 	std::size_t attr_name_start = file_contents.find(attr);
-	if(attr_name_start == std::string::npos) return "";
+	if(attr_name_start == std::string::npos)
+		return "";
 
 	std::size_t attr_value_start = file_contents.find("=", attr_name_start);
 	std::size_t line_end = file_contents.find("\n", attr_name_start);
-	if(line_end < attr_value_start) return "";
+	if(line_end < attr_value_start)
+		return "";
 
 	attr_value_start++;
 	std::string attr_value = file_contents.substr(attr_value_start, line_end - attr_value_start);
@@ -150,7 +153,8 @@ map_context::map_context(const game_config_view& game_config, const std::string&
 	 * embedded_ - the map data is directly in the scenario file
 	 * pure_map_ - the map data is in its own separate file (map_file, map_data+macro inclusion) or this is a .map file
 	 *
-	 * an editor-generated file uses neither of these and is its own thing - it's not embedded (since the editor now saves using map_file) and it's not a pure map since there's also scenario data involved
+	 * an editor-generated file uses neither of these and is its own thing - it's not embedded (since the editor now
+	 * saves using map_file) and it's not a pure map since there's also scenario data involved
 	 *
 	 * 0. Not a scenario or map file.
 	 *    0.1 File not found
@@ -195,17 +199,13 @@ map_context::map_context(const game_config_view& game_config, const std::string&
 	}
 
 	// 0.3 Not a .map or .cfg file
-	if(!filesystem::is_map(filename)
-		&& !filesystem::is_mask(filename)
-		&& !filesystem::is_cfg(filename))
-	{
+	if(!filesystem::is_map(filename) && !filesystem::is_mask(filename) && !filesystem::is_cfg(filename)) {
 		std::string message = _("File does not have .map, .cfg, or .mask extension");
 		throw editor_map_load_exception(filename, message);
 	}
 
 	// 1.0 Pure map data
-	if(filesystem::is_map(filename)
-		|| filesystem::is_mask(filename)) {
+	if(filesystem::is_map(filename) || filesystem::is_mask(filename)) {
 		LOG_ED << "Loading map or mask file";
 		map_ = editor_map::from_string(file_string); // throws on error
 		pure_map_ = true;
@@ -213,9 +213,8 @@ map_context::map_context(const game_config_view& game_config, const std::string&
 		add_to_recent_files();
 	} else {
 		// 4.0 old-style editor generated scenario which lacks a top-level tag
-		if(file_string.find("[multiplayer]") == std::string::npos &&
-			file_string.find("[scenario]") == std::string::npos &&
-			file_string.find("[test]") == std::string::npos) {
+		if(file_string.find("[multiplayer]") == std::string::npos && file_string.find("[scenario]") == std::string::npos
+			&& file_string.find("[test]") == std::string::npos) {
 			LOG_ED << "Loading generated scenario file";
 			try {
 				load_scenario();
@@ -233,21 +232,23 @@ map_context::map_context(const game_config_view& game_config, const std::string&
 					LOG_ED << "Loading embedded map file";
 					embedded_ = true;
 					pure_map_ = true;
-					std::size_t start = file_string.find(map_data_loc)+1;
-					std::size_t length = file_string.find("\"", start)-start;
+					std::size_t start = file_string.find(map_data_loc) + 1;
+					std::size_t length = file_string.find("\"", start) - start;
 					std::string map_data = file_string.substr(start, length);
 					map_ = editor_map::from_string(map_data);
 					add_to_recent_files();
 				} else {
 					// 3.0 Macro referenced pure map
-					const std::string& macro_argument = map_data_loc.substr(2, map_data_loc.size()-4);
+					const std::string& macro_argument = map_data_loc.substr(2, map_data_loc.size() - 4);
 					LOG_ED << "Map looks like a scenario, trying {" << macro_argument << "}";
 
-					auto new_filename = filesystem::get_wml_location(macro_argument, filesystem::directory_name(filesystem::get_short_wml_path(filename_)));
+					auto new_filename = filesystem::get_wml_location(
+						macro_argument, filesystem::directory_name(filesystem::get_short_wml_path(filename_)));
 
 					if(!new_filename) {
-						std::string message = _("The map file looks like a scenario, but the map_data value does not point to an existing file")
-											+ std::string("\n") + macro_argument;
+						std::string message = _("The map file looks like a scenario, but the map_data value does not "
+												"point to an existing file")
+							+ std::string("\n") + macro_argument;
 						throw editor_map_load_exception(filename, message);
 					}
 
@@ -265,20 +266,26 @@ map_context::map_context(const game_config_view& game_config, const std::string&
 				try {
 					// 5.1 The file can be loaded by the editor as a scenario
 					if(file_string.find("<<") != std::string::npos) {
-						throw editor_map_load_exception(filename, _("Found the characters ‘<<’ indicating inline lua is present — aborting"));
+						throw editor_map_load_exception(
+							filename, _("Found the characters ‘<<’ indicating inline lua is present — aborting"));
 					}
 					load_scenario();
 				} catch(const std::exception&) {
 					// 5.2 The file can't be loaded by the editor as a scenario, so try to just load the map
-					gui2::show_message(_("Error"), _("Failed to load the scenario, attempting to load only the map."), gui2::dialogs::message::auto_close);
+					gui2::show_message(_("Error"), _("Failed to load the scenario, attempting to load only the map."),
+						gui2::dialogs::message::auto_close);
 
-					// NOTE: this means that loading the map file from a scenario where the maps are in nested directories under maps/ will not work
-					//       this is done to address mainline scenarios referencing their maps as "multiplayer/maps/<map_file>.map"
-					//       otherwise this results in the "multiplayer/maps/" part getting duplicated in the path and then not being found
-					std::string new_filename = filesystem::get_current_editor_dir(addon_id_) + "/maps/" + filesystem::base_name(map_file_loc);
+					// NOTE: this means that loading the map file from a scenario where the maps are in nested
+					// directories under maps/ will not work
+					//       this is done to address mainline scenarios referencing their maps as
+					//       "multiplayer/maps/<map_file>.map" otherwise this results in the "multiplayer/maps/" part
+					//       getting duplicated in the path and then not being found
+					std::string new_filename = filesystem::get_current_editor_dir(addon_id_) + "/maps/"
+						+ filesystem::base_name(map_file_loc);
 					if(!filesystem::file_exists(new_filename)) {
-						std::string message = _("The map file looks like a scenario, but the map_file value does not point to an existing file")
-											+ std::string("\n") + new_filename;
+						std::string message = _("The map file looks like a scenario, but the map_file value does not "
+												"point to an existing file")
+							+ std::string("\n") + new_filename;
 						throw editor_map_load_exception(filename, message);
 					}
 
@@ -340,12 +347,12 @@ void map_context::set_side_setup(editor_team_info& info)
 }
 
 void map_context::set_scenario_setup(const std::string& id,
-		const std::string& name,
-		const std::string& description,
-		int turns,
-		int xp_mod,
-		bool victory_defeated,
-		bool random_time)
+	const std::string& name,
+	const std::string& description,
+	int turns,
+	int xp_mod,
+	bool victory_defeated,
+	bool random_time)
 {
 	scenario_id_ = id;
 	scenario_name_ = name;
@@ -394,13 +401,16 @@ config map_context::convert_scenario(const config& old_scenario)
 	config& multiplayer = cfg.add_child("multiplayer");
 	multiplayer.append_attributes(old_scenario);
 	std::string map_data = multiplayer["map_data"];
-	std::string separate_map_file = filesystem::get_current_editor_dir(addon_id_) + "/maps/" + filesystem::base_name(filename_, true) + filesystem::map_extension;
+	std::string separate_map_file = filesystem::get_current_editor_dir(addon_id_) + "/maps/"
+		+ filesystem::base_name(filename_, true) + filesystem::map_extension;
 
 	// check that there's embedded map data, since that's how the editor used to save scenarios
 	if(!map_data.empty()) {
-		// check if a .map file already exists as a separate standalone .map in the editor folders or if a .map file already exists in the add-on
+		// check if a .map file already exists as a separate standalone .map in the editor folders or if a .map file
+		// already exists in the add-on
 		if(filesystem::file_exists(separate_map_file)) {
-			separate_map_file = filesystem::get_current_editor_dir(addon_id_) + "/maps/" + filesystem::get_next_filename(filesystem::base_name(filename_, true), filesystem::map_extension);
+			separate_map_file = filesystem::get_current_editor_dir(addon_id_) + "/maps/"
+				+ filesystem::get_next_filename(filesystem::base_name(filename_, true), filesystem::map_extension);
 		}
 		multiplayer["id"] = filesystem::base_name(separate_map_file, true);
 
@@ -409,7 +419,8 @@ config map_context::convert_scenario(const config& old_scenario)
 		multiplayer["map_file"] = filesystem::base_name(separate_map_file);
 	} else {
 		ERR_ED << "Cannot convert " << filename_ << " due to missing map_data attribute.";
-		throw editor_map_load_exception("load_scenario: no embedded map_data attribute found in old-style scenario", filename_);
+		throw editor_map_load_exception(
+			"load_scenario: no embedded map_data attribute found in old-style scenario", filename_);
 	}
 
 	config& event = multiplayer.add_child("event");
@@ -424,7 +435,7 @@ config map_context::convert_scenario(const config& old_scenario)
 	//   if [unit], set the unit's side
 	// for [time]:
 	//   keep under [multiplayer]
-	for(const auto [child_key, child_cfg]: old_scenario.all_children_view()) {
+	for(const auto [child_key, child_cfg] : old_scenario.all_children_view()) {
 		if(child_key != "side" && child_key != "time") {
 			config& c = event.add_child(child_key);
 			c.append_attributes(child_cfg);
@@ -466,7 +477,8 @@ void map_context::load_scenario()
 	} else if(scen.has_child("test")) {
 		scenario = scen.mandatory_child("test");
 	} else {
-		ERR_ED << "Found no [scenario], [multiplayer], or [test] tag in " << filename_ << ", assuming old-style editor scenario and defaulting to [multiplayer]";
+		ERR_ED << "Found no [scenario], [multiplayer], or [test] tag in " << filename_
+			   << ", assuming old-style editor scenario and defaulting to [multiplayer]";
 		scen = convert_scenario(scen);
 		scenario = scen.mandatory_child("multiplayer");
 	}
@@ -484,7 +496,8 @@ void map_context::load_scenario()
 	if(!scenario["map_data"].str().empty()) {
 		map_ = editor_map::from_string(scenario["map_data"]); // throws on error
 	} else if(!scenario["map_file"].str().empty()) {
-		map_ = editor_map::from_string(filesystem::read_file(filesystem::get_current_editor_dir(addon_id_) + "/maps/" + filesystem::base_name(scenario["map_file"]))); // throws on error
+		map_ = editor_map::from_string(filesystem::read_file(filesystem::get_current_editor_dir(addon_id_) + "/maps/"
+			+ filesystem::base_name(scenario["map_file"]))); // throws on error
 	} else {
 		throw editor_map_load_exception("load_scenario: no map_file or map_data attribute found", filename_);
 	}
@@ -536,15 +549,14 @@ bool map_context::select_area(int index)
 
 void map_context::draw_terrain(const t_translation::terrain_code& terrain, const map_location& loc, bool one_layer_only)
 {
-	t_translation::terrain_code full_terrain = one_layer_only
-		? terrain
-		: map_.get_terrain_info(terrain).terrain_with_default_base();
+	t_translation::terrain_code full_terrain
+		= one_layer_only ? terrain : map_.get_terrain_info(terrain).terrain_with_default_base();
 
 	draw_terrain_actual(full_terrain, loc, one_layer_only);
 }
 
 void map_context::draw_terrain_actual(
-		const t_translation::terrain_code& terrain, const map_location& loc, bool one_layer_only)
+	const t_translation::terrain_code& terrain, const map_location& loc, bool one_layer_only)
 {
 	if(!map_.on_board_with_border(loc)) {
 		// requests for painting off the map are ignored in set_terrain anyway,
@@ -569,11 +581,10 @@ void map_context::draw_terrain_actual(
 }
 
 void map_context::draw_terrain(
-		const t_translation::terrain_code& terrain, const std::set<map_location>& locs, bool one_layer_only)
+	const t_translation::terrain_code& terrain, const std::set<map_location>& locs, bool one_layer_only)
 {
-	t_translation::terrain_code full_terrain = one_layer_only
-		? terrain
-		: map_.get_terrain_info(terrain).terrain_with_default_base();
+	t_translation::terrain_code full_terrain
+		= one_layer_only ? terrain : map_.get_terrain_info(terrain).terrain_with_default_base();
 
 	for(const map_location& loc : locs) {
 		draw_terrain_actual(full_terrain, loc, one_layer_only);
@@ -634,7 +645,7 @@ config map_context::to_config()
 	config scen;
 
 	// Textdomain
-	std::string current_textdomain = "wesnoth-"+addon_id_;
+	std::string current_textdomain = "wesnoth-" + addon_id_;
 
 	// the state of the previous scenario cfg
 	// if it exists, alter specific parts of it (sides, times, and editor events) rather than replacing it entirely
@@ -646,13 +657,10 @@ config map_context::to_config()
 	// else if this has [scenario], use [scenario]
 	// else if this has [test], use [test]
 	// else if none, add a [multiplayer]
-	config& scenario = scen.has_child("multiplayer")
-		? scen.mandatory_child("multiplayer")
-		: scen.has_child("scenario")
-			? scen.mandatory_child("scenario")
-			: scen.has_child("test")
-				? scen.mandatory_child("test")
-				: scen.add_child("multiplayer");
+	config& scenario = scen.has_child("multiplayer") ? scen.mandatory_child("multiplayer")
+		: scen.has_child("scenario")                 ? scen.mandatory_child("scenario")
+		: scen.has_child("test")                     ? scen.mandatory_child("test")
+													 : scen.add_child("multiplayer");
 
 	scenario.remove_children("side");
 	scenario.remove_children("event", [](const config& cfg) {
@@ -673,7 +681,9 @@ config map_context::to_config()
 
 	// write out the map data
 	scenario["map_file"] = scenario_id_ + filesystem::map_extension;
-	filesystem::write_file(filesystem::get_current_editor_dir(addon_id_) + "/maps/" + scenario_id_ + filesystem::map_extension, map_.write());
+	filesystem::write_file(
+		filesystem::get_current_editor_dir(addon_id_) + "/maps/" + scenario_id_ + filesystem::map_extension,
+		map_.write());
 
 	// find or add the editor's start event
 	config& event = scenario.add_child("event");
@@ -767,9 +777,9 @@ config map_context::to_config()
 			read(trait_loyal, preprocess_string("{TRAIT_LOYAL}", &traits_map, "wesnoth-help"));
 			mods.append(trait_loyal);
 		}
-		//TODO this entire block could also be replaced by unit.write(u, true)
-		//however, the resultant config is massive and contains many attributes we don't need.
-		//need to find a middle ground here.
+		// TODO this entire block could also be replaced by unit.write(u, true)
+		// however, the resultant config is massive and contains many attributes we don't need.
+		// need to find a middle ground here.
 	}
 
 	// [side]s
@@ -808,7 +818,7 @@ config map_context::to_config()
 void map_context::save_schedule(const std::string& schedule_id, const std::string& schedule_name)
 {
 	// Textdomain
-	std::string current_textdomain = "wesnoth-"+addon_id_;
+	std::string current_textdomain = "wesnoth-" + addon_id_;
 
 	// Path to schedule.cfg
 	std::string schedule_path = filesystem::get_current_editor_dir(addon_id_) + "/utils/schedule.cfg";
@@ -816,7 +826,7 @@ void map_context::save_schedule(const std::string& schedule_id, const std::strin
 	// Create schedule config
 	config schedule;
 	try {
-		if (filesystem::file_exists(schedule_path)) {
+		if(filesystem::file_exists(schedule_path)) {
 			/* If exists, read the schedule.cfg
 			 * and insert [editor_times] block at correct place */
 			preproc_map editor_map;
@@ -844,12 +854,11 @@ void map_context::save_schedule(const std::string& schedule_id, const std::strin
 	try {
 		std::stringstream wml_stream;
 
-		wml_stream
-			<< "#textdomain " << current_textdomain << "\n"
-			<< "#\n"
-			<< "# This file was generated using the scenario editor.\n"
-			<< "#\n"
-			<< "#ifdef EDITOR\n";
+		wml_stream << "#textdomain " << current_textdomain << "\n"
+				   << "#\n"
+				   << "# This file was generated using the scenario editor.\n"
+				   << "#\n"
+				   << "#ifdef EDITOR\n";
 
 		{
 			config_writer out(wml_stream, false);
@@ -885,14 +894,15 @@ void map_context::save_scenario()
 
 	try {
 		std::stringstream wml_stream;
-		wml_stream
-			<< "# This file was generated using the scenario editor.\n"
-			<< "#\n"
-			<< "# If you edit this file by hand, then do not use macros.\n"
-			<< "# The editor doesn't support macros, and so using them will result in only being able to edit the map.\n"
-			<< "# Additionally, the contents of all [side] and [time] tags as well as any events that have an id starting with 'editor_event-' are replaced entirely.\n"
-			<< "# Any manual changes made to those will be lost.\n"
-			<< "\n";
+		wml_stream << "# This file was generated using the scenario editor.\n"
+				   << "#\n"
+				   << "# If you edit this file by hand, then do not use macros.\n"
+				   << "# The editor doesn't support macros, and so using them will result in only being able to edit "
+					  "the map.\n"
+				   << "# Additionally, the contents of all [side] and [time] tags as well as any events that have an "
+					  "id starting with 'editor_event-' are replaced entirely.\n"
+				   << "# Any manual changes made to those will be lost.\n"
+				   << "\n";
 		{
 			config_writer out(wml_stream, false);
 			out.write(to_config());
@@ -928,8 +938,8 @@ void map_context::save_map()
 			boost::regex rexpression_map_data(R"((.*map_data\s*=\s*")(.+?)(".*))");
 			boost::smatch matched_map_data;
 
-			if(boost::regex_search(map_string, matched_map_data, rexpression_map_data,
-					   boost::regex_constants::match_not_dot_null)) {
+			if(boost::regex_search(
+				   map_string, matched_map_data, rexpression_map_data, boost::regex_constants::match_not_dot_null)) {
 				std::stringstream ss;
 				ss << matched_map_data[1];
 				ss << map_data;

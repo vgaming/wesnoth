@@ -12,23 +12,22 @@
 	See the COPYING file for more details.
 */
 
-
 #include "synced_user_choice.hpp"
 
 #include "display.hpp"
 #include "floating_label.hpp"
+#include "font/standard_colors.hpp"
+#include "formula/string_utils.hpp"
 #include "game_data.hpp"
+#include "gui/dialogs/multiplayer/synced_choice_wait.hpp"
 #include "log.hpp"
 #include "play_controller.hpp"
-#include "synced_context.hpp"
 #include "replay.hpp"
 #include "resources.hpp"
-#include "gui/dialogs/multiplayer/synced_choice_wait.hpp"
+#include "synced_context.hpp"
 #include <chrono>
-#include <set>
 #include <map>
-#include "formula/string_utils.hpp"
-#include "font/standard_colors.hpp"
+#include <set>
 
 static lg::log_domain log_replay("replay");
 #define DBG_REPLAY LOG_STREAM(debug, log_replay)
@@ -38,89 +37,85 @@ static lg::log_domain log_replay("replay");
 
 namespace
 {
-	using namespace std::chrono_literals;
-	class user_choice_notifer_ingame
-	{
-		//the handle for the label on the screen -1 if not shown yet.
-		int label_id_;
-		std::string message_;
-		std::chrono::steady_clock::time_point start_show_;
-
-	public:
-		user_choice_notifer_ingame()
-			: label_id_(-1)
-			, message_()
-			, start_show_(std::chrono::steady_clock::now() + 2000ms)
-		{
-
-		}
-
-		~user_choice_notifer_ingame()
-		{
-			if(label_id_ != -1) {
-				end_show_label();
-			}
-		}
-
-		void update(const std::string& message)
-		{
-			if(label_id_ == -1 && std::chrono::steady_clock::now() > start_show_)
-			{
-				start_show_label();
-			}
-			if(message == message_) {
-				return;
-			}
-			message_ = message;
-			if(label_id_ != -1) {
-				end_show_label();
-				start_show_label();
-			}
-		}
-
-		void start_show_label()
-		{
-			assert(label_id_ == -1);
-			SDL_Rect area = display::get_singleton()->map_outside_area();
-			font::floating_label flabel(message_);
-			flabel.set_font_size(font::SIZE_LARGE);
-			flabel.set_color(font::NORMAL_COLOR);
-			flabel.set_position(area.w/2, area.h/4);
-			flabel.set_lifetime(std::chrono::milliseconds{-1});
-			flabel.set_clip_rect(area);
-			label_id_ = font::add_floating_label(flabel);
-		}
-
-		void end_show_label()
-		{
-			assert(label_id_ != -1);
-			font::remove_floating_label(label_id_);
-			label_id_ = -1;
-		}
-	};
-}
-
-std::map<int,config> mp_sync::get_user_choice_multiple_sides(const std::string &name, const mp_sync::user_choice &uch,
-	std::set<int> sides)
+using namespace std::chrono_literals;
+class user_choice_notifer_ingame
 {
-	//pass sides by copy because we need a copy.
-	const bool is_synced = synced_context::is_synced();
-	const int max_side  = static_cast<int>(resources::gameboard->teams().size());
-	//we currently don't check for too early because lua's sync choice doesn't necessarily show screen dialogs.
-	//It (currently) in the responsibility of the user of sync choice to not use dialogs during prestart events..
-	if(!is_synced)
+	// the handle for the label on the screen -1 if not shown yet.
+	int label_id_;
+	std::string message_;
+	std::chrono::steady_clock::time_point start_show_;
+
+public:
+	user_choice_notifer_ingame()
+		: label_id_(-1)
+		, message_()
+		, start_show_(std::chrono::steady_clock::now() + 2000ms)
 	{
-		//we got called from inside lua's wesnoth.synchronize_choice or from a select event.
-		replay::process_error("MP synchronization only works in a synced context (for example Select or preload events are no synced context).\n");
-		return std::map<int,config>();
 	}
 
-	for(int side : sides)
+	~user_choice_notifer_ingame()
 	{
-		if(1 > side || side > max_side)
-		{
+		if(label_id_ != -1) {
+			end_show_label();
+		}
+	}
+
+	void update(const std::string& message)
+	{
+		if(label_id_ == -1 && std::chrono::steady_clock::now() > start_show_) {
+			start_show_label();
+		}
+		if(message == message_) {
+			return;
+		}
+		message_ = message;
+		if(label_id_ != -1) {
+			end_show_label();
+			start_show_label();
+		}
+	}
+
+	void start_show_label()
+	{
+		assert(label_id_ == -1);
+		SDL_Rect area = display::get_singleton()->map_outside_area();
+		font::floating_label flabel(message_);
+		flabel.set_font_size(font::SIZE_LARGE);
+		flabel.set_color(font::NORMAL_COLOR);
+		flabel.set_position(area.w / 2, area.h / 4);
+		flabel.set_lifetime(std::chrono::milliseconds{-1});
+		flabel.set_clip_rect(area);
+		label_id_ = font::add_floating_label(flabel);
+	}
+
+	void end_show_label()
+	{
+		assert(label_id_ != -1);
+		font::remove_floating_label(label_id_);
+		label_id_ = -1;
+	}
+};
+} // namespace
+
+std::map<int, config> mp_sync::get_user_choice_multiple_sides(
+	const std::string& name, const mp_sync::user_choice& uch, std::set<int> sides)
+{
+	// pass sides by copy because we need a copy.
+	const bool is_synced = synced_context::is_synced();
+	const int max_side = static_cast<int>(resources::gameboard->teams().size());
+	// we currently don't check for too early because lua's sync choice doesn't necessarily show screen dialogs.
+	// It (currently) in the responsibility of the user of sync choice to not use dialogs during prestart events..
+	if(!is_synced) {
+		// we got called from inside lua's wesnoth.synchronize_choice or from a select event.
+		replay::process_error("MP synchronization only works in a synced context (for example Select or preload events "
+							  "are no synced context).\n");
+		return std::map<int, config>();
+	}
+
+	for(int side : sides) {
+		if(1 > side || side > max_side) {
 			replay::process_error("MP synchronization with an invalid side number.\n");
-			return std::map<int,config>();
+			return std::map<int, config>();
 		}
 	}
 
@@ -128,39 +123,33 @@ std::map<int,config> mp_sync::get_user_choice_multiple_sides(const std::string &
 		for empty sides we want to use random choice instead.
 	*/
 	std::set<int> empty_sides;
-	for(int side : sides)
-	{
-		if( resources::gameboard->get_team(side).is_empty())
-		{
+	for(int side : sides) {
+		if(resources::gameboard->get_team(side).is_empty()) {
 			empty_sides.insert(side);
 		}
 	}
 
-	for(int side : empty_sides)
-	{
+	for(int side : empty_sides) {
 		sides.erase(side);
 	}
 
-	std::map<int,config> retv =  user_choice_manager::get_user_choice_internal(name, uch, sides);
+	std::map<int, config> retv = user_choice_manager::get_user_choice_internal(name, uch, sides);
 
-	for(int side : empty_sides)
-	{
+	for(int side : empty_sides) {
 		retv[side] = uch.random_choice(side);
 	}
 	return retv;
-
 }
 
 /*
 	fixes some rare cases and calls get_user_choice_internal if we are in a synced context.
 */
-config mp_sync::get_user_choice(const std::string &name, const mp_sync::user_choice &uch,
-	int side)
+config mp_sync::get_user_choice(const std::string& name, const mp_sync::user_choice& uch, int side)
 {
 	const bool is_too_early = resources::gamedata->is_before_screen();
 	const bool is_synced = synced_context::is_synced();
-	const bool is_mp_game = resources::controller->is_networked_mp();//Only used in debugging output below
-	const int max_side  = static_cast<int>(resources::gameboard->teams().size());
+	const bool is_mp_game = resources::controller->is_networked_mp(); // Only used in debugging output below
+	const int max_side = static_cast<int>(resources::gameboard->teams().size());
 	bool is_side_null_controlled;
 
 	/* side = 0 should default to the currently active side per definition. */
@@ -173,66 +162,61 @@ config mp_sync::get_user_choice(const std::string &name, const mp_sync::user_cho
 		LOG_REPLAY << " side changed to " << side;
 	}
 
-	if(!is_synced)
-	{
-		//we got called from inside lua's wesnoth.synchronize_choice or from a select event (or maybe a preload event?).
-		//This doesn't cause problems and someone could use it for example to use a [message][option] inside a wesnoth.synchronize_choice which could be useful,
-		//so just give a warning.
+	if(!is_synced) {
+		// we got called from inside lua's wesnoth.synchronize_choice or from a select event (or maybe a preload
+		// event?). This doesn't cause problems and someone could use it for example to use a [message][option] inside a
+		// wesnoth.synchronize_choice which could be useful, so just give a warning.
 		LOG_REPLAY << "MP synchronization called during an unsynced context.";
 		return uch.query_user(side);
 	}
-	if(is_too_early && uch.is_visible())
-	{
-		//We are in a prestart event or even earlier.
-		//Although we are able to sync them, we cannot use query_user,
-		//because we cannot (or shouldn't) put things on the screen inside a prestart event, this is true for SP and MP games.
-		//Quotation form event wiki: "For things displayed on-screen such as character dialog, use start instead"
+	if(is_too_early && uch.is_visible()) {
+		// We are in a prestart event or even earlier.
+		// Although we are able to sync them, we cannot use query_user,
+		// because we cannot (or shouldn't) put things on the screen inside a prestart event, this is true for SP and MP
+		// games. Quotation form event wiki: "For things displayed on-screen such as character dialog, use start
+		// instead"
 
-		//Note: it seems like get_user_choice_multiple_sides doesn't reject this case.
+		// Note: it seems like get_user_choice_multiple_sides doesn't reject this case.
 
 		return uch.random_choice(side);
 	}
-	//in start events it's unclear to decide on which side the function should be executed (default= side1 still).
-	//But for advancements we can just decide on the side that owns the unit and that's in the responsibility of advance_unit_at.
-	//For [message][option] and lua's sync_choice the scenario designer is responsible for that.
-	//For [get_global_variable] side is never null.
+	// in start events it's unclear to decide on which side the function should be executed (default= side1 still).
+	// But for advancements we can just decide on the side that owns the unit and that's in the responsibility of
+	// advance_unit_at. For [message][option] and lua's sync_choice the scenario designer is responsible for that. For
+	// [get_global_variable] side is never null.
 
 	is_side_null_controlled = resources::gameboard->get_team(side).is_empty();
 
 	LOG_REPLAY << "get_user_choice_called with"
-			<< " name=" << name
-			<< " is_synced=" << is_synced
-			<< " is_mp_game=" << is_mp_game
-			<< " is_side_null_controlled=" << is_side_null_controlled;
+			   << " name=" << name << " is_synced=" << is_synced << " is_mp_game=" << is_mp_game
+			   << " is_side_null_controlled=" << is_side_null_controlled;
 
-	if (is_side_null_controlled)
-	{
+	if(is_side_null_controlled) {
 		DBG_REPLAY << "MP synchronization: side 1 being null-controlled in get_user_choice.";
-		//most likely we are in a start event with an empty side 1
-		//but calling [set_global_variable] to an empty side might also cause this.
-		//i think in that case we should better use uch.random_choice(),
-		//which could return something like config {"invalid", true};
+		// most likely we are in a start event with an empty side 1
+		// but calling [set_global_variable] to an empty side might also cause this.
+		// i think in that case we should better use uch.random_choice(),
+		// which could return something like config {"invalid", true};
 		side = 1;
-		while ( side <= max_side  &&  resources::gameboard->get_team(side).is_empty() )
+		while(side <= max_side && resources::gameboard->get_team(side).is_empty())
 			side++;
 		assert(side <= max_side);
 	}
-
 
 	assert(1 <= side && side <= max_side);
 
 	std::set<int> sides;
 	sides.insert(side);
 	std::map<int, config> retv = user_choice_manager::get_user_choice_internal(name, uch, sides);
-	if(retv.find(side) == retv.end())
-	{
-		//An error occurred, get_user_choice_internal should have given an oos error message
+	if(retv.find(side) == retv.end()) {
+		// An error occurred, get_user_choice_internal should have given an oos error message
 		return config();
 	}
 	return retv[side];
 }
 
-user_choice_manager::user_choice_manager(const std::string &name, const mp_sync::user_choice &uch, const std::set<int>& sides)
+user_choice_manager::user_choice_manager(
+	const std::string& name, const mp_sync::user_choice& uch, const std::set<int>& sides)
 	: required_(sides)
 	, res_()
 	, local_choice_(0)
@@ -244,28 +228,24 @@ user_choice_manager::user_choice_manager(const std::string &name, const mp_sync:
 	, changed_event_("user_choice_update")
 {
 	update_local_choice();
-	const int max_side  = static_cast<int>(resources::gameboard->teams().size());
+	const int max_side = static_cast<int>(resources::gameboard->teams().size());
 
-	for(int side : required_)
-	{
+	for(int side : required_) {
 		assert(1 <= side && side <= max_side);
 		const team& t = resources::gameboard->get_team(side);
 		assert(!t.is_empty());
-		if(side != current_side_)
-		{
+		if(side != current_side_) {
 			synced_context::block_undo();
 		}
 	}
 
 	do_replay_handle();
 	search_in_replay();
-
 }
 
 void user_choice_manager::search_in_replay()
 {
-	while(!finished() && !oos_)
-	{
+	while(!finished() && !oos_) {
 		do_replay_handle();
 		if(resources::recorder->at_end()) {
 			return;
@@ -273,12 +253,11 @@ void user_choice_manager::search_in_replay()
 
 		DBG_REPLAY << "MP synchronization: extracting choice from replay with has_local_side=" << has_local_choice();
 
-		const config *action = resources::recorder->get_next_action();
-		assert(action); //action cannot be null because resources::recorder->at_end() returned false.
-		if( !action->has_child(tagname_) || !(*action)["dependent"].to_bool())
-		{
+		const config* action = resources::recorder->get_next_action();
+		assert(action); // action cannot be null because resources::recorder->at_end() returned false.
+		if(!action->has_child(tagname_) || !(*action)["dependent"].to_bool()) {
 			replay::process_error("[" + tagname_ + "] expected but none found\n. found instead:\n" + action->debug());
-			//We save this action for later
+			// We save this action for later
 			resources::recorder->revert_action();
 			// execute this local choice locally
 			oos_ = true;
@@ -286,18 +265,18 @@ void user_choice_manager::search_in_replay()
 			return;
 		}
 		int from_side = (*action)["from_side"].to_int(0);
-		if((*action)["side_invalid"].to_bool(false) == true)
-		{
-			//since this 'cheat' can have a quite heavy effect especially in umc content we give an oos error .
-			replay::process_error("MP synchronization: side_invalid in replay data, this could mean someone wants to cheat.\n");
+		if((*action)["side_invalid"].to_bool(false) == true) {
+			// since this 'cheat' can have a quite heavy effect especially in umc content we give an oos error .
+			replay::process_error(
+				"MP synchronization: side_invalid in replay data, this could mean someone wants to cheat.\n");
 		}
-		if(required_.find(from_side) == required_.end())
-		{
-			replay::process_error("MP synchronization: we got an answer from side " + std::to_string(from_side) + "for [" + tagname_ + "] which is not was we expected\n");
+		if(required_.find(from_side) == required_.end()) {
+			replay::process_error("MP synchronization: we got an answer from side " + std::to_string(from_side)
+				+ "for [" + tagname_ + "] which is not was we expected\n");
 		}
-		if(res_.find(from_side) != res_.end())
-		{
-			replay::process_error("MP synchronization: we got already our answer from side " + std::to_string(from_side) + "for [" + tagname_ + "] now we have it twice.\n");
+		if(res_.find(from_side) != res_.end()) {
+			replay::process_error("MP synchronization: we got already our answer from side " + std::to_string(from_side)
+				+ "for [" + tagname_ + "] now we have it twice.\n");
 		}
 		res_[from_side] = action->mandatory_child(tagname_);
 		changed_event_.notify_observers();
@@ -316,20 +295,17 @@ void user_choice_manager::pull()
 void user_choice_manager::update_local_choice()
 {
 	int local_choice_prev = local_choice_;
-	//equals to any side in sides that is local, 0 if no such side exists.
+	// equals to any side in sides that is local, 0 if no such side exists.
 	local_choice_ = 0;
-	//if for any side from which we need an answer
+	// if for any side from which we need an answer
 	std::vector<t_string> sides_str;
-	for(int side : required_)
-	{
-		//and we haven't already received our answer from that side
-		if(res_.find(side) == res_.end())
-		{
+	for(int side : required_) {
+		// and we haven't already received our answer from that side
+		if(res_.find(side) == res_.end()) {
 			sides_str.push_back(std::to_string(side));
-			//and it is local
-			if(resources::gameboard->get_team(side).is_local() && !resources::gameboard->get_team(side).is_idle())
-			{
-				//then we have to make a local choice.
+			// and it is local
+			if(resources::gameboard->get_team(side).is_local() && !resources::gameboard->get_team(side).is_idle()) {
+				// then we have to make a local choice.
 				local_choice_ = side;
 				break;
 			}
@@ -339,12 +315,9 @@ void user_choice_manager::update_local_choice()
 	// TRANSLATORS: In networked games, this text is shown on the map while
 	// waiting for $desc from another player.
 	// Don't end the text with a punctuation sign.
-	wait_message_ = VNGETTEXT(
-		"waiting for $desc from side $sides",
-		"waiting for $desc from sides $sides",
-		sides_str.size(),
-		{std::pair("desc", uch_.description()), std::pair("sides", utils::format_conjunct_list("", sides_str))}
-	);
+	wait_message_
+		= VNGETTEXT("waiting for $desc from side $sides", "waiting for $desc from sides $sides", sides_str.size(),
+			{std::pair("desc", uch_.description()), std::pair("sides", utils::format_conjunct_list("", sides_str))});
 	if(local_choice_prev != local_choice_) {
 		changed_event_.notify_observers();
 	}
@@ -368,11 +341,10 @@ void user_choice_manager::ask_local_choice()
 	resources::recorder->user_input(tagname_, cfg, local_choice_);
 	res_[local_choice_] = cfg;
 
-	//send data to others.
-	//but if there wasn't any data sent during this turn, we don't want to begin with that now.
-	//TODO: we should send user choices during nonundoable actions immediately.
-	if(synced_context::undo_blocked() || current_side_ != local_choice_)
-	{
+	// send data to others.
+	// but if there wasn't any data sent during this turn, we don't want to begin with that now.
+	// TODO: we should send user choices during nonundoable actions immediately.
+	if(synced_context::undo_blocked() || current_side_ != local_choice_) {
 		synced_context::send_user_choice();
 	}
 	update_local_choice();
@@ -381,11 +353,10 @@ void user_choice_manager::ask_local_choice()
 void user_choice_manager::fix_oos()
 {
 	assert(oos_);
-	ERR_REPLAY << "A sync error appeared while waiting for a synced user choice of type '" << uch_.description() << "' ([" + tagname_ + "]), doing the choice locally";
-	for(int side : required_)
-	{
-		if(res_.find(side) == res_.end())
-		{
+	ERR_REPLAY << "A sync error appeared while waiting for a synced user choice of type '" << uch_.description()
+			   << "' ([" + tagname_ + "]), doing the choice locally";
+	for(int side : required_) {
+		if(res_.find(side) == res_.end()) {
 			ERR_REPLAY << "Doing a local choice for side " << side;
 			res_[side] = uch_.query_user(side);
 		}
@@ -396,13 +367,11 @@ void user_choice_manager::fix_oos()
 static void wait_ingame(user_choice_manager& man)
 {
 	user_choice_notifer_ingame notifer;
-	while(!man.finished() && man.waiting())
-	{
-		//TODO: didn't we already check for this?
-		if(!resources::gamedata->is_before_screen())
-		{
-			//during the prestart/preload event the screen is locked and we shouldn't call user_interact.
-			//because that might result in crashes if someone clicks anywhere during screenlock.
+	while(!man.finished() && man.waiting()) {
+		// TODO: didn't we already check for this?
+		if(!resources::gamedata->is_before_screen()) {
+			// during the prestart/preload event the screen is locked and we shouldn't call user_interact.
+			// because that might result in crashes if someone clicks anywhere during screenlock.
 
 			// calls man.pull via events.cpp -> pump_monitor::process
 			resources::controller->play_slice();
@@ -417,48 +386,49 @@ static void wait_prestart(user_choice_manager& man)
 	gui2::dialogs::synched_choice_wait::display(man);
 }
 
-std::map<int, config> user_choice_manager::get_user_choice_internal(const std::string &name, const mp_sync::user_choice &uch, const std::set<int>& sides)
+std::map<int, config> user_choice_manager::get_user_choice_internal(
+	const std::string& name, const mp_sync::user_choice& uch, const std::set<int>& sides)
 {
 	const bool is_too_early = resources::gamedata->is_before_screen();
 	user_choice_manager man(name, uch, sides);
-	while(!man.finished())
-	{
-		if(man.waiting())
-		{
+	while(!man.finished()) {
+		if(man.waiting()) {
 			if(is_too_early) {
 				wait_prestart(man);
-			}
-			else {
+			} else {
 				wait_ingame(man);
 			}
-		}
-		else if(man.has_local_choice())
-		{
+		} else if(man.has_local_choice()) {
 			man.ask_local_choice();
-		}
-		else
-		{
+		} else {
 			man.fix_oos();
 		}
 	}
 	return man.res_;
 }
 
-namespace {
-	// we want to prevent calling pull() while we are already calling pull()
-	// this could for example happen if pull() receives a [side_drop] and
-	// user_choice_manager::process is called while the "player has left the game.
-	// What do you want to do?" dialog is shown.
-	static bool ucm_in_proccess = false;
-	struct ucm_process_scope {
-		ucm_process_scope() { ucm_in_proccess = true; }
-		~ucm_process_scope() { ucm_in_proccess = false; }
-	};
-}
+namespace
+{
+// we want to prevent calling pull() while we are already calling pull()
+// this could for example happen if pull() receives a [side_drop] and
+// user_choice_manager::process is called while the "player has left the game.
+// What do you want to do?" dialog is shown.
+static bool ucm_in_proccess = false;
+struct ucm_process_scope
+{
+	ucm_process_scope()
+	{
+		ucm_in_proccess = true;
+	}
+	~ucm_process_scope()
+	{
+		ucm_in_proccess = false;
+	}
+};
+} // namespace
 void user_choice_manager::process()
 {
-	if(!oos_ && !finished() && !ucm_in_proccess)
-	{
+	if(!oos_ && !finished() && !ucm_in_proccess) {
 		ucm_process_scope scope1;
 		pull();
 	}

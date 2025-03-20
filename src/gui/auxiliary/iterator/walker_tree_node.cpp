@@ -23,7 +23,9 @@ namespace gui2::iteration
 {
 
 tree_node::tree_node(gui2::tree_view_node& node, tree_view_node::node_children_vector& children)
-	: children_(children), widget_(&node), itor_(children.begin())
+	: children_(children)
+	, widget_(&node)
+	, itor_(children.begin())
 {
 }
 
@@ -34,20 +36,20 @@ walker_base::state_t tree_node::next(const level level)
 	}
 
 	switch(level) {
-		case self:
-			if(widget_) {
-				widget_ = nullptr;
-				return invalid;
-			}
-			[[fallthrough]];
-		case internal:
-			assert(false);
-			return fail;
-		case child:
-			if(itor_ != children_.end()) {
-				++itor_;
-				return itor_ == children_.end() ? invalid : valid;
-			}
+	case self:
+		if(widget_) {
+			widget_ = nullptr;
+			return invalid;
+		}
+		[[fallthrough]];
+	case internal:
+		assert(false);
+		return fail;
+	case child:
+		if(itor_ != children_.end()) {
+			++itor_;
+			return itor_ == children_.end() ? invalid : valid;
+		}
 	}
 
 	assert(false);
@@ -57,12 +59,12 @@ walker_base::state_t tree_node::next(const level level)
 bool tree_node::at_end(const level level) const
 {
 	switch(level) {
-		case self:
-			return widget_ == nullptr;
-		case internal:
-			return true;
-		case child:
-			return (itor_ == children_.end());
+	case self:
+		return widget_ == nullptr;
+	case internal:
+		return true;
+	case child:
+		return (itor_ == children_.end());
 	}
 
 	assert(false);
@@ -72,16 +74,16 @@ bool tree_node::at_end(const level level) const
 gui2::widget* tree_node::get(const level level)
 {
 	switch(level) {
-		case self:
-			return widget_;
-		case internal:
+	case self:
+		return widget_;
+	case internal:
+		return nullptr;
+	case child:
+		if(itor_ == children_.end()) {
 			return nullptr;
-		case child:
-			if(itor_ == children_.end()) {
-				return nullptr;
-			} else {
-				return itor_.operator->()->get();
-			}
+		} else {
+			return itor_.operator->()->get();
+		}
 	}
 
 	assert(false);

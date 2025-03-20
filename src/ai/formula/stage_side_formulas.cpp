@@ -29,12 +29,15 @@ static lg::log_domain log_ai("ai/stage/side_formulas");
 #define WRN_AI LOG_STREAM(warn, log_ai)
 #define ERR_AI LOG_STREAM(err, log_ai)
 
-namespace ai {
-
-stage_side_formulas::stage_side_formulas(ai_context &context, const config &cfg, formula_ai &fai)
-	: stage(context,cfg), cfg_(cfg), fai_(fai), move_formula_()
+namespace ai
 {
 
+stage_side_formulas::stage_side_formulas(ai_context& context, const config& cfg, formula_ai& fai)
+	: stage(context, cfg)
+	, cfg_(cfg)
+	, fai_(fai)
+	, move_formula_()
+{
 }
 
 stage_side_formulas::~stage_side_formulas()
@@ -45,17 +48,17 @@ bool stage_side_formulas::do_play_stage()
 {
 	wfl::map_formula_callable callable(fai_.fake_ptr());
 	try {
-		if (move_formula_) {
-			while( !fai_.make_action(move_formula_,callable).is_empty() ) { }
+		if(move_formula_) {
+			while(!fai_.make_action(move_formula_, callable).is_empty()) {
+			}
 		} else {
 			WRN_AI << "Side formula skipped, maybe it's empty or incorrect";
 		}
-	}
-	catch(wfl::formula_error& e) {
+	} catch(wfl::formula_error& e) {
 		if(e.filename == "formula") {
 			e.line = 0;
 		}
-		fai_.handle_exception( e, "Formula error");
+		fai_.handle_exception(e, "Formula error");
 	}
 	return false;
 }

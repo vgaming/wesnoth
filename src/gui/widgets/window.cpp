@@ -35,44 +35,42 @@
 #include "gui/core/event/distributor.hpp"
 #include "gui/core/event/handler.hpp"
 #include "gui/core/event/message.hpp"
-#include "gui/core/log.hpp"
 #include "gui/core/layout_exception.hpp"
-#include "sdl/point.hpp"
+#include "gui/core/log.hpp"
+#include "gui/core/register_widget.hpp"
 #include "gui/core/window_builder.hpp"
 #include "gui/dialogs/tooltip.hpp"
 #include "gui/widgets/button.hpp"
 #include "gui/widgets/container_base.hpp"
-#include "gui/widgets/text_box_base.hpp"
-#include "gui/core/register_widget.hpp"
 #include "gui/widgets/grid.hpp"
 #include "gui/widgets/helper.hpp"
 #include "gui/widgets/panel.hpp"
 #include "gui/widgets/settings.hpp"
+#include "gui/widgets/text_box_base.hpp"
 #include "gui/widgets/widget.hpp"
 #include "gui/widgets/window.hpp"
+#include "sdl/point.hpp"
 #ifdef DEBUG_WINDOW_LAYOUT_GRAPHS
 #include "gui/widgets/debug.hpp"
 #endif
+#include "formula/variant.hpp"
+#include "sdl/input.hpp" // get_mouse_button_mask
 #include "sdl/rect.hpp"
 #include "sdl/texture.hpp"
-#include "formula/variant.hpp"
-#include "video.hpp" // only for toggle_fullscreen
 #include "sdl/userevent.hpp"
-#include "sdl/input.hpp" // get_mouse_button_mask
+#include "video.hpp" // only for toggle_fullscreen
 
 #include <functional>
 
 #include <algorithm>
 
-
 static lg::log_domain log_gui("gui/layout");
-#define ERR_GUI  LOG_STREAM(err, log_gui)
+#define ERR_GUI LOG_STREAM(err, log_gui)
 
 #define LOG_SCOPE_HEADER get_control_type() + " [" + id() + "] " + __func__
 #define LOG_HEADER LOG_SCOPE_HEADER + ':'
 
-#define LOG_IMPL_SCOPE_HEADER                                                  \
-	window.get_control_type() + " [" + window.id() + "] " + __func__
+#define LOG_IMPL_SCOPE_HEADER window.get_control_type() + " [" + window.id() + "] " + __func__
 #define LOG_IMPL_HEADER LOG_IMPL_SCOPE_HEADER + ':'
 
 static lg::log_domain log_display("display");
@@ -92,7 +90,8 @@ namespace implementation
 class builder_window : public builder_styled_widget
 {
 public:
-	builder_window(const config& cfg) : builder_styled_widget(cfg)
+	builder_window(const config& cfg)
+		: builder_styled_widget(cfg)
 	{
 	}
 
@@ -191,7 +190,8 @@ private:
 	std::map<unsigned, window*> windows_;
 };
 
-manager::manager() : windows_()
+manager::manager()
+	: windows_()
 {
 }
 
@@ -244,7 +244,7 @@ window* manager::get_window(const unsigned id)
 } // namespace
 
 window::window(const builder_window::window_resolution& definition)
-	: panel(implementation::builder_window(::config {"definition", definition.definition}), type())
+	: panel(implementation::builder_window(::config{"definition", definition.definition}), type())
 	, status_(status::NEW)
 	, show_mode_(show_mode::none)
 	, retval_(retval::NONE)
@@ -299,73 +299,51 @@ window::window(const builder_window::window_resolution& definition)
 
 	add_to_keyboard_chain(this);
 
-	connect_signal<event::SDL_VIDEO_RESIZE>(std::bind(
-			&window::signal_handler_sdl_video_resize, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_5));
+	connect_signal<event::SDL_VIDEO_RESIZE>(std::bind(&window::signal_handler_sdl_video_resize, this,
+		std::placeholders::_2, std::placeholders::_3, std::placeholders::_5));
 
-	connect_signal<event::SDL_ACTIVATE>(std::bind(
-			&event::distributor::initialize_state, event_distributor_.get()));
+	connect_signal<event::SDL_ACTIVATE>(std::bind(&event::distributor::initialize_state, event_distributor_.get()));
 
 	connect_signal<event::SDL_LEFT_BUTTON_UP>(
-			std::bind(&window::signal_handler_click_dismiss,
-						this,
-						std::placeholders::_2,
-						std::placeholders::_3,
-						std::placeholders::_4,
-						SDL_BUTTON_LMASK),
-			event::dispatcher::front_child);
+		std::bind(&window::signal_handler_click_dismiss, this, std::placeholders::_2, std::placeholders::_3,
+			std::placeholders::_4, SDL_BUTTON_LMASK),
+		event::dispatcher::front_child);
 	connect_signal<event::SDL_MIDDLE_BUTTON_UP>(
-			std::bind(&window::signal_handler_click_dismiss,
-						this,
-						std::placeholders::_2,
-						std::placeholders::_3,
-						std::placeholders::_4,
-						SDL_BUTTON_MMASK),
-			event::dispatcher::front_child);
+		std::bind(&window::signal_handler_click_dismiss, this, std::placeholders::_2, std::placeholders::_3,
+			std::placeholders::_4, SDL_BUTTON_MMASK),
+		event::dispatcher::front_child);
 	connect_signal<event::SDL_RIGHT_BUTTON_UP>(
-			std::bind(&window::signal_handler_click_dismiss,
-						this,
-						std::placeholders::_2,
-						std::placeholders::_3,
-						std::placeholders::_4,
-						SDL_BUTTON_RMASK),
-			event::dispatcher::front_child);
+		std::bind(&window::signal_handler_click_dismiss, this, std::placeholders::_2, std::placeholders::_3,
+			std::placeholders::_4, SDL_BUTTON_RMASK),
+		event::dispatcher::front_child);
 
 	// FIXME investigate why this handler is being called twice and if this is actually needed
-	connect_signal<event::SDL_KEY_DOWN>(
-			std::bind(
-					&window::signal_handler_sdl_key_down, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_5, std::placeholders::_6, false),
-			event::dispatcher::back_post_child);
-	connect_signal<event::SDL_KEY_DOWN>(std::bind(
-			&window::signal_handler_sdl_key_down, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_5, std::placeholders::_6, true));
+	connect_signal<event::SDL_KEY_DOWN>(std::bind(&window::signal_handler_sdl_key_down, this, std::placeholders::_2,
+											std::placeholders::_3, std::placeholders::_5, std::placeholders::_6, false),
+		event::dispatcher::back_post_child);
+	connect_signal<event::SDL_KEY_DOWN>(std::bind(&window::signal_handler_sdl_key_down, this, std::placeholders::_2,
+		std::placeholders::_3, std::placeholders::_5, std::placeholders::_6, true));
 
 	connect_signal<event::MESSAGE_SHOW_TOOLTIP>(
-			std::bind(&window::signal_handler_message_show_tooltip,
-						this,
-						std::placeholders::_2,
-						std::placeholders::_3,
-						std::placeholders::_5),
-			event::dispatcher::back_pre_child);
+		std::bind(&window::signal_handler_message_show_tooltip, this, std::placeholders::_2, std::placeholders::_3,
+			std::placeholders::_5),
+		event::dispatcher::back_pre_child);
 
 	connect_signal<event::MESSAGE_SHOW_HELPTIP>(
-			std::bind(&window::signal_handler_message_show_helptip,
-						this,
-						std::placeholders::_2,
-						std::placeholders::_3,
-						std::placeholders::_5),
-			event::dispatcher::back_pre_child);
+		std::bind(&window::signal_handler_message_show_helptip, this, std::placeholders::_2, std::placeholders::_3,
+			std::placeholders::_5),
+		event::dispatcher::back_pre_child);
 
 	connect_signal<event::REQUEST_PLACEMENT>(
-			std::bind(
-					&window::signal_handler_request_placement, this, std::placeholders::_2, std::placeholders::_3),
-			event::dispatcher::back_pre_child);
+		std::bind(&window::signal_handler_request_placement, this, std::placeholders::_2, std::placeholders::_3),
+		event::dispatcher::back_pre_child);
 
 	connect_signal<event::CLOSE_WINDOW>(std::bind(&window::signal_handler_close_window, this));
 
 	register_hotkey(hotkey::GLOBAL__HELPTIP, std::bind(gui2::helptip));
 
 	/** @todo: should eventally become part of global hotkey handling. */
-	register_hotkey(hotkey::HOTKEY_FULLSCREEN,
-		std::bind(&video::toggle_fullscreen));
+	register_hotkey(hotkey::HOTKEY_FULLSCREEN, std::bind(&video::toggle_fullscreen));
 }
 
 window::~window()
@@ -509,7 +487,7 @@ int window::show(const unsigned auto_close_timeout)
 
 	generate_dot_file("show", SHOW);
 
-	//assert(status_ == status::NEW);
+	// assert(status_ == status::NEW);
 
 	/*
 	 * Before show has been called, some functions might have done some testing
@@ -532,8 +510,7 @@ int window::show(const unsigned auto_close_timeout)
 		delay_event(event, auto_close_timeout);
 	}
 
-	try
-	{
+	try {
 		// According to the comment in the next loop, we need to pump() once
 		// before we know which mouse buttons are down. Assume they're all
 		// down, otherwise there's a race condition when the MOUSE_UP gets
@@ -569,9 +546,7 @@ int window::show(const unsigned auto_close_timeout)
 			// Update the display. This will rate limit to vsync.
 			events::draw();
 		}
-	}
-	catch(...)
-	{
+	} catch(...) {
 		// TODO: is this even necessary? What are we catching?
 		DBG_DP << "Caught general exception in show(): " << utils::get_unknown_exception_type();
 		hide();
@@ -641,7 +616,7 @@ void window::update_render_textures()
 	point buf_draw = render_buffer_.draw_size();
 	bool raw_size_changed = buf_raw.x != render.x || buf_raw.y != render.y;
 	bool draw_size_changed = buf_draw.x != draw.x || buf_draw.y != draw.y;
-	if (!raw_size_changed && !draw_size_changed) {
+	if(!raw_size_changed && !draw_size_changed) {
 		// buffers are fine
 		return;
 	}
@@ -697,7 +672,7 @@ void window::render()
 	deferred_regions_.clear();
 
 	// Render the portion of the window awaiting rerender (if any).
-	if (awaiting_rerender_.empty()) {
+	if(awaiting_rerender_.empty()) {
 		return;
 	}
 
@@ -719,7 +694,7 @@ bool window::expose(const rect& region)
 	// Calculate the destination region we need to draw.
 	rect dst = get_rectangle().intersect(region);
 	dst.clip(draw::get_clip());
-	if (dst.empty()) {
+	if(dst.empty()) {
 		return false;
 	}
 
@@ -736,7 +711,7 @@ bool window::expose(const rect& region)
 rect window::screen_location()
 {
 	if(hidden_) {
-		return {0,0,0,0};
+		return {0, 0, 0, 0};
 	}
 	return get_rectangle();
 }
@@ -765,8 +740,7 @@ widget* window::find_at(const point& coordinate, const bool must_be_active)
 	return panel::find_at(coordinate, must_be_active);
 }
 
-const widget* window::find_at(const point& coordinate,
-								const bool must_be_active) const
+const widget* window::find_at(const point& coordinate, const bool must_be_active) const
 {
 	return panel::find_at(coordinate, must_be_active);
 }
@@ -776,8 +750,7 @@ widget* window::find(const std::string_view id, const bool must_be_active)
 	return container_base::find(id, must_be_active);
 }
 
-const widget* window::find(const std::string_view id, const bool must_be_active)
-		const
+const widget* window::find(const std::string_view id, const bool must_be_active) const
 {
 	return container_base::find(id, must_be_active);
 }
@@ -821,8 +794,7 @@ void window::remove_linked_widget(const std::string& id, const widget* wgt)
 	if(itor != widgets.end()) {
 		widgets.erase(itor);
 
-		assert(std::find(widgets.begin(), widgets.end(), wgt)
-			   == widgets.end());
+		assert(std::find(widgets.begin(), widgets.end(), wgt) == widgets.end());
 	}
 }
 
@@ -865,7 +837,7 @@ void window::layout()
 			maximum_height = settings::screen_height;
 		}
 	} else {
-		maximum_width  = w_(variables_, &functions_);
+		maximum_width = w_(variables_, &functions_);
 		maximum_height = h_(variables_, &functions_);
 	}
 
@@ -880,8 +852,7 @@ void window::layout()
 			btn->set_visible(widget::visibility::invisible);
 			click_dismiss_button = btn;
 		}
-		VALIDATE(click_dismiss_button,
-				 _("Click dismiss needs a ‘click_dismiss’ or ‘ok’ button."));
+		VALIDATE(click_dismiss_button, _("Click dismiss needs a ‘click_dismiss’ or ‘ok’ button."));
 	}
 
 	/***** Layout. *****/
@@ -890,25 +861,20 @@ void window::layout()
 
 	layout_linked_widgets();
 
-	try
-	{
+	try {
 		window_implementation::layout(*this, maximum_width, maximum_height);
-	}
-	catch(const layout_exception_resize_failed&)
-	{
-
+	} catch(const layout_exception_resize_failed&) {
 		/** @todo implement the scrollbars on the window. */
 
 		std::stringstream sstr;
 		sstr << __FILE__ << ":" << __LINE__ << " in function '" << __func__
 			 << "' found the following problem: Failed to size window;"
-			 << " wanted size " << get_best_size() << " available size "
-			 << maximum_width << ',' << maximum_height << " screen size "
-			 << settings::screen_width << ',' << settings::screen_height << '.';
+			 << " wanted size " << get_best_size() << " available size " << maximum_width << ',' << maximum_height
+			 << " screen size " << settings::screen_width << ',' << settings::screen_height << '.';
 
 		throw wml_exception(_("Failed to show a dialog, "
-							   "which doesn’t fit on the screen."),
-							 sstr.str());
+							  "which doesn’t fit on the screen."),
+			sstr.str());
 	}
 
 	/****** Validate click dismiss status. *****/
@@ -916,36 +882,27 @@ void window::layout()
 		assert(click_dismiss_button);
 		click_dismiss_button->set_visible(widget::visibility::visible);
 
-		connect_signal_mouse_left_click(
-				*click_dismiss_button,
-				std::bind(&window::set_retval, this, retval::OK, true));
+		connect_signal_mouse_left_click(*click_dismiss_button, std::bind(&window::set_retval, this, retval::OK, true));
 
 		layout_initialize(true);
 		generate_dot_file("layout_initialize", LAYOUT);
 
 		layout_linked_widgets();
 
-		try
-		{
-			window_implementation::layout(
-					*this, maximum_width, maximum_height);
-		}
-		catch(const layout_exception_resize_failed&)
-		{
-
+		try {
+			window_implementation::layout(*this, maximum_width, maximum_height);
+		} catch(const layout_exception_resize_failed&) {
 			/** @todo implement the scrollbars on the window. */
 
 			std::stringstream sstr;
 			sstr << __FILE__ << ":" << __LINE__ << " in function '" << __func__
 				 << "' found the following problem: Failed to size window;"
-				 << " wanted size " << get_best_size() << " available size "
-				 << maximum_width << ',' << maximum_height << " screen size "
-				 << settings::screen_width << ',' << settings::screen_height
-				 << '.';
+				 << " wanted size " << get_best_size() << " available size " << maximum_width << ',' << maximum_height
+				 << " screen size " << settings::screen_width << ',' << settings::screen_height << '.';
 
 			throw wml_exception(_("Failed to show a dialog, "
-								   "which doesn’t fit on the screen."),
-								 sstr.str());
+								  "which doesn’t fit on the screen."),
+				sstr.str());
 		}
 	}
 
@@ -955,50 +912,46 @@ void window::layout()
 	   a handful of windows that request 0 size just to get a position
 	   chosen via the code below, so at least for now allow them:
 	*/
-	assert(size.x >= 0 && static_cast<unsigned>(size.x) <= maximum_width
-	       && size.y >= 0 && static_cast<unsigned>(size.y) <= maximum_height);
+	assert(size.x >= 0 && static_cast<unsigned>(size.x) <= maximum_width && size.y >= 0
+		&& static_cast<unsigned>(size.y) <= maximum_height);
 
 	point origin(0, 0);
 
 	if(automatic_placement_) {
-
 		switch(horizontal_placement_) {
-			case grid::HORIZONTAL_ALIGN_LEFT:
-				// Do nothing
-				break;
-			case grid::HORIZONTAL_ALIGN_CENTER:
-				origin.x = (settings::screen_width - size.x) / 2;
-				break;
-			case grid::HORIZONTAL_ALIGN_RIGHT:
-				origin.x = settings::screen_width - size.x;
-				break;
-			default:
-				assert(false);
+		case grid::HORIZONTAL_ALIGN_LEFT:
+			// Do nothing
+			break;
+		case grid::HORIZONTAL_ALIGN_CENTER:
+			origin.x = (settings::screen_width - size.x) / 2;
+			break;
+		case grid::HORIZONTAL_ALIGN_RIGHT:
+			origin.x = settings::screen_width - size.x;
+			break;
+		default:
+			assert(false);
 		}
 		switch(vertical_placement_) {
-			case grid::VERTICAL_ALIGN_TOP:
-				// Do nothing
-				break;
-			case grid::VERTICAL_ALIGN_CENTER:
-				origin.y = (settings::screen_height - size.y) / 2;
-				break;
-			case grid::VERTICAL_ALIGN_BOTTOM:
-				origin.y = settings::screen_height - size.y;
-				break;
-			default:
-				assert(false);
+		case grid::VERTICAL_ALIGN_TOP:
+			// Do nothing
+			break;
+		case grid::VERTICAL_ALIGN_CENTER:
+			origin.y = (settings::screen_height - size.y) / 2;
+			break;
+		case grid::VERTICAL_ALIGN_BOTTOM:
+			origin.y = settings::screen_height - size.y;
+			break;
+		default:
+			assert(false);
 		}
 	} else {
-
 		variables_.add("window_width", wfl::variant(size.x));
 		variables_.add("window_height", wfl::variant(size.y));
 
 		while(reevaluate_best_size_(variables_, &functions_)) {
 			layout_initialize(true);
 
-			window_implementation::layout(*this,
-										   w_(variables_, &functions_),
-										   h_(variables_, &functions_));
+			window_implementation::layout(*this, w_(variables_, &functions_), h_(variables_, &functions_));
 
 			size = get_best_size();
 			variables_.add("window_width", wfl::variant(size.x));
@@ -1029,15 +982,11 @@ void window::layout()
 void window::layout_linked_widgets()
 {
 	// evaluate the group sizes
-	for(auto & linked_size : linked_size_)
-	{
-
+	for(auto& linked_size : linked_size_) {
 		point max_size(0, 0);
 
 		// Determine the maximum size.
-		for(auto widget : linked_size.second.widgets)
-		{
-
+		for(auto widget : linked_size.second.widgets) {
 			const point size = widget->get_best_size();
 
 			if(size.x > max_size.x) {
@@ -1055,9 +1004,7 @@ void window::layout_linked_widgets()
 		}
 
 		// Set the maximum size.
-		for(auto widget : linked_size.second.widgets)
-		{
-
+		for(auto widget : linked_size.second.widgets) {
 			point size = widget->get_best_size();
 
 			if(linked_size.second.width != -1) {
@@ -1109,16 +1056,13 @@ void window::finalize(const builder_grid& content_grid)
 
 #ifdef DEBUG_WINDOW_LAYOUT_GRAPHS
 
-void window::generate_dot_file(const std::string& generator,
-								const unsigned domain)
+void window::generate_dot_file(const std::string& generator, const unsigned domain)
 {
 	debug_layout_->generate_dot_file(generator, domain);
 }
 #endif
 
-void window_implementation::layout(window& window,
-									const unsigned maximum_width,
-									const unsigned maximum_height)
+void window_implementation::layout(window& window, const unsigned maximum_width, const unsigned maximum_height)
 {
 	log_scope2(log_gui_layout, LOG_IMPL_SCOPE_HEADER);
 
@@ -1128,16 +1072,12 @@ void window_implementation::layout(window& window,
 	 * the algorithm page.
 	 */
 
-	try
-	{
+	try {
 		point size = window.get_best_size();
 
-		DBG_GUI_L << LOG_IMPL_HEADER << " best size : " << size
-				  << " maximum size : " << maximum_width << ','
+		DBG_GUI_L << LOG_IMPL_HEADER << " best size : " << size << " maximum size : " << maximum_width << ','
 				  << maximum_height << ".";
-		if(size.x <= static_cast<int>(maximum_width)
-		   && size.y <= static_cast<int>(maximum_height)) {
-
+		if(size.x <= static_cast<int>(maximum_width) && size.y <= static_cast<int>(maximum_height)) {
 			DBG_GUI_L << LOG_IMPL_HEADER << " Result: Fits, nothing to do.";
 			return;
 		}
@@ -1148,12 +1088,10 @@ void window_implementation::layout(window& window,
 			size = window.get_best_size();
 			if(size.x > static_cast<int>(maximum_width)) {
 				DBG_GUI_L << LOG_IMPL_HEADER << " Result: Resize width failed."
-						  << " Wanted width " << maximum_width
-						  << " resulting width " << size.x << ".";
+						  << " Wanted width " << maximum_width << " resulting width " << size.x << ".";
 				throw layout_exception_width_resize_failed();
 			}
-			DBG_GUI_L << LOG_IMPL_HEADER
-					  << " Status: Resize width succeeded.";
+			DBG_GUI_L << LOG_IMPL_HEADER << " Status: Resize width succeeded.";
 		}
 
 		if(size.y > static_cast<int>(maximum_height)) {
@@ -1162,25 +1100,18 @@ void window_implementation::layout(window& window,
 			size = window.get_best_size();
 			if(size.y > static_cast<int>(maximum_height)) {
 				DBG_GUI_L << LOG_IMPL_HEADER << " Result: Resize height failed."
-						  << " Wanted height " << maximum_height
-						  << " resulting height " << size.y << ".";
+						  << " Wanted height " << maximum_height << " resulting height " << size.y << ".";
 				throw layout_exception_height_resize_failed();
 			}
-			DBG_GUI_L << LOG_IMPL_HEADER
-					  << " Status: Resize height succeeded.";
+			DBG_GUI_L << LOG_IMPL_HEADER << " Status: Resize height succeeded.";
 		}
 
-		assert(size.x <= static_cast<int>(maximum_width)
-			   && size.y <= static_cast<int>(maximum_height));
-
+		assert(size.x <= static_cast<int>(maximum_width) && size.y <= static_cast<int>(maximum_height));
 
 		DBG_GUI_L << LOG_IMPL_HEADER << " Result: Resizing succeeded.";
 		return;
-	}
-	catch(const layout_exception_width_modified&)
-	{
-		DBG_GUI_L << LOG_IMPL_HEADER
-				  << " Status: Width has been modified, rerun.";
+	} catch(const layout_exception_width_modified&) {
+		DBG_GUI_L << LOG_IMPL_HEADER << " Status: Width has been modified, rerun.";
 
 		window.layout_initialize(false);
 		window.layout_linked_widgets();
@@ -1229,9 +1160,7 @@ void window::add_to_tab_order(widget* widget, int at)
 	}
 }
 
-void window::signal_handler_sdl_video_resize(const event::ui_event event,
-											  bool& handled,
-											  const point& new_size)
+void window::signal_handler_sdl_video_resize(const event::ui_event event, bool& handled, const point& new_size)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -1244,13 +1173,10 @@ void window::signal_handler_sdl_video_resize(const event::ui_event event,
 	handled = true;
 }
 
-void window::signal_handler_click_dismiss(const event::ui_event event,
-										   bool& handled,
-										   bool& halt,
-										   const int mouse_button_mask)
+void window::signal_handler_click_dismiss(
+	const event::ui_event event, bool& handled, bool& halt, const int mouse_button_mask)
 {
-	DBG_GUI_E << LOG_HEADER << ' ' << event << " mouse_button_mask "
-			  << static_cast<unsigned>(mouse_button_mask) << ".";
+	DBG_GUI_E << LOG_HEADER << ' ' << event << " mouse_button_mask " << static_cast<unsigned>(mouse_button_mask) << ".";
 
 	handled = halt = click_dismiss(mouse_button_mask);
 }
@@ -1263,11 +1189,8 @@ static bool is_active(const widget* wgt)
 	return false;
 }
 
-void window::signal_handler_sdl_key_down(const event::ui_event event,
-										  bool& handled,
-										  const SDL_Keycode key,
-										  const SDL_Keymod mod,
-										  bool handle_tab)
+void window::signal_handler_sdl_key_down(
+	const event::ui_event event, bool& handled, const SDL_Keycode key, const SDL_Keymod mod, bool handle_tab)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -1281,13 +1204,13 @@ void window::signal_handler_sdl_key_down(const event::ui_event event,
 		}
 	}
 	if(key == SDLK_KP_ENTER || key == SDLK_RETURN) {
-		if (mod & (KMOD_CTRL | KMOD_ALT | KMOD_GUI | KMOD_SHIFT)) {
+		if(mod & (KMOD_CTRL | KMOD_ALT | KMOD_GUI | KMOD_SHIFT)) {
 			// Don't handle if modifier is pressed
 			handled = false;
 		} else {
 			// Trigger window OK button only if Enter enabled,
 			// otherwise pass handling to widget
-			if (!enter_disabled_) {
+			if(!enter_disabled_) {
 				set_retval(retval::OK);
 				handled = true;
 			}
@@ -1329,36 +1252,31 @@ void window::signal_handler_sdl_key_down(const event::ui_event event,
 #endif
 }
 
-void window::signal_handler_message_show_tooltip(const event::ui_event event,
-												  bool& handled,
-												  const event::message& message)
+void window::signal_handler_message_show_tooltip(
+	const event::ui_event event, bool& handled, const event::message& message)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
-	const event::message_show_tooltip& request
-			= dynamic_cast<const event::message_show_tooltip&>(message);
+	const event::message_show_tooltip& request = dynamic_cast<const event::message_show_tooltip&>(message);
 
 	dialogs::tip::show(tooltip_.id, request.message, request.location, request.source_rect);
 
 	handled = true;
 }
 
-void window::signal_handler_message_show_helptip(const event::ui_event event,
-												  bool& handled,
-												  const event::message& message)
+void window::signal_handler_message_show_helptip(
+	const event::ui_event event, bool& handled, const event::message& message)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
-	const event::message_show_helptip& request
-			= dynamic_cast<const event::message_show_helptip&>(message);
+	const event::message_show_helptip& request = dynamic_cast<const event::message_show_helptip&>(message);
 
 	dialogs::tip::show(helptip_.id, request.message, request.location, request.source_rect);
 
 	handled = true;
 }
 
-void window::signal_handler_request_placement(const event::ui_event event,
-											   bool& handled)
+void window::signal_handler_request_placement(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -1383,7 +1301,8 @@ window_definition::window_definition(const config& cfg)
 }
 
 window_definition::resolution::resolution(const config& cfg)
-	: panel_definition::resolution(cfg), grid(nullptr)
+	: panel_definition::resolution(cfg)
+	, grid(nullptr)
 {
 	auto child = cfg.optional_child("grid");
 	// VALIDATE(child, _("No grid defined."));
@@ -1397,7 +1316,6 @@ window_definition::resolution::resolution(const config& cfg)
 // }------------ END --------------
 
 } // namespace gui2
-
 
 /**
  * @page layout_algorithm Layout algorithm

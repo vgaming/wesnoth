@@ -50,4 +50,4 @@ void sp_options_configure::post_show()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

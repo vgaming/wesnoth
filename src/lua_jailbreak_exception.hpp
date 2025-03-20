@@ -26,7 +26,9 @@
 class lua_jailbreak_exception
 {
 public:
-	virtual ~lua_jailbreak_exception() noexcept {}
+	virtual ~lua_jailbreak_exception() noexcept
+	{
+	}
 
 	/** Depth of recursive luaW_pcall_internal() function calls. */
 	static int jail_depth;
@@ -42,12 +44,10 @@ public:
 	static void rethrow();
 
 protected:
-
 	/** The exception to be rethrown. */
 	static lua_jailbreak_exception* jailbreak_exception;
 
 private:
-
 	/** Clears the current exception. */
 	static void clear() noexcept;
 
@@ -88,12 +88,15 @@ private:
  *
  * @param type                    The type of the class whc
  */
-#define IMPLEMENT_LUA_JAILBREAK_EXCEPTION(type)                      \
-	                                                                 \
-	virtual type* clone() const final { return new type(*this); }    \
-	                                                                 \
-	virtual void execute() final                                     \
-	{                                                                \
-		type exception(dynamic_cast<type&>(*jailbreak_exception));   \
-		throw exception;                                             \
+#define IMPLEMENT_LUA_JAILBREAK_EXCEPTION(type)                                                                        \
+                                                                                                                       \
+	virtual type* clone() const final                                                                                  \
+	{                                                                                                                  \
+		return new type(*this);                                                                                        \
+	}                                                                                                                  \
+                                                                                                                       \
+	virtual void execute() final                                                                                       \
+	{                                                                                                                  \
+		type exception(dynamic_cast<type&>(*jailbreak_exception));                                                     \
+		throw exception;                                                                                               \
 	}

@@ -20,26 +20,28 @@
 
 #include "ai/default/stage_rca.hpp"
 
-#include "ai/manager.hpp"
 #include "ai/composite/engine.hpp"
 #include "ai/composite/property_handler.hpp"
 #include "ai/composite/rca.hpp"
 #include "ai/gamestate_observer.hpp"
+#include "ai/manager.hpp"
 #include "log.hpp"
 
 #include <functional>
 
-namespace ai {
+namespace ai
+{
 
-namespace ai_default_rca {
+namespace ai_default_rca
+{
 
 static lg::log_domain log_ai_testing_rca_default("ai/stage/rca");
 #define DBG_AI_TESTING_RCA_DEFAULT LOG_STREAM(debug, log_ai_testing_rca_default)
 #define LOG_AI_TESTING_RCA_DEFAULT LOG_STREAM(info, log_ai_testing_rca_default)
 #define ERR_AI_TESTING_RCA_DEFAULT LOG_STREAM(err, log_ai_testing_rca_default)
 
-candidate_action_evaluation_loop::candidate_action_evaluation_loop( ai_context &context, const config &cfg)
-	: stage(context,cfg)
+candidate_action_evaluation_loop::candidate_action_evaluation_loop(ai_context& context, const config& cfg)
+	: stage(context, cfg)
 	, candidate_actions_()
 	, cfg_(cfg)
 {
@@ -47,32 +49,31 @@ candidate_action_evaluation_loop::candidate_action_evaluation_loop( ai_context &
 
 void candidate_action_evaluation_loop::on_create()
 {
-	//init the candidate actions
-	for (const config &cfg_element : cfg_.child_range("candidate_action")) {
-		engine::parse_candidate_action_from_config(*this,cfg_element,back_inserter(candidate_actions_));
+	// init the candidate actions
+	for(const config& cfg_element : cfg_.child_range("candidate_action")) {
+		engine::parse_candidate_action_from_config(*this, cfg_element, back_inserter(candidate_actions_));
 	}
 
-	std::function<void(std::vector<candidate_action_ptr>&, const config&)> factory_candidate_actions = [this](std::vector<candidate_action_ptr> &candidate_actions, const config &cfg)
-	{
-		engine::parse_candidate_action_from_config(*this, cfg, std::back_inserter(candidate_actions));
-	};
-	register_vector_property(property_handlers(),"candidate_action",candidate_actions_, factory_candidate_actions);
-
+	std::function<void(std::vector<candidate_action_ptr>&, const config&)> factory_candidate_actions
+		= [this](std::vector<candidate_action_ptr>& candidate_actions, const config& cfg) {
+			  engine::parse_candidate_action_from_config(*this, cfg, std::back_inserter(candidate_actions));
+		  };
+	register_vector_property(property_handlers(), "candidate_action", candidate_actions_, factory_candidate_actions);
 }
 
 config candidate_action_evaluation_loop::to_config() const
 {
 	config cfg = stage::to_config();
-	for (candidate_action_ptr ca : candidate_actions_) {
-		cfg.add_child("candidate_action",ca->to_config());
+	for(candidate_action_ptr ca : candidate_actions_) {
+		cfg.add_child("candidate_action", ca->to_config());
 	}
 	return cfg;
 }
 
-
-class desc_sorter_of_candidate_actions {
+class desc_sorter_of_candidate_actions
+{
 public:
-	bool operator()(const candidate_action_ptr &a, const candidate_action_ptr &b) const
+	bool operator()(const candidate_action_ptr& a, const candidate_action_ptr& b) const
 	{
 		return a->get_max_score() > b->get_max_score();
 	}
@@ -80,14 +81,14 @@ public:
 
 bool candidate_action_evaluation_loop::do_play_stage()
 {
-	LOG_AI_TESTING_RCA_DEFAULT << "Starting candidate action evaluation loop for side "<< get_side();
+	LOG_AI_TESTING_RCA_DEFAULT << "Starting candidate action evaluation loop for side " << get_side();
 
-	for (candidate_action_ptr ca : candidate_actions_) {
+	for(candidate_action_ptr ca : candidate_actions_) {
 		ca->enable();
 	}
 
-	//sort candidate actions by max_score DESC
-	std::sort(candidate_actions_.begin(),candidate_actions_.end(),desc_sorter_of_candidate_actions());
+	// sort candidate actions by max_score DESC
+	std::sort(candidate_actions_.begin(), candidate_actions_.end(), desc_sorter_of_candidate_actions());
 
 	bool executed = false;
 	bool gamestate_changed = false;
@@ -96,48 +97,53 @@ bool candidate_action_evaluation_loop::do_play_stage()
 		double best_score = candidate_action::BAD_SCORE;
 		candidate_action_ptr best_ptr;
 
-		//Evaluation
-		for (candidate_action_ptr ca_ptr : candidate_actions_) {
-			if (!ca_ptr->is_enabled()){
-				DBG_AI_TESTING_RCA_DEFAULT << "Skipping disabled candidate action: "<< *ca_ptr;
+		// Evaluation
+		for(candidate_action_ptr ca_ptr : candidate_actions_) {
+			if(!ca_ptr->is_enabled()) {
+				DBG_AI_TESTING_RCA_DEFAULT << "Skipping disabled candidate action: " << *ca_ptr;
 				continue;
 			}
 
-			if (ca_ptr->get_max_score()<=best_score) {
-				DBG_AI_TESTING_RCA_DEFAULT << "Ending candidate action evaluation loop because current score "<<best_score<<" is greater than the upper bound of score for remaining candidate actions "<< ca_ptr->get_max_score();
+			if(ca_ptr->get_max_score() <= best_score) {
+				DBG_AI_TESTING_RCA_DEFAULT
+					<< "Ending candidate action evaluation loop because current score " << best_score
+					<< " is greater than the upper bound of score for remaining candidate actions "
+					<< ca_ptr->get_max_score();
 				break;
 			}
 
-			DBG_AI_TESTING_RCA_DEFAULT << "Evaluating candidate action: "<< *ca_ptr;
+			DBG_AI_TESTING_RCA_DEFAULT << "Evaluating candidate action: " << *ca_ptr;
 			double score = ca_ptr->evaluate();
-			DBG_AI_TESTING_RCA_DEFAULT << "Evaluated candidate action to score "<< score << " : " << *ca_ptr;
+			DBG_AI_TESTING_RCA_DEFAULT << "Evaluated candidate action to score " << score << " : " << *ca_ptr;
 
-			if (score>best_score) {
+			if(score > best_score) {
 				best_score = score;
 				best_ptr = ca_ptr;
 			}
 		}
 
-		//Execution
-		if (best_score>candidate_action::BAD_SCORE) {
-			DBG_AI_TESTING_RCA_DEFAULT << "Executing best candidate action: "<< *best_ptr;
+		// Execution
+		if(best_score > candidate_action::BAD_SCORE) {
+			DBG_AI_TESTING_RCA_DEFAULT << "Executing best candidate action: " << *best_ptr;
 			gamestate_observer gs_o;
 			best_ptr->execute();
 			executed = true;
-			if (!gs_o.is_gamestate_changed()) {
-				//this means that this CA has lied to us in evaluate()
-				//we punish it by disabling it
-				DBG_AI_TESTING_RCA_DEFAULT << "Disabling candidate action because it failed to change the game state: "<< *best_ptr;
+			if(!gs_o.is_gamestate_changed()) {
+				// this means that this CA has lied to us in evaluate()
+				// we punish it by disabling it
+				DBG_AI_TESTING_RCA_DEFAULT << "Disabling candidate action because it failed to change the game state: "
+										   << *best_ptr;
 				best_ptr->disable();
-				//since we don't re-enable at this play_stage, if we disable this CA, other may get the chance to go.
+				// since we don't re-enable at this play_stage, if we disable this CA, other may get the chance to go.
 			} else {
 				gamestate_changed = true;
 			}
 		} else {
-			LOG_AI_TESTING_RCA_DEFAULT << "Ending candidate action evaluation loop due to best score "<< best_score<<"<="<< candidate_action::BAD_SCORE;
+			LOG_AI_TESTING_RCA_DEFAULT << "Ending candidate action evaluation loop due to best score " << best_score
+									   << "<=" << candidate_action::BAD_SCORE;
 		}
-	} while (executed);
-	LOG_AI_TESTING_RCA_DEFAULT << "Ended candidate action evaluation loop for side "<< get_side();
+	} while(executed);
+	LOG_AI_TESTING_RCA_DEFAULT << "Ended candidate action evaluation loop for side " << get_side();
 	remove_completed_cas();
 	return gamestate_changed;
 }
@@ -146,19 +152,18 @@ void candidate_action_evaluation_loop::remove_completed_cas()
 {
 	std::vector<std::size_t> tbr; // indexes of elements to be removed
 
-	for (std::size_t i = 0; i != candidate_actions_.size(); ++i)
-	{
-		if (candidate_actions_[i]->to_be_removed())
-		{
+	for(std::size_t i = 0; i != candidate_actions_.size(); ++i) {
+		if(candidate_actions_[i]->to_be_removed()) {
 			tbr.push_back(i); // so we fill the array with the indexes
 		}
 	}
 
-	for (std::size_t i = 0; i != tbr.size(); ++i)
-	{
+	for(std::size_t i = 0; i != tbr.size(); ++i) {
 		// we should go downwards, so that index shifts don't affect us
-		std::size_t index = tbr.size() - i - 1; // downcounting for is not possible using unsigned counters, so we hack around
-		std::string path = "stage[" + this->get_id() + "].candidate_action[" + candidate_actions_[tbr[index]]->get_name() + "]";
+		std::size_t index
+			= tbr.size() - i - 1; // downcounting for is not possible using unsigned counters, so we hack around
+		std::string path
+			= "stage[" + this->get_id() + "].candidate_action[" + candidate_actions_[tbr[index]]->get_name() + "]";
 
 		config cfg = config();
 		cfg["path"] = path;
@@ -167,27 +172,28 @@ void candidate_action_evaluation_loop::remove_completed_cas()
 		ai::manager::get_singleton().modify_active_ai_for_side(this->get_side(), cfg); // we remove the CA
 	}
 
-
-// @note: this code might be more convenient, but is obviously faulty and incomplete, because of iterator invalidation rules
-//	  If you see a way to complete it, please contact me(Nephro).
-// 	for (std::vector<candidate_action_ptr>::iterator it = candidate_actions_.begin(); it != candidate_actions_.end(); )
-// 	{
-// 		if ((*it)->to_be_removed())
-// 		{
-// 			// code to remove a CA
-// 			std::string path = "stage[" + this->get_id() + "].candidate_action[" + (*it)->get_name() + "]";
-//
-// 			config cfg = config();
-// 			cfg["path"] = path;
-// 			cfg["action"] = "delete";
-//
-// 			ai::manager::get_singleton().modify_active_ai_for_side(this->get_side(), cfg);
-// 		}
-// 		else
-// 		{
-// 			++it; // @note: should I modify this to a while loop?
-// 		}
-// 	}
+	// @note: this code might be more convenient, but is obviously faulty and incomplete, because of iterator
+	// invalidation rules
+	//	  If you see a way to complete it, please contact me(Nephro).
+	// 	for (std::vector<candidate_action_ptr>::iterator it = candidate_actions_.begin(); it !=
+	// candidate_actions_.end(); )
+	// 	{
+	// 		if ((*it)->to_be_removed())
+	// 		{
+	// 			// code to remove a CA
+	// 			std::string path = "stage[" + this->get_id() + "].candidate_action[" + (*it)->get_name() + "]";
+	//
+	// 			config cfg = config();
+	// 			cfg["path"] = path;
+	// 			cfg["action"] = "delete";
+	//
+	// 			ai::manager::get_singleton().modify_active_ai_for_side(this->get_side(), cfg);
+	// 		}
+	// 		else
+	// 		{
+	// 			++it; // @note: should I modify this to a while loop?
+	// 		}
+	// 	}
 }
 
 rca_context& candidate_action_evaluation_loop::get_rca_context()
@@ -199,6 +205,6 @@ candidate_action_evaluation_loop::~candidate_action_evaluation_loop()
 {
 }
 
-} // end of namespace testing_ai_default
+} // namespace ai_default_rca
 
 } // end of namespace ai

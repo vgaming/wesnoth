@@ -37,32 +37,32 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	long long x_sll;
 	double x_dbl;
 
-// compare identical assigned int vs string
+	// compare identical assigned int vs string
 	c1["x"] = 6;
 	c2["x"] = "6";
 	BOOST_CHECK_EQUAL(c1["x"], c2["x"]);
 
-// compare identical assigned int vs floating point
+	// compare identical assigned int vs floating point
 	c1["x"] = 6;
 	c2["x"] = 6.0;
 	BOOST_CHECK_EQUAL(c1["x"], c2["x"]);
 
-// compare identical assigned int-string vs floating point
+	// compare identical assigned int-string vs floating point
 	c1["x"] = "6";
 	c2["x"] = 6.0;
 	BOOST_CHECK_EQUAL(c1["x"], c2["x"]);
 
-// compare identical assigned floating point-string vs int
+	// compare identical assigned floating point-string vs int
 	c1["x"] = 6;
 	c2["x"] = "6.0";
 	BOOST_CHECK_NE(c1["x"], c2["x"]);
 
-// compare identical assigned floating point vs string
+	// compare identical assigned floating point vs string
 	c1["x"] = 6.0;
 	c2["x"] = "6.0";
 	BOOST_CHECK_NE(c1["x"], c2["x"]);
 
-// check what happens when trying to get a numeric result from a non-numeric value
+	// check what happens when trying to get a numeric result from a non-numeric value
 	c["x"] = "1aaaa";
 	x_str = c["x"].str();
 	BOOST_CHECK_EQUAL(x_str, "1aaaa");
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_dbl = c["x"].to_double();
 	BOOST_CHECK_EQUAL(x_dbl, 0.0);
 
-// check type conversion when assigned as int
+	// check type conversion when assigned as int
 	c["x"] = 1;
 	x_str = c["x"].str();
 	BOOST_CHECK_EQUAL(x_str, "1");
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_dbl = c["x"].to_double();
 	BOOST_CHECK_EQUAL(x_dbl, 1.0);
 
-// check type conversion when assigned as int (again)
+	// check type conversion when assigned as int (again)
 	c["x"] = 10000000;
 	x_int = c["x"].to_int();
 	BOOST_CHECK_EQUAL(x_int, 10000000);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_dbl = c["x"].to_double();
 	BOOST_CHECK_EQUAL(x_dbl, 1e7);
 
-// check type conversion when assigned aan empty string
+	// check type conversion when assigned aan empty string
 	c["x"] = "";
 	x_sll = c["x"].to_long_long();
 	BOOST_CHECK_EQUAL(x_sll, 0ll);
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_dbl = c["x"].to_double();
 	BOOST_CHECK_EQUAL(x_dbl, 0.0);
 
-// check type conversion when assigned as a hex string
+	// check type conversion when assigned as a hex string
 	c["x"] = "0x11";
 	x_int = c["x"].to_int();
 	BOOST_CHECK_EQUAL(x_int, 0);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_dbl = c["x"].to_double();
 	BOOST_CHECK_EQUAL(x_dbl, 0.0);
 
-// check type conversion when assigned as a hex string (again)
+	// check type conversion when assigned as a hex string (again)
 	c["x"] = "0xab";
 	x_int = c["x"].to_int();
 	BOOST_CHECK_EQUAL(x_int, 0);
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_dbl = c["x"].to_double();
 	BOOST_CHECK_EQUAL(x_dbl, 0.0);
 
-// check type conversion when assigned as a string with leading zeroes
+	// check type conversion when assigned as a string with leading zeroes
 	c["x"] = "00001111";
 	x_int = c["x"].to_int();
 	BOOST_CHECK_EQUAL(x_int, 1111);
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_dbl = c["x"].to_double();
 	BOOST_CHECK_EQUAL(x_dbl, 1.111e3);
 
-// check type conversion when assigned as a string with only zeroes
+	// check type conversion when assigned as a string with only zeroes
 	c["x"] = "000000";
 	x_int = c["x"].to_int();
 	BOOST_CHECK_EQUAL(x_int, 0);
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_dbl = c["x"].to_double();
 	BOOST_CHECK_EQUAL(x_dbl, 0.0);
 
-// check type conversion when assigned as a string with leading zeroes and is too large to fit in an int
+	// check type conversion when assigned as a string with leading zeroes and is too large to fit in an int
 	c["x"] = "01234567890123456789";
 	x_sll = c["x"].to_long_long();
 	BOOST_CHECK_EQUAL(x_sll, 1234567890123456789ll);
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_dbl = c["x"].to_double();
 	BOOST_CHECK_EQUAL(x_dbl, 1.23456789012345678e18);
 
-// check type conversion when assigned as a string with no leading zeroes and is too large to fit in an int
+	// check type conversion when assigned as a string with no leading zeroes and is too large to fit in an int
 	c["x"] = "99999999999999999999";
 	x_sll = c["x"].to_long_long();
 	BOOST_CHECK_EQUAL(x_sll, 0ll);
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_dbl = c["x"].to_double();
 	BOOST_CHECK_EQUAL(x_dbl, 1e20);
 
-// check type conversion when assigned as a floating point
+	// check type conversion when assigned as a floating point
 	c["x"] = 1.499;
 	x_sll = c["x"].to_long_long();
 	BOOST_CHECK_EQUAL(x_sll, 1ll);
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_dbl = c["x"].to_double();
 	BOOST_CHECK(std::abs(x_dbl - 1.499) < 1e-6);
 
-// check type conversion when assigned as a long long (int overflows)
+	// check type conversion when assigned as a long long (int overflows)
 	c["x"] = 123456789123ll;
 	x_int = c["x"].to_int();
 	BOOST_CHECK_EQUAL(x_int, -1097262461);
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(test_config_attribute_value)
 	x_str = c["x"].str();
 	BOOST_CHECK_EQUAL(x_str, "123456789123");
 
-// check heterogeneous comparison
+	// check heterogeneous comparison
 	c["x"] = 987654321;
 	BOOST_CHECK_EQUAL(c["x"], 987654321);
 	c["x"] = "1";

@@ -30,10 +30,10 @@ namespace dialogs
 REGISTER_DIALOG(transient_message)
 
 transient_message::transient_message(const std::string& title,
-									   const bool title_use_markup,
-									   const std::string& message,
-									   const bool message_use_markup,
-									   const std::string& image)
+	const bool title_use_markup,
+	const std::string& message,
+	const bool message_use_markup,
+	const std::string& image)
 	: modal_dialog(window_id())
 	, hide_title_(title.empty())
 	, hide_image_(image.empty())
@@ -58,20 +58,17 @@ void transient_message::pre_show()
 } // namespace dialogs
 
 void show_transient_message(const std::string& title,
-							const std::string& message,
-							const std::string& image,
-							const bool message_use_markup,
-							const bool title_use_markup)
+	const std::string& message,
+	const std::string& image,
+	const bool message_use_markup,
+	const bool title_use_markup)
 {
-	dialogs::transient_message dlg(
-			title, title_use_markup, message, message_use_markup, image);
+	dialogs::transient_message dlg(title, title_use_markup, message, message_use_markup, image);
 
 	dlg.show();
 }
 
-void show_transient_error_message(const std::string& message,
-								  const std::string& image,
-								  const bool message_use_markup)
+void show_transient_error_message(const std::string& message, const std::string& image, const bool message_use_markup)
 {
 	LOG_STREAM(err, lg::general()) << message;
 	show_transient_message(_("Error"), message, image, message_use_markup);

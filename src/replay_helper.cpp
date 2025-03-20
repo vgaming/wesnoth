@@ -15,12 +15,12 @@
 
 #include "replay_helper.hpp"
 
-#include <string>
-#include <cassert>
 #include "map/location.hpp"
-#include "time_of_day.hpp"
-#include "resources.hpp"
 #include "play_controller.hpp"
+#include "resources.hpp"
+#include "time_of_day.hpp"
+#include <cassert>
+#include <string>
 
 config replay_helper::get_recruit(const std::string& type_id, const map_location& loc, const map_location& from)
 {
@@ -35,7 +35,6 @@ config replay_helper::get_recruit(const std::string& type_id, const map_location
 
 config replay_helper::get_recall(const std::string& unit_id, const map_location& loc, const map_location& from)
 {
-
 	config val;
 	val["value"] = unit_id;
 	loc.write(val);
@@ -54,7 +53,6 @@ config replay_helper::get_disband(const std::string& unit_id)
 	return val;
 }
 
-
 /**
  * Records a move that follows the provided @a steps.
  * This should be the steps to be taken this turn, ending in an
@@ -65,39 +63,36 @@ config replay_helper::get_movement(const std::vector<map_location>& steps, bool 
 	assert(!steps.empty());
 
 	config move;
-	if(skip_sighted)
-	{
-		//note, that skip_ally_sighted has no effect if skip_sighted is true
+	if(skip_sighted) {
+		// note, that skip_ally_sighted has no effect if skip_sighted is true
 		move["skip_sighted"] = "all";
-	}
-	else if(skip_ally_sighted && !skip_sighted)
-	{
+	} else if(skip_ally_sighted && !skip_sighted) {
 		move["skip_sighted"] = "only_ally";
-	}
-	else
-	{
-		//leave it empty
+	} else {
+		// leave it empty
 	}
 	write_locations(steps, move);
 
 	return move;
 }
 
-
-
-config replay_helper::get_attack(const map_location& a, const map_location& b,
-	int att_weapon, int def_weapon, const std::string& attacker_type_id,
-	const std::string& defender_type_id, int attacker_lvl,
-	int defender_lvl, const std::size_t turn, const time_of_day &t)
+config replay_helper::get_attack(const map_location& a,
+	const map_location& b,
+	int att_weapon,
+	int def_weapon,
+	const std::string& attacker_type_id,
+	const std::string& defender_type_id,
+	int attacker_lvl,
+	int defender_lvl,
+	const std::size_t turn,
+	const time_of_day& t)
 {
-
 	config move, src, dst;
 	a.write(src);
 	b.write(dst);
 
 	move.add_child("source", std::move(src));
 	move.add_child("destination", std::move(dst));
-
 
 	move["weapon"] = att_weapon;
 	move["defender_weapon"] = def_weapon;
@@ -132,15 +127,14 @@ config replay_helper::get_update_shroud()
 	return config();
 }
 
-
 config replay_helper::get_init_side()
 {
 	config init_side;
-		init_side["side_number"] = resources::controller->current_side();
+	init_side["side_number"] = resources::controller->current_side();
 	return init_side;
 }
 
-config replay_helper::get_event(const std::string& name, const map_location& loc, const map_location*  last_select_loc)
+config replay_helper::get_event(const std::string& name, const map_location& loc, const map_location* last_select_loc)
 {
 	config ev;
 	ev["raise"] = name;
@@ -148,8 +142,7 @@ config replay_helper::get_event(const std::string& name, const map_location& loc
 		config& source = ev.add_child("source");
 		loc.write(source);
 	}
-	if(last_select_loc != nullptr && last_select_loc->valid())
-	{
+	if(last_select_loc != nullptr && last_select_loc->valid()) {
 		config& source = ev.add_child("last_select");
 		last_select_loc->write(source);
 	}

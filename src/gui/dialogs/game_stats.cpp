@@ -16,16 +16,16 @@
 
 #include "gui/dialogs/game_stats.hpp"
 
-#include "gui/widgets/listbox.hpp"
-#include "gui/widgets/label.hpp"
-#include "gui/widgets/stacked_widget.hpp"
-#include "gui/widgets/window.hpp"
 #include "formatter.hpp"
 #include "game_classification.hpp"
+#include "gui/widgets/label.hpp"
+#include "gui/widgets/listbox.hpp"
+#include "gui/widgets/stacked_widget.hpp"
+#include "gui/widgets/window.hpp"
 #include "map/map.hpp"
 #include "play_controller.hpp"
-#include "serialization/markup.hpp"
 #include "resources.hpp"
+#include "serialization/markup.hpp"
 #include "units/map.hpp"
 #include "units/unit.hpp"
 
@@ -60,13 +60,14 @@ unit_const_ptr game_stats::get_leader(const int side)
 
 static std::string controller_name(const team& t)
 {
-	static const side_controller::sized_array<t_string> names {_("controller^Idle"), _("controller^Human"), _("controller^AI"), _("controller^Reserved")};
+	static const side_controller::sized_array<t_string> names{
+		_("controller^Idle"), _("controller^Human"), _("controller^AI"), _("controller^Reserved")};
 	return markup::span_color("#808080", markup::tag("small", names[static_cast<int>(t.controller())]));
 }
 
 void game_stats::pre_show()
 {
-	listbox& stats_list    = find_widget<listbox>("game_stats_list");
+	listbox& stats_list = find_widget<listbox>("game_stats_list");
 	listbox& settings_list = find_widget<listbox>("scenario_settings_list");
 
 	for(const auto& team : board_.teams()) {
@@ -89,17 +90,18 @@ void game_stats::pre_show()
 		std::string leader_name;
 		std::string leader_image;
 
-		const bool see_all = game_config::debug || (resources::controller && resources::controller->get_display().show_everything());
+		const bool see_all
+			= game_config::debug || (resources::controller && resources::controller->get_display().show_everything());
 		if(leader) {
 			const bool visible = leader->is_visible_to_team(leader->get_location(), viewing_team_, see_all);
 
 			// Add leader image. If it's fogged/[hides], show only a random leader image.
 			if(visible || known) {
 				leader_image = leader->absolute_image() + leader->image_mods();
-				leader_name  = leader->name();
+				leader_name = leader->name();
 			} else {
 				leader_image = formatter() << "units/unknown-unit.png" << "~RC(magenta>" << team.color() << ")";
-				leader_name  = _("Unknown");
+				leader_name = _("Unknown");
 			}
 
 			if(resources::controller) {
@@ -207,8 +209,7 @@ void game_stats::pre_show()
 		[this](const std::size_t i) { return board_.teams()[i].villages(); },
 		[this](const std::size_t i) { return team_data_[i].units; },
 		[this](const std::size_t i) { return team_data_[i].upkeep; },
-		[this](const std::size_t i) { return team_data_[i].net_income; }
-	);
+		[this](const std::size_t i) { return team_data_[i].net_income; });
 
 	// Sorting options for the settings list
 	settings_list.set_sorters(
@@ -222,8 +223,7 @@ void game_stats::pre_show()
 		[this](const std::size_t i) { return board_.teams()[i].village_gold(); },
 		[this](const std::size_t i) { return board_.teams()[i].village_support(); },
 		[this](const std::size_t i) { return board_.teams()[i].uses_fog(); },
-		[this](const std::size_t i) { return board_.teams()[i].uses_shroud(); }
-	);
+		[this](const std::size_t i) { return board_.teams()[i].uses_shroud(); });
 
 	//
 	// Set up tab control
@@ -244,9 +244,7 @@ void game_stats::on_tab_select()
 	find_widget<stacked_widget>("pager").select_layer(i);
 
 	// There are only two tabs, so this is simple
-	find_widget<label>("title").set_label(
-		i == 0 ? _("Current Status") : _("Scenario Settings")
-	);
+	find_widget<label>("title").set_label(i == 0 ? _("Current Status") : _("Scenario Settings"));
 }
 
 void game_stats::post_show()
@@ -259,4 +257,4 @@ void game_stats::post_show()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

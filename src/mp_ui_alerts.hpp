@@ -20,21 +20,22 @@
 
 #pragma once
 
-#include<string>
-#include<vector>
+#include <string>
+#include <vector>
 
-namespace mp::ui_alerts {
+namespace mp::ui_alerts
+{
 
-	// Functions called when such an event occurs
-	void player_joins(bool is_lobby);
-	void player_leaves(bool is_lobby);
-	void game_created(const std::string & scenario, const std::string & name);
-	void public_message(bool is_lobby, const std::string & sender, const std::string & message);
-	void friend_message(bool is_lobby, const std::string & sender, const std::string & message);
-	void private_message(bool is_lobby, const std::string & sender, const std::string & message);
-	void server_message(bool is_lobby, const std::string & sender, const std::string & message);
-	void ready_for_start();
-	void game_has_begun();
+// Functions called when such an event occurs
+void player_joins(bool is_lobby);
+void player_leaves(bool is_lobby);
+void game_created(const std::string& scenario, const std::string& name);
+void public_message(bool is_lobby, const std::string& sender, const std::string& message);
+void friend_message(bool is_lobby, const std::string& sender, const std::string& message);
+void private_message(bool is_lobby, const std::string& sender, const std::string& message);
+void server_message(bool is_lobby, const std::string& sender, const std::string& message);
+void ready_for_start();
+void game_has_begun();
 
-	void turn_changed(const std::string & player);
-}
+void turn_changed(const std::string& player);
+} // namespace mp::ui_alerts

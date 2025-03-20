@@ -29,25 +29,27 @@
 
 #include <boost/regex.hpp>
 
-static bool is_positive_integer(const std::string& str) {
+static bool is_positive_integer(const std::string& str)
+{
 	return str != "0" && std::find_if(str.begin(), str.end(), [](char c) { return !std::isdigit(c); }) == str.end();
 }
 
 class location_palette_item : public gui::widget
 {
 public:
-	struct state_t {
+	struct state_t
+	{
 		state_t()
 			: selected(false)
 			, mouseover(false)
-		{}
+		{
+		}
 		bool selected;
 		bool mouseover;
 		friend bool operator==(state_t r, state_t l)
 		{
 			return r.selected == l.selected && r.mouseover == l.mouseover;
 		}
-
 	};
 	location_palette_item(editor::location_palette* parent)
 		: gui::widget(true)
@@ -57,16 +59,17 @@ public:
 
 	void draw_contents() override
 	{
-		if (state_.mouseover) {
+		if(state_.mouseover) {
 			draw::fill(location(), 200, 200, 200, 26);
 		}
-		if (state_.selected) {
+		if(state_.selected) {
 			draw::rect(location(), 255, 255, 255, 255);
 		}
-		font::pango_draw_text(true, location(), 16, font::NORMAL_COLOR, desc_.empty() ? id_ : desc_, location().x + 2, location().y, 0);
+		font::pango_draw_text(
+			true, location(), 16, font::NORMAL_COLOR, desc_.empty() ? id_ : desc_, location().x + 2, location().y, 0);
 	}
 
-	//TODO move to widget
+	// TODO move to widget
 	bool hit(int x, int y) const
 	{
 		return location().contains(x, y);
@@ -74,16 +77,16 @@ public:
 
 	void mouse_up(const SDL_MouseButtonEvent& e)
 	{
-		if (!(hit(e.x, e.y)))
+		if(!(hit(e.x, e.y)))
 			return;
-		if (e.button == SDL_BUTTON_LEFT) {
+		if(e.button == SDL_BUTTON_LEFT) {
 			parent_->select_item(id_);
 		}
-		if (e.button == SDL_BUTTON_RIGHT) {
-			//TODO: add a context menu with the following options:
-			// 1) 'copy it to clipboard'
-			// 2) 'jump to item'
-			// 3) 'delete item'.
+		if(e.button == SDL_BUTTON_RIGHT) {
+			// TODO: add a context menu with the following options:
+			//  1) 'copy it to clipboard'
+			//  2) 'jump to item'
+			//  3) 'delete item'.
 		}
 	}
 
@@ -91,12 +94,12 @@ public:
 	{
 		gui::widget::handle_event(e);
 
-		if (hidden() || !enabled() || mouse_locked())
+		if(hidden() || !enabled() || mouse_locked())
 			return;
 
 		state_t start_state = state_;
 
-		switch (e.type) {
+		switch(e.type) {
 		case SDL_MOUSEBUTTONUP:
 			mouse_up(e.button);
 			break;
@@ -107,17 +110,16 @@ public:
 			return;
 		}
 
-		if (!(start_state == state_))
+		if(!(start_state == state_))
 			set_dirty(true);
 	}
 
 	void set_item_id(const std::string& id)
 	{
 		id_ = id;
-		if (is_positive_integer(id)) {
-			desc_ = VGETTEXT("Player $side_num", utils::string_map{ {"side_num", id} });
-		}
-		else {
+		if(is_positive_integer(id)) {
+			desc_ = VGETTEXT("Player $side_num", utils::string_map{{"side_num", id}});
+		} else {
 			desc_ = "";
 		}
 	}
@@ -136,57 +138,65 @@ private:
 class location_palette_button : public gui::button
 {
 public:
-	location_palette_button(const SDL_Rect& location, const std::string& text, const std::function<void (void)>& callback)
+	location_palette_button(
+		const SDL_Rect& location, const std::string& text, const std::function<void(void)>& callback)
 		: gui::button(text)
 		, callback_(callback)
 	{
 		this->set_location(location.x, location.y);
 		this->hide(false);
 	}
+
 protected:
 	virtual void mouse_up(const SDL_MouseButtonEvent& e) override
 	{
 		gui::button::mouse_up(e);
-		if (callback_) {
-			if (this->pressed()) {
+		if(callback_) {
+			if(this->pressed()) {
 				callback_();
 			}
 		}
 	}
-	std::function<void (void)> callback_;
-
+	std::function<void(void)> callback_;
 };
-namespace editor {
-location_palette::location_palette(editor_display &gui, editor_toolkit &toolkit)
-		: common_palette()
-		, item_size_(20)
-		//TODO avoid magic number
-		, item_space_(20 + 3)
-		, items_start_(0)
-		, selected_item_()
-		, items_()
-		, toolkit_(toolkit)
-		, buttons_()
-		, button_add_()
-		, button_delete_()
-		, button_goto_()
-		, disp_(gui)
-	{
-		for (int i = 1; i < 10; ++i) {
-			items_.push_back(std::to_string(i));
-		}
-		selected_item_ = items_[0];
+namespace editor
+{
+location_palette::location_palette(editor_display& gui, editor_toolkit& toolkit)
+	: common_palette()
+	, item_size_(20)
+	// TODO avoid magic number
+	, item_space_(20 + 3)
+	, items_start_(0)
+	, selected_item_()
+	, items_()
+	, toolkit_(toolkit)
+	, buttons_()
+	, button_add_()
+	, button_delete_()
+	, button_goto_()
+	, disp_(gui)
+{
+	for(int i = 1; i < 10; ++i) {
+		items_.push_back(std::to_string(i));
 	}
+	selected_item_ = items_[0];
+}
 
 sdl_handler_vector location_palette::handler_members()
 {
 	sdl_handler_vector h;
-	for (gui::widget& b : buttons_) {
+	for(gui::widget& b : buttons_) {
 		h.push_back(&b);
 	}
-	if (button_add_) { h.push_back(button_add_.get()); }
-	if (button_delete_) { h.push_back(button_delete_.get()); }
-	if (button_goto_) { h.push_back(button_goto_.get()); }
+	if(button_add_) {
+		h.push_back(button_add_.get());
+	}
+	if(button_delete_) {
+		h.push_back(button_delete_.get());
+	}
+	if(button_goto_) {
+		h.push_back(button_goto_.get());
+	}
 	return h;
 }
 
@@ -243,37 +253,35 @@ void location_palette::adjust_size(const SDL_Rect& target)
 	const int button_height = 22;
 	const int button_y = 30;
 	int bottom = target.y + target.h;
-	if (!button_goto_) {
-		button_goto_.reset(new location_palette_button(SDL_Rect{ target.x , bottom -= button_y, target.w - 10, button_height }, _("Go To"), [this]() {
-			//static_cast<mouse_action_starting_position&>(toolkit_.get_mouse_action()). ??
-			map_location pos = disp_.get_map().special_location(selected_item_);
-			if (pos.valid()) {
-				disp_.scroll_to_tile(pos, display::WARP);
-			}
-		}));
-		button_add_.reset(new location_palette_button(SDL_Rect{ target.x , bottom -= button_y, target.w - 10, button_height }, _("Add"), [this]() {
-			std::string newid;
-			if (gui2::dialogs::edit_text::execute(_("New Location Identifier"), "", newid)) {
-				static const boost::regex valid_id("[a-zA-Z0-9_]+");
-				if(boost::regex_match(newid, valid_id)) {
-					add_item(newid);
+	if(!button_goto_) {
+		button_goto_.reset(new location_palette_button(
+			SDL_Rect{target.x, bottom -= button_y, target.w - 10, button_height}, _("Go To"), [this]() {
+				// static_cast<mouse_action_starting_position&>(toolkit_.get_mouse_action()). ??
+				map_location pos = disp_.get_map().special_location(selected_item_);
+				if(pos.valid()) {
+					disp_.scroll_to_tile(pos, display::WARP);
 				}
-				else {
-					gui2::show_transient_message(
-						_("Error"),
-						_("Invalid location id")
-					);
-					//TODO: a user visible messae would be nice.
-					ERR_ED  << "entered invalid location id";
+			}));
+		button_add_.reset(new location_palette_button(
+			SDL_Rect{target.x, bottom -= button_y, target.w - 10, button_height}, _("Add"), [this]() {
+				std::string newid;
+				if(gui2::dialogs::edit_text::execute(_("New Location Identifier"), "", newid)) {
+					static const boost::regex valid_id("[a-zA-Z0-9_]+");
+					if(boost::regex_match(newid, valid_id)) {
+						add_item(newid);
+					} else {
+						gui2::show_transient_message(_("Error"), _("Invalid location id"));
+						// TODO: a user visible messae would be nice.
+						ERR_ED << "entered invalid location id";
+					}
 				}
-			}
-		}));
-		button_delete_.reset(new location_palette_button(SDL_Rect{ target.x , bottom -= button_y, target.w - 10, button_height }, _("Delete"), nullptr));
-	}
-	else {
-		button_goto_->set_location(SDL_Rect{ target.x , bottom -= button_y, target.w - 10, button_height });
-		button_add_->set_location(SDL_Rect{ target.x , bottom -= button_y, target.w - 10, button_height });
-		button_delete_->set_location(SDL_Rect{ target.x , bottom -= button_y, target.w - 10, button_height });
+			}));
+		button_delete_.reset(new location_palette_button(
+			SDL_Rect{target.x, bottom -= button_y, target.w - 10, button_height}, _("Delete"), nullptr));
+	} else {
+		button_goto_->set_location(SDL_Rect{target.x, bottom -= button_y, target.w - 10, button_height});
+		button_add_->set_location(SDL_Rect{target.x, bottom -= button_y, target.w - 10, button_height});
+		button_delete_->set_location(SDL_Rect{target.x, bottom -= button_y, target.w - 10, button_height});
 	}
 
 	const int space_for_items = bottom - target.y;
@@ -310,7 +318,7 @@ void location_palette::adjust_size(const SDL_Rect& target)
 
 void location_palette::select_item(const std::string& item_id)
 {
-	if (selected_item_ != item_id) {
+	if(selected_item_ != item_id) {
 		selected_item_ = item_id;
 		set_dirty();
 	}
@@ -333,7 +341,7 @@ bool location_palette::is_selected_item(const std::string& id)
 
 void location_palette::layout()
 {
-	if (!dirty()) {
+	if(!dirty()) {
 		return;
 	}
 
@@ -388,7 +396,7 @@ void location_palette::layout()
 void location_palette::draw_contents()
 {
 	// This is unnecessary as every GUI1 widget is a TLD.
-	//for(std::size_t i = 0; i < num_visible_items(); ++i) {
+	// for(std::size_t i = 0; i < num_visible_items(); ++i) {
 	//	location_palette_item& tile = buttons_[i];
 	//	tile.draw();
 	//}
@@ -397,7 +405,7 @@ void location_palette::draw_contents()
 std::vector<std::string> location_palette::action_pressed() const
 {
 	std::vector<std::string> res;
-	if (button_delete_ && button_delete_->pressed()) {
+	if(button_delete_ && button_delete_->pressed()) {
 		res.push_back("editor-remove-location");
 	}
 	return res;
@@ -408,7 +416,8 @@ location_palette::~location_palette()
 }
 
 // Sort numbers before all other strings.
-static bool loc_id_comp(const std::string& lhs, const std::string& rhs) {
+static bool loc_id_comp(const std::string& lhs, const std::string& rhs)
+{
 	if(is_positive_integer(lhs)) {
 		if(is_positive_integer(rhs)) {
 			return std::stoi(lhs) < std::stoi(rhs);
@@ -452,7 +461,8 @@ void location_palette::add_item(const std::string& id)
 		}
 	}
 
-	// No need to call adjust_size(), because initialisation creates all possible buttons even when num_visible_items() > num_items().
+	// No need to call adjust_size(), because initialisation creates all possible buttons even when num_visible_items()
+	// > num_items().
 }
 
 } // end namespace editor

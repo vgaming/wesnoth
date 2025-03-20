@@ -16,12 +16,12 @@
 #include "game_classification.hpp"
 
 #include "config.hpp"
+#include "game_config_manager.hpp"
+#include "game_version.hpp"
 #include "log.hpp"
 #include "preferences/preferences.hpp"
 #include "serialization/chrono.hpp"
 #include "serialization/string_utils.hpp"
-#include "game_version.hpp"
-#include "game_config_manager.hpp"
 
 #include <list>
 
@@ -113,11 +113,11 @@ struct modevents_entry
 	std::string type;
 	std::string id;
 };
-}
+} // namespace
 
 std::set<std::string> game_classification::active_addons(const std::string& scenario_id) const
 {
-	//FIXME: this doesn't include mods from the current scenario.
+	// FIXME: this doesn't include mods from the current scenario.
 	std::list<modevents_entry> mods;
 	std::set<std::string> loaded_resources;
 	std::set<std::string> res;
@@ -139,7 +139,6 @@ std::set<std::string> game_classification::active_addons(const std::string& scen
 		mods.emplace_back("campaign", campaign);
 	}
 	while(!mods.empty()) {
-
 		const modevents_entry& current = mods.front();
 		if(current.type == "resource") {
 			if(!loaded_resources.insert(current.id).second) {
@@ -151,13 +150,13 @@ std::set<std::string> game_classification::active_addons(const std::string& scen
 			if(!cfg["addon_id"].empty()) {
 				res.insert(cfg["addon_id"]);
 			}
-			for (const config& load_res : cfg->child_range("load_resource")) {
+			for(const config& load_res : cfg->child_range("load_resource")) {
 				mods.emplace_back("resource", load_res["id"].str());
 			}
 		} else {
 			ERR_NG << "Unable to find config for content " << current.id << " of type " << current.type;
 		}
-		mods.pop_front( );
+		mods.pop_front();
 	}
 
 	DBG_NG << "Active content for game set to:";

@@ -15,15 +15,14 @@
 
 #pragma once
 
+#include "actions/undo_action.hpp"
 #include "game_events/pump.hpp" // for queued_event
 #include "mouse_handler_base.hpp"
 #include "random.hpp"
 #include "synced_checkup.hpp"
 #include "synced_commands.hpp"
-#include "actions/undo_action.hpp"
 
 #include <deque>
-
 
 // only static methods.
 class synced_context
@@ -154,6 +153,7 @@ public:
 	static config ask_server_choice(const server_choice&);
 
 	static bool ignore_undo();
+
 private:
 	/** Weather we are in a synced move, in a user_choice, or none of them. */
 	static inline synced_state state_ = synced_context::UNSYNCED;

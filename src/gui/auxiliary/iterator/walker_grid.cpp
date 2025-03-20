@@ -23,7 +23,9 @@ namespace gui2::iteration
 {
 
 grid::grid(gui2::grid& grid)
-	: grid_(grid), widget_(&grid), itor_(grid.begin())
+	: grid_(grid)
+	, widget_(&grid)
+	, itor_(grid.begin())
 {
 }
 
@@ -34,20 +36,20 @@ walker_base::state_t grid::next(const level level)
 	}
 
 	switch(level) {
-		case self:
-			if(widget_) {
-				widget_ = nullptr;
-				return invalid;
-			}
-			[[fallthrough]];
-		case internal:
-			assert(false);
-			return fail;
-		case child:
-			if(itor_ != grid_.end()) {
-				++itor_;
-				return itor_ == grid_.end() ? invalid : valid;
-			}
+	case self:
+		if(widget_) {
+			widget_ = nullptr;
+			return invalid;
+		}
+		[[fallthrough]];
+	case internal:
+		assert(false);
+		return fail;
+	case child:
+		if(itor_ != grid_.end()) {
+			++itor_;
+			return itor_ == grid_.end() ? invalid : valid;
+		}
 	}
 
 	assert(false);
@@ -57,12 +59,12 @@ walker_base::state_t grid::next(const level level)
 bool grid::at_end(const level level) const
 {
 	switch(level) {
-		case self:
-			return widget_ == nullptr;
-		case internal:
-			return true;
-		case child:
-			return (itor_ == grid_.end());
+	case self:
+		return widget_ == nullptr;
+	case internal:
+		return true;
+	case child:
+		return (itor_ == grid_.end());
 	}
 
 	assert(false);
@@ -72,16 +74,16 @@ bool grid::at_end(const level level) const
 gui2::widget* grid::get(const level level)
 {
 	switch(level) {
-		case self:
-			return widget_;
-		case internal:
+	case self:
+		return widget_;
+	case internal:
+		return nullptr;
+	case child:
+		if(itor_ == grid_.end()) {
 			return nullptr;
-		case child:
-			if(itor_ == grid_.end()) {
-				return nullptr;
-			} else {
-				return *itor_;
-			}
+		} else {
+			return *itor_;
+		}
 	}
 
 	assert(false);

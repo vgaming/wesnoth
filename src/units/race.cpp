@@ -35,12 +35,14 @@ const std::string unit_race::s_female("female");
 /** Standard string id (not translatable) for MALE */
 const std::string unit_race::s_male("male");
 
-static const config& empty_traits() {
+static const config& empty_traits()
+{
 	static config cfg;
 	return cfg;
 }
 
-static const config& empty_topics() {
+static const config& empty_topics()
+{
 	static config cfg;
 	return cfg;
 }
@@ -76,7 +78,7 @@ unit_race::unit_race(const config& cfg)
 	, undead_variation_(cfg["undead_variation"])
 	, help_taxonomy_(cfg["help_taxonomy"])
 {
-	if (plural_name_.empty()) {
+	if(plural_name_.empty()) {
 		lg::log_to_chat() << "[race] id='" << id_ << "' is missing a plural_name field.\n";
 		ERR_WML << "[race] id='" << id_ << "' is missing a plural_name field.";
 		plural_name_ = (cfg["name"]);
@@ -101,7 +103,7 @@ unit_race::unit_race(const config& cfg)
 
 	name_generator_factory generator_factory = name_generator_factory(cfg, {"male", "female"});
 
-	for(int i=MALE; i<NUM_GENDERS; i++) {
+	for(int i = MALE; i < NUM_GENDERS; i++) {
 		GENDER gender = static_cast<GENDER>(i);
 		name_generator_[i] = generator_factory.get_name_generator(gender_string(gender));
 	}
@@ -132,10 +134,13 @@ const config::const_child_itors& unit_race::additional_topics() const
 	return topics_;
 }
 
-unsigned int unit_race::num_traits() const { return ntraits_; }
+unsigned int unit_race::num_traits() const
+{
+	return ntraits_;
+}
 
-
-const std::string& gender_string(unit_race::GENDER gender) {
+const std::string& gender_string(unit_race::GENDER gender)
+{
 	switch(gender) {
 	case unit_race::FEMALE:
 		return unit_race::s_female;
@@ -144,20 +149,23 @@ const std::string& gender_string(unit_race::GENDER gender) {
 	}
 }
 
-unit_race::GENDER string_gender(const std::string& str, unit_race::GENDER def) {
-	if ( str == unit_race::s_male ) {
+unit_race::GENDER string_gender(const std::string& str, unit_race::GENDER def)
+{
+	if(str == unit_race::s_male) {
 		return unit_race::MALE;
-	} else if ( str == unit_race::s_female ) {
+	} else if(str == unit_race::s_female) {
 		return unit_race::FEMALE;
 	}
 	return def;
 }
 
-const config::attribute_value& gender_value(
-    const config& cfg, unit_race::GENDER gender, const std::string& male_key,
-    const std::string& female_key, const std::string& default_key)
+const config::attribute_value& gender_value(const config& cfg,
+	unit_race::GENDER gender,
+	const std::string& male_key,
+	const std::string& female_key,
+	const std::string& default_key)
 {
-    return cfg.get_or(gender == unit_race::MALE ? male_key : female_key, default_key);
+	return cfg.get_or(gender == unit_race::MALE ? male_key : female_key, default_key);
 }
 
 std::string unit_race::get_icon_path_stem() const

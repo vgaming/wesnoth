@@ -44,14 +44,17 @@
 class version_info
 {
 public:
-	version_info();                    /**< Default constructor. */
-	version_info(const std::string&);  /**< String constructor. */
+	version_info();                   /**< Default constructor. */
+	version_info(const std::string&); /**< String constructor. */
 	version_info(const char* str);
 	version_info(std::nullptr_t) = delete;
 
 	/** Simple list constructor. */
-	version_info(unsigned int major, unsigned int minor, unsigned int revision_level,
-	             char special_separator='\0', const std::string& special=std::string());
+	version_info(unsigned int major,
+		unsigned int minor,
+		unsigned int revision_level,
+		char special_separator = '\0',
+		const std::string& special = std::string());
 
 	/**
 	 * Whether the version number is considered canonical for mainline Wesnoth.
@@ -78,7 +81,10 @@ public:
 	/**
 	 * Syntactic shortcut for str().
 	 */
-	operator std::string() const { return this->str(); }
+	operator std::string() const
+	{
+		return this->str();
+	}
 
 	// Good old setters and getters for this class. Their names should be
 	// pretty self-descriptive. I couldn't use shorter names such as
@@ -182,8 +188,8 @@ public:
 
 private:
 	std::vector<unsigned int> nums_;
-	std::string               special_;
-	char                      special_separator_;
+	std::string special_;
+	char special_separator_;
 };
 
 /** Equality operator for version_info. */
@@ -199,15 +205,7 @@ bool operator>=(const version_info&, const version_info&);
 /** Less-than-or-equal operator for version_info. */
 bool operator<=(const version_info&, const version_info&);
 
-enum VERSION_COMP_OP {
-	OP_INVALID,
-	OP_EQUAL,
-	OP_NOT_EQUAL,
-	OP_LESS,
-	OP_LESS_OR_EQUAL,
-	OP_GREATER,
-	OP_GREATER_OR_EQUAL
-};
+enum VERSION_COMP_OP { OP_INVALID, OP_EQUAL, OP_NOT_EQUAL, OP_LESS, OP_LESS_OR_EQUAL, OP_GREATER, OP_GREATER_OR_EQUAL };
 
 VERSION_COMP_OP parse_version_op(const std::string& op_str);
 bool do_version_check(const version_info& a, VERSION_COMP_OP op, const version_info& b);

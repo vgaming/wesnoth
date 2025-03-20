@@ -21,10 +21,10 @@
 #include "formula/callable.hpp"
 #include "formula/string_utils.hpp"
 #include "gui/core/log.hpp"
-#include "sdl/point.hpp"
 #include "gui/widgets/settings.hpp"
-#include "tstring.hpp"
 #include "sdl/input.hpp" // get_mouse_location
+#include "sdl/point.hpp"
+#include "tstring.hpp"
 
 namespace gui2
 {
@@ -54,13 +54,13 @@ PangoWeight decode_text_weight(const std::string& weight)
 {
 	if(weight == "thin") {
 		return PANGO_WEIGHT_THIN;
-	} else if (weight == "light") {
+	} else if(weight == "light") {
 		return PANGO_WEIGHT_LIGHT;
-	} else if (weight == "semibold") {
+	} else if(weight == "semibold") {
 		return PANGO_WEIGHT_SEMIBOLD;
-	} else if (weight == "bold") {
+	} else if(weight == "bold") {
 		return PANGO_WEIGHT_BOLD;
-	} else if (weight == "heavy") {
+	} else if(weight == "heavy") {
 		return PANGO_WEIGHT_HEAVY;
 	}
 
@@ -121,26 +121,26 @@ PangoEllipsizeMode decode_ellipsize_mode(const std::string& ellipsize_mode)
 std::string encode_ellipsize_mode(const PangoEllipsizeMode ellipsize_mode)
 {
 	switch(ellipsize_mode) {
-		case PANGO_ELLIPSIZE_START:
-			return "start";
-		case PANGO_ELLIPSIZE_MIDDLE:
-			return "middle";
-		case PANGO_ELLIPSIZE_END:
-			return "end";
-		default:
-			return "none";
+	case PANGO_ELLIPSIZE_START:
+		return "start";
+	case PANGO_ELLIPSIZE_MIDDLE:
+		return "middle";
+	case PANGO_ELLIPSIZE_END:
+		return "end";
+	default:
+		return "none";
 	}
 }
 
 std::string encode_text_alignment(const PangoAlignment alignment)
 {
 	switch(alignment) {
-		case PANGO_ALIGN_LEFT:
-			return "left";
-		case PANGO_ALIGN_RIGHT:
-			return "right";
-		case PANGO_ALIGN_CENTER:
-			return "center";
+	case PANGO_ALIGN_LEFT:
+		return "left";
+	case PANGO_ALIGN_RIGHT:
+		return "right";
+	case PANGO_ALIGN_CENTER:
+		return "center";
 	}
 
 	assert(false);

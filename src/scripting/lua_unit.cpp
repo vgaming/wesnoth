@@ -15,22 +15,22 @@
 
 #include "scripting/lua_unit.hpp"
 
+#include "deprecation.hpp"
 #include "formatter.hpp"
 #include "game_board.hpp"
+#include "game_version.hpp"
 #include "log.hpp"
-#include "map/location.hpp"             // for map_location
+#include "map/location.hpp" // for map_location
 #include "map/map.hpp"
 #include "resources.hpp"
 #include "scripting/lua_attributes.hpp"
 #include "scripting/lua_common.hpp"
 #include "scripting/lua_unit_attacks.hpp"
 #include "scripting/push_check.hpp"
-#include "units/unit.hpp"
-#include "units/map.hpp"
 #include "units/animation_component.hpp"
+#include "units/map.hpp"
+#include "units/unit.hpp"
 #include "utils/optional_fwd.hpp"
-#include "game_version.hpp"
-#include "deprecation.hpp"
 #include <vector>
 
 static lg::log_domain log_scripting_lua("scripting/lua");
@@ -47,33 +47,40 @@ lua_unit::~lua_unit()
 
 unit* lua_unit::get() const
 {
-	if (ptr) return ptr.get();
-	if (c_ptr) return c_ptr;
-	if (side) {
+	if(ptr)
+		return ptr.get();
+	if(c_ptr)
+		return c_ptr;
+	if(side) {
 		return resources::gameboard->get_team(side).recall_list().find_if_matches_underlying_id(uid).get();
 	}
 	unit_map::unit_iterator ui = resources::gameboard->units().find(uid);
-	if (!ui.valid()) return nullptr;
-	return ui.get_shared_ptr().get(); //&*ui would not be legal, must get new shared_ptr by copy ctor because the unit_map itself is holding a boost shared pointer.
+	if(!ui.valid())
+		return nullptr;
+	return ui.get_shared_ptr().get(); //&*ui would not be legal, must get new shared_ptr by copy ctor because the
+									  //unit_map itself is holding a boost shared pointer.
 }
 unit_ptr lua_unit::get_shared() const
 {
-	if (ptr) return ptr;
-	if (side) {
+	if(ptr)
+		return ptr;
+	if(side) {
 		return resources::gameboard->get_team(side).recall_list().find_if_matches_underlying_id(uid);
 	}
 	unit_map::unit_iterator ui = resources::gameboard->units().find(uid);
-	if (!ui.valid()) return unit_ptr();
-	return ui.get_shared_ptr(); //&*ui would not be legal, must get new shared_ptr by copy ctor because the unit_map itself is holding a boost shared pointer.
+	if(!ui.valid())
+		return unit_ptr();
+	return ui.get_shared_ptr(); //&*ui would not be legal, must get new shared_ptr by copy ctor because the unit_map
+								//itself is holding a boost shared pointer.
 }
 
 // Having this function here not only simplifies other code, it allows us to move
 // pointers around from one structure to another.
 // This makes bare pointer->map in particular about 2 orders of magnitude faster,
 // as benchmarked from Lua code.
-bool lua_unit::put_map(const map_location &loc)
+bool lua_unit::put_map(const map_location& loc)
 {
-	if (ptr) {
+	if(ptr) {
 		auto [unit_it, success] = resources::gameboard->units().replace(loc, ptr);
 
 		if(success) {
@@ -83,9 +90,9 @@ bool lua_unit::put_map(const map_location &loc)
 			ERR_LUA << "Could not move unit " << ptr->underlying_id() << " onto map location " << loc;
 			return false;
 		}
-	} else if (side) { // recall list
+	} else if(side) { // recall list
 		unit_ptr it = resources::gameboard->get_team(side).recall_list().extract_if_matches_underlying_id(uid);
-		if (it) {
+		if(it) {
 			side = 0;
 			// uid may be changed by unit_map on insertion
 			uid = resources::gameboard->units().replace(loc, it).first->underlying_id();
@@ -95,9 +102,9 @@ bool lua_unit::put_map(const map_location &loc)
 		}
 	} else { // on map
 		unit_map::unit_iterator ui = resources::gameboard->units().find(uid);
-		if (ui != resources::gameboard->units().end()) {
+		if(ui != resources::gameboard->units().end()) {
 			map_location from = ui->get_location();
-			if (from != loc) { // This check is redundant in current usage
+			if(from != loc) { // This check is redundant in current usage
 				resources::gameboard->units().erase(loc);
 				resources::gameboard->units().move(from, loc);
 			}
@@ -112,7 +119,7 @@ bool lua_unit::put_map(const map_location &loc)
 
 bool luaW_isunit(lua_State* L, int index)
 {
-	return luaL_testudata(L, index,getunitKey) != nullptr;
+	return luaL_testudata(L, index, getunitKey) != nullptr;
 }
 
 enum {
@@ -122,7 +129,7 @@ enum {
 	LU_NOT_VALID,
 };
 
-static lua_unit* internal_get_unit(lua_State *L, int index, bool only_on_map, int& error)
+static lua_unit* internal_get_unit(lua_State* L, int index, bool only_on_map, int& error)
 {
 	error = LU_OK;
 	if(!luaW_isunit(L, index)) {
@@ -139,7 +146,7 @@ static lua_unit* internal_get_unit(lua_State *L, int index, bool only_on_map, in
 	return lu;
 }
 
-unit* luaW_tounit(lua_State *L, int index, bool only_on_map)
+unit* luaW_tounit(lua_State* L, int index, bool only_on_map)
 {
 	int error;
 	lua_unit* lu = internal_get_unit(L, index, only_on_map, error);
@@ -149,7 +156,7 @@ unit* luaW_tounit(lua_State *L, int index, bool only_on_map)
 	return lu->get();
 }
 
-unit_ptr luaW_tounit_ptr(lua_State *L, int index, bool only_on_map)
+unit_ptr luaW_tounit_ptr(lua_State* L, int index, bool only_on_map)
 {
 	int error;
 	lua_unit* lu = internal_get_unit(L, index, only_on_map, error);
@@ -159,28 +166,28 @@ unit_ptr luaW_tounit_ptr(lua_State *L, int index, bool only_on_map)
 	return lu->get_shared();
 }
 
-lua_unit* luaW_tounit_ref(lua_State *L, int index)
+lua_unit* luaW_tounit_ref(lua_State* L, int index)
 {
 	int error;
 	return internal_get_unit(L, index, false, error);
 }
 
-static void unit_show_error(lua_State *L, int index, int error)
+static void unit_show_error(lua_State* L, int index, int error)
 {
 	switch(error) {
-		case LU_NOT_UNIT:
-			luaW_type_error(L, index, "unit");
-			break;
-		case LU_NOT_VALID:
-			luaL_argerror(L, index, "unit not found");
-			break;
-		case LU_NOT_ON_MAP:
-			luaL_argerror(L, index, "unit not found on map");
-			break;
+	case LU_NOT_UNIT:
+		luaW_type_error(L, index, "unit");
+		break;
+	case LU_NOT_VALID:
+		luaL_argerror(L, index, "unit not found");
+		break;
+	case LU_NOT_ON_MAP:
+		luaL_argerror(L, index, "unit not found on map");
+		break;
 	}
 }
 
-unit_ptr luaW_checkunit_ptr(lua_State *L, int index, bool only_on_map)
+unit_ptr luaW_checkunit_ptr(lua_State* L, int index, bool only_on_map)
 {
 	int error;
 	lua_unit* lu = internal_get_unit(L, index, only_on_map, error);
@@ -188,7 +195,7 @@ unit_ptr luaW_checkunit_ptr(lua_State *L, int index, bool only_on_map)
 	return lu->get_shared();
 }
 
-unit& luaW_checkunit(lua_State *L, int index, bool only_on_map)
+unit& luaW_checkunit(lua_State* L, int index, bool only_on_map)
 {
 	int error;
 	lua_unit* lu = internal_get_unit(L, index, only_on_map, error);
@@ -196,7 +203,7 @@ unit& luaW_checkunit(lua_State *L, int index, bool only_on_map)
 	return *lu->get();
 }
 
-lua_unit* luaW_checkunit_ref(lua_State *L, int index)
+lua_unit* luaW_checkunit_ref(lua_State* L, int index)
 {
 	int error;
 	lua_unit* lu = internal_get_unit(L, index, false, error);
@@ -204,12 +211,12 @@ lua_unit* luaW_checkunit_ref(lua_State *L, int index)
 	return lu;
 }
 
-void lua_unit::setmetatable(lua_State *L)
+void lua_unit::setmetatable(lua_State* L)
 {
 	luaL_setmetatable(L, getunitKey);
 }
 
-lua_unit* luaW_pushlocalunit(lua_State *L, unit& u)
+lua_unit* luaW_pushlocalunit(lua_State* L, unit& u)
 {
 	lua_unit* res = new(L) lua_unit(u);
 	lua_unit::setmetatable(L);
@@ -219,9 +226,9 @@ lua_unit* luaW_pushlocalunit(lua_State *L, unit& u)
 /**
  * Destroys a unit object before it is collected (__gc metamethod).
  */
-static int impl_unit_collect(lua_State *L)
+static int impl_unit_collect(lua_State* L)
 {
-	lua_unit *u = static_cast<lua_unit *>(lua_touserdata(L, 1));
+	lua_unit* u = static_cast<lua_unit*>(lua_touserdata(L, 1));
 	u->lua_unit::~lua_unit();
 	return 0;
 }
@@ -275,23 +282,31 @@ static int impl_unit_tostring(lua_State* L)
 #define UNIT_SETTER(name, type) LATTR_SETTER(name, type, unit, u)
 luaW_Registry unitReg{"wesnoth", "units", getunitKey};
 
-template<> struct lua_object_traits<lua_unit*> {
+template<>
+struct lua_object_traits<lua_unit*>
+{
 	inline static auto metatable = getunitKey;
-	inline static lua_unit* get(lua_State* L, int n) {
+	inline static lua_unit* get(lua_State* L, int n)
+	{
 		auto lu = luaW_tounit_ref(L, n);
-		if(!lu) unit_show_error(L, n, LU_NOT_UNIT);
+		if(!lu)
+			unit_show_error(L, n, LU_NOT_UNIT);
 		return lu;
 	}
 };
 
-template<> struct lua_object_traits<unit> {
+template<>
+struct lua_object_traits<unit>
+{
 	inline static auto metatable = getunitKey;
-	inline static unit& get(lua_State* L, int n) {
+	inline static unit& get(lua_State* L, int n)
+	{
 		return luaW_checkunit(L, n);
 	}
 };
 
-static void handle_unit_move(lua_State* L, lua_unit* lu, map_location dst) {
+static void handle_unit_move(lua_State* L, lua_unit* lu, map_location dst)
+{
 	if(!lu->on_map()) {
 		(*lu)->set_location(dst);
 	} else {
@@ -323,7 +338,8 @@ static void handle_unit_move(lua_State* L, lua_unit* lu, map_location dst) {
 	}
 }
 
-LATTR_GETTER("valid", utils::optional<std::string>, lua_unit*, lu) {
+LATTR_GETTER("valid", utils::optional<std::string>, lua_unit*, lu)
+{
 	const unit* pu = lu->get();
 	if(!pu) {
 		return utils::nullopt;
@@ -337,246 +353,310 @@ LATTR_GETTER("valid", utils::optional<std::string>, lua_unit*, lu) {
 	return "private"s;
 }
 
-UNIT_GETTER("x", int) {
+UNIT_GETTER("x", int)
+{
 	return u.get_location().wml_x();
 }
 
-LATTR_SETTER("x", int, lua_unit*, lu) {
-	if(!lu->get()) return;
+LATTR_SETTER("x", int, lua_unit*, lu)
+{
+	if(!lu->get())
+		return;
 	map_location loc = (*lu)->get_location();
 	loc.set_wml_x(value);
 	handle_unit_move(L, lu, loc);
 }
 
-UNIT_GETTER("y", int) {
+UNIT_GETTER("y", int)
+{
 	return u.get_location().wml_y();
 }
 
-LATTR_SETTER("y", int, lua_unit*, lu) {
-	if(!lu->get()) return;
+LATTR_SETTER("y", int, lua_unit*, lu)
+{
+	if(!lu->get())
+		return;
 	map_location loc = (*lu)->get_location();
 	loc.set_wml_y(value);
 	handle_unit_move(L, lu, loc);
 }
 
-UNIT_GETTER("loc", map_location) {
+UNIT_GETTER("loc", map_location)
+{
 	return u.get_location();
 }
 
-LATTR_SETTER("loc", map_location, lua_unit*, lu) {
-	if(!lu->get()) return;
+LATTR_SETTER("loc", map_location, lua_unit*, lu)
+{
+	if(!lu->get())
+		return;
 	handle_unit_move(L, lu, value);
 }
 
-UNIT_GETTER("goto", map_location) {
+UNIT_GETTER("goto", map_location)
+{
 	return u.get_goto();
 }
 
-UNIT_SETTER("goto", map_location) {
+UNIT_SETTER("goto", map_location)
+{
 	u.set_goto(value);
 }
 
-UNIT_GETTER("side", int) {
+UNIT_GETTER("side", int)
+{
 	return u.side();
 }
 
-UNIT_SETTER("side", int) {
+UNIT_SETTER("side", int)
+{
 	u.set_side(value);
 }
 
-UNIT_GETTER("id", std::string) {
+UNIT_GETTER("id", std::string)
+{
 	return u.id();
 }
 
-LATTR_SETTER("id", std::string, lua_unit*, lu) {
-	if(!lu->get()) return;
-	if(lu->on_map()) luaL_argerror(L, 3, "can't modify id of on-map unit");
+LATTR_SETTER("id", std::string, lua_unit*, lu)
+{
+	if(!lu->get())
+		return;
+	if(lu->on_map())
+		luaL_argerror(L, 3, "can't modify id of on-map unit");
 	(*lu)->set_id(value);
 }
 
-UNIT_GETTER("type", std::string) {
+UNIT_GETTER("type", std::string)
+{
 	return u.type_id();
 }
 
-UNIT_GETTER("image_mods", std::string) {
+UNIT_GETTER("image_mods", std::string)
+{
 	return u.effect_image_mods();
 }
 
-UNIT_GETTER("usage", std::string) {
+UNIT_GETTER("usage", std::string)
+{
 	return u.usage();
 }
 
-UNIT_SETTER("usage", std::string) {
+UNIT_SETTER("usage", std::string)
+{
 	u.set_usage(value);
 }
 
-UNIT_GETTER("ellipse", std::string) {
+UNIT_GETTER("ellipse", std::string)
+{
 	return u.image_ellipse();
 }
 
-UNIT_SETTER("ellipse", std::string) {
+UNIT_SETTER("ellipse", std::string)
+{
 	u.set_image_ellipse(value);
 }
 
-UNIT_GETTER("halo", std::string) {
+UNIT_GETTER("halo", std::string)
+{
 	return u.image_halo();
 }
 
-UNIT_SETTER("halo", std::string) {
+UNIT_SETTER("halo", std::string)
+{
 	u.set_image_halo(value);
 }
 
-UNIT_GETTER("hitpoints", int) {
+UNIT_GETTER("hitpoints", int)
+{
 	return u.hitpoints();
 }
 
-UNIT_SETTER("hitpoints", int) {
+UNIT_SETTER("hitpoints", int)
+{
 	u.set_hitpoints(value);
 }
 
-UNIT_GETTER("max_hitpoints", int) {
+UNIT_GETTER("max_hitpoints", int)
+{
 	return u.max_hitpoints();
 }
 
-UNIT_SETTER("max_hitpoints", int) {
+UNIT_SETTER("max_hitpoints", int)
+{
 	u.set_max_hitpoints(value);
 }
 
-UNIT_GETTER("experience", int) {
+UNIT_GETTER("experience", int)
+{
 	return u.experience();
 }
 
-UNIT_SETTER("experience", int) {
+UNIT_SETTER("experience", int)
+{
 	u.set_experience(value);
 }
 
-UNIT_GETTER("max_experience", int) {
+UNIT_GETTER("max_experience", int)
+{
 	return u.max_experience();
 }
 
-UNIT_SETTER("max_experience", int) {
+UNIT_SETTER("max_experience", int)
+{
 	u.set_max_experience(value);
 }
 
-UNIT_GETTER("recall_cost", int) {
+UNIT_GETTER("recall_cost", int)
+{
 	return u.recall_cost();
 }
 
-UNIT_SETTER("recall_cost", int) {
+UNIT_SETTER("recall_cost", int)
+{
 	u.set_recall_cost(value);
 }
 
-UNIT_GETTER("moves", int) {
+UNIT_GETTER("moves", int)
+{
 	return u.movement_left();
 }
 
-UNIT_SETTER("moves", int) {
+UNIT_SETTER("moves", int)
+{
 	u.set_movement(value);
 }
 
-UNIT_GETTER("max_moves", int) {
+UNIT_GETTER("max_moves", int)
+{
 	return u.total_movement();
 }
 
-UNIT_SETTER("max_moves", int) {
+UNIT_SETTER("max_moves", int)
+{
 	u.set_total_movement(value);
 }
 
-UNIT_GETTER("max_attacks", int) {
+UNIT_GETTER("max_attacks", int)
+{
 	return u.max_attacks();
 }
 
-UNIT_SETTER("max_attacks", int) {
+UNIT_SETTER("max_attacks", int)
+{
 	u.set_max_attacks(value);
 }
 
-UNIT_GETTER("attacks_left", int) {
+UNIT_GETTER("attacks_left", int)
+{
 	return u.attacks_left();
 }
 
-UNIT_SETTER("attacks_left", int) {
+UNIT_SETTER("attacks_left", int)
+{
 	u.set_attacks(value);
 }
 
-UNIT_GETTER("vision", int) {
+UNIT_GETTER("vision", int)
+{
 	return u.vision();
 }
 
-UNIT_GETTER("jamming", int) {
+UNIT_GETTER("jamming", int)
+{
 	return u.jamming();
 }
 
-UNIT_GETTER("name", t_string) {
+UNIT_GETTER("name", t_string)
+{
 	return u.name();
 }
 
-UNIT_SETTER("name", t_string) {
+UNIT_SETTER("name", t_string)
+{
 	u.set_name(value);
 }
 
-UNIT_GETTER("description",  t_string) {
+UNIT_GETTER("description", t_string)
+{
 	return u.unit_description();
 }
 
-UNIT_SETTER("description",  t_string) {
+UNIT_SETTER("description", t_string)
+{
 	u.set_unit_description(value);
 }
 
-UNIT_GETTER("canrecruit", bool) {
+UNIT_GETTER("canrecruit", bool)
+{
 	return u.can_recruit();
 }
 
-UNIT_SETTER("canrecruit", bool) {
+UNIT_SETTER("canrecruit", bool)
+{
 	u.set_can_recruit(value);
 }
 
-UNIT_GETTER("renamable", bool) {
+UNIT_GETTER("renamable", bool)
+{
 	return !u.unrenamable();
 }
 
-UNIT_SETTER("renamable", bool) {
+UNIT_SETTER("renamable", bool)
+{
 	u.set_unrenamable(!value);
 }
 
-UNIT_GETTER("level", int) {
+UNIT_GETTER("level", int)
+{
 	return u.level();
 }
 
-UNIT_SETTER("level", int) {
+UNIT_SETTER("level", int)
+{
 	u.set_level(value);
 }
 
-UNIT_GETTER("cost", int) {
+UNIT_GETTER("cost", int)
+{
 	return u.cost();
 }
 
-UNIT_GETTER("extra_recruit", std::vector<std::string>) {
+UNIT_GETTER("extra_recruit", std::vector<std::string>)
+{
 	return u.recruits();
 }
 
-UNIT_SETTER("extra_recruit", std::vector<std::string>) {
+UNIT_SETTER("extra_recruit", std::vector<std::string>)
+{
 	u.set_recruits(value);
 }
 
-UNIT_GETTER("advances_to", std::vector<std::string>) {
+UNIT_GETTER("advances_to", std::vector<std::string>)
+{
 	return u.advances_to();
 }
 
-UNIT_SETTER("advances_to", std::vector<std::string>) {
+UNIT_SETTER("advances_to", std::vector<std::string>)
+{
 	u.set_advances_to(value);
 }
 
-UNIT_GETTER("alignment", std::string) {
+UNIT_GETTER("alignment", std::string)
+{
 	return unit_alignments::get_string(u.alignment());
 }
 
-UNIT_SETTER("alignment", lua_index_raw) {
+UNIT_SETTER("alignment", lua_index_raw)
+{
 	auto alignment = unit_alignments::get_enum(lua_check<std::string_view>(L, value.index));
-	if(!alignment) luaL_argerror(L, value.index, "invalid unit alignment");
+	if(!alignment)
+		luaL_argerror(L, value.index, "invalid unit alignment");
 	u.set_alignment(*alignment);
 }
 
-UNIT_GETTER("upkeep", lua_index_raw) {
+UNIT_GETTER("upkeep", lua_index_raw)
+{
 	unit::upkeep_t upkeep = u.upkeep_raw();
 
 	// Need to keep these separate in order to ensure an int value is always used if applicable.
@@ -589,7 +669,8 @@ UNIT_GETTER("upkeep", lua_index_raw) {
 	return lua_index_raw(L);
 }
 
-UNIT_SETTER("upkeep", lua_index_raw) {
+UNIT_SETTER("upkeep", lua_index_raw)
+{
 	if(lua_isnumber(L, value.index)) {
 		u.set_upkeep(static_cast<int>(luaL_checkinteger(L, 3)));
 		return;
@@ -607,27 +688,33 @@ UNIT_SETTER("upkeep", lua_index_raw) {
 	return;
 }
 
-UNIT_GETTER("advancements", std::vector<config>) {
+UNIT_GETTER("advancements", std::vector<config>)
+{
 	return u.modification_advancements();
 }
 
-UNIT_SETTER("advancements", std::vector<config>) {
+UNIT_SETTER("advancements", std::vector<config>)
+{
 	u.set_advancements(value);
 }
 
-UNIT_GETTER("overlays", std::vector<std::string>) {
+UNIT_GETTER("overlays", std::vector<std::string>)
+{
 	return u.overlays();
 }
 
-UNIT_GETTER("traits", std::vector<std::string>) {
+UNIT_GETTER("traits", std::vector<std::string>)
+{
 	return u.get_traits_list();
 }
 
-UNIT_GETTER("abilities", std::vector<std::string>) {
+UNIT_GETTER("abilities", std::vector<std::string>)
+{
 	return u.get_ability_list();
 }
 
-UNIT_GETTER("status", lua_index_raw) {
+UNIT_GETTER("status", lua_index_raw)
+{
 	(void)u;
 	lua_createtable(L, 1, 0);
 	lua_pushvalue(L, 1);
@@ -636,7 +723,8 @@ UNIT_GETTER("status", lua_index_raw) {
 	return lua_index_raw(L);
 }
 
-UNIT_GETTER("variables", lua_index_raw) {
+UNIT_GETTER("variables", lua_index_raw)
+{
 	(void)u;
 	lua_createtable(L, 1, 0);
 	lua_pushvalue(L, 1);
@@ -645,112 +733,137 @@ UNIT_GETTER("variables", lua_index_raw) {
 	return lua_index_raw(L);
 }
 
-UNIT_GETTER("attacks", lua_index_raw) {
+UNIT_GETTER("attacks", lua_index_raw)
+{
 	(void)u;
 	push_unit_attacks_table(L, 1);
 	return lua_index_raw(L);
 }
 
-UNIT_GETTER("petrified", bool) {
-	deprecated_message("(unit).petrified", DEP_LEVEL::INDEFINITE, {1,17,0}, "use (unit).status.petrified instead");
+UNIT_GETTER("petrified", bool)
+{
+	deprecated_message("(unit).petrified", DEP_LEVEL::INDEFINITE, {1, 17, 0}, "use (unit).status.petrified instead");
 	return u.incapacitated();
 }
 
-UNIT_GETTER("animations", std::vector<std::string>) {
+UNIT_GETTER("animations", std::vector<std::string>)
+{
 	return u.anim_comp().get_flags();
 }
 
-UNIT_GETTER("recall_filter", config) {
+UNIT_GETTER("recall_filter", config)
+{
 	return u.recall_filter();
 }
 
-UNIT_SETTER("recall_filter", config) {
+UNIT_SETTER("recall_filter", config)
+{
 	u.set_recall_filter(value);
 }
 
-UNIT_GETTER("hidden", bool) {
+UNIT_GETTER("hidden", bool)
+{
 	return u.get_hidden();
 }
 
-UNIT_SETTER("hidden", bool) {
+UNIT_SETTER("hidden", bool)
+{
 	u.set_hidden(value);
 }
 
-UNIT_GETTER("resting", bool) {
+UNIT_GETTER("resting", bool)
+{
 	return u.resting();
 }
 
-UNIT_SETTER("resting", bool) {
+UNIT_SETTER("resting", bool)
+{
 	u.set_resting(value);
 }
 
-UNIT_GETTER("flying", bool) {
+UNIT_GETTER("flying", bool)
+{
 	return u.is_flying();
 }
 
-UNIT_GETTER("fearless", bool) {
+UNIT_GETTER("fearless", bool)
+{
 	return u.is_fearless();
 }
 
-UNIT_GETTER("healthy", bool) {
+UNIT_GETTER("healthy", bool)
+{
 	return u.is_healthy();
 }
 
-UNIT_GETTER("zoc", bool) {
+UNIT_GETTER("zoc", bool)
+{
 	return u.get_emit_zoc();
 }
 
-UNIT_SETTER("zoc", bool) {
+UNIT_SETTER("zoc", bool)
+{
 	u.set_emit_zoc(value);
 }
 
-UNIT_GETTER("role", std::string) {
+UNIT_GETTER("role", std::string)
+{
 	return u.get_role();
 }
 
-UNIT_SETTER("role", std::string) {
+UNIT_SETTER("role", std::string)
+{
 	u.set_role(value);
 }
 
-UNIT_GETTER("race", std::string) {
+UNIT_GETTER("race", std::string)
+{
 	return u.race()->id();
 }
 
-UNIT_GETTER("gender", std::string) {
+UNIT_GETTER("gender", std::string)
+{
 	return gender_string(u.gender());
 }
 
-UNIT_GETTER("variation", std::string) {
+UNIT_GETTER("variation", std::string)
+{
 	return u.variation();
 }
 
-UNIT_GETTER("undead_variation", std::string) {
+UNIT_GETTER("undead_variation", std::string)
+{
 	return u.undead_variation();
 }
 
-UNIT_SETTER("undead_variation", std::string) {
+UNIT_SETTER("undead_variation", std::string)
+{
 	u.set_undead_variation(value);
 }
 
-UNIT_GETTER("facing", std::string) {
+UNIT_GETTER("facing", std::string)
+{
 	return map_location::write_direction(u.facing());
 }
 
-UNIT_SETTER("facing", std::string) {
+UNIT_SETTER("facing", std::string)
+{
 	u.set_facing(map_location::parse_direction(value));
 }
 
-UNIT_GETTER("portrait", std::string) {
-	return u.big_profile() == u.absolute_image()
-		? u.absolute_image() + u.image_mods() + "~SCALE_SHARP(144,144)"
-		: u.big_profile();
+UNIT_GETTER("portrait", std::string)
+{
+	return u.big_profile() == u.absolute_image() ? u.absolute_image() + u.image_mods() + "~SCALE_SHARP(144,144)"
+												 : u.big_profile();
 }
 
-UNIT_SETTER("portrait", std::string) {
+UNIT_SETTER("portrait", std::string)
+{
 	u.set_big_profile(value);
 }
 
-UNIT_GETTER("__cfg", config) {
+UNIT_GETTER("__cfg", config)
+{
 	config cfg;
 	u.write(cfg);
 	u.get_location().write(cfg);
@@ -763,7 +876,7 @@ UNIT_GETTER("__cfg", config) {
  * - Arg 2: string containing the name of the property.
  * - Ret 1: something containing the attribute.
  */
-static int impl_unit_get(lua_State *L)
+static int impl_unit_get(lua_State* L)
 {
 	return unitReg.get(L);
 }
@@ -774,7 +887,7 @@ static int impl_unit_get(lua_State *L)
  * - Arg 2: string containing the name of the property.
  * - Arg 3: something containing the attribute.
  */
-static int impl_unit_set(lua_State *L)
+static int impl_unit_set(lua_State* L)
 {
 	return unitReg.set(L);
 }
@@ -785,7 +898,7 @@ static int impl_unit_set(lua_State *L)
  * - Arg 2: string containing the name of the property.
  * - Ret 1: a list of attributes.
  */
-static int impl_unit_dir(lua_State *L)
+static int impl_unit_dir(lua_State* L)
 {
 	return unitReg.dir(L);
 }
@@ -796,7 +909,7 @@ static int impl_unit_dir(lua_State *L)
  * - Arg 2: string containing the name of the status.
  * - Ret 1: boolean.
  */
-static int impl_unit_status_get(lua_State *L)
+static int impl_unit_status_get(lua_State* L)
 {
 	if(!lua_istable(L, 1)) {
 		return luaW_type_error(L, 1, "unit status");
@@ -806,7 +919,7 @@ static int impl_unit_status_get(lua_State *L)
 	if(!u) {
 		return luaL_argerror(L, 1, "unknown unit");
 	}
-	char const *m = luaL_checkstring(L, 2);
+	char const* m = luaL_checkstring(L, 2);
 	lua_pushboolean(L, u->get_state(m));
 	return 1;
 }
@@ -817,7 +930,7 @@ static int impl_unit_status_get(lua_State *L)
  * - Arg 2: string containing the name of the status.
  * - Arg 3: boolean.
  */
-static int impl_unit_status_set(lua_State *L)
+static int impl_unit_status_set(lua_State* L)
 {
 	if(!lua_istable(L, 1)) {
 		return luaW_type_error(L, 1, "unit status");
@@ -827,7 +940,7 @@ static int impl_unit_status_set(lua_State *L)
 	if(!u) {
 		return luaL_argerror(L, 1, "unknown unit");
 	}
-	char const *m = luaL_checkstring(L, 2);
+	char const* m = luaL_checkstring(L, 2);
 	u->set_state(m, luaW_toboolean(L, 3));
 	return 0;
 }
@@ -836,7 +949,7 @@ static int impl_unit_status_set(lua_State *L)
  * List statuses on a unit (__dir metamethod)
  * This returns all known statuses (regardless of state) plus any currently set to true.
  */
-static int impl_unit_status_dir(lua_State *L)
+static int impl_unit_status_dir(lua_State* L)
 {
 	if(!lua_istable(L, 1)) {
 		return luaW_type_error(L, 1, "unit status");
@@ -864,7 +977,7 @@ static int impl_unit_status_dir(lua_State *L)
  * - Arg 2: string containing the name of the status.
  * - Ret 1: boolean.
  */
-static int impl_unit_variables_get(lua_State *L)
+static int impl_unit_variables_get(lua_State* L)
 {
 	if(!lua_istable(L, 1)) {
 		return luaW_type_error(L, 1, "unit variables");
@@ -874,7 +987,7 @@ static int impl_unit_variables_get(lua_State *L)
 	if(!u) {
 		return luaL_argerror(L, 2, "unknown unit");
 	}
-	char const *m = luaL_checkstring(L, 2);
+	char const* m = luaL_checkstring(L, 2);
 	return_cfgref_attrib("__cfg", u->variables());
 
 	variable_access_const v(m, u->variables());
@@ -887,7 +1000,7 @@ static int impl_unit_variables_get(lua_State *L)
  * - Arg 2: string containing the name of the status.
  * - Arg 3: scalar.
  */
-static int impl_unit_variables_set(lua_State *L)
+static int impl_unit_variables_set(lua_State* L)
 {
 	if(!lua_istable(L, 1)) {
 		return luaW_type_error(L, 1, "unit variables");
@@ -897,7 +1010,7 @@ static int impl_unit_variables_set(lua_State *L)
 	if(!u) {
 		return luaL_argerror(L, 2, "unknown unit");
 	}
-	char const *m = luaL_checkstring(L, 2);
+	char const* m = luaL_checkstring(L, 2);
 	modify_cfg_attrib("__cfg", u->variables() = cfg);
 	config& vars = u->variables();
 	if(lua_isnoneornil(L, 3)) {
@@ -915,7 +1028,7 @@ static int impl_unit_variables_set(lua_State *L)
 /**
  * List variables on a unit (__dir metamethod)
  */
-static int impl_unit_variables_dir(lua_State *L)
+static int impl_unit_variables_dir(lua_State* L)
 {
 	if(!lua_istable(L, 1)) {
 		return luaW_type_error(L, 1, "unit variables");
@@ -938,56 +1051,57 @@ static int impl_unit_variables_dir(lua_State *L)
 	return 1;
 }
 
-namespace lua_units {
-	std::string register_metatables(lua_State* L)
-	{
-		std::ostringstream cmd_out;
+namespace lua_units
+{
+std::string register_metatables(lua_State* L)
+{
+	std::ostringstream cmd_out;
 
-		// Create the getunit metatable.
-		cmd_out << "Adding getunit metatable...\n";
+	// Create the getunit metatable.
+	cmd_out << "Adding getunit metatable...\n";
 
-		luaL_newmetatable(L, getunitKey);
-		lua_pushcfunction(L, impl_unit_collect);
-		lua_setfield(L, -2, "__gc");
-		lua_pushcfunction(L, impl_unit_equality);
-		lua_setfield(L, -2, "__eq");
-		lua_pushcfunction(L, impl_unit_tostring);
-		lua_setfield(L, -2, "__tostring");
-		lua_pushcfunction(L, impl_unit_get);
-		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, impl_unit_set);
-		lua_setfield(L, -2, "__newindex");
-		lua_pushcfunction(L, impl_unit_dir);
-		lua_setfield(L, -2, "__dir");
-		lua_pushstring(L, "unit");
-		lua_setfield(L, -2, "__metatable");
+	luaL_newmetatable(L, getunitKey);
+	lua_pushcfunction(L, impl_unit_collect);
+	lua_setfield(L, -2, "__gc");
+	lua_pushcfunction(L, impl_unit_equality);
+	lua_setfield(L, -2, "__eq");
+	lua_pushcfunction(L, impl_unit_tostring);
+	lua_setfield(L, -2, "__tostring");
+	lua_pushcfunction(L, impl_unit_get);
+	lua_setfield(L, -2, "__index");
+	lua_pushcfunction(L, impl_unit_set);
+	lua_setfield(L, -2, "__newindex");
+	lua_pushcfunction(L, impl_unit_dir);
+	lua_setfield(L, -2, "__dir");
+	lua_pushstring(L, "unit");
+	lua_setfield(L, -2, "__metatable");
 
-		// Create the unit status metatable.
-		cmd_out << "Adding unit status metatable...\n";
+	// Create the unit status metatable.
+	cmd_out << "Adding unit status metatable...\n";
 
-		luaL_newmetatable(L, ustatusKey);
-		lua_pushcfunction(L, impl_unit_status_get);
-		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, impl_unit_status_set);
-		lua_setfield(L, -2, "__newindex");
-		lua_pushcfunction(L, impl_unit_status_dir);
-		lua_setfield(L, -2, "__dir");
-		lua_pushstring(L, "unit status");
-		lua_setfield(L, -2, "__metatable");
+	luaL_newmetatable(L, ustatusKey);
+	lua_pushcfunction(L, impl_unit_status_get);
+	lua_setfield(L, -2, "__index");
+	lua_pushcfunction(L, impl_unit_status_set);
+	lua_setfield(L, -2, "__newindex");
+	lua_pushcfunction(L, impl_unit_status_dir);
+	lua_setfield(L, -2, "__dir");
+	lua_pushstring(L, "unit status");
+	lua_setfield(L, -2, "__metatable");
 
-		// Create the unit variables metatable.
-		cmd_out << "Adding unit variables metatable...\n";
+	// Create the unit variables metatable.
+	cmd_out << "Adding unit variables metatable...\n";
 
-		luaL_newmetatable(L, unitvarKey);
-		lua_pushcfunction(L, impl_unit_variables_get);
-		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, impl_unit_variables_set);
-		lua_setfield(L, -2, "__newindex");
-		lua_pushcfunction(L, impl_unit_variables_dir);
-		lua_setfield(L, -2, "__dir");
-		lua_pushstring(L, "unit variables");
-		lua_setfield(L, -2, "__metatable");
+	luaL_newmetatable(L, unitvarKey);
+	lua_pushcfunction(L, impl_unit_variables_get);
+	lua_setfield(L, -2, "__index");
+	lua_pushcfunction(L, impl_unit_variables_set);
+	lua_setfield(L, -2, "__newindex");
+	lua_pushcfunction(L, impl_unit_variables_dir);
+	lua_setfield(L, -2, "__dir");
+	lua_pushstring(L, "unit variables");
+	lua_setfield(L, -2, "__metatable");
 
-		return cmd_out.str();
-	}
+	return cmd_out.str();
 }
+} // namespace lua_units

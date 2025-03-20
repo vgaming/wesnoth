@@ -20,7 +20,6 @@
 #include "log.hpp"
 #include "mp_ui_alerts.hpp"
 
-
 static lg::log_domain log_engine("engine");
 #define WRN_NG LOG_STREAM(warn, log_engine)
 
@@ -122,9 +121,11 @@ void lobby_info::process_gamelist(const config& data)
 	games_by_id_.clear();
 
 	int queued_id = 0;
-	for(const config& game : game_config_manager::get()->game_config().mandatory_child("game_presets").child_range("game")) {
+	for(const config& game :
+		game_config_manager::get()->game_config().mandatory_child("game_presets").child_range("game")) {
 		config qgame;
-		const config& scenario = game_config_manager::get()->game_config().find_mandatory_child("multiplayer", "id", game["scenario"].str());
+		const config& scenario = game_config_manager::get()->game_config().find_mandatory_child(
+			"multiplayer", "id", game["scenario"].str());
 		int human_sides = 0;
 		for(const auto& side : scenario.child_range("side")) {
 			if(side["controller"].str() == "human") {
@@ -166,7 +167,8 @@ void lobby_info::process_gamelist(const config& data)
 		} else {
 			qgame["map_data"] = filesystem::read_map(scenario["map_file"]);
 		}
-		qgame["hash"] = game_config_manager::get()->game_config().mandatory_child("multiplayer_hashes")[game["scenario"].str()];
+		qgame["hash"]
+			= game_config_manager::get()->game_config().mandatory_child("multiplayer_hashes")[game["scenario"].str()];
 
 		config& qchild = qgame.add_child("slot_data");
 		qchild["vacant"] = human_sides;

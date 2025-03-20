@@ -36,8 +36,8 @@
 #include <ctime>
 #include <iosfwd>
 #include <string>
-#include <vector>
 #include <type_traits>
+#include <vector>
 
 /**
  * Variant for storing WML attributes.
@@ -56,16 +56,26 @@ public:
 	class true_false
 	{
 		bool value_;
-	public:
-		explicit true_false(bool value = false) : value_(value) {}
-		operator bool() const { return value_; }
 
-		const std::string & str() const
+	public:
+		explicit true_false(bool value = false)
+			: value_(value)
+		{
+		}
+		operator bool() const
+		{
+			return value_;
+		}
+
+		const std::string& str() const
 		{
 			return value_ ? config_attribute_value::s_true : config_attribute_value::s_false;
 		}
 	};
-	friend std::ostream& operator<<(std::ostream &os, const true_false &v) { return os << v.str(); }
+	friend std::ostream& operator<<(std::ostream& os, const true_false& v)
+	{
+		return os << v.str();
+	}
 
 	/**
 	 * A wrapper for bool to get the correct streaming ("yes"/"no").
@@ -74,16 +84,27 @@ public:
 	class yes_no
 	{
 		bool value_;
-	public:
-		explicit yes_no(bool value = false) : value_(value) {}
-		operator bool() const { return value_; }
 
-		const std::string & str() const
+	public:
+		explicit yes_no(bool value = false)
+			: value_(value)
+		{
+		}
+		operator bool() const
+		{
+			return value_;
+		}
+
+		const std::string& str() const
 		{
 			return value_ ? config_attribute_value::s_yes : config_attribute_value::s_no;
 		}
 	};
-	friend std::ostream& operator<<(std::ostream &os, const yes_no &v) { return os << v.str(); }
+	friend std::ostream& operator<<(std::ostream& os, const yes_no& v)
+	{
+		return os << v.str();
+	}
+
 private:
 	/** Visitor for checking equality. */
 	class equality_visitor;
@@ -97,11 +118,8 @@ private:
 	// use few types (to keep the overhead low), we do have use cases for
 	// fractions (double) and huge numbers (up to the larger of LLONG_MAX
 	// and SIZE_MAX).
-	typedef utils::variant<utils::monostate,
-		true_false, yes_no,
-		int, unsigned long long, double,
-		std::string, t_string
-	> value_type;
+	typedef utils::variant<utils::monostate, true_false, yes_no, int, unsigned long long, double, std::string, t_string>
+		value_type;
 	/**
 	 * The stored value will always use the first type from the variant
 	 * definition that can represent it and that can be streamed to the
@@ -114,21 +132,33 @@ public:
 	// Numeric assignments:
 	config_attribute_value& operator=(bool v);
 	config_attribute_value& operator=(int v);
-	config_attribute_value& operator=(long v) { return operator=(static_cast<long long>(v)); }
+	config_attribute_value& operator=(long v)
+	{
+		return operator=(static_cast<long long>(v));
+	}
 	config_attribute_value& operator=(long long v);
-	config_attribute_value& operator=(unsigned v) { return operator=(static_cast<unsigned long long>(v)); }
-	config_attribute_value& operator=(unsigned long v) { return operator=(static_cast<unsigned long long>(v)); }
+	config_attribute_value& operator=(unsigned v)
+	{
+		return operator=(static_cast<unsigned long long>(v));
+	}
+	config_attribute_value& operator=(unsigned long v)
+	{
+		return operator=(static_cast<unsigned long long>(v));
+	}
 	config_attribute_value& operator=(unsigned long long v);
 	config_attribute_value& operator=(double v);
 
 	// String assignments:
-	config_attribute_value& operator=(const char *v) { return operator=(std::string(v)); }
+	config_attribute_value& operator=(const char* v)
+	{
+		return operator=(std::string(v));
+	}
 	config_attribute_value& operator=(std::string&& v);
-	config_attribute_value& operator=(const std::string &v);
-	config_attribute_value& operator=(const std::string_view &v);
-	config_attribute_value& operator=(const t_string &v);
+	config_attribute_value& operator=(const std::string& v);
+	config_attribute_value& operator=(const std::string_view& v);
+	config_attribute_value& operator=(const t_string& v);
 
-	//TODO: should this be a normal constructor?
+	// TODO: should this be a normal constructor?
 	template<typename T>
 	static config_attribute_value create(const T val)
 	{
@@ -158,15 +188,36 @@ public:
 	std::string str(const std::string& fallback = "") const;
 	t_string t_str() const;
 
-	bool to(const bool def) const { return to_bool(def); }
-	int to(int def) const { return to_int(def); }
-	unsigned to(unsigned def) const { return to_unsigned(def); }
-	double to(double def) const { return to_double(def); }
-	std::string to(const std::string& def) const { return str(def); }
+	bool to(const bool def) const
+	{
+		return to_bool(def);
+	}
+	int to(int def) const
+	{
+		return to_int(def);
+	}
+	unsigned to(unsigned def) const
+	{
+		return to_unsigned(def);
+	}
+	double to(double def) const
+	{
+		return to_double(def);
+	}
+	std::string to(const std::string& def) const
+	{
+		return str(def);
+	}
 
 	// Implicit conversions:
-	operator std::string() const { return str(); }
-	operator t_string() const { return t_str(); }
+	operator std::string() const
+	{
+		return str();
+	}
+	operator t_string() const
+	{
+		return t_str();
+	}
 
 	/** Tests for an attribute that was never set. */
 	bool blank() const;
@@ -174,17 +225,15 @@ public:
 	bool empty() const;
 
 	// Comparisons:
-	bool operator==(const config_attribute_value &other) const;
-	bool operator!=(const config_attribute_value &other) const
+	bool operator==(const config_attribute_value& other) const;
+	bool operator!=(const config_attribute_value& other) const
 	{
 		return !operator==(other);
 	}
 
 	bool operator==(bool comp) const
 	{
-		const bool has_bool =
-			utils::holds_alternative<yes_no>(value_) ||
-			utils::holds_alternative<true_false>(value_);
+		const bool has_bool = utils::holds_alternative<yes_no>(value_) || utils::holds_alternative<true_false>(value_);
 		return has_bool && to_bool() == comp;
 	}
 
@@ -207,7 +256,7 @@ public:
 	}
 
 	template<typename T>
-	bool friend operator!=(const T &str, const config_attribute_value& val)
+	bool friend operator!=(const T& str, const config_attribute_value& val)
 	{
 		return !val.operator==(str);
 	}
@@ -220,8 +269,8 @@ public:
 	 * Applies a visitor to the underlying variant.
 	 * (See the documentation for Boost.Variant.)
 	 */
-	template <typename V>
-	auto apply_visitor(const V & visitor) const
+	template<typename V>
+	auto apply_visitor(const V& visitor) const
 	{
 		return utils::visit(visitor, value_);
 	}
@@ -234,10 +283,13 @@ private:
 
 #ifndef USING_BOOST_VARIANT
 /** Specialize operator<< for monostate. Boost already does this, but the STL does not. */
-inline std::ostream& operator<<(std::ostream& os, const std::monostate&) { return os; }
+inline std::ostream& operator<<(std::ostream& os, const std::monostate&)
+{
+	return os;
+}
 #endif
 
 namespace utils
 {
-	std::vector<std::string> split(const config_attribute_value& val);
+std::vector<std::string> split(const config_attribute_value& val);
 }

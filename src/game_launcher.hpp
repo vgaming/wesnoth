@@ -26,8 +26,8 @@
 #include "sound.hpp"                 // for music_thinker
 #include "utils/optional_fwd.hpp"
 
-#include <string>                       // for string
-#include <vector>                       // for vector
+#include <string> // for string
+#include <vector> // for vector
 
 class commandline_options;
 
@@ -68,7 +68,7 @@ public:
 		// 2 is reserved for timeouts
 		TEST_FAIL_LOADING_REPLAY = 3,
 		TEST_FAIL_PLAYING_REPLAY = 4,
-		//TEST_FAIL_BROKE_STRICT = 5,
+		// TEST_FAIL_BROKE_STRICT = 5,
 		TEST_FAIL_WML_EXCEPTION = 6,
 		TEST_FAIL_BY_DEFEAT = 7,
 		TEST_PASS_BY_VICTORY = 8,
@@ -99,7 +99,10 @@ public:
 	bool goto_multiplayer();
 	bool goto_editor();
 
-	void select_mp_server(const std::string& server) { multiplayer_server_ = server; }
+	void select_mp_server(const std::string& server)
+	{
+		multiplayer_server_ = server;
+	}
 	bool play_multiplayer(mp_mode mode);
 	bool play_multiplayer_commandline();
 	bool play_campaign();
@@ -108,9 +111,15 @@ public:
 	void launch_game(reload_mode reload = reload_mode::RELOAD_DATA);
 	void play_replay();
 
-	editor::EXIT_STATUS start_editor() { return start_editor(""); }
+	editor::EXIT_STATUS start_editor()
+	{
+		return start_editor("");
+	}
 
-	const commandline_options & opts() const { return cmdline_opts_; }
+	const commandline_options& opts() const
+	{
+		return cmdline_opts_;
+	}
 
 private:
 	game_launcher(const game_launcher&) = delete;

@@ -20,7 +20,6 @@
 #include "gui/auxiliary/field.hpp"
 #include "gui/widgets/toggle_button.hpp"
 
-
 namespace gui2::dialogs
 {
 
@@ -52,15 +51,17 @@ editor_edit_side::editor_edit_side(editor::editor_team_info& info)
 
 void editor_edit_side::pre_show()
 {
-	controller_group.add_member(find_widget<toggle_button>("controller_human", false, true), side_controller::type::human);
-	controller_group.add_member(find_widget<toggle_button>("controller_ai", false, true),    side_controller::type::ai);
-	controller_group.add_member(find_widget<toggle_button>("controller_null", false, true),  side_controller::type::none);
+	controller_group.add_member(
+		find_widget<toggle_button>("controller_human", false, true), side_controller::type::human);
+	controller_group.add_member(find_widget<toggle_button>("controller_ai", false, true), side_controller::type::ai);
+	controller_group.add_member(
+		find_widget<toggle_button>("controller_null", false, true), side_controller::type::none);
 
 	controller_group.set_member_states(controller_);
 
-	vision_group.add_member(find_widget<toggle_button>("vision_all", false, true),    team_shared_vision::type::all);
+	vision_group.add_member(find_widget<toggle_button>("vision_all", false, true), team_shared_vision::type::all);
 	vision_group.add_member(find_widget<toggle_button>("vision_shroud", false, true), team_shared_vision::type::shroud);
-	vision_group.add_member(find_widget<toggle_button>("vision_null", false, true),   team_shared_vision::type::none);
+	vision_group.add_member(find_widget<toggle_button>("vision_null", false, true), team_shared_vision::type::none);
 
 	vision_group.set_member_states(share_vision_);
 
@@ -75,4 +76,4 @@ void editor_edit_side::post_show()
 	share_vision_ = vision_group.get_active_member_value();
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

@@ -21,8 +21,8 @@
 
 #include "game_events/handlers.hpp"
 #include "game_events/conditional_wml.hpp"
-#include "game_events/pump.hpp"
 #include "game_events/manager_impl.hpp" // for standardize_name
+#include "game_events/pump.hpp"
 
 #include "formula/callable_objects.hpp"
 #include "formula/formula.hpp"
@@ -64,7 +64,8 @@ event_handler::event_handler(const std::string& types, const std::string& id)
 	, filters_()
 	, id_(id)
 	, types_(types)
-{}
+{
+}
 
 std::vector<std::string> event_handler::names(const variable_set* vars) const
 {
@@ -123,18 +124,17 @@ void event_handler::handle_event(const queued_event& event_info, game_lua_kernel
 
 bool event_handler::filter_event(const queued_event& ev) const
 {
-	return std::all_of(filters_.begin(), filters_.end(), [&ev](const auto& filter) {
-		return (*filter)(ev);
-	});
+	return std::all_of(filters_.begin(), filters_.end(), [&ev](const auto& filter) { return (*filter)(ev); });
 }
 
-void event_handler::write_config(config &cfg, bool include_nonserializable) const
+void event_handler::write_config(config& cfg, bool include_nonserializable) const
 {
 	if(disabled_) {
 		WRN_NG << "Tried to serialize disabled event, skipping";
 		return;
 	}
-	static const char* log_append_preload = " - this will not break saves since it was registered during or before preload\n";
+	static const char* log_append_preload
+		= " - this will not break saves since it was registered during or before preload\n";
 	static const char* log_append_postload = " - this will break saves because it was registered after preload\n";
 	if(is_lua_) {
 		if(include_nonserializable) {
@@ -142,7 +142,7 @@ void event_handler::write_config(config &cfg, bool include_nonserializable) cons
 			cfg.add_child("lua")["code"] = "<function>";
 		} else {
 			static const char* log = "Skipping serialization of an event with action bound to Lua code";
-			if(has_preloaded_){
+			if(has_preloaded_) {
 				WRN_NG << log << log_append_postload;
 				lg::log_to_chat() << log << log_append_postload;
 			} else {
@@ -165,8 +165,10 @@ void event_handler::write_config(config &cfg, bool include_nonserializable) cons
 			return;
 		}
 	}
-	if(!types_.empty()) cfg["name"] = types_;
-	if(!id_.empty()) cfg["id"] = id_;
+	if(!types_.empty())
+		cfg["name"] = types_;
+	if(!id_.empty())
+		cfg["id"] = id_;
 	cfg["first_time_only"] = first_time_only_;
 	cfg["priority"] = priority_;
 	for(const auto& filter : filters_) {
@@ -185,8 +187,12 @@ bool event_filter::can_serialize() const
 	return false;
 }
 
-struct filter_condition : public event_filter {
-	filter_condition(const vconfig& cfg) : cfg_(cfg.make_safe()) {}
+struct filter_condition : public event_filter
+{
+	filter_condition(const vconfig& cfg)
+		: cfg_(cfg.make_safe())
+	{
+	}
 	bool operator()(const queued_event&) const override
 	{
 		return conditional_passed(cfg_);
@@ -199,12 +205,17 @@ struct filter_condition : public event_filter {
 	{
 		return true;
 	}
+
 private:
 	vconfig cfg_;
 };
 
-struct filter_side : public event_filter {
-	filter_side(const vconfig& cfg) : ssf_(cfg.make_safe(), &resources::controller->gamestate()) {}
+struct filter_side : public event_filter
+{
+	filter_side(const vconfig& cfg)
+		: ssf_(cfg.make_safe(), &resources::controller->gamestate())
+	{
+	}
 	bool operator()(const queued_event&) const override
 	{
 		return ssf_.match(resources::controller->current_side());
@@ -217,12 +228,18 @@ struct filter_side : public event_filter {
 	{
 		return true;
 	}
+
 private:
 	side_filter ssf_;
 };
 
-struct filter_unit : public event_filter {
-	filter_unit(const vconfig& cfg, bool first) : suf_(cfg.make_safe()), first_(first) {}
+struct filter_unit : public event_filter
+{
+	filter_unit(const vconfig& cfg, bool first)
+		: suf_(cfg.make_safe())
+		, first_(first)
+	{
+	}
 	bool operator()(const queued_event& event_info) const override
 	{
 		const auto& loc = first_ ? event_info.loc1 : event_info.loc2;
@@ -237,13 +254,19 @@ struct filter_unit : public event_filter {
 	{
 		return true;
 	}
+
 private:
 	unit_filter suf_;
 	bool first_;
 };
 
-struct filter_attack : public event_filter {
-	filter_attack(const vconfig& cfg, bool first) : swf_(cfg.make_safe()), first_(first) {}
+struct filter_attack : public event_filter
+{
+	filter_attack(const vconfig& cfg, bool first)
+		: swf_(cfg.make_safe())
+		, first_(first)
+	{
+	}
 	bool operator()(const queued_event& event_info) const override
 	{
 		const unit_map& units = resources::gameboard->units();
@@ -254,15 +277,16 @@ struct filter_attack : public event_filter {
 		if(unit_a != units.end() && loc.matches_unit(unit_a)) {
 			const auto u = unit_a->shared_from_this();
 			auto temp_weapon = event_info.data.optional_child(first_ ? "first" : "second");
-			if(temp_weapon){
+			if(temp_weapon) {
 				const_attack_ptr attack = std::make_shared<const attack_type>(*temp_weapon);
 				if(unit_d != units.end() && loc_d.matches_unit(unit_d)) {
 					const auto opp = unit_d->shared_from_this();
 					auto temp_other_weapon = event_info.data.optional_child(!first_ ? "first" : "second");
-					const_attack_ptr second_attack = temp_other_weapon ? std::make_shared<const attack_type>(*temp_other_weapon) : nullptr;
+					const_attack_ptr second_attack
+						= temp_other_weapon ? std::make_shared<const attack_type>(*temp_other_weapon) : nullptr;
 					auto ctx = attack->specials_context(u, opp, loc, loc_d, first_, second_attack);
 					utils::optional<decltype(ctx)> opp_ctx;
-					if(second_attack){
+					if(second_attack) {
 						opp_ctx.emplace(second_attack->specials_context(opp, u, loc_d, loc, !first_, attack));
 					}
 					return swf_.empty() || attack->matches_filter(swf_.get_parsed_config());
@@ -282,13 +306,18 @@ struct filter_attack : public event_filter {
 	{
 		return true;
 	}
+
 private:
 	vconfig swf_;
 	bool first_;
 };
 
-struct filter_formula : public event_filter {
-	filter_formula(const std::string& formula) : formula_(formula) {}
+struct filter_formula : public event_filter
+{
+	filter_formula(const std::string& formula)
+		: formula_(formula)
+	{
+	}
 	bool operator()(const queued_event& event_info) const override
 	{
 		wfl::gamestate_callable gs;
@@ -309,6 +338,7 @@ struct filter_formula : public event_filter {
 	{
 		return true;
 	}
+
 private:
 	wfl::formula formula_;
 };
@@ -335,12 +365,18 @@ static std::unique_ptr<event_filter> make_filter(const std::string& key, const v
  * This is a dynamic wrapper for any filter type, specified via [insert_tag].
  * It loads the filter contents from a variable and forwards it to the appropriate filter class.
  */
-struct filter_dynamic : public event_filter {
-	filter_dynamic(const std::string& tag, const std::string& var) : tag_(tag), var_(var) {}
+struct filter_dynamic : public event_filter
+{
+	filter_dynamic(const std::string& tag, const std::string& var)
+		: tag_(tag)
+		, var_(var)
+	{
+	}
 	bool operator()(const queued_event& event_info) const override
 	{
 		variable_access_const variable(var_, resources::gamedata->get_variables());
-		if(!variable.exists_as_container()) return false;
+		if(!variable.exists_as_container())
+			return false;
 		if(auto filter = make_filter(tag_, vconfig(variable.as_container()))) {
 			return (*filter)(event_info);
 		}
@@ -356,11 +392,12 @@ struct filter_dynamic : public event_filter {
 	{
 		return true;
 	}
+
 private:
 	std::string tag_, var_;
 };
 
-void event_handler::read_filters(const config &cfg)
+void event_handler::read_filters(const config& cfg)
 {
 	for(const auto [filter_key, filter_cfg] : cfg.all_children_view()) {
 		vconfig vcfg(filter_cfg);
@@ -380,7 +417,7 @@ void event_handler::add_filter(std::unique_ptr<event_filter>&& filter)
 	filters_.push_back(std::move(filter));
 }
 
-void event_handler::register_wml_event(game_lua_kernel &lk)
+void event_handler::register_wml_event(game_lua_kernel& lk)
 {
 	event_ref_ = lk.save_wml_event();
 }
@@ -391,6 +428,5 @@ void event_handler::set_event_ref(int idx, bool has_preloaded)
 	is_lua_ = true;
 	has_preloaded_ = has_preloaded;
 }
-
 
 } // end namespace game_events

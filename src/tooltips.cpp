@@ -29,11 +29,13 @@ static lg::log_domain log_font("font");
 #define DBG_FT LOG_STREAM(debug, log_font)
 #define LOG_FT LOG_STREAM(info, log_font)
 
-namespace {
+namespace
+{
 
 static const int font_size = font::SIZE_SMALL;
 static const int text_width = 400;
-static const double height_fudge = 0.95;  // An artificial "border" to keep tip text from crowding lower edge of viewing area
+static const double height_fudge
+	= 0.95; // An artificial "border" to keep tip text from crowding lower edge of viewing area
 
 struct tooltip
 {
@@ -49,7 +51,10 @@ struct tooltip
 };
 
 tooltip::tooltip(const SDL_Rect& r, const std::string& msg, const std::string& act)
-	: origin(r), message(msg), action(act), label(msg)
+	: origin(r)
+	, message(msg)
+	, action(act)
+	, label(msg)
 {
 	init_label();
 	DBG_FT << "created tooltip for " << origin << " at " << loc;
@@ -57,18 +62,18 @@ tooltip::tooltip(const SDL_Rect& r, const std::string& msg, const std::string& a
 
 void tooltip::init_label()
 {
-	const color_t bgcolor {0,0,0,192};
+	const color_t bgcolor{0, 0, 0, 192};
 	rect game_canvas = video::game_canvas();
 	unsigned int border = 10;
 
 	rect huge;
-	huge.h=1000000;
-	huge.w=1000000;
+	huge.h = 1000000;
+	huge.w = 1000000;
 
 	label.set_font_size(font_size);
 	label.set_color(font::NORMAL_COLOR);
 	label.set_clip_rect(huge);
-	label.set_width(text_width);   // If tooltip will be too tall for game_canvas, this could be scaled up appropriately
+	label.set_width(text_width); // If tooltip will be too tall for game_canvas, this could be scaled up appropriately
 	label.set_alignment(font::LEFT_ALIGN);
 	label.set_bg_color(bgcolor);
 	label.set_border_size(border);
@@ -76,9 +81,11 @@ void tooltip::init_label()
 	label.create_texture();
 
 	point lsize = label.get_draw_size();
-	int new_text_width = text_width * static_cast<float>(lsize.y)/game_canvas.h;  // If necessary, scale width to reduce height while preserving area of label
-	while((lsize.y > game_canvas.h*height_fudge) && (lsize.x < game_canvas.w)) {
-		// Scaling the tip to reduce height is hard, since making a texture wider is no guarantee that there will be fewer lines of text:
+	int new_text_width = text_width * static_cast<float>(lsize.y)
+		/ game_canvas.h; // If necessary, scale width to reduce height while preserving area of label
+	while((lsize.y > game_canvas.h * height_fudge) && (lsize.x < game_canvas.w)) {
+		// Scaling the tip to reduce height is hard, since making a texture wider is no guarantee that there will be
+		// fewer lines of text:
 		//
 		// This block of text is just
 		// as tall as the other one.
@@ -86,10 +93,11 @@ void tooltip::init_label()
 		// This block of text is just as tall as the other
 		// one.
 		//
-		// Creating this over and over may not be the most efficient route, but it will work and will be quite rare (tip taller than screen).
+		// Creating this over and over may not be the most efficient route, but it will work and will be quite rare (tip
+		// taller than screen).
 		bool wont_fit = false;
-		if(new_text_width>game_canvas.w) {
-			new_text_width=game_canvas.w;
+		if(new_text_width > game_canvas.w) {
+			new_text_width = game_canvas.w;
 			wont_fit = true;
 		}
 		DBG_FT << "lsize.x,y = " << lsize.x << "," << lsize.y << ", new_text_width = " << new_text_width;
@@ -105,8 +113,8 @@ void tooltip::init_label()
 		}
 		new_text_width *= 1.3;
 	}
-	// I don't know if it's strictly necessary to create the texture yet again just to make sure the clip_rect is set to game_canvas
-	// but it seems like the safe course of action.
+	// I don't know if it's strictly necessary to create the texture yet again just to make sure the clip_rect is set to
+	// game_canvas but it seems like the safe course of action.
 	label.set_clip_rect(game_canvas);
 	label.clear_texture();
 	label.create_texture();
@@ -121,24 +129,25 @@ void tooltip::update_label_pos()
 	point lsize = label.get_draw_size();
 	loc = {0, 0, lsize.x, lsize.y};
 
-	DBG_FT << "\nupdate_label_pos() Start: loc = " << loc.x << "," << loc.y << " origin = " << origin.x << "," << origin.y;
+	DBG_FT << "\nupdate_label_pos() Start: loc = " << loc.x << "," << loc.y << " origin = " << origin.x << ","
+		   << origin.y;
 
 	if(origin.y > loc.h) {
 		// There is enough room to fit it above the tip area
 		loc.y = origin.y - loc.h;
 		DBG_FT << "\tAbove: loc = " << loc.x << "," << loc.y << " origin = " << origin.x << "," << origin.y;
-	} else if((origin.y + origin.h + loc.h) <= game_canvas.h*height_fudge) {
+	} else if((origin.y + origin.h + loc.h) <= game_canvas.h * height_fudge) {
 		// There is enough room to fit it below the tip area
 		loc.y = origin.y + origin.h;
 		DBG_FT << "\tBelow: loc = " << loc.x << "," << loc.y << " origin = " << origin.x << "," << origin.y;
-	} else if(((origin.y + origin.h/2 - loc.h/2) >= 0) &&
-		  ((origin.y + origin.h/2 + loc.h/2) <= game_canvas.h*height_fudge)) {
+	} else if(((origin.y + origin.h / 2 - loc.h / 2) >= 0)
+		&& ((origin.y + origin.h / 2 + loc.h / 2) <= game_canvas.h * height_fudge)) {
 		// There is enough room to center it at the tip area
-		loc.y = origin.y + origin.h/2 - loc.h/2;
+		loc.y = origin.y + origin.h / 2 - loc.h / 2;
 		DBG_FT << "\tCenter: loc = " << loc.x << "," << loc.y << " origin = " << origin.x << "," << origin.y;
-	} else if(loc.h <= game_canvas.h*0.95) {
+	} else if(loc.h <= game_canvas.h * 0.95) {
 		// There is enough room to center it
-		loc.y = game_canvas.h/2 - loc.h/2;
+		loc.y = game_canvas.h / 2 - loc.h / 2;
 		DBG_FT << "\tScreen Center: loc = " << loc.x << "," << loc.y << " origin = " << origin.x << "," << origin.y;
 	} else {
 		// It doesn't fit
@@ -146,7 +155,8 @@ void tooltip::update_label_pos()
 		DBG_FT << "\tToo big: loc = " << loc.x << "," << loc.y << " origin = " << origin.x << "," << origin.y;
 	}
 
-	DBG_FT << "\tBefore x adjust: loc.x,y,w,h = " << loc.x << "," << loc.y << "," << loc.w << "," << loc.h << "  origin = " << origin.x << "," << origin.y;
+	DBG_FT << "\tBefore x adjust: loc.x,y,w,h = " << loc.x << "," << loc.y << "," << loc.w << "," << loc.h
+		   << "  origin = " << origin.x << "," << origin.y;
 	// Try to keep it within the screen
 	loc.x = origin.x;
 	if(loc.x + loc.w > game_canvas.w) {
@@ -156,10 +166,10 @@ void tooltip::update_label_pos()
 		loc.x = 0;
 	}
 
-	DBG_FT << "\tFinal: loc.x,y,w,h = " << loc.x << "," << loc.y << "," << loc.w << "," << loc.h << "  origin = " << origin.x << "," << origin.y;
+	DBG_FT << "\tFinal: loc.x,y,w,h = " << loc.x << "," << loc.y << "," << loc.w << "," << loc.h
+		   << "  origin = " << origin.x << "," << origin.y;
 	label.set_position(loc.x, loc.y);
 }
-
 
 std::map<int, tooltip> tips;
 int active_tooltip = 0;
@@ -174,7 +184,7 @@ surface current_background = nullptr;
 // or ensure that tooltips:: functions are called on an instance.
 tooltips::manager* current_manager = nullptr;
 
-} // anon namespace
+} // namespace
 
 /** Clear/hide the active tooltip. */
 static void clear_active()
@@ -199,8 +209,9 @@ manager::manager()
 manager::~manager()
 {
 	try {
-	clear_tooltips();
-	} catch (...) {}
+		clear_tooltips();
+	} catch(...) {
+	}
 	current_manager = nullptr;
 }
 
@@ -247,12 +258,11 @@ void clear_tooltips()
 
 void clear_tooltips(const SDL_Rect& r)
 {
-	for(auto i = tips.begin(); i != tips.end(); ) {
+	for(auto i = tips.begin(); i != tips.end();) {
 		if(i->second.origin.overlaps(r)) {
-			DBG_FT << "clearing tip " << i->first << " at "
-				<< i->second.origin << " overlapping " << r;
+			DBG_FT << "clearing tip " << i->first << " at " << i->second.origin << " overlapping " << r;
 
-			if (i->first == active_tooltip) {
+			if(i->first == active_tooltip) {
 				i->second.label.undraw();
 				active_tooltip = 0;
 			}
@@ -267,7 +277,8 @@ void clear_tooltips(const SDL_Rect& r)
 bool update_tooltip(int id, const SDL_Rect& origin, const std::string& message)
 {
 	std::map<int, tooltip>::iterator it = tips.find(id);
-	if (it == tips.end() ) return false;
+	if(it == tips.end())
+		return false;
 	tooltip& tip = it->second;
 	if(tip.message == message && tip.origin == origin) {
 		return false;
@@ -288,7 +299,9 @@ bool update_tooltip(int id, const SDL_Rect& origin, const std::string& message)
 
 void remove_tooltip(int id)
 {
-	if(!id) { return; }
+	if(!id) {
+		return;
+	}
 	DBG_FT << "removing tooltip " << id;
 	if(id == active_tooltip) {
 		clear_active();
@@ -355,7 +368,8 @@ void process(int mousex, int mousey)
 
 bool click(int mousex, int mousey)
 {
-	for(auto& [id, tip] : tips) { (void)id;
+	for(auto& [id, tip] : tips) {
+		(void)id;
 		if(!tip.action.empty() && tip.origin.contains(mousex, mousey)) {
 			help::show_help(tip.action);
 			return true;

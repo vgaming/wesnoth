@@ -19,14 +19,16 @@
 #include <array>
 #include <ctime>
 
-#include "formula/formula.hpp"
 #include "formula/callable.hpp"
+#include "formula/formula.hpp"
 #include "formula/tokenizer.hpp"
 
 using namespace wfl;
 
-class mock_char : public formula_callable {
-	variant get_value(const std::string& key) const {
+class mock_char : public formula_callable
+{
+	variant get_value(const std::string& key) const
+	{
 		if(key == "strength") {
 			return variant(15);
 		} else if(key == "agility") {
@@ -37,12 +39,14 @@ class mock_char : public formula_callable {
 	}
 };
 
-class mock_party : public formula_callable {
-	variant get_value(const std::string& key) const {
+class mock_party : public formula_callable
+{
+	variant get_value(const std::string& key) const
+	{
 		if(key == "members") {
-			i_[0].add("strength",variant(12));
-			i_[1].add("strength",variant(16));
-			i_[2].add("strength",variant(14));
+			i_[0].add("strength", variant(12));
+			i_[1].add("strength", variant(16));
+			i_[2].add("strength", variant(14));
 			std::vector<variant> members;
 			for(int n = 0; n != 3; ++n) {
 				members.emplace_back(i_[n].fake_ptr());
@@ -60,7 +64,9 @@ class mock_party : public formula_callable {
 	mutable map_formula_callable i_[3];
 
 public:
-	mock_party() {}
+	mock_party()
+	{
+	}
 };
 
 BOOST_AUTO_TEST_SUITE(formula_core)
@@ -77,8 +83,7 @@ BOOST_AUTO_TEST_CASE(test_formula_basic_arithmetic)
 	BOOST_CHECK_EQUAL(formula("(strength+agility)/2").evaluate(c).as_int(), 13);
 
 	BOOST_CHECK_EQUAL(formula("20 % 3").evaluate().as_int(), 2);
-	BOOST_CHECK_EQUAL(formula("19.5 % 3").evaluate().as_decimal(),
-		static_cast<int>(1000.0 * 1.5));
+	BOOST_CHECK_EQUAL(formula("19.5 % 3").evaluate().as_decimal(), static_cast<int>(1000.0 * 1.5));
 
 	BOOST_CHECK_EQUAL(formula("-5").evaluate().as_int(), -5);
 
@@ -132,21 +137,23 @@ BOOST_AUTO_TEST_CASE(test_formula_strings)
 
 	BOOST_CHECK_EQUAL(formula("'ab' .. 'cd'").evaluate().as_string(), "abcd");
 
-	BOOST_CHECK_EQUAL(formula("'strength, agility: [strength], [agility]'").evaluate(c).as_string(),
-		   "strength, agility: 15, 12");
+	BOOST_CHECK_EQUAL(
+		formula("'strength, agility: [strength], [agility]'").evaluate(c).as_string(), "strength, agility: 15, 12");
 
 	BOOST_CHECK_EQUAL(formula("'String with [']quotes['] and [(]brackets[)]!'").evaluate().as_string(),
 		"String with 'quotes' and [brackets]!");
-	BOOST_CHECK_EQUAL(formula("'String with ['embedded ' .. 'string']!'").evaluate().as_string(),
-		"String with embedded string!");
+	BOOST_CHECK_EQUAL(
+		formula("'String with ['embedded ' .. 'string']!'").evaluate().as_string(), "String with embedded string!");
 }
 
-BOOST_AUTO_TEST_CASE(test_formula_dice) {
+BOOST_AUTO_TEST_CASE(test_formula_dice)
+{
 	const int dice_roll = formula("3d6").evaluate().as_int();
 	assert(dice_roll >= 3 && dice_roll <= 18);
 }
 
-BOOST_AUTO_TEST_CASE(test_formula_containers) {
+BOOST_AUTO_TEST_CASE(test_formula_containers)
+{
 	variant myarray = formula("[1,2,3]").evaluate();
 	BOOST_CHECK_EQUAL(myarray.num_elements(), 3);
 	BOOST_CHECK_EQUAL(myarray[0].as_int(), 1);
@@ -174,12 +181,13 @@ BOOST_AUTO_TEST_CASE(test_formula_containers) {
 	BOOST_CHECK_EQUAL(myslice[3].as_int(), 19);
 }
 
-BOOST_AUTO_TEST_CASE(test_formula_tokenizer) {
+BOOST_AUTO_TEST_CASE(test_formula_tokenizer)
+{
 	using namespace wfl::tokenizer;
 	const std::string test = "[(abc + 4 * (5+3))^2.0, functions, '[']thing[']']";
 	auto i1 = test.begin();
 	auto i2 = test.end();
-	const std::array<std::pair<std::string, token_type>, 25> tokens {{
+	const std::array<std::pair<std::string, token_type>, 25> tokens{{
 		{"[", token_type::lsquare},
 		{"(", token_type::lparens},
 		{"abc", token_type::identifier},

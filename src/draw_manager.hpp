@@ -18,7 +18,10 @@
 
 #include <chrono>
 
-namespace gui2 { class top_level_drawable; }
+namespace gui2
+{
+class top_level_drawable;
+}
 
 /**
  * A global draw management interface.

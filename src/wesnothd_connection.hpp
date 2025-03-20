@@ -36,8 +36,8 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/streambuf.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/asio/streambuf.hpp>
 
 #include <condition_variable>
 #include <future>
@@ -45,7 +45,6 @@
 #include <mutex>
 #include <queue>
 #include <thread>
-
 
 /** A class that represents a TCP/IP connection to the wesnothd server. */
 class wesnothd_connection

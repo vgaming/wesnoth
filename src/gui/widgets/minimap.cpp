@@ -17,14 +17,14 @@
 
 #include "gui/widgets/minimap.hpp"
 
+#include "../../minimap.hpp" // We want the file in src/
 #include "gui/core/log.hpp"
-#include "gui/core/widget_definition.hpp"
 #include "gui/core/register_widget.hpp"
-#include "map/map.hpp"
+#include "gui/core/widget_definition.hpp"
 #include "map/exception.hpp"
+#include "map/map.hpp"
 #include "sdl/rect.hpp"
 #include "wml_exception.hpp"
-#include "../../minimap.hpp" // We want the file in src/
 
 #include <functional>
 
@@ -37,7 +37,7 @@ static lg::log_domain log_config("config");
 #define LOG_HEADER LOG_SCOPE_HEADER + ':'
 
 // Define this to enable debug output for the minimap cache.
-//#define DEBUG_MINIMAP_CACHE
+// #define DEBUG_MINIMAP_CACHE
 
 namespace gui2
 {
@@ -88,7 +88,7 @@ bool minimap::impl_draw_background()
 	if(map_) {
 		if(const auto drawer = image::prep_minimap_for_rendering(*map_, nullptr, nullptr, nullptr, true)) {
 			const auto [w, h] = get_size();
-			drawer({ 0, 0, w, h });
+			drawer({0, 0, w, h});
 		}
 	}
 	return true;
@@ -108,7 +108,8 @@ minimap_definition::resolution::resolution(const config& cfg)
 	: resolution_definition(cfg)
 {
 	// Note the order should be the same as the enum state_t in minimap.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("minimap_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("minimap_definition][resolution", "state_enabled")));
 }
 
 // }---------- BUILDER -----------{
@@ -116,7 +117,8 @@ minimap_definition::resolution::resolution(const config& cfg)
 namespace implementation
 {
 
-builder_minimap::builder_minimap(const config& cfg) : builder_styled_widget(cfg)
+builder_minimap::builder_minimap(const config& cfg)
+	: builder_styled_widget(cfg)
 {
 }
 
@@ -124,8 +126,7 @@ std::unique_ptr<widget> builder_minimap::build() const
 {
 	auto widget = std::make_unique<minimap>(*this);
 
-	DBG_GUI_G << "Window builder: placed minimap '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed minimap '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

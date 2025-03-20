@@ -18,8 +18,8 @@
 #include "gui/widgets/repeating_button.hpp"
 
 #include "gui/core/log.hpp"
-#include "gui/core/timer.hpp"
 #include "gui/core/register_widget.hpp"
+#include "gui/core/timer.hpp"
 #include "gui/widgets/settings.hpp"
 #include "gui/widgets/window.hpp"
 #include "sound.hpp"
@@ -43,15 +43,15 @@ repeating_button::repeating_button(const implementation::builder_repeating_butto
 	, state_(ENABLED)
 	, repeat_timer_(0)
 {
-	connect_signal<event::MOUSE_ENTER>(std::bind(
-			&repeating_button::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
-	connect_signal<event::MOUSE_LEAVE>(std::bind(
-			&repeating_button::signal_handler_mouse_leave, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::MOUSE_ENTER>(
+		std::bind(&repeating_button::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::MOUSE_LEAVE>(
+		std::bind(&repeating_button::signal_handler_mouse_leave, this, std::placeholders::_2, std::placeholders::_3));
 
 	connect_signal<event::LEFT_BUTTON_DOWN>(std::bind(
-			&repeating_button::signal_handler_left_button_down, this, std::placeholders::_2, std::placeholders::_3));
+		&repeating_button::signal_handler_left_button_down, this, std::placeholders::_2, std::placeholders::_3));
 	connect_signal<event::LEFT_BUTTON_UP>(std::bind(
-			&repeating_button::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
+		&repeating_button::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
 }
 
 repeating_button::~repeating_button()
@@ -61,14 +61,12 @@ repeating_button::~repeating_button()
 	}
 }
 
-void repeating_button::connect_signal_mouse_left_down(
-		const event::signal& signal)
+void repeating_button::connect_signal_mouse_left_down(const event::signal& signal)
 {
 	connect_signal<event::LEFT_BUTTON_DOWN>(signal);
 }
 
-void repeating_button::disconnect_signal_mouse_left_down(
-		const event::signal& signal)
+void repeating_button::disconnect_signal_mouse_left_down(const event::signal& signal)
 {
 	disconnect_signal<event::LEFT_BUTTON_DOWN>(signal);
 }
@@ -103,8 +101,7 @@ void repeating_button::set_state(const state_t state)
 	}
 }
 
-void repeating_button::signal_handler_mouse_enter(const event::ui_event event,
-												   bool& handled)
+void repeating_button::signal_handler_mouse_enter(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -112,8 +109,7 @@ void repeating_button::signal_handler_mouse_enter(const event::ui_event event,
 	handled = true;
 }
 
-void repeating_button::signal_handler_mouse_leave(const event::ui_event event,
-												   bool& handled)
+void repeating_button::signal_handler_mouse_leave(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -121,24 +117,20 @@ void repeating_button::signal_handler_mouse_leave(const event::ui_event event,
 	handled = true;
 }
 
-void
-repeating_button::signal_handler_left_button_down(const event::ui_event event,
-												   bool& handled)
+void repeating_button::signal_handler_left_button_down(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
 	// If the timer isn't set it's the initial down event.
 	if(!repeat_timer_) {
-
 		// mimic the old gui and only play the sound once.
 		sound::play_UI_sound(settings::sound_button_click);
 
 		window* window = get_window();
 		if(window) {
-			repeat_timer_ = add_timer(settings::repeat_button_repeat_time,
-									  [this, window](unsigned int) {
-											window->fire(event::LEFT_BUTTON_DOWN, *this);
-									  },true);
+			repeat_timer_ = add_timer(
+				settings::repeat_button_repeat_time,
+				[this, window](unsigned int) { window->fire(event::LEFT_BUTTON_DOWN, *this); }, true);
 
 			window->mouse_capture();
 		}
@@ -149,8 +141,7 @@ repeating_button::signal_handler_left_button_down(const event::ui_event event,
 	handled = true;
 }
 
-void repeating_button::signal_handler_left_button_up(const event::ui_event event,
-													  bool& handled)
+void repeating_button::signal_handler_left_button_up(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -180,10 +171,14 @@ repeating_button_definition::resolution::resolution(const config& cfg)
 {
 	// Note the order should be the same as the enum state_t in
 	// repeating_button.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("repeating_button_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("repeating_button_definition][resolution", "state_disabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_pressed", missing_mandatory_wml_tag("repeating_button_definition][resolution", "state_pressed")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_focused", missing_mandatory_wml_tag("repeating_button_definition][resolution", "state_focused")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("repeating_button_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_disabled", missing_mandatory_wml_tag("repeating_button_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_pressed", missing_mandatory_wml_tag("repeating_button_definition][resolution", "state_pressed")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_focused", missing_mandatory_wml_tag("repeating_button_definition][resolution", "state_focused")));
 }
 
 // }---------- BUILDER -----------{
@@ -200,8 +195,7 @@ std::unique_ptr<widget> builder_repeating_button::build() const
 {
 	auto widget = std::make_unique<repeating_button>(*this);
 
-	DBG_GUI_G << "Window builder: placed repeating button '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed repeating button '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

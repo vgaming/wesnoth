@@ -24,13 +24,12 @@
 #include "game_config.hpp"
 #include "image_modifications.hpp"
 #include "log.hpp"
-#include "serialization/base64.hpp"
-#include "serialization/string_utils.hpp"
 #include "sdl/rect.hpp"
 #include "sdl/texture.hpp"
+#include "serialization/base64.hpp"
+#include "serialization/string_utils.hpp"
 
 #include <SDL2/SDL_image.h>
-
 
 #include <boost/algorithm/string.hpp>
 
@@ -170,7 +169,8 @@ std::set<std::string> precached_dirs;
 int red_adjust = 0, green_adjust = 0, blue_adjust = 0;
 
 const std::string data_uri_prefix = "data:";
-struct parsed_data_URI{
+struct parsed_data_URI
+{
 	explicit parsed_data_URI(std::string_view data_URI);
 	std::string_view scheme;
 	std::string_view mime;
@@ -195,7 +195,7 @@ parsed_data_URI::parsed_data_URI(std::string_view data_URI)
 	good = (scheme == "data" && base64 == "base64" && mime.length() > 0 && data.length() > 0);
 }
 
-} // end anon namespace
+} // namespace
 
 void flush_cache()
 {
@@ -246,8 +246,8 @@ locator::locator(const std::string& fn)
 	}
 
 	if(boost::algorithm::starts_with(filename_, data_uri_prefix)) {
-		if(parsed_data_URI parsed{ filename_ }; !parsed.good) {
-			std::string_view view{ filename_ };
+		if(parsed_data_URI parsed{filename_}; !parsed.good) {
+			std::string_view view{filename_};
 			std::string_view stripped = view.substr(0, view.find(","));
 			ERR_IMG << "Invalid data URI: " << stripped;
 		}
@@ -272,11 +272,7 @@ locator::locator(const std::string& filename, const std::string& modifications)
 }
 
 locator::locator(
-		const std::string& filename,
-		const map_location& loc,
-		int center_x,
-		int center_y,
-		const std::string& modifications)
+	const std::string& filename, const map_location& loc, int center_x, int center_y, const std::string& modifications)
 	: type_(SUB_FILE)
 	, filename_(filename)
 	, modifications_(modifications)
@@ -293,8 +289,8 @@ bool locator::operator==(const locator& a) const
 	} else if(type_ == FILE) {
 		return filename_ == a.filename_;
 	} else if(type_ == SUB_FILE) {
-		return std::tie(filename_, loc_, modifications_, center_x_, center_y_) ==
-			std::tie(a.filename_, a.loc_, a.modifications_, a.center_x_, a.center_y_);
+		return std::tie(filename_, loc_, modifications_, center_x_, center_y_)
+			== std::tie(a.filename_, a.loc_, a.modifications_, a.center_x_, a.center_y_);
 	}
 
 	return false;
@@ -307,8 +303,8 @@ bool locator::operator<(const locator& a) const
 	} else if(type_ == FILE) {
 		return filename_ < a.filename_;
 	} else if(type_ == SUB_FILE) {
-		return std::tie(filename_, loc_, modifications_, center_x_, center_y_) <
-			std::tie(a.filename_, a.loc_, a.modifications_, a.center_x_, a.center_y_);
+		return std::tie(filename_, loc_, modifications_, center_x_, center_y_)
+			< std::tie(a.filename_, a.loc_, a.modifications_, a.center_x_, a.center_y_);
 	}
 
 	return false;
@@ -323,7 +319,7 @@ static void add_localized_overlay(const std::string& ovr_file, surface& orig_sur
 		return;
 	}
 
-	SDL_Rect area {0, 0, ovr_surf->w, ovr_surf->h};
+	SDL_Rect area{0, 0, ovr_surf->w, ovr_surf->h};
 
 	sdl_blit(ovr_surf, nullptr, orig_surf, &area);
 }
@@ -343,8 +339,7 @@ static surface load_image_file(const image::locator& loc)
 		std::string webp_name = name.substr(0, name.size() - 4) + ".webp";
 		location = filesystem::get_binary_file_location("images", webp_name);
 		if(location) {
-			WRN_IMG << "Replaced missing '" << name << "' with found '"
-			        << webp_name << "'.";
+			WRN_IMG << "Replaced missing '" << name << "' with found '" << webp_name << "'.";
 		}
 	}
 
@@ -414,12 +409,8 @@ static surface load_image_sub_file(const image::locator& loc)
 	}
 
 	if(loc.get_loc().valid()) {
-		rect srcrect(
-			((tile_size * 3) / 4)                           *  loc.get_loc().x,
-			  tile_size * loc.get_loc().y + (tile_size / 2) * (loc.get_loc().x % 2),
-			  tile_size,
-			  tile_size
-		);
+		rect srcrect(((tile_size * 3) / 4) * loc.get_loc().x,
+			tile_size * loc.get_loc().y + (tile_size / 2) * (loc.get_loc().x % 2), tile_size, tile_size);
 
 		if(loc.get_center_x() >= 0 && loc.get_center_y() >= 0) {
 			srcrect.x += surf->w / 2 - loc.get_center_x();
@@ -514,15 +505,11 @@ static surface apply_light(surface surf, const light_string& ls)
 	} else {
 		// build all the paths for lightmap sources
 		static const std::string p = "terrain/light/light";
-		static const std::string lm_img[19] {
-			p + ".png",
-			p + "-concave-2-tr.png", p + "-concave-2-r.png", p + "-concave-2-br.png",
-			p + "-concave-2-bl.png", p + "-concave-2-l.png", p + "-concave-2-tl.png",
-			p + "-convex-br-bl.png", p + "-convex-bl-l.png", p + "-convex-l-tl.png",
-			p + "-convex-tl-tr.png", p + "-convex-tr-r.png", p + "-convex-r-br.png",
-			p + "-convex-l-bl.png",  p + "-convex-tl-l.png", p + "-convex-tr-tl.png",
-			p + "-convex-r-tr.png",  p + "-convex-br-r.png", p + "-convex-bl-br.png"
-		};
+		static const std::string lm_img[19]{p + ".png", p + "-concave-2-tr.png", p + "-concave-2-r.png",
+			p + "-concave-2-br.png", p + "-concave-2-bl.png", p + "-concave-2-l.png", p + "-concave-2-tl.png",
+			p + "-convex-br-bl.png", p + "-convex-bl-l.png", p + "-convex-l-tl.png", p + "-convex-tl-tr.png",
+			p + "-convex-tr-r.png", p + "-convex-r-br.png", p + "-convex-l-bl.png", p + "-convex-tl-l.png",
+			p + "-convex-tr-tl.png", p + "-convex-r-tr.png", p + "-convex-br-r.png", p + "-convex-bl-br.png"};
 
 		// decompose into atomic lightmap operations (4 chars)
 		for(std::size_t c = 0; c + 3 < ls.size(); c += 4) {
@@ -555,7 +542,7 @@ static surface load_from_disk(const locator& loc)
 {
 	switch(loc.get_type()) {
 	case locator::FILE:
-		if(loc.is_data_uri()){
+		if(loc.is_data_uri()) {
 			return load_image_data_uri(loc);
 		} else {
 			return load_image_file(loc);
@@ -596,8 +583,7 @@ static surface get_hexed(const locator& i_locator, bool skip_cache = false)
 	// Ensure the image is the correct size by cropping and/or centering.
 	// TODO: this should probably be a function of sdl/utils
 	if(image && (image->w != mask->w || image->h != mask->h)) {
-		DBG_IMG << "adjusting [" << image->w << ',' << image->h << ']'
-			<< " image to hex mask: " << i_locator;
+		DBG_IMG << "adjusting [" << image->w << ',' << image->h << ']' << " image to hex mask: " << i_locator;
 		// the fitted surface
 		surface fit(mask->w, mask->h);
 		// if the image is too large in either dimension, crop it.
@@ -652,10 +638,7 @@ static TYPE simplify_type(const image::locator& i_locator, TYPE type)
 	return type;
 }
 
-surface get_surface(
-	const image::locator& i_locator,
-	TYPE type,
-	bool skip_cache)
+surface get_surface(const image::locator& i_locator, TYPE type, bool skip_cache)
 {
 	surface res;
 
@@ -701,9 +684,8 @@ surface get_surface(
 	if(const bool* cached_value = skip.locate_in_cache(i_locator)) {
 		// ... and cached as true
 		if(*cached_value) {
-			DBG_IMG << "duplicate load: " << i_locator
-				<< " [" << type << "]"
-				<< " (" << duplicate_loads_ << "/" << total_loads_ << " total)";
+			DBG_IMG << "duplicate load: " << i_locator << " [" << type << "]"
+					<< " (" << duplicate_loads_ << "/" << total_loads_ << " total)";
 			++duplicate_loads_;
 		}
 	}
@@ -744,9 +726,7 @@ surface get_lighted_image(const image::locator& i_locator, const light_string& l
 	return res;
 }
 
-texture get_lighted_texture(
-	const image::locator& i_locator,
-	const light_string& ls)
+texture get_lighted_texture(const image::locator& i_locator, const light_string& ls)
 {
 	if(i_locator.is_void()) {
 		return texture();
@@ -855,7 +835,7 @@ static void precache_file_existence_internal(const std::string& dir, const std::
 	std::vector<std::string> files_found;
 	std::vector<std::string> dirs_found;
 	filesystem::get_files_in_dir(checked_dir, &files_found, &dirs_found, filesystem::name_mode::FILE_NAME_ONLY,
-			filesystem::filter_mode::NO_FILTER, filesystem::reorder_mode::DONT_REORDER);
+		filesystem::filter_mode::NO_FILTER, filesystem::reorder_mode::DONT_REORDER);
 
 	for(const auto& f : files_found) {
 		image_existence_map[subdir + f] = true;
@@ -894,17 +874,20 @@ save_result save_image(const surface& surf, const std::string& filename)
 		return save_result::no_image;
 	}
 
-	if(boost::algorithm::ends_with(filename, ".jpeg") || boost::algorithm::ends_with(filename, ".jpg") || boost::algorithm::ends_with(filename, ".jpe")) {
+	if(boost::algorithm::ends_with(filename, ".jpeg") || boost::algorithm::ends_with(filename, ".jpg")
+		|| boost::algorithm::ends_with(filename, ".jpe")) {
 		LOG_IMG << "Writing a JPG image to " << filename;
 
-		const int err = IMG_SaveJPG_RW(surf, filesystem::make_write_RWops(filename).release(), true, 75); // SDL takes ownership of the RWops
+		const int err = IMG_SaveJPG_RW(
+			surf, filesystem::make_write_RWops(filename).release(), true, 75); // SDL takes ownership of the RWops
 		return err == 0 ? save_result::success : save_result::save_failed;
 	}
 
 	if(boost::algorithm::ends_with(filename, ".png")) {
 		LOG_IMG << "Writing a PNG image to " << filename;
 
-		const int err = IMG_SavePNG_RW(surf, filesystem::make_write_RWops(filename).release(), true); // SDL takes ownership of the RWops
+		const int err = IMG_SavePNG_RW(
+			surf, filesystem::make_write_RWops(filename).release(), true); // SDL takes ownership of the RWops
 		return err == 0 ? save_result::success : save_result::save_failed;
 	}
 

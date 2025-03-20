@@ -17,18 +17,16 @@
 
 #define GETTEXT_DOMAIN "wesnoth-test"
 
-
-#include "config_cache.hpp"
 #include "config.hpp"
+#include "config_cache.hpp"
 #include "game_config.hpp"
+#include "game_version.hpp"
 #include "language.hpp"
 #include "log.hpp"
-#include "game_version.hpp"
 
 #include "tests/utils/game_config_manager_tests.hpp"
 
 #include <functional>
-
 
 static preproc_map setup_test_preproc_map()
 {
@@ -41,19 +39,21 @@ static preproc_map setup_test_preproc_map()
 	defines_map["WESNOTH_VERSION"] = preproc_define(game_config::wesnoth_version.str());
 
 	return defines_map;
-
 }
-
 
 /**
  * Used to make distinct singleton for testing it
  * because other tests will need original one to load data
  **/
-class test_config_cache : public game_config::config_cache {
-	test_config_cache() : game_config::config_cache() {}
+class test_config_cache : public game_config::config_cache
+{
+	test_config_cache()
+		: game_config::config_cache()
+	{
+	}
 
-	public:
-	static test_config_cache& instance() ;
+public:
+	static test_config_cache& instance();
 
 	void set_force_invalid_cache(bool force)
 	{
@@ -61,8 +61,9 @@ class test_config_cache : public game_config::config_cache {
 	}
 };
 
-test_config_cache & test_config_cache::instance() {
-	static test_config_cache * cache_  = new test_config_cache;
+test_config_cache& test_config_cache::instance()
+{
+	static test_config_cache* cache_ = new test_config_cache;
 	return *cache_;
 }
 
@@ -71,8 +72,12 @@ test_config_cache & test_config_cache::instance() {
  **/
 typedef game_config::scoped_preproc_define_internal<test_config_cache> test_scoped_define;
 
-struct config_cache_fixture {
-	config_cache_fixture() : cache(test_config_cache::instance()), old_locale(get_language()), test_def("TEST")
+struct config_cache_fixture
+{
+	config_cache_fixture()
+		: cache(test_config_cache::instance())
+		, old_locale(get_language())
+		, test_def("TEST")
 	{
 		test_utils::get_test_config_ref();
 	}
@@ -85,57 +90,50 @@ struct config_cache_fixture {
 	test_scoped_define test_def;
 };
 
-BOOST_AUTO_TEST_CASE( test_preproc_defines )
+BOOST_AUTO_TEST_CASE(test_preproc_defines)
 {
 	test_config_cache& cache = test_config_cache::instance();
 	const preproc_map& test_defines = cache.get_preproc_map();
 	preproc_map defines_map(setup_test_preproc_map());
 
 	// check initial state
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(test_defines.begin(),test_defines.end(),
-			defines_map.begin() ,defines_map.end());
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(test_defines.begin(), test_defines.end(), defines_map.begin(), defines_map.end());
 
 	// scoped
 	{
 		test_scoped_define test("TEST");
 		defines_map["TEST"] = preproc_define();
 
-		BOOST_CHECK_EQUAL_COLLECTIONS(test_defines.begin(),test_defines.end(),
-				defines_map.begin() ,defines_map.end());
+		BOOST_CHECK_EQUAL_COLLECTIONS(test_defines.begin(), test_defines.end(), defines_map.begin(), defines_map.end());
 		defines_map.erase("TEST");
 	}
 	// Check scoped remove
 
-	BOOST_CHECK_EQUAL_COLLECTIONS(test_defines.begin(),test_defines.end(),
-			defines_map.begin() ,defines_map.end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(test_defines.begin(), test_defines.end(), defines_map.begin(), defines_map.end());
 
 	// Manual add define
 	cache.add_define("TEST");
 	defines_map["TEST"] = preproc_define();
-	BOOST_CHECK_EQUAL_COLLECTIONS(test_defines.begin(),test_defines.end(),
-			defines_map.begin() ,defines_map.end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(test_defines.begin(), test_defines.end(), defines_map.begin(), defines_map.end());
 
 	// Manual remove define
 	cache.remove_define("TEST");
 	defines_map.erase("TEST");
-	BOOST_CHECK_EQUAL_COLLECTIONS(test_defines.begin(),test_defines.end(),
-			defines_map.begin() ,defines_map.end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(test_defines.begin(), test_defines.end(), defines_map.begin(), defines_map.end());
 }
 
-BOOST_AUTO_TEST_CASE( test_config_cache_defaults )
+BOOST_AUTO_TEST_CASE(test_config_cache_defaults)
 {
 	test_config_cache& cache = test_config_cache::instance();
 	preproc_map defines_map(setup_test_preproc_map());
 
 	const preproc_map& test_defines = cache.get_preproc_map();
-	BOOST_CHECK_EQUAL_COLLECTIONS(test_defines.begin(),test_defines.end(),
-			defines_map.begin() ,defines_map.end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(test_defines.begin(), test_defines.end(), defines_map.begin(), defines_map.end());
 }
 
+BOOST_FIXTURE_TEST_SUITE(config_cache, config_cache_fixture)
 
-BOOST_FIXTURE_TEST_SUITE( config_cache, config_cache_fixture )
-
-	const std::string test_data_path("data/test/test/_main.cfg");
+const std::string test_data_path("data/test/test/_main.cfg");
 
 static config setup_test_config()
 {
@@ -148,30 +146,27 @@ static config setup_test_config()
 	return test_config;
 }
 
-
-BOOST_AUTO_TEST_CASE( test_load_config )
+BOOST_AUTO_TEST_CASE(test_load_config)
 {
-
 	config test_config = setup_test_config();
 	config cached_config;
 	cache.get_config(test_data_path, cached_config);
 	BOOST_CHECK_EQUAL(test_config, cached_config);
 
-	config &child = test_config.add_child("test_key2");
+	config& child = test_config.add_child("test_key2");
 	child["define"] = t_string("testing translation reset.", GETTEXT_DOMAIN);
-
 
 	test_scoped_define test_define_def("TEST_DEFINE");
 	cached_config.clear();
 	cache.get_config(test_data_path, cached_config);
 	BOOST_CHECK_EQUAL(test_config, cached_config);
 
-	BOOST_CHECK_EQUAL(test_config.mandatory_child("test_key2")["define"].str(), cached_config.mandatory_child("test_key2")["define"].str());
+	BOOST_CHECK_EQUAL(test_config.mandatory_child("test_key2")["define"].str(),
+		cached_config.mandatory_child("test_key2")["define"].str());
 }
 
-BOOST_AUTO_TEST_CASE( test_non_clean_config_loading )
+BOOST_AUTO_TEST_CASE(test_non_clean_config_loading)
 {
-
 	config test_config = setup_test_config();
 
 	// Test clean load first
@@ -184,20 +179,20 @@ BOOST_AUTO_TEST_CASE( test_non_clean_config_loading )
 	// test non-clean one then
 	{
 		config cfg;
-		config &child = cfg.add_child("junk_data");
+		config& child = cfg.add_child("junk_data");
 		child["some_junk"] = "hah";
 		cache.get_config(test_data_path, cfg);
 		BOOST_CHECK_EQUAL(test_config, cfg);
 	}
 }
 
-BOOST_AUTO_TEST_CASE( test_macrosubstitution )
+BOOST_AUTO_TEST_CASE(test_macrosubstitution)
 {
 	config test_config = setup_test_config();
 
-	config &child = test_config.add_child("test_key3");
+	config& child = test_config.add_child("test_key3");
 	child["define"] = "transaction";
-	config &child2 = test_config.add_child("test_key4");
+	config& child2 = test_config.add_child("test_key4");
 	child2["defined"] = "parameter";
 
 	// test first that macro loading works
@@ -212,11 +207,9 @@ BOOST_AUTO_TEST_CASE( test_macrosubstitution )
 	cached_config.clear();
 	cache.get_config(test_data_path, cached_config);
 	BOOST_CHECK_EQUAL(test_config, cached_config);
-
-
 }
 
-BOOST_AUTO_TEST_CASE( test_transaction )
+BOOST_AUTO_TEST_CASE(test_transaction)
 {
 	config test_config = setup_test_config();
 
@@ -228,7 +221,7 @@ BOOST_AUTO_TEST_CASE( test_transaction )
 	// test first that macro loading works
 	test_scoped_define macro("TEST_MACRO");
 
-	//Start transaction
+	// Start transaction
 
 	game_config::config_cache_transaction transaction;
 
@@ -249,7 +242,7 @@ BOOST_AUTO_TEST_CASE( test_transaction )
 	BOOST_CHECK_EQUAL(umc_config, cached_config);
 }
 
-BOOST_AUTO_TEST_CASE( test_define_loading )
+BOOST_AUTO_TEST_CASE(test_define_loading)
 {
 	// try to load umc without valid cache
 	config test_config = setup_test_config();
@@ -262,7 +255,7 @@ BOOST_AUTO_TEST_CASE( test_define_loading )
 	// test first that macro loading works
 	test_scoped_define macro("TEST_MACRO");
 
-	//Start transaction
+	// Start transaction
 
 	game_config::config_cache_transaction transaction;
 
@@ -286,7 +279,7 @@ BOOST_AUTO_TEST_CASE( test_define_loading )
 	cache.set_force_invalid_cache(false);
 }
 
-BOOST_AUTO_TEST_CASE( test_lead_spaces_loading )
+BOOST_AUTO_TEST_CASE(test_lead_spaces_loading)
 {
 	config test_config;
 	test_config.add_child("test_lead_space")["space"] = "empty char in middle";

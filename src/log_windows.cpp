@@ -38,9 +38,9 @@
 #include <windows.h>
 
 static lg::log_domain log_setup("logsetup");
-#define ERR_LS LOG_STREAM(err,   log_setup)
-#define WRN_LS LOG_STREAM(warn,  log_setup)
-#define LOG_LS LOG_STREAM(info,  log_setup)
+#define ERR_LS LOG_STREAM(err, log_setup)
+#define WRN_LS LOG_STREAM(warn, log_setup)
+#define LOG_LS LOG_STREAM(info, log_setup)
 #define DBG_LS LOG_STREAM(debug, log_setup)
 
 namespace lg
@@ -122,7 +122,7 @@ void console_handler::enable_native_console_output()
 	assert(freopen("CONOUT$", "wb", stdout) == stdout);
 
 	DBG_LS << "stdin from console";
-	assert(freopen("CONIN$",  "rb", stdin) == stdin);
+	assert(freopen("CONIN$", "rb", stdin) == stdin);
 
 	LOG_LS << "Console streams handover complete!";
 }

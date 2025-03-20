@@ -24,7 +24,8 @@
 namespace gui2::iteration::walker
 {
 
-widget::widget(gui2::widget& widget) : widget_(&widget)
+widget::widget(gui2::widget& widget)
+	: widget_(&widget)
 {
 }
 
@@ -35,15 +36,15 @@ walker_base::state_t widget::next(const level level)
 	}
 
 	switch(level) {
-		case self:
-			if(widget_) {
-				widget_ = nullptr;
-				return invalid;
-			}
-			[[fallthrough]];
-		case internal:
-		case child:
-			break;
+	case self:
+		if(widget_) {
+			widget_ = nullptr;
+			return invalid;
+		}
+		[[fallthrough]];
+	case internal:
+	case child:
+		break;
 	}
 
 	assert(false);
@@ -53,11 +54,11 @@ walker_base::state_t widget::next(const level level)
 bool widget::at_end(const level level) const
 {
 	switch(level) {
-		case self:
-			return widget_ == nullptr;
-		case internal:
-		case child:
-			return true;
+	case self:
+		return widget_ == nullptr;
+	case internal:
+	case child:
+		return true;
 	}
 
 	assert(false);
@@ -67,11 +68,11 @@ bool widget::at_end(const level level) const
 gui2::widget* widget::get(const level level)
 {
 	switch(level) {
-		case self:
-			return widget_;
-		case internal:
-		case child:
-			return nullptr;
+	case self:
+		return widget_;
+	case internal:
+	case child:
+		return nullptr;
 	}
 
 	assert(false);

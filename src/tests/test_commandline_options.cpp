@@ -18,12 +18,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE( cmdline_opts )
+BOOST_AUTO_TEST_SUITE(cmdline_opts)
 
-BOOST_AUTO_TEST_CASE (test_empty_options)
+BOOST_AUTO_TEST_CASE(test_empty_options)
 {
-
-	std::vector<std::string> args {"wesnoth"};
+	std::vector<std::string> args{"wesnoth"};
 	commandline_options co(args);
 
 	BOOST_CHECK(!co.campaign);
@@ -84,16 +83,10 @@ BOOST_AUTO_TEST_CASE (test_empty_options)
 	BOOST_CHECK(!co.with_replay);
 }
 
-BOOST_AUTO_TEST_CASE (test_default_options)
+BOOST_AUTO_TEST_CASE(test_default_options)
 {
-	std::vector<std::string> args {
-		"wesnoth",
-		"--campaign",
-		"--editor",
-		"--logdomains",
-		"--preprocess-output-macros",
-		"--server",
-		"--test"};
+	std::vector<std::string> args{
+		"wesnoth", "--campaign", "--editor", "--logdomains", "--preprocess-output-macros", "--server", "--test"};
 
 	commandline_options co(args);
 	BOOST_CHECK(co.campaign && co.campaign->empty());
@@ -154,70 +147,24 @@ BOOST_AUTO_TEST_CASE (test_default_options)
 	BOOST_CHECK(!co.with_replay);
 }
 
-BOOST_AUTO_TEST_CASE (test_full_options)
+BOOST_AUTO_TEST_CASE(test_full_options)
 {
-	std::vector<std::string> args {
-		"wesnoth",
-		"--ai-config=1:aifoo",
-		"--ai-config=2:aibar",
-		"--algorithm=3:algfoo",
-		"--algorithm=4:algbar",
-		"--campaign=campfoo",
-		"--campaign-difficulty=16",
-		"--campaign-scenario=scenfoo",
-		"--campaign-skip-story",
-		"--clock",
-		"--controller=5:confoo",
-		"--controller=6:conbar",
-		"--data-dir=datadirfoo",
-		"--data-path",
-		"--debug",
+	std::vector<std::string> args{"wesnoth", "--ai-config=1:aifoo", "--ai-config=2:aibar", "--algorithm=3:algfoo",
+		"--algorithm=4:algbar", "--campaign=campfoo", "--campaign-difficulty=16", "--campaign-scenario=scenfoo",
+		"--campaign-skip-story", "--clock", "--controller=5:confoo", "--controller=6:conbar", "--data-dir=datadirfoo",
+		"--data-path", "--debug",
 #ifdef DEBUG_WINDOW_LAYOUT_GRAPHS
-		"--debug-dot-domain=ddfoo",
-		"--debug-dot-level=dlfoo",
+		"--debug-dot-domain=ddfoo", "--debug-dot-level=dlfoo",
 #endif
-		"--editor=editfoo",
-		"--era=erafoo",
-		"--exit-at-end",
-		"--fps",
-		"--fullscreen",
-		"--help",
-		"--ignore-map-settings",
-		"--label=labelfoo",
-		"--load=loadfoo",
-		"--log-error=errfoo,errbar/*",
-		"--log-warning=warnfoo,warnfoo/bar",
-		"--log-info=infofoo",
-		"--log-debug=dbgfoo,dbgbar,dbg/foo/bar/baz",
-		"--logdomains=filterfoo",
-		"--max-fps=100",
-		"--multiplayer",
-		"--new-widgets",
-		"--nocache",
-		"--nomusic",
-		"--nosound",
-		"--nogui",
-		"--parm=7:parmfoo:valfoo",
-		"--parm=8:parmbar:valbar",
-		"--preprocess", "preppathfoo", "preptargfoo",
-		"--preprocess-defines=DEFFOO,DEFBAR",
-		"--preprocess-input-macros=inmfoo",
-		"--preprocess-output-macros=outmfoo",
-		"--resolution=800x600",
-		"--rng-seed=1234",
-		"--scenario=scenfoo",
-		"--screenshot", "mapfoo", "outssfoo",
-		"--side=9:sidefoo",
-		"--side=10:sidebar",
-		"--server=servfoo",
-		"--test=testfoo",
-		"--turns=42",
-		"--userdata-dir=userdatadirfoo",
-		"--userdata-path",
-		"--validcache",
-		"--version",
-		"--windowed",
-		"--with-replay"};
+		"--editor=editfoo", "--era=erafoo", "--exit-at-end", "--fps", "--fullscreen", "--help", "--ignore-map-settings",
+		"--label=labelfoo", "--load=loadfoo", "--log-error=errfoo,errbar/*", "--log-warning=warnfoo,warnfoo/bar",
+		"--log-info=infofoo", "--log-debug=dbgfoo,dbgbar,dbg/foo/bar/baz", "--logdomains=filterfoo", "--max-fps=100",
+		"--multiplayer", "--new-widgets", "--nocache", "--nomusic", "--nosound", "--nogui", "--parm=7:parmfoo:valfoo",
+		"--parm=8:parmbar:valbar", "--preprocess", "preppathfoo", "preptargfoo", "--preprocess-defines=DEFFOO,DEFBAR",
+		"--preprocess-input-macros=inmfoo", "--preprocess-output-macros=outmfoo", "--resolution=800x600",
+		"--rng-seed=1234", "--scenario=scenfoo", "--screenshot", "mapfoo", "outssfoo", "--side=9:sidefoo",
+		"--side=10:sidebar", "--server=servfoo", "--test=testfoo", "--turns=42", "--userdata-dir=userdatadirfoo",
+		"--userdata-path", "--validcache", "--version", "--windowed", "--with-replay"};
 
 	commandline_options co(args);
 
@@ -239,16 +186,17 @@ BOOST_AUTO_TEST_CASE (test_full_options)
 	BOOST_CHECK(co.help);
 	BOOST_CHECK(co.load && *co.load == "loadfoo");
 	BOOST_CHECK(co.log);
-	BOOST_CHECK(co.log->size()==8);
-	BOOST_CHECK(co.log->at(0).first  == lg::severity::LG_ERROR && co.log->at(1).first == lg::severity::LG_ERROR);
-	BOOST_CHECK(co.log->at(0).second == "errfoo"  && co.log->at(1).second == "errbar/*");
-	BOOST_CHECK(co.log->at(2).first  == lg::severity::LG_WARN && co.log->at(3).first == lg::severity::LG_WARN);
+	BOOST_CHECK(co.log->size() == 8);
+	BOOST_CHECK(co.log->at(0).first == lg::severity::LG_ERROR && co.log->at(1).first == lg::severity::LG_ERROR);
+	BOOST_CHECK(co.log->at(0).second == "errfoo" && co.log->at(1).second == "errbar/*");
+	BOOST_CHECK(co.log->at(2).first == lg::severity::LG_WARN && co.log->at(3).first == lg::severity::LG_WARN);
 	BOOST_CHECK(co.log->at(2).second == "warnfoo" && co.log->at(3).second == "warnfoo/bar");
-	BOOST_CHECK(co.log->at(4).first  == lg::severity::LG_INFO);
+	BOOST_CHECK(co.log->at(4).first == lg::severity::LG_INFO);
 	BOOST_CHECK(co.log->at(4).second == "infofoo");
-	BOOST_CHECK(co.log->at(5).first  == lg::severity::LG_DEBUG &&
-        co.log->at(6).first == lg::severity::LG_DEBUG && co.log->at(7).first == lg::severity::LG_DEBUG);
-	BOOST_CHECK(co.log->at(5).second == "dbgfoo"  && co.log->at(6).second == "dbgbar" && co.log->at(7).second == "dbg/foo/bar/baz");
+	BOOST_CHECK(co.log->at(5).first == lg::severity::LG_DEBUG && co.log->at(6).first == lg::severity::LG_DEBUG
+		&& co.log->at(7).first == lg::severity::LG_DEBUG);
+	BOOST_CHECK(co.log->at(5).second == "dbgfoo" && co.log->at(6).second == "dbgbar"
+		&& co.log->at(7).second == "dbg/foo/bar/baz");
 	BOOST_CHECK(co.logdomains && *co.logdomains == "filterfoo");
 	BOOST_CHECK(co.multiplayer);
 	BOOST_CHECK(co.multiplayer_ai_config);
@@ -266,12 +214,14 @@ BOOST_AUTO_TEST_CASE (test_full_options)
 	BOOST_CHECK(co.multiplayer_ignore_map_settings);
 	BOOST_CHECK(co.multiplayer_label && *co.multiplayer_label == "labelfoo");
 	BOOST_CHECK(co.multiplayer_parm);
-	BOOST_CHECK(std::get<0>(co.multiplayer_parm->at(0)) == 7 && std::get<1>(co.multiplayer_parm->at(0)) == "parmfoo" && std::get<2>(co.multiplayer_parm->at(0)) == "valfoo");
-	BOOST_CHECK(std::get<0>(co.multiplayer_parm->at(1)) == 8 && std::get<1>(co.multiplayer_parm->at(1)) == "parmbar" && std::get<2>(co.multiplayer_parm->at(1)) == "valbar");
+	BOOST_CHECK(std::get<0>(co.multiplayer_parm->at(0)) == 7 && std::get<1>(co.multiplayer_parm->at(0)) == "parmfoo"
+		&& std::get<2>(co.multiplayer_parm->at(0)) == "valfoo");
+	BOOST_CHECK(std::get<0>(co.multiplayer_parm->at(1)) == 8 && std::get<1>(co.multiplayer_parm->at(1)) == "parmbar"
+		&& std::get<2>(co.multiplayer_parm->at(1)) == "valbar");
 	BOOST_CHECK(co.multiplayer_scenario && *co.multiplayer_scenario == "scenfoo");
 	BOOST_CHECK(co.multiplayer_side);
 	BOOST_CHECK(co.multiplayer_side->size() == 2);
-	BOOST_CHECK(co.multiplayer_side->at(0).first == 9  && co.multiplayer_side->at(0).second == "sidefoo");
+	BOOST_CHECK(co.multiplayer_side->at(0).first == 9 && co.multiplayer_side->at(0).second == "sidefoo");
 	BOOST_CHECK(co.multiplayer_side->at(1).first == 10 && co.multiplayer_side->at(1).second == "sidebar");
 	BOOST_CHECK(co.multiplayer_turns && *co.multiplayer_turns == "42");
 	BOOST_CHECK(co.max_fps && *co.max_fps == 100);
@@ -301,11 +251,9 @@ BOOST_AUTO_TEST_CASE (test_full_options)
 	BOOST_CHECK(co.with_replay);
 }
 
-BOOST_AUTO_TEST_CASE (test_positional_options)
+BOOST_AUTO_TEST_CASE(test_positional_options)
 {
-	std::vector<std::string> args {
-		"wesnoth",
-		"datadirfoo"};
+	std::vector<std::string> args{"wesnoth", "datadirfoo"};
 
 	commandline_options co(args);
 
@@ -367,15 +315,10 @@ BOOST_AUTO_TEST_CASE (test_positional_options)
 	BOOST_CHECK(!co.with_replay);
 }
 
-BOOST_AUTO_TEST_CASE (test_log_domain_severity_override_order)
+BOOST_AUTO_TEST_CASE(test_log_domain_severity_override_order)
 {
-	std::vector<std::string> args {
-		"wesnoth",
-		"--log-error=gui/draw",
-		"--log-info=all,gui/general",
-		"--log-debug=gui/*",
-		"--log-none=all,gui/general,gui/draw",
-		"--log-error=gui/general"};
+	std::vector<std::string> args{"wesnoth", "--log-error=gui/draw", "--log-info=all,gui/general", "--log-debug=gui/*",
+		"--log-none=all,gui/general,gui/draw", "--log-error=gui/general"};
 
 	commandline_options co(args);
 

@@ -117,7 +117,8 @@ void select_orb_colors::setup_orb_group(const std::string& base_id, bool& shown,
 	group.set_member_states(initial);
 }
 
-void select_orb_colors::setup_orb_group_two_color(const std::string& base_id, bool& shown, bool& two_color, const std::string& initial)
+void select_orb_colors::setup_orb_group_two_color(
+	const std::string& base_id, bool& shown, bool& two_color, const std::string& initial)
 {
 	setup_orb_group(base_id, shown, initial);
 
@@ -125,7 +126,8 @@ void select_orb_colors::setup_orb_group_two_color(const std::string& base_id, bo
 	toggle_button& toggle = find_widget<toggle_button>(prefix + "two_color");
 	toggle.set_value_bool(two_color);
 
-	connect_signal_mouse_left_click(toggle, std::bind(&select_orb_colors::toggle_orb_callback, this, std::ref(two_color)));
+	connect_signal_mouse_left_click(
+		toggle, std::bind(&select_orb_colors::toggle_orb_callback, this, std::ref(two_color)));
 }
 
 void select_orb_colors::reset_orb_toggle(const std::string& base_id, bool shown)
@@ -142,7 +144,8 @@ void select_orb_colors::reset_orb_group(const std::string& base_id, bool shown, 
 	groups_[base_id].set_member_states(initial);
 }
 
-void select_orb_colors::reset_orb_group_two_color(const std::string& base_id, bool shown, bool two_color, const std::string& initial)
+void select_orb_colors::reset_orb_group_two_color(
+	const std::string& base_id, bool shown, bool two_color, const std::string& initial)
 {
 	reset_orb_group(base_id, shown, initial);
 
@@ -176,4 +179,4 @@ void select_orb_colors::reset_orb_callback()
 	reset_orb_group("enemy", show_enemy_, game_config::colors::enemy_orb_color);
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

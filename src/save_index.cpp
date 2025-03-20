@@ -98,17 +98,15 @@ const std::string& save_index_class::dir() const
 
 void save_index_class::clean_up_index()
 {
-	config &root = data();
+	config& root = data();
 
 	std::vector<std::string> filenames;
 	filesystem::get_files_in_dir(dir(), &filenames);
 
 	if(root.all_children_count() > filenames.size()) {
-		root.remove_children("save", [&filenames](const config& d)
-			{
-				return std::find(filenames.begin(), filenames.end(), d["save"]) == filenames.end();
-			}
-		);
+		root.remove_children("save", [&filenames](const config& d) {
+			return std::find(filenames.begin(), filenames.end(), d["save"]) == filenames.end();
+		});
 	}
 }
 
@@ -222,8 +220,9 @@ std::vector<save_info> save_index_class::get_saves_list(const std::string* filte
 
 	utils::erase_if(filenames, [filter](const std::string& filename) {
 		// Steam documentation indicates games can ignore their auto-generated 'steam_autocloud.vdf'.
-		// Reference: https://partner.steamgames.com/doc/features/cloud (under Steam Auto-Cloud section as of September 2021)
-		static const std::vector<std::string> to_ignore {"steam_autocloud.vdf"};
+		// Reference: https://partner.steamgames.com/doc/features/cloud (under Steam Auto-Cloud section as of September
+		// 2021)
+		static const std::vector<std::string> to_ignore{"steam_autocloud.vdf"};
 
 		if(std::find(to_ignore.begin(), to_ignore.end(), filename) != to_ignore.end()) {
 			return true;
@@ -250,9 +249,11 @@ std::string save_info::format_time_local() const
 {
 	if(std::tm* tm_l = std::localtime(&modified())) {
 		const std::string format = prefs::get().use_twelve_hour_clock_format()
-			// TRANSLATORS: Day of week + month + day of month + year + 12-hour time, eg 'Tue Nov 02 2021, 1:59 PM'. Format for your locale.
+			// TRANSLATORS: Day of week + month + day of month + year + 12-hour time, eg 'Tue Nov 02 2021, 1:59 PM'.
+			// Format for your locale.
 			? _("%a %b %d %Y, %I:%M %p")
-			// TRANSLATORS: Day of week + month + day of month + year + 24-hour time, eg 'Tue Nov 02 2021, 13:59'. Format for your locale.
+			// TRANSLATORS: Day of week + month + day of month + year + 24-hour time, eg 'Tue Nov 02 2021, 13:59'.
+			// Format for your locale.
 			: _("%a %b %d %Y, %H:%M");
 
 		return translation::strftime(format, tm_l);
@@ -292,12 +293,11 @@ bool save_info_less_time::operator()(const save_info& a, const save_info& b) con
 	}
 }
 
-static filesystem::scoped_istream find_save_file(const std::string& dir,
-		const std::string& name, const std::vector<std::string>& suffixes)
+static filesystem::scoped_istream find_save_file(
+	const std::string& dir, const std::string& name, const std::vector<std::string>& suffixes)
 {
 	for(const std::string& suf : suffixes) {
-		filesystem::scoped_istream file_stream =
-			filesystem::istream_file(dir + "/" + name + suf);
+		filesystem::scoped_istream file_stream = filesystem::istream_file(dir + "/" + name + suf);
 
 		if(!file_stream->fail()) {
 			return file_stream;
@@ -402,9 +402,8 @@ void extract_summary_from_config(config& cfg_save, config& cfg_summary)
 	auto cfg_snapshot = cfg_save.optional_child("snapshot");
 
 	// Servergenerated replays contain [scenario] and no [replay_start]
-	auto cfg_replay_start = cfg_save.has_child("replay_start")
-		? cfg_save.optional_child("replay_start")
-		: cfg_save.optional_child("scenario");
+	auto cfg_replay_start = cfg_save.has_child("replay_start") ? cfg_save.optional_child("replay_start")
+															   : cfg_save.optional_child("scenario");
 
 	auto cfg_replay = cfg_save.optional_child("replay");
 	const bool has_replay = cfg_replay && !cfg_replay->empty();

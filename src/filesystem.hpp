@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <ctime>
 #include <cstdint>
+#include <ctime>
 #include <fstream>
 #include <iosfwd>
 #include <memory>
@@ -33,7 +33,8 @@
 #include "global.hpp"
 #include "utils/optional_fwd.hpp"
 
-namespace game_config {
+namespace game_config
+{
 extern std::string path;
 extern std::string default_preferences_path;
 extern bool check_migration;
@@ -42,13 +43,14 @@ extern bool check_migration;
 extern const std::string observer_team_name;
 
 extern int cache_compression_level;
-}
+} // namespace game_config
 
 class config;
 class game_config_view;
 struct SDL_RWops;
 
-namespace filesystem {
+namespace filesystem
+{
 
 using scoped_istream = std::unique_ptr<std::istream>;
 using scoped_ostream = std::unique_ptr<std::ostream>;
@@ -60,13 +62,20 @@ struct sdl_rwops_deleter
 
 using rwops_ptr = std::unique_ptr<SDL_RWops, sdl_rwops_deleter>;
 
-rwops_ptr make_read_RWops(const std::string &path);
-rwops_ptr make_write_RWops(const std::string &path);
+rwops_ptr make_read_RWops(const std::string& path);
+rwops_ptr make_write_RWops(const std::string& path);
 
 /** An exception object used when an IO error occurs */
-struct io_exception : public game::error {
-	io_exception() : game::error("") {}
-	io_exception(const std::string& msg) : game::error(msg) {}
+struct io_exception : public game::error
+{
+	io_exception()
+		: game::error("")
+	{
+	}
+	io_exception(const std::string& msg)
+		: game::error(msg)
+	{
+	}
 };
 
 struct file_tree_checksum;
@@ -85,11 +94,16 @@ class blacklist_pattern_list
 {
 public:
 	blacklist_pattern_list()
-		: file_patterns_(), directory_patterns_()
-	{}
-	blacklist_pattern_list(const std::vector<std::string>& file_patterns, const std::vector<std::string>& directory_patterns)
-		: file_patterns_(file_patterns), directory_patterns_(directory_patterns)
-	{}
+		: file_patterns_()
+		, directory_patterns_()
+	{
+	}
+	blacklist_pattern_list(
+		const std::vector<std::string>& file_patterns, const std::vector<std::string>& directory_patterns)
+		: file_patterns_(file_patterns)
+		, directory_patterns_(directory_patterns)
+	{
+	}
 
 	bool match_file(const std::string& name) const;
 
@@ -105,7 +119,8 @@ public:
 		directory_patterns_.push_back(pattern);
 	}
 
-	void remove_blacklisted_files_and_dirs(std::vector<std::string>& files, std::vector<std::string>& directories) const;
+	void remove_blacklisted_files_and_dirs(
+		std::vector<std::string>& files, std::vector<std::string>& directories) const;
 
 private:
 	std::vector<std::string> file_patterns_;
@@ -125,15 +140,15 @@ extern const blacklist_pattern_list default_blacklist;
  * @param reorder Triggers the special handling of _main.cfg and _final.cfg.
  * @param[out] checksum Can be used to store checksum info.
  */
-void get_files_in_dir(const std::string &dir,
-                      std::vector<std::string>* files,
-                      std::vector<std::string>* dirs=nullptr,
-                      name_mode mode = name_mode::FILE_NAME_ONLY,
-                      filter_mode filter = filter_mode::NO_FILTER,
-                      reorder_mode reorder = reorder_mode::DONT_REORDER,
-                      file_tree_checksum* checksum = nullptr);
+void get_files_in_dir(const std::string& dir,
+	std::vector<std::string>* files,
+	std::vector<std::string>* dirs = nullptr,
+	name_mode mode = name_mode::FILE_NAME_ONLY,
+	filter_mode filter = filter_mode::NO_FILTER,
+	reorder_mode reorder = reorder_mode::DONT_REORDER,
+	file_tree_checksum* checksum = nullptr);
 
-std::string get_dir(const std::string &dir);
+std::string get_dir(const std::string& dir);
 
 /**
  * Try to autodetect the location of the game data dir. Note that
@@ -157,7 +172,8 @@ std::string get_lua_history_file();
 utils::optional<std::string> get_game_manual_file(const std::string& locale_code = "en");
 /**
  * parent directory for everything that should be synced between systems.
- * implemented due to limitations of Steam's AutoCloud (non-SDK) syncing, but will also simplify things if it's ever added for any other platforms.
+ * implemented due to limitations of Steam's AutoCloud (non-SDK) syncing, but will also simplify things if it's ever
+ * added for any other platforms.
  */
 std::string get_sync_dir();
 std::string get_saves_dir();
@@ -236,9 +252,11 @@ std::vector<uint8_t> read_file_binary(const std::string& fname);
 std::string read_file_as_data_uri(const std::string& fname);
 
 filesystem::scoped_istream istream_file(const std::string& fname, bool treat_failure_as_error = true);
-filesystem::scoped_ostream ostream_file(const std::string& fname, std::ios_base::openmode mode = std::ios_base::binary, bool create_directory = true);
+filesystem::scoped_ostream ostream_file(
+	const std::string& fname, std::ios_base::openmode mode = std::ios_base::binary, bool create_directory = true);
 /** Throws io_exception if an error occurs. */
-void write_file(const std::string& fname, const std::string& data, std::ios_base::openmode mode = std::ios_base::binary);
+void write_file(
+	const std::string& fname, const std::string& data, std::ios_base::openmode mode = std::ios_base::binary);
 /**
  * Read a file and then writes it back out.
  *
@@ -291,7 +309,8 @@ bool is_gzip_file(const std::string& filename);
 /** Returns true if the file ends with '.bz2'. */
 bool is_bzip2_file(const std::string& filename);
 
-inline bool is_compressed_file(const std::string& filename) {
+inline bool is_compressed_file(const std::string& filename)
+{
 	return is_gzip_file(filename) || is_bzip2_file(filename);
 }
 
@@ -312,13 +331,20 @@ struct file_tree_checksum
 	file_tree_checksum();
 	explicit file_tree_checksum(const config& cfg);
 	void write(config& cfg) const;
-	void reset() {nfiles = 0;modified = 0;sum_size=0;}
+	void reset()
+	{
+		nfiles = 0;
+		modified = 0;
+		sum_size = 0;
+	}
 	// @todo make variables private!
 	std::size_t nfiles, sum_size;
 	std::time_t modified;
-	bool operator==(const file_tree_checksum &rhs) const;
-	bool operator!=(const file_tree_checksum &rhs) const
-	{ return !operator==(rhs); }
+	bool operator==(const file_tree_checksum& rhs) const;
+	bool operator!=(const file_tree_checksum& rhs) const
+	{
+		return !operator==(rhs);
+	}
 };
 
 /** Get the time at which the data/ tree was last modified at. */
@@ -374,14 +400,11 @@ std::string nearest_extant_parent(const std::string& file);
  *          however, if resolution fails because a component does not exist, an
  *          empty string is returned instead.
  */
-std::string normalize_path(const std::string& path,
-						   bool normalize_separators = false,
-						   bool resolve_dot_entries = false);
+std::string normalize_path(
+	const std::string& path, bool normalize_separators = false, bool resolve_dot_entries = false);
 
 /** Helper function to convert absolute path to wesnoth relative path */
-bool to_asset_path(std::string& abs_path,
-                   const std::string& addon_id,
-                   const std::string& asset_type);
+bool to_asset_path(std::string& abs_path, const std::string& addon_id, const std::string& asset_type);
 
 /**
  * Sanitizes a path to remove references to the user's name.
@@ -469,17 +492,19 @@ utils::optional<std::string> get_binary_file_location(const std::string& type, c
 /**
  * Returns a complete path to the actual directory of a given @a type, if it exists.
  */
-utils::optional<std::string> get_binary_dir_location(const std::string &type, const std::string &filename);
+utils::optional<std::string> get_binary_dir_location(const std::string& type, const std::string& filename);
 
 /**
- * Returns a translated path to the actual file or directory, if it exists. @a current_dir is needed to resolve a path starting with ".".
+ * Returns a translated path to the actual file or directory, if it exists. @a current_dir is needed to resolve a path
+ * starting with ".".
  */
-utils::optional<std::string> get_wml_location(const std::string& path, const utils::optional<std::string>& current_dir = utils::nullopt);
+utils::optional<std::string> get_wml_location(
+	const std::string& path, const utils::optional<std::string>& current_dir = utils::nullopt);
 
 /**
  * Returns a short path to @a filename, skipping the (user) data directory.
  */
-std::string get_short_wml_path(const std::string &filename);
+std::string get_short_wml_path(const std::string& filename);
 
 /**
  * Returns an asset path to @a filename for binary path-independent use in saved games.
@@ -488,7 +513,7 @@ std::string get_short_wml_path(const std::string &filename);
  *   images, units/konrad-fighter.png ->
  *   data/campaigns/Heir_To_The_Throne/images/units/konrad-fighter.png
  */
-utils::optional<std::string> get_independent_binary_file_path(const std::string& type, const std::string &filename);
+utils::optional<std::string> get_independent_binary_file_path(const std::string& type, const std::string& filename);
 
 /**
  * Returns the appropriate invocation for a Wesnoth-related binary, assuming
@@ -497,7 +522,7 @@ utils::optional<std::string> get_independent_binary_file_path(const std::string&
  * program is not guaranteed to actually exist.  '-debug' variants are handled
  * correctly.
  */
-std::string get_program_invocation(const std::string &program_name);
+std::string get_program_invocation(const std::string& program_name);
 
 /**
  * Returns the localized version of the given filename, if it exists.
@@ -510,4 +535,4 @@ utils::optional<std::string> get_localized_path(const std::string& file, const s
  */
 utils::optional<std::string> get_addon_id_from_path(const std::string& location);
 
-}
+} // namespace filesystem

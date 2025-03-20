@@ -24,38 +24,56 @@
 
 class game_display;
 
-namespace gui{
+namespace gui
+{
 
+enum TEXTBOX_MODE { TEXTBOX_NONE, TEXTBOX_SEARCH, TEXTBOX_MESSAGE, TEXTBOX_COMMAND, TEXTBOX_AI };
 
-	enum TEXTBOX_MODE { TEXTBOX_NONE, TEXTBOX_SEARCH, TEXTBOX_MESSAGE,
-		        TEXTBOX_COMMAND, TEXTBOX_AI };
+class floating_textbox
+{
+public:
+	floating_textbox();
 
-	class floating_textbox{
-	public:
-		floating_textbox();
+	TEXTBOX_MODE mode() const
+	{
+		return mode_;
+	}
+	const std::unique_ptr<gui::button>& check() const
+	{
+		return check_;
+	}
+	const std::unique_ptr<gui::textbox>& box() const
+	{
+		return box_;
+	}
+	const std::vector<std::string>& command_history() const
+	{
+		return command_history_;
+	}
 
-		TEXTBOX_MODE mode() const { return mode_; }
-		const std::unique_ptr<gui::button>& check() const { return check_; }
-		const std::unique_ptr<gui::textbox>& box() const { return box_; }
-		const std::vector<std::string>& command_history() const { return command_history_; }
+	void close();
+	void update_location(game_display& gui);
+	void show(gui::TEXTBOX_MODE mode,
+		const std::string& label,
+		const std::string& check_label,
+		bool checked,
+		game_display& gui);
+	void tab(const std::set<std::string>& dictionary);
+	void memorize_command(const std::string& command);
+	bool active() const
+	{
+		return box_.get() != nullptr;
+	}
 
-		void close();
-		void update_location(game_display& gui);
-		void show(gui::TEXTBOX_MODE mode, const std::string& label,
-			const std::string& check_label, bool checked, game_display& gui);
-		void tab(const std::set<std::string>& dictionary);
-		void memorize_command(const std::string& command);
-		bool active() const { return box_.get() != nullptr; }
+private:
+	std::unique_ptr<gui::textbox> box_;
+	std::unique_ptr<gui::button> check_;
 
-	private:
-		std::unique_ptr<gui::textbox> box_;
-		std::unique_ptr<gui::button> check_;
+	TEXTBOX_MODE mode_;
 
-		TEXTBOX_MODE mode_;
+	std::string label_string_;
+	int label_;
 
-		std::string label_string_;
-		int label_;
-
-		std::vector<std::string> command_history_;
-	};
-}
+	std::vector<std::string> command_history_;
+};
+} // namespace gui

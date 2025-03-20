@@ -18,15 +18,16 @@
  *  General settings and defaults for scenarios.
  */
 
-#include "lexical_cast.hpp"
 #include "map_settings.hpp"
+#include "lexical_cast.hpp"
 
 #include "formula/string_utils.hpp"
 #include "preferences/preferences.hpp"
 #include "saved_game.hpp"
 #include "serialization/string_utils.hpp"
 
-namespace settings {
+namespace settings
+{
 
 int get_turns(const std::string& value)
 {
@@ -77,7 +78,8 @@ void set_default_values(ng::create_engine& create)
 
 bool force_lock_settings(ng::create_engine& create)
 {
-	return create.current_level().data()["force_lock_settings"].to_bool(!create.get_state().classification().is_normal_mp_game());
+	return create.current_level().data()["force_lock_settings"].to_bool(
+		!create.get_state().classification().is_normal_mp_game());
 }
 
 std::string game_name_default()
@@ -89,13 +91,16 @@ std::string game_name_default()
 
 int num_turns_default(ng::create_engine& create)
 {
-	return create.get_state().mp_settings().use_map_settings ? settings::get_turns(create.current_level().data()["turns"]) : prefs::get().mp_turns();
+	return create.get_state().mp_settings().use_map_settings
+		? settings::get_turns(create.current_level().data()["turns"])
+		: prefs::get().mp_turns();
 }
 
 int village_gold_default(ng::create_engine& create)
 {
 	return create.get_state().mp_settings().use_map_settings
-		? settings::get_village_gold(create.current_level().data()["mp_village_gold"], &create.get_state().classification())
+		? settings::get_village_gold(
+			  create.current_level().data()["mp_village_gold"], &create.get_state().classification())
 		: prefs::get().village_gold();
 }
 
@@ -159,9 +164,8 @@ bool fog_game_default(ng::create_engine& create)
 
 bool shroud_game_default(ng::create_engine& create)
 {
-	return create.get_state().mp_settings().use_map_settings
-		? create.current_level().data()["mp_shroud"].to_bool(false)
-		: prefs::get().mp_shroud();
+	return create.get_state().mp_settings().use_map_settings ? create.current_level().data()["mp_shroud"].to_bool(false)
+															 : prefs::get().mp_shroud();
 }
 
 bool allow_observers_default()
@@ -176,6 +180,7 @@ bool shuffle_sides_default()
 
 random_faction_mode::type random_faction_mode_default()
 {
-	return random_faction_mode::get_enum(prefs::get().random_faction_mode()).value_or(random_faction_mode::type::independent);
+	return random_faction_mode::get_enum(prefs::get().random_faction_mode())
+		.value_or(random_faction_mode::type::independent);
 }
 } // end namespace settings

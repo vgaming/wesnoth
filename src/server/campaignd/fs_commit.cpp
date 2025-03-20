@@ -34,8 +34,8 @@
 #include "formatter.hpp"
 #include "serialization/unicode_cast.hpp"
 
-#include <boost/system/error_code.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/system/error_code.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -45,9 +45,9 @@
 static lg::log_domain log_filesystem("filesystem");
 
 #define DBG_FS LOG_STREAM(debug, log_filesystem)
-#define LOG_FS LOG_STREAM(info,  log_filesystem)
-#define WRN_FS LOG_STREAM(warn,  log_filesystem)
-#define ERR_FS LOG_STREAM(err,   log_filesystem)
+#define LOG_FS LOG_STREAM(info, log_filesystem)
+#define WRN_FS LOG_STREAM(warn, log_filesystem)
+#define ERR_FS LOG_STREAM(err, log_filesystem)
 
 namespace filesystem
 {
@@ -108,13 +108,8 @@ filesystem::scoped_ostream ostream_file_with_delete(const std::string& fname)
 	const auto& w_name = unicode_cast<std::wstring>(fname);
 
 	try {
-		HANDLE file = CreateFileW(w_name.c_str(),
-								  GENERIC_WRITE | DELETE,
-								  FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-								  nullptr,
-								  CREATE_ALWAYS,
-								  FILE_ATTRIBUTE_NORMAL,
-								  nullptr);
+		HANDLE file = CreateFileW(w_name.c_str(), GENERIC_WRITE | DELETE, FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+			CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
 		if(file == INVALID_HANDLE_VALUE) {
 			throw BOOST_IOSTREAMS_FAILURE(formatter() << "CreateFile() failed: " << GetLastError());
@@ -151,7 +146,7 @@ bool rename_open_file(const std::string& new_name, HANDLE open_handle)
 	}
 
 	const auto& w_name = unicode_cast<std::wstring>(new_name);
-	const std::size_t buf_size = w_name.length()*sizeof(wchar_t) + sizeof(FILE_RENAME_INFO);
+	const std::size_t buf_size = w_name.length() * sizeof(wchar_t) + sizeof(FILE_RENAME_INFO);
 
 	// Avert your eyes, children
 
@@ -166,11 +161,7 @@ bool rename_open_file(const std::string& new_name, HANDLE open_handle)
 
 	// Okay, back to our regular programming
 
-	if(!SetFileInformationByHandle(open_handle,
-								   FileRenameInfo,
-								   fileinfo_buf.get(),
-								   static_cast<DWORD>(buf_size)))
-	{
+	if(!SetFileInformationByHandle(open_handle, FileRenameInfo, fileinfo_buf.get(), static_cast<DWORD>(buf_size))) {
 		ERR_FS << "replace_open_file(): SetFileInformationByHandle() " << GetLastError();
 		return false;
 	}

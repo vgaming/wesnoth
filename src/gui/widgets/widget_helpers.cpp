@@ -46,4 +46,4 @@ void swap_grid(grid* g, grid* content_grid, std::unique_ptr<widget> widget, cons
 	auto old = parent_grid->swap_child(id, std::move(widget), false);
 	assert(old);
 }
-}
+} // namespace gui2

@@ -94,32 +94,17 @@ void achievements_dialog::set_achievements_row()
 		const bool in_progress = ach.max_progress_ != 0 && ach.current_progress_ != -1;
 		const auto in_progress_name = !in_progress
 			? ach.name_
-			: t_string(VGETTEXT("$title ($count/$total)", {{
-				{"title", ach.name_},
-				{"count", std::to_string(ach.current_progress_)},
-				{"total", std::to_string(ach.max_progress_)}
-			}}));
+			: t_string(VGETTEXT("$title ($count/$total)",
+				  {{{"title", ach.name_}, {"count", std::to_string(ach.current_progress_)},
+					  {"total", std::to_string(ach.max_progress_)}}}));
 
-		grid& newrow = achievements_box_->add_row(widget_data{
-			{ "icon", {
-				{ "label", ach.achieved_
-					? ach.icon_completed_
-					: ach.icon_
-				}
-			}},
-			{ "name", {
-				{ "label", ach.achieved_
-					? ach.name_completed_
-					: in_progress_name
-				}
-			}},
-			{ "description", {
-				{ "label", ach.achieved_
-					? t_string(markup::span_color("green", ach.description_completed_))
-					: ach.description_
-				}
-			}}
-		});
+		grid& newrow = achievements_box_->add_row(
+			widget_data{{"icon", {{"label", ach.achieved_ ? ach.icon_completed_ : ach.icon_}}},
+				{"name", {{"label", ach.achieved_ ? ach.name_completed_ : in_progress_name}}},
+				{"description",
+					{{"label",
+						ach.achieved_ ? t_string(markup::span_color("green", ach.description_completed_))
+									  : ach.description_}}}});
 
 		auto achievement_progress = static_cast<progress_bar*>(newrow.find("achievement_progress", false));
 		if(in_progress) {
@@ -135,10 +120,8 @@ void achievements_dialog::set_achievements_row()
 	}
 
 	auto& achieved_label = find_widget<label>("achievement_count");
-	achieved_label.set_label(VGETTEXT("Completed $count/$total", {
-		{"count", std::to_string(achieved_count)} ,
-		{"total", std::to_string(list.achievements_.size())}
-	}));
+	achieved_label.set_label(VGETTEXT("Completed $count/$total",
+		{{"count", std::to_string(achieved_count)}, {"total", std::to_string(list.achievements_.size())}}));
 }
 
 void achievements_dialog::set_sub_achievements(grid& newrow, const achievement& ach)
@@ -146,8 +129,7 @@ void achievements_dialog::set_sub_achievements(grid& newrow, const achievement& 
 	int i = 0;
 
 	// set any sub achievements
-	for(const sub_achievement& sub_ach : ach.sub_achievements_)
-	{
+	for(const sub_achievement& sub_ach : ach.sub_achievements_) {
 		if(i == sub_achievements_limit) {
 			ERR_CONFIG << "Too many sub achievements";
 			break;
@@ -160,8 +142,7 @@ void achievements_dialog::set_sub_achievements(grid& newrow, const achievement& 
 	}
 
 	// if an achievement hasn't defined the maximum possible sub-achievements, hide the [image]s for the rest
-	for(; i < sub_achievements_limit; i++)
-	{
+	for(; i < sub_achievements_limit; i++) {
 		newrow.find("sub_icon" + std::to_string(i), false)->set_visible(visibility::invisible);
 	}
 }

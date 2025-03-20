@@ -74,8 +74,8 @@ config initial_level_config(saved_game& state)
 		// Generic victory objectives.
 		std::ostringstream ss;
 		ss << markup::tag("big", t_string(N_("Victory:"), "wesnoth")) << "\n";
-		ss << markup::span_color("#00ff00",
-			font::unicode_bullet, " ", t_string(N_("Defeat enemy leader(s)"), "wesnoth"));
+		ss << markup::span_color(
+			"#00ff00", font::unicode_bullet, " ", t_string(N_("Defeat enemy leader(s)"), "wesnoth"));
 		scenario["objectives"] = ss.str();
 	}
 

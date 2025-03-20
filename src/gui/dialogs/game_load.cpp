@@ -22,6 +22,7 @@
 #include "formatter.hpp"
 #include "formula/string_utils.hpp"
 #include "game_config.hpp"
+#include "game_config_view.hpp"
 #include "gettext.hpp"
 #include "gui/auxiliary/field.hpp"
 #include "gui/dialogs/game_delete.hpp"
@@ -36,20 +37,18 @@
 #include "language.hpp"
 #include "picture.hpp"
 #include "preferences/preferences.hpp"
-#include "serialization/string_utils.hpp"
 #include "serialization/markup.hpp"
-#include "utils/general.hpp"
+#include "serialization/string_utils.hpp"
 #include "utils/ci_searcher.hpp"
-#include "game_config_view.hpp"
+#include "utils/general.hpp"
 
 #include <functional>
 
-
 static lg::log_domain log_gameloaddlg{"gui/dialogs/game_load_dialog"};
-#define ERR_GAMELOADDLG   LOG_STREAM(err,   log_gameloaddlg)
-#define WRN_GAMELOADDLG   LOG_STREAM(warn,  log_gameloaddlg)
-#define LOG_GAMELOADDLG   LOG_STREAM(info,  log_gameloaddlg)
-#define DBG_GAMELOADDLG   LOG_STREAM(debug, log_gameloaddlg)
+#define ERR_GAMELOADDLG LOG_STREAM(err, log_gameloaddlg)
+#define WRN_GAMELOADDLG LOG_STREAM(warn, log_gameloaddlg)
+#define LOG_GAMELOADDLG LOG_STREAM(info, log_gameloaddlg)
+#define DBG_GAMELOADDLG LOG_STREAM(debug, log_gameloaddlg)
 
 namespace gui2::dialogs
 {
@@ -106,18 +105,15 @@ void game_load::pre_show()
 	keyboard_capture(filter);
 	add_to_keyboard_chain(&list);
 
-	list.set_sorters(
-		[this](const std::size_t i) { return games_[i].name(); },
- 		[this](const std::size_t i) { return games_[i].modified(); }
-	);
+	list.set_sorters([this](const std::size_t i) { return games_[i].name(); },
+		[this](const std::size_t i) { return games_[i].modified(); });
 
 	populate_game_list();
 
-	connect_signal_mouse_left_click(find_widget<button>("delete"),
-			std::bind(&game_load::delete_button_callback, this));
+	connect_signal_mouse_left_click(find_widget<button>("delete"), std::bind(&game_load::delete_button_callback, this));
 
-	connect_signal_mouse_left_click(find_widget<button>("browse_saves_folder"),
-			std::bind(&game_load::browse_button_callback, this));
+	connect_signal_mouse_left_click(
+		find_widget<button>("browse_saves_folder"), std::bind(&game_load::browse_button_callback, this));
 
 	menu_button& dir_list = find_widget<menu_button>("dirList");
 
@@ -140,13 +136,12 @@ void game_load::set_save_dir_list(menu_button& dir_list)
 	std::vector<config> options;
 
 	// The first option in the list is the current version's save dir
-	options.emplace_back("label",  _("game_version^Current Version"), "path", "");
+	options.emplace_back("label", _("game_version^Current Version"), "path", "");
 
 	for(const auto& known_dir : other_dirs) {
-		options.emplace_back(
-			"label", VGETTEXT("game_version^Wesnoth $version", utils::string_map{{"version", known_dir.version}}),
-			"path", known_dir.path
-		);
+		options.emplace_back("label",
+			VGETTEXT("game_version^Wesnoth $version", utils::string_map{{"version", known_dir.version}}), "path",
+			known_dir.path);
 	}
 
 	dir_list.set_values(options);
@@ -181,19 +176,18 @@ void game_load::populate_game_list()
 void game_load::display_savegame_internal(const savegame::save_info& game)
 {
 	filename_ = game.name();
-	summary_  = game.summary();
+	summary_ = game.summary();
 
-	find_widget<minimap>("minimap")
-			.set_map_data(summary_["map_data"]);
+	find_widget<minimap>("minimap").set_map_data(summary_["map_data"]);
 
-	find_widget<label>("lblScenario")
-			.set_label(summary_["label"]);
+	find_widget<label>("lblScenario").set_label(summary_["label"]);
 
 	listbox& leader_list = find_widget<listbox>("leader_list");
 
 	leader_list.clear();
 
-	const std::string sprite_scale_mod = (formatter() << "~SCALE_INTO(" << game_config::tile_size << ',' << game_config::tile_size << ')').str();
+	const std::string sprite_scale_mod
+		= (formatter() << "~SCALE_INTO(" << game_config::tile_size << ',' << game_config::tile_size << ')').str();
 
 	unsigned li = 0;
 	for(const auto& leader : summary_.child_range("leader")) {
@@ -231,7 +225,8 @@ void game_load::display_savegame_internal(const savegame::save_info& game)
 		data.emplace("leader_gold", item);
 
 		// TRANSLATORS: "reserve" refers to units on the recall list
-		item["label"] = VGETTEXT("$active active, $reserve reserve", {{"active", leader["units"]}, {"reserve", leader["recall_units"]}});
+		item["label"] = VGETTEXT(
+			"$active active, $reserve reserve", {{"active", leader["units"]}, {"reserve", leader["recall_units"]}});
 		data.emplace("leader_troops", item);
 
 		leader_list.add_row(data);
@@ -249,10 +244,10 @@ void game_load::display_savegame_internal(const savegame::save_info& game)
 
 	// The new label value may have more or less lines than the previous value, so invalidate the layout.
 	find_widget<styled_widget>("slblSummary").set_label(str.str());
-	//invalidate_layout();
+	// invalidate_layout();
 
-	toggle_button& replay_toggle            = dynamic_cast<toggle_button&>(*show_replay_->get_widget());
-	toggle_button& cancel_orders_toggle     = dynamic_cast<toggle_button&>(*cancel_orders_->get_widget());
+	toggle_button& replay_toggle = dynamic_cast<toggle_button&>(*show_replay_->get_widget());
+	toggle_button& cancel_orders_toggle = dynamic_cast<toggle_button&>(*cancel_orders_->get_widget());
 	toggle_button& change_difficulty_toggle = dynamic_cast<toggle_button&>(*change_difficulty_->get_widget());
 
 	const bool is_replay = savegame::loadgame::is_replay_save(summary_);
@@ -293,16 +288,14 @@ void game_load::display_savegame()
 
 	if(!successfully_displayed_a_game) {
 		find_widget<minimap>("minimap").set_map_data("");
-		find_widget<label>("lblScenario")
-			.set_label("");
-		find_widget<styled_widget>("slblSummary")
-			.set_label("");
+		find_widget<label>("lblScenario").set_label("");
+		find_widget<styled_widget>("slblSummary").set_label("");
 
 		listbox& leader_list = find_widget<listbox>("leader_list");
 		leader_list.clear();
 
-		toggle_button& replay_toggle            = dynamic_cast<toggle_button&>(*show_replay_->get_widget());
-		toggle_button& cancel_orders_toggle     = dynamic_cast<toggle_button&>(*cancel_orders_->get_widget());
+		toggle_button& replay_toggle = dynamic_cast<toggle_button&>(*show_replay_->get_widget());
+		toggle_button& cancel_orders_toggle = dynamic_cast<toggle_button&>(*cancel_orders_->get_widget());
 		toggle_button& change_difficulty_toggle = dynamic_cast<toggle_button&>(*change_difficulty_->get_widget());
 
 		replay_toggle.set_active(false);
@@ -319,8 +312,9 @@ void game_load::display_savegame()
 
 void game_load::apply_filter_text(const std::string& text)
 {
-	find_widget<listbox>("savegame_list").filter_rows_by(
-		[this, match = translation::make_ci_matcher(text)](std::size_t row) { return match(games_[row].name()); });
+	find_widget<listbox>("savegame_list")
+		.filter_rows_by(
+			[this, match = translation::make_ci_matcher(text)](std::size_t row) { return match(games_[row].name()); });
 }
 
 void game_load::evaluate_summary_string(std::stringstream& str, const config& cfg_summary)
@@ -340,39 +334,39 @@ void game_load::evaluate_summary_string(std::stringstream& str, const config& cf
 
 	if(campaign_type_enum) {
 		switch(*campaign_type_enum) {
-			case campaign_type::type::scenario: {
-				const config* campaign = nullptr;
-				if(!campaign_id.empty()) {
-					if(auto c = cache_config_.find_child("campaign", "id", campaign_id)) {
-						campaign = c.ptr();
-					}
+		case campaign_type::type::scenario: {
+			const config* campaign = nullptr;
+			if(!campaign_id.empty()) {
+				if(auto c = cache_config_.find_child("campaign", "id", campaign_id)) {
+					campaign = c.ptr();
 				}
-
-				utils::string_map symbols;
-				if(campaign != nullptr) {
-					symbols["campaign_name"] = (*campaign)["name"];
-				} else {
-					// Fallback to nontranslatable campaign id.
-					symbols["campaign_name"] = "(" + campaign_id + ")";
-				}
-
-				str << VGETTEXT("Campaign: $campaign_name", symbols);
-
-				// Display internal id for debug purposes if we didn't above
-				if(game_config::debug && (campaign != nullptr)) {
-					str << '\n' << "(" << campaign_id << ")";
-				}
-				break;
 			}
-			case campaign_type::type::multiplayer:
-				str << _("Multiplayer");
-				break;
-			case campaign_type::type::tutorial:
-				str << _("Tutorial");
-				break;
-			case campaign_type::type::test:
-				str << _("Test scenario");
-				break;
+
+			utils::string_map symbols;
+			if(campaign != nullptr) {
+				symbols["campaign_name"] = (*campaign)["name"];
+			} else {
+				// Fallback to nontranslatable campaign id.
+				symbols["campaign_name"] = "(" + campaign_id + ")";
+			}
+
+			str << VGETTEXT("Campaign: $campaign_name", symbols);
+
+			// Display internal id for debug purposes if we didn't above
+			if(game_config::debug && (campaign != nullptr)) {
+				str << '\n' << "(" << campaign_id << ")";
+			}
+			break;
+		}
+		case campaign_type::type::multiplayer:
+			str << _("Multiplayer");
+			break;
+		case campaign_type::type::tutorial:
+			str << _("Tutorial");
+			break;
+		case campaign_type::type::test:
+			str << _("Test scenario");
+			break;
 		}
 	} else {
 		str << campaign_type;
@@ -389,12 +383,12 @@ void game_load::evaluate_summary_string(std::stringstream& str, const config& cf
 	}
 
 	if(campaign_type_enum) {
-		switch (*campaign_type_enum) {
+		switch(*campaign_type_enum) {
 		case campaign_type::type::scenario:
 		case campaign_type::type::multiplayer: {
 			const config* campaign = nullptr;
-			if (!campaign_id.empty()) {
-				if (auto c = cache_config_.find_child("campaign", "id", campaign_id)) {
+			if(!campaign_id.empty()) {
+				if(auto c = cache_config_.find_child("campaign", "id", campaign_id)) {
 					campaign = c.ptr();
 				}
 			}
@@ -403,15 +397,15 @@ void game_load::evaluate_summary_string(std::stringstream& str, const config& cf
 			// 'MULTIPLAYER' may be a campaign with difficulty or single scenario without difficulty
 			// For the latter do not show the difficulty - even though it will be listed as
 			// NORMAL -> Medium in the save file it should not be considered valid (GitHub Issue #5321)
-			if (campaign != nullptr) {
+			if(campaign != nullptr) {
 				str << "\n" << _("Difficulty: ");
 				try {
-					const config& difficulty = campaign->find_mandatory_child("difficulty", "define", cfg_summary["difficulty"]);
+					const config& difficulty
+						= campaign->find_mandatory_child("difficulty", "define", cfg_summary["difficulty"]);
 					std::ostringstream ss;
 					ss << difficulty["label"] << " (" << difficulty["description"] << ")";
 					str << ss.str();
-				}
-				catch (const config::error&) {
+				} catch(const config::error&) {
 					// fall back to standard difficulty string in case of exception
 					str << string_table[cfg_summary["difficulty"]];
 				}
@@ -457,7 +451,6 @@ void game_load::delete_button_callback()
 
 	const std::size_t index = std::size_t(list.get_selected_row());
 	if(index < games_.size()) {
-
 		// See if we should ask the user for deletion confirmation
 		if(prefs::get().ask_delete()) {
 			if(!gui2::dialogs::game_delete::execute()) {
@@ -515,4 +508,4 @@ void game_load::handle_dir_select()
 	display_savegame();
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

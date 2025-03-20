@@ -23,8 +23,7 @@
 
 #include <algorithm>
 
-#define LOG_SCOPE_HEADER                                                       \
-	"tcontainer(" + get_control_type() + ") [" + id() + "] " + __func__
+#define LOG_SCOPE_HEADER "tcontainer(" + get_control_type() + ") [" + id() + "] " + __func__
 #define LOG_HEADER LOG_SCOPE_HEADER + ':'
 
 namespace gui2
@@ -36,8 +35,7 @@ container_base::container_base(const implementation::builder_styled_widget& buil
 {
 	grid_.set_parent(this);
 	connect_signal<event::REQUEST_PLACEMENT>(
-		std::bind(&container_base::clear_layout_size, this),
-		event::dispatcher::back_pre_child);
+		std::bind(&container_base::clear_layout_size, this), event::dispatcher::back_pre_child);
 }
 
 SDL_Rect container_base::get_client_rect() const
@@ -171,9 +169,7 @@ point container_base::calculate_best_size() const
 		result.y = default_size.y;
 	}
 
-
-	DBG_GUI_L << LOG_HEADER << " border size " << border_size << " returning "
-			  << result << ".";
+	DBG_GUI_L << LOG_HEADER << " border size " << border_size << " returning " << result << ".";
 
 	return result;
 }
@@ -198,8 +194,7 @@ void container_base::set_visible_rectangle(const SDL_Rect& rectangle)
 
 void container_base::impl_draw_children()
 {
-	assert(get_visible() == widget::visibility::visible
-	       && grid_.get_visible() == widget::visibility::visible);
+	assert(get_visible() == widget::visibility::visible && grid_.get_visible() == widget::visibility::visible);
 
 	grid_.draw_children();
 }
@@ -209,14 +204,12 @@ void container_base::layout_children()
 	grid_.layout_children();
 }
 
-widget* container_base::find_at(const point& coordinate,
-							  const bool must_be_active)
+widget* container_base::find_at(const point& coordinate, const bool must_be_active)
 {
 	return grid_.find_at(coordinate, must_be_active);
 }
 
-const widget* container_base::find_at(const point& coordinate,
-									const bool must_be_active) const
+const widget* container_base::find_at(const point& coordinate, const bool must_be_active) const
 {
 	return grid_.find_at(coordinate, must_be_active);
 }
@@ -227,8 +220,7 @@ widget* container_base::find(const std::string_view id, const bool must_be_activ
 	return result ? result : grid_.find(id, must_be_active);
 }
 
-const widget* container_base::find(const std::string_view id,
-								 const bool must_be_active) const
+const widget* container_base::find(const std::string_view id, const bool must_be_active) const
 {
 	const widget* result = styled_widget::find(id, must_be_active);
 	return result ? result : grid_.find(id, must_be_active);

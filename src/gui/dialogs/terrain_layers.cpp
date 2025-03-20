@@ -56,38 +56,33 @@ void terrain_layers::pre_show()
 
 	int order = 1;
 	for(const terrain_builder::tile::log_details& det : tile_logs_) {
-		const terrain_builder::tile::rule_image_rand& ri   = *det.first;
+		const terrain_builder::tile::rule_image_rand& ri = *det.first;
 		const terrain_builder::rule_image_variant& variant = *det.second;
 
 		// TODO: also use random image variations (not just take 1st)
 		const image::locator& img = variant.images.front().get_first_frame();
 		const std::string& name = img.get_filename();
 		// TODO: deal with (rarely used) ~modifications
-		//const std::string& modif = img.get_modifications();
+		// const std::string& modif = img.get_modifications();
 		const map_location& loc_cut = img.get_loc();
 
 		widget_data data;
 		widget_item item;
 
-		item["label"] = (formatter() << (ri->is_background() ? "B ": "F ") << order).str();
+		item["label"] = (formatter() << (ri->is_background() ? "B " : "F ") << order).str();
 		data.emplace("index", item);
 
 		std::ostringstream image_steam;
 
 		const int tz = game_config::tile_size;
-		SDL_Rect r {0,0,tz,tz};
+		SDL_Rect r{0, 0, tz, tz};
 
 		const point img_size = image::get_size(img.get_filename());
 
 		// calculate which part of the image the terrain engine uses
 		if(loc_cut.valid()) {
 			// copied from image.cpp : load_image_sub_file()
-			r = {
-				((tz * 3) / 4) * loc_cut.x
-				, tz           * loc_cut.y + (tz / 2) * (loc_cut.x % 2)
-				, tz
-				, tz
-			};
+			r = {((tz * 3) / 4) * loc_cut.x, tz * loc_cut.y + (tz / 2) * (loc_cut.x % 2), tz, tz};
 
 			if(img.get_center_x() >= 0 && img.get_center_y() >= 0) {
 				r.x += img_size.x / 2 - img.get_center_x();
@@ -103,14 +98,9 @@ void terrain_layers::pre_show()
 		rect r2{0, 0, img_size.x, img_size.y};
 		r2.clip(r);
 		if(!r2.empty()) {
-			image_steam
-				<< "~BLIT(" << name
-					<< "~CROP("
-						<< r2.x << "," << r2.y << ","
-						<< r2.w << "," << r2.h << ")"
-					<< "," << r2.x - r.x << "," << r2.y - r.y
-				<< ")"
-				<< "~MASK(" << "terrain/alphamask.png" << ")";
+			image_steam << "~BLIT(" << name << "~CROP(" << r2.x << "," << r2.y << "," << r2.w << "," << r2.h << ")"
+						<< "," << r2.x - r.x << "," << r2.y - r.y << ")"
+						<< "~MASK(" << "terrain/alphamask.png" << ")";
 		}
 
 		item["label"] = image_steam.str();
@@ -143,4 +133,4 @@ void terrain_layers::pre_show()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

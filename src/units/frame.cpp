@@ -31,9 +31,10 @@ frame_builder::frame_builder()
 	, auto_hflip_(boost::logic::indeterminate)
 	, primary_frame_(boost::logic::indeterminate)
 	, drawing_layer_(std::to_string(get_abs_frame_layer(drawing_layer::unit_default)))
-{}
+{
+}
 
-frame_builder::frame_builder(const config& cfg,const std::string& frame_string)
+frame_builder::frame_builder(const config& cfg, const std::string& frame_string)
 	: duration_(1)
 	, image_(cfg[frame_string + "image"])
 	, image_diagonal_(cfg[frame_string + "image_diagonal"])
@@ -75,8 +76,7 @@ frame_builder::frame_builder(const config& cfg,const std::string& frame_string)
 			text_color_ = color_t::from_rgb_string(text_color_key.str());
 		} catch(const std::invalid_argument& e) {
 			// Might be thrown either due to an incorrect number of elements or std::stoul failure.
-			ERR_NG << "Invalid RBG text color in unit animation: " << text_color_key.str()
-				<< "\n" << e.what();
+			ERR_NG << "Invalid RBG text color in unit animation: " << text_color_key.str() << "\n" << e.what();
 		}
 	}
 
@@ -102,20 +102,19 @@ frame_builder::frame_builder(const config& cfg,const std::string& frame_string)
 			blend_with_ = color_t::from_rgb_string(blend_color_key.str());
 		} catch(const std::invalid_argument& e) {
 			// Might be thrown either due to an incorrect number of elements or std::stoul failure.
-			ERR_NG << "Invalid RBG blend color in unit animation: " << blend_color_key.str()
-				<< "\n" << e.what();
+			ERR_NG << "Invalid RBG blend color in unit animation: " << blend_color_key.str() << "\n" << e.what();
 		}
 	}
 }
 
-frame_builder& frame_builder::image(const std::string& image ,const std::string&  image_mod)
+frame_builder& frame_builder::image(const std::string& image, const std::string& image_mod)
 {
 	image_ = image;
 	image_mod_ = image_mod;
 	return *this;
 }
 
-frame_builder& frame_builder::image_diagonal(const std::string& image_diagonal,const std::string& image_mod)
+frame_builder& frame_builder::image_diagonal(const std::string& image_diagonal, const std::string& image_mod)
 {
 	image_diagonal_ = image_diagonal;
 	image_mod_ = image_mod;
@@ -128,19 +127,20 @@ frame_builder& frame_builder::sound(const std::string& sound)
 	return *this;
 }
 
-frame_builder& frame_builder::text(const std::string& text,const color_t text_color)
+frame_builder& frame_builder::text(const std::string& text, const color_t text_color)
 {
 	text_ = text;
 	text_color_ = text_color;
 	return *this;
 }
 
-frame_builder& frame_builder::halo(const std::string& halo, const std::string& halo_x, const std::string& halo_y,const std::string&  halo_mod)
+frame_builder& frame_builder::halo(
+	const std::string& halo, const std::string& halo_x, const std::string& halo_y, const std::string& halo_mod)
 {
 	halo_ = halo;
 	halo_x_ = halo_x;
 	halo_y_ = halo_y;
-	halo_mod_= halo_mod;
+	halo_mod_ = halo_mod;
 	return *this;
 }
 
@@ -150,7 +150,7 @@ frame_builder& frame_builder::duration(const std::chrono::milliseconds& duration
 	return *this;
 }
 
-frame_builder& frame_builder::blend(const std::string& blend_ratio,const color_t blend_color)
+frame_builder& frame_builder::blend(const std::string& blend_ratio, const color_t blend_color)
 {
 	blend_with_ = blend_color;
 	blend_ratio_ = blend_ratio;
@@ -219,54 +219,46 @@ frame_builder& frame_builder::primary_frame(const bool primary_frame)
 
 frame_builder& frame_builder::drawing_layer(const std::string& drawing_layer)
 {
-	drawing_layer_=drawing_layer;
+	drawing_layer_ = drawing_layer;
 	return *this;
 }
 
-frame_parsed_parameters::frame_parsed_parameters(const frame_builder& builder, const std::chrono::milliseconds& duration)
+frame_parsed_parameters::frame_parsed_parameters(
+	const frame_builder& builder, const std::chrono::milliseconds& duration)
 	: duration_(duration > std::chrono::milliseconds{0} ? duration : builder.duration_)
-	, image_(builder.image_,duration_)
-	, image_diagonal_(builder.image_diagonal_,duration_)
+	, image_(builder.image_, duration_)
+	, image_diagonal_(builder.image_diagonal_, duration_)
 	, image_mod_(builder.image_mod_)
-	, halo_(builder.halo_,duration_)
-	, halo_x_(builder.halo_x_,duration_)
-	, halo_y_(builder.halo_y_,duration_)
+	, halo_(builder.halo_, duration_)
+	, halo_x_(builder.halo_x_, duration_)
+	, halo_y_(builder.halo_y_, duration_)
 	, halo_mod_(builder.halo_mod_)
 	, sound_(builder.sound_)
 	, text_(builder.text_)
 	, text_color_(builder.text_color_)
 	, blend_with_(builder.blend_with_)
-	, blend_ratio_(builder.blend_ratio_,duration_)
-	, highlight_ratio_(builder.highlight_ratio_,duration_)
-	, offset_(builder.offset_,duration_)
-	, submerge_(builder.submerge_,duration_)
-	, x_(builder.x_,duration_)
-	, y_(builder.y_,duration_)
-	, directional_x_(builder.directional_x_,duration_)
-	, directional_y_(builder.directional_y_,duration_)
+	, blend_ratio_(builder.blend_ratio_, duration_)
+	, highlight_ratio_(builder.highlight_ratio_, duration_)
+	, offset_(builder.offset_, duration_)
+	, submerge_(builder.submerge_, duration_)
+	, x_(builder.x_, duration_)
+	, y_(builder.y_, duration_)
+	, directional_x_(builder.directional_x_, duration_)
+	, directional_y_(builder.directional_y_, duration_)
 	, auto_vflip_(builder.auto_vflip_)
 	, auto_hflip_(builder.auto_hflip_)
 	, primary_frame_(builder.primary_frame_)
-	, drawing_layer_(builder.drawing_layer_,duration_)
-{}
+	, drawing_layer_(builder.drawing_layer_, duration_)
+{
+}
 
 bool frame_parsed_parameters::does_not_change() const
 {
-	return
-		image_.does_not_change() &&
-		image_diagonal_.does_not_change() &&
-		halo_.does_not_change() &&
-		halo_x_.does_not_change() &&
-		halo_y_.does_not_change() &&
-		blend_ratio_.does_not_change() &&
-		highlight_ratio_.does_not_change() &&
-		offset_.does_not_change() &&
-		submerge_.does_not_change() &&
-		x_.does_not_change() &&
-		y_.does_not_change() &&
-		directional_x_.does_not_change() &&
-		directional_y_.does_not_change() &&
-		drawing_layer_.does_not_change();
+	return image_.does_not_change() && image_diagonal_.does_not_change() && halo_.does_not_change()
+		&& halo_x_.does_not_change() && halo_y_.does_not_change() && blend_ratio_.does_not_change()
+		&& highlight_ratio_.does_not_change() && offset_.does_not_change() && submerge_.does_not_change()
+		&& x_.does_not_change() && y_.does_not_change() && directional_x_.does_not_change()
+		&& directional_y_.does_not_change() && drawing_layer_.does_not_change();
 }
 
 bool frame_parsed_parameters::need_update() const
@@ -291,8 +283,8 @@ frame_parameters frame_parsed_parameters::parameters(const std::chrono::millisec
 		.text_color = text_color_,
 		.blend_with = blend_with_,
 		.blend_ratio = blend_ratio_.get_current_element(current_time),
-		.highlight_ratio = highlight_ratio_.get_current_element(current_time,1.0),
-		.offset = offset_.get_current_element(current_time,-1000),
+		.highlight_ratio = highlight_ratio_.get_current_element(current_time, 1.0),
+		.offset = offset_.get_current_element(current_time, -1000),
 		.submerge = submerge_.get_current_element(current_time),
 		.x = x_.get_current_element(current_time),
 		.y = y_.get_current_element(current_time),
@@ -301,7 +293,8 @@ frame_parameters frame_parsed_parameters::parameters(const std::chrono::millisec
 		.auto_vflip = auto_vflip_,
 		.auto_hflip = auto_hflip_,
 		.primary_frame = primary_frame_,
-		.drawing_layer = drawing_layer_.get_current_element(current_time, get_abs_frame_layer(drawing_layer::unit_default)),
+		.drawing_layer
+		= drawing_layer_.get_current_element(current_time, get_abs_frame_layer(drawing_layer::unit_default)),
 	};
 #else
 	frame_parameters result;
@@ -318,8 +311,8 @@ frame_parameters frame_parsed_parameters::parameters(const std::chrono::millisec
 	result.text_color = text_color_;
 	result.blend_with = blend_with_;
 	result.blend_ratio = blend_ratio_.get_current_element(current_time);
-	result.highlight_ratio = highlight_ratio_.get_current_element(current_time,1.0);
-	result.offset = offset_.get_current_element(current_time,-1000);
+	result.highlight_ratio = highlight_ratio_.get_current_element(current_time, 1.0);
+	result.offset = offset_.get_current_element(current_time, -1000);
 	result.submerge = submerge_.get_current_element(current_time);
 	result.x = x_.get_current_element(current_time);
 	result.y = y_.get_current_element(current_time);
@@ -328,42 +321,43 @@ frame_parameters frame_parsed_parameters::parameters(const std::chrono::millisec
 	result.auto_vflip = auto_vflip_;
 	result.auto_hflip = auto_hflip_;
 	result.primary_frame = primary_frame_;
-	result.drawing_layer = drawing_layer_.get_current_element(current_time, get_abs_frame_layer(drawing_layer::unit_default));
+	result.drawing_layer
+		= drawing_layer_.get_current_element(current_time, get_abs_frame_layer(drawing_layer::unit_default));
 	return result;
 #endif
 }
 
 void frame_parsed_parameters::override(const std::chrono::milliseconds& duration,
-		const std::string& highlight,
-		const std::string& blend_ratio,
-		color_t blend_color,
-		const std::string& offset,
-		const std::string& layer,
-		const std::string& modifiers)
+	const std::string& highlight,
+	const std::string& blend_ratio,
+	color_t blend_color,
+	const std::string& offset,
+	const std::string& layer,
+	const std::string& modifiers)
 {
 	if(!highlight.empty()) {
-		highlight_ratio_ = progressive_double(highlight,duration);
-	} else if(duration != duration_){
-		highlight_ratio_ = progressive_double(highlight_ratio_.get_original(),duration);
+		highlight_ratio_ = progressive_double(highlight, duration);
+	} else if(duration != duration_) {
+		highlight_ratio_ = progressive_double(highlight_ratio_.get_original(), duration);
 	}
 
 	if(!offset.empty()) {
-		offset_ = progressive_double(offset,duration);
-	} else if(duration != duration_){
-		offset_ = progressive_double(offset_.get_original(),duration);
+		offset_ = progressive_double(offset, duration);
+	} else if(duration != duration_) {
+		offset_ = progressive_double(offset_.get_original(), duration);
 	}
 
 	if(!blend_ratio.empty()) {
-		blend_ratio_ = progressive_double(blend_ratio,duration);
-		blend_with_  = blend_color;
-	} else if(duration != duration_){
-		blend_ratio_ = progressive_double(blend_ratio_.get_original(),duration);
+		blend_ratio_ = progressive_double(blend_ratio, duration);
+		blend_with_ = blend_color;
+	} else if(duration != duration_) {
+		blend_ratio_ = progressive_double(blend_ratio_.get_original(), duration);
 	}
 
 	if(!layer.empty()) {
-		drawing_layer_ = progressive_int(layer,duration);
-	} else if(duration != duration_){
-		drawing_layer_ = progressive_int(drawing_layer_.get_original(),duration);
+		drawing_layer_ = progressive_int(layer, duration);
+	} else if(duration != duration_) {
+		drawing_layer_ = progressive_int(drawing_layer_.get_original(), duration);
 	}
 
 	if(!modifiers.empty()) {
@@ -490,8 +484,7 @@ std::vector<std::string> frame_parsed_parameters::debug_strings() const
 
 namespace
 {
-void render_unit_image(
-	int x,
+void render_unit_image(int x,
 	int y,
 	const drawing_layer drawing_layer,
 	const map_location& loc,
@@ -568,10 +561,7 @@ void render_unit_image(
 
 	// Get a pure-white version of the texture
 	const image::locator whiteout_locator(
-		i_locator.get_filename(),
-		i_locator.get_modifications()
-			+ "~CHAN(255, 255, 255, alpha)"
-	);
+		i_locator.get_filename(), i_locator.get_modifications() + "~CHAN(255, 255, 255, alpha)");
 
 	disp->drawing_buffer_add(drawing_layer, loc, [=, tex = image::get_texture(whiteout_locator)](const rect&) mutable {
 		tex.set_alpha_mod(alpha * blend_ratio);
@@ -627,10 +617,15 @@ void render_unit_image(
 }
 } // namespace
 
-void unit_frame::redraw(const std::chrono::milliseconds& frame_time, bool on_start_time, bool in_scope_of_frame,
-		const map_location& src, const map_location& dst,
-		halo::handle& halo_id, halo::manager& halo_man,
-		const frame_parameters& animation_val, const frame_parameters& engine_val) const
+void unit_frame::redraw(const std::chrono::milliseconds& frame_time,
+	bool on_start_time,
+	bool in_scope_of_frame,
+	const map_location& src,
+	const map_location& dst,
+	halo::handle& halo_id,
+	halo::manager& halo_man,
+	const frame_parameters& animation_val,
+	const frame_parameters& engine_val) const
 {
 	game_display* game_disp = game_display::get_singleton();
 
@@ -638,17 +633,17 @@ void unit_frame::redraw(const std::chrono::milliseconds& frame_time, bool on_sta
 	const auto [xdst, ydst] = game_disp->get_location(dst);
 	const map_location::direction direction = src.get_relative_dir(dst);
 
-	const frame_parameters current_data = merge_parameters(frame_time,animation_val,engine_val);
+	const frame_parameters current_data = merge_parameters(frame_time, animation_val, engine_val);
 	double tmp_offset = current_data.offset;
 
 	// Debug code to see the number of frames and their position
-	//if(tmp_offset) {
+	// if(tmp_offset) {
 	//	std::cout << static_cast<int>(tmp_offset * 100) << "," << "\n";
 	//}
 
 	if(on_start_time) {
 		// Stuff that should be done only once per frame
-		if(!current_data.sound.empty()  ) {
+		if(!current_data.sound.empty()) {
 			sound::play_sound(current_data.sound);
 		}
 
@@ -666,7 +661,7 @@ void unit_frame::redraw(const std::chrono::milliseconds& frame_time, bool on_sta
 		image_loc = current_data.image.clone(current_data.image_mod);
 	}
 
-	point image_size {0, 0};
+	point image_size{0, 0};
 	if(!image_loc.is_void() && !image_loc.get_filename().empty()) { // invalid diag image, or not diagonal
 		image_size = image::get_size(image_loc);
 	}
@@ -678,17 +673,18 @@ void unit_frame::redraw(const std::chrono::milliseconds& frame_time, bool on_sta
 	const double disp_zoom = display::get_singleton()->get_zoom_factor();
 
 	if(image_size.x && image_size.y) {
-		bool facing_west = (
-			direction == map_location::direction::north_west ||
-			direction == map_location::direction::south_west);
+		bool facing_west
+			= (direction == map_location::direction::north_west || direction == map_location::direction::south_west);
 
-		bool facing_north = (
-			direction == map_location::direction::north_west ||
-			direction == map_location::direction::north ||
-			direction == map_location::direction::north_east);
+		bool facing_north = (direction == map_location::direction::north_west
+			|| direction == map_location::direction::north || direction == map_location::direction::north_east);
 
-		if(!current_data.auto_hflip) { facing_west = false; }
-		if(!current_data.auto_vflip) { facing_north = true; }
+		if(!current_data.auto_hflip) {
+			facing_west = false;
+		}
+		if(!current_data.auto_vflip) {
+			facing_north = true;
+		}
 
 		int my_x = x + disp_zoom * (current_data.x - image_size.x / 2);
 		int my_y = y + disp_zoom * (current_data.y - image_size.y / 2);
@@ -717,24 +713,16 @@ void unit_frame::redraw(const std::chrono::milliseconds& frame_time, bool on_sta
 		}
 
 		if(alpha != 0) {
-			render_unit_image(my_x, my_y,
-				drawing_layer { int(drawing_layer::unit_first) + current_data.drawing_layer },
-				src,
-				image_loc,
-				facing_west,
-				alpha,
-				brighten,
-				current_data.blend_with ? *current_data.blend_with : color_t(),
-				current_data.blend_ratio,
-				current_data.submerge,
-				!facing_north
-			);
+			render_unit_image(my_x, my_y, drawing_layer{int(drawing_layer::unit_first) + current_data.drawing_layer},
+				src, image_loc, facing_west, alpha, brighten,
+				current_data.blend_with ? *current_data.blend_with : color_t(), current_data.blend_ratio,
+				current_data.submerge, !facing_north);
 		}
 	}
 
 	halo_id.reset();
 
-	if(!in_scope_of_frame) { //check after frame as first/last frame image used in defense/attack anims
+	if(!in_scope_of_frame) { // check after frame as first/last frame image used in defense/attack anims
 		return;
 	}
 
@@ -744,57 +732,51 @@ void unit_frame::redraw(const std::chrono::milliseconds& frame_time, bool on_sta
 	}
 
 	halo::ORIENTATION orientation;
-	switch(direction)
-	{
-		case map_location::direction::north:
-		case map_location::direction::north_east:
+	switch(direction) {
+	case map_location::direction::north:
+	case map_location::direction::north_east:
+		orientation = halo::NORMAL;
+		break;
+	case map_location::direction::south_east:
+	case map_location::direction::south:
+		if(!current_data.auto_vflip) {
 			orientation = halo::NORMAL;
-			break;
-		case map_location::direction::south_east:
-		case map_location::direction::south:
-			if(!current_data.auto_vflip) {
-				orientation = halo::NORMAL;
-			} else {
-				orientation = halo::VREVERSE;
-			}
-			break;
-		case map_location::direction::south_west:
-			if(!current_data.auto_vflip) {
-				orientation = halo::HREVERSE;
-			} else {
-				orientation = halo::HVREVERSE;
-			}
-			break;
-		case map_location::direction::north_west:
+		} else {
+			orientation = halo::VREVERSE;
+		}
+		break;
+	case map_location::direction::south_west:
+		if(!current_data.auto_vflip) {
 			orientation = halo::HREVERSE;
-			break;
-		case map_location::direction::indeterminate:
-		default:
-			orientation = halo::NORMAL;
-			break;
+		} else {
+			orientation = halo::HVREVERSE;
+		}
+		break;
+	case map_location::direction::north_west:
+		orientation = halo::HREVERSE;
+		break;
+	case map_location::direction::indeterminate:
+	default:
+		orientation = halo::NORMAL;
+		break;
 	}
 
 	if(direction != map_location::direction::south_west && direction != map_location::direction::north_west) {
-		halo_id = halo_man.add(
-			static_cast<int>(x + current_data.halo_x * disp_zoom),
-			static_cast<int>(y + current_data.halo_y * disp_zoom),
-			current_data.halo  + current_data.halo_mod,
-			map_location(-1, -1),
-			orientation
-		);
+		halo_id = halo_man.add(static_cast<int>(x + current_data.halo_x * disp_zoom),
+			static_cast<int>(y + current_data.halo_y * disp_zoom), current_data.halo + current_data.halo_mod,
+			map_location(-1, -1), orientation);
 	} else {
-		halo_id = halo_man.add(
-			static_cast<int>(x - current_data.halo_x * disp_zoom),
-			static_cast<int>(y + current_data.halo_y * disp_zoom),
-			current_data.halo  + current_data.halo_mod,
-			map_location(-1, -1),
-			orientation
-		);
+		halo_id = halo_man.add(static_cast<int>(x - current_data.halo_x * disp_zoom),
+			static_cast<int>(y + current_data.halo_y * disp_zoom), current_data.halo + current_data.halo_mod,
+			map_location(-1, -1), orientation);
 	}
 }
 
-std::set<map_location> unit_frame::get_overlaped_hex(const std::chrono::milliseconds& frame_time, const map_location& src, const map_location& dst,
-		const frame_parameters& animation_val, const frame_parameters& engine_val) const
+std::set<map_location> unit_frame::get_overlaped_hex(const std::chrono::milliseconds& frame_time,
+	const map_location& src,
+	const map_location& dst,
+	const frame_parameters& animation_val,
+	const frame_parameters& engine_val) const
 {
 	display* disp = display::get_singleton();
 
@@ -822,12 +804,12 @@ std::set<map_location> unit_frame::get_overlaped_hex(const std::chrono::millisec
 	if(tmp_offset == 0 && current_data.x == 0 && current_data.directional_x == 0 && image::is_in_hex(image_loc)) {
 		result.insert(src);
 
-		bool facing_north = (
-			direction == map_location::direction::north_west ||
-			direction == map_location::direction::north ||
-			direction == map_location::direction::north_east);
+		bool facing_north = (direction == map_location::direction::north_west
+			|| direction == map_location::direction::north || direction == map_location::direction::north_east);
 
-		if(!current_data.auto_vflip) { facing_north = true; }
+		if(!current_data.auto_vflip) {
+			facing_north = true;
+		}
 
 		int my_y = current_data.y;
 		if(facing_north) {
@@ -860,17 +842,18 @@ std::set<map_location> unit_frame::get_overlaped_hex(const std::chrono::millisec
 			const int y = static_cast<int>(tmp_offset * ydst + (1.0 - tmp_offset) * ysrc) + d2;
 			const double disp_zoom = display::get_singleton()->get_zoom_factor();
 
-			bool facing_west = (
-				direction == map_location::direction::north_west ||
-				direction == map_location::direction::south_west);
+			bool facing_west = (direction == map_location::direction::north_west
+				|| direction == map_location::direction::south_west);
 
-			bool facing_north = (
-				direction == map_location::direction::north_west ||
-				direction == map_location::direction::north ||
-				direction == map_location::direction::north_east);
+			bool facing_north = (direction == map_location::direction::north_west
+				|| direction == map_location::direction::north || direction == map_location::direction::north_east);
 
-			if(!current_data.auto_hflip) { facing_west = false; }
-			if(!current_data.auto_vflip) { facing_north = true; }
+			if(!current_data.auto_hflip) {
+				facing_west = false;
+			}
+			if(!current_data.auto_vflip) {
+				facing_north = true;
+			}
 
 			int my_x = x + disp_zoom * (current_data.x - w / 2);
 			int my_y = y + disp_zoom * (current_data.y - h / 2);
@@ -889,7 +872,7 @@ std::set<map_location> unit_frame::get_overlaped_hex(const std::chrono::millisec
 
 			// Check if our underlying hexes are invalidated. If we need to update ourselves because we changed,
 			// invalidate our hexes and return whether or not was successful.
-			const SDL_Rect r {my_x, my_y, int(w * disp_zoom), int(h * disp_zoom)};
+			const SDL_Rect r{my_x, my_y, int(w * disp_zoom), int(h * disp_zoom)};
 			display::rect_of_hexes underlying_hex = disp->hexes_under_rect(r);
 
 			result.insert(src);
@@ -915,8 +898,8 @@ std::set<map_location> unit_frame::get_overlaped_hex(const std::chrono::millisec
  * This way if it becomes used, people will easily find the right place to look.
  */
 frame_parameters unit_frame::merge_parameters(const std::chrono::milliseconds& current_time,
-		const frame_parameters& animation_val,
-		const frame_parameters& engine_val) const
+	const frame_parameters& animation_val,
+	const frame_parameters& engine_val) const
 {
 	frame_parameters result;
 	const frame_parameters& current_val = builder_.parameters(current_time);
@@ -934,9 +917,8 @@ frame_parameters unit_frame::merge_parameters(const std::chrono::milliseconds& c
 	const bool primary = static_cast<bool>(result.primary_frame) || boost::logic::indeterminate(result.primary_frame);
 
 	/** The engine provides a default image to use for the unit when none is available */
-	result.image = current_val.image.is_void() || current_val.image.get_filename().empty()
-		? animation_val.image
-		: current_val.image;
+	result.image = current_val.image.is_void() || current_val.image.get_filename().empty() ? animation_val.image
+																						   : current_val.image;
 
 	if(primary && (result.image.is_void() || result.image.get_filename().empty())) {
 		result.image = engine_val.image;
@@ -990,18 +972,20 @@ frame_parameters unit_frame::merge_parameters(const std::chrono::milliseconds& c
 	/** The engine provides a blend color for poisoned units */
 	result.blend_with = current_val.blend_with ? current_val.blend_with : animation_val.blend_with;
 	if(primary && engine_val.blend_with) {
-		result.blend_with = engine_val.blend_with->blend_lighten(result.blend_with ? *result.blend_with : color_t(0,0,0));
+		result.blend_with
+			= engine_val.blend_with->blend_lighten(result.blend_with ? *result.blend_with : color_t(0, 0, 0));
 	}
 
 	/** The engine provides a blend color for poisoned units */
-	result.blend_ratio = current_val.blend_ratio != 0 ? current_val.blend_ratio:animation_val.blend_ratio;
+	result.blend_ratio = current_val.blend_ratio != 0 ? current_val.blend_ratio : animation_val.blend_ratio;
 	if(primary && engine_val.blend_ratio != 0) {
 		result.blend_ratio = std::min(result.blend_ratio + engine_val.blend_ratio, 1.0);
 	}
 
 	/** The engine provides a highlight ratio for selected units and visible "invisible" units */
-	result.highlight_ratio = (current_val.highlight_ratio < 0.999 || current_val.highlight_ratio > 1.001) ?
-		current_val.highlight_ratio : animation_val.highlight_ratio;
+	result.highlight_ratio = (current_val.highlight_ratio < 0.999 || current_val.highlight_ratio > 1.001)
+		? current_val.highlight_ratio
+		: animation_val.highlight_ratio;
 	if(primary && (engine_val.highlight_ratio < 0.999 || engine_val.highlight_ratio > 1.001)) {
 		result.highlight_ratio = result.highlight_ratio * engine_val.highlight_ratio; // selected unit
 	}
@@ -1022,7 +1006,7 @@ frame_parameters unit_frame::merge_parameters(const std::chrono::milliseconds& c
 	result.x = current_val.x ? current_val.x : animation_val.x;
 
 	/** The engine provides a y modification for terrain with height adjust and flying units */
-	result.y = current_val.y?current_val.y:animation_val.y;
+	result.y = current_val.y ? current_val.y : animation_val.y;
 	result.y += engine_val.y;
 
 	assert(engine_val.directional_x == 0);

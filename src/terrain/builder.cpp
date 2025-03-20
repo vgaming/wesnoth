@@ -147,7 +147,8 @@ void terrain_builder::tile::rebuild_cache(const std::string& tod, logs* log)
 			assert(anim.get_animation_duration() != 0ms);
 
 			if(variant.random_start < 0ms) {
-				img_list.back().set_animation_time(std::chrono::milliseconds{ri.rand} % img_list.back().get_animation_duration());
+				img_list.back().set_animation_time(
+					std::chrono::milliseconds{ri.rand} % img_list.back().get_animation_duration());
 			} else if(variant.random_start > 0ms) {
 				img_list.back().set_animation_time(std::chrono::milliseconds{ri.rand} % variant.random_start);
 			}
@@ -230,7 +231,8 @@ const terrain_builder::tile& terrain_builder::tilemap::operator[](const map_loca
 	return tiles_[(loc.x + 2) + (loc.y + 2) * (x_ + 4)];
 }
 
-terrain_builder::terrain_builder(const config& level, const gamemap* m, const std::string& offmap_image, bool draw_border)
+terrain_builder::terrain_builder(
+	const config& level, const gamemap* m, const std::string& offmap_image, bool draw_border)
 	: tilewidth_(game_config::tile_size)
 	, map_(m)
 	, tile_map_(m ? map().w() : 0, m ? map().h() : 0)
@@ -299,7 +301,7 @@ void terrain_builder::change_map(const gamemap* m)
 }
 
 const terrain_builder::imagelist* terrain_builder::get_terrain_at(
-		const map_location& loc, const std::string& tod, const TERRAIN_TYPE terrain_type)
+	const map_location& loc, const std::string& tod, const TERRAIN_TYPE terrain_type)
 {
 	if(!tile_map_.on_map(loc))
 		return nullptr;
@@ -460,7 +462,8 @@ bool terrain_builder::load_images(building_rule& rule)
 							}
 						}
 						if(ri.global_image) {
-							res.add_frame(time, image::locator(filename, constraint.loc, ri.center_x, ri.center_y, modif));
+							res.add_frame(
+								time, image::locator(filename, constraint.loc, ri.center_x, ri.center_y, modif));
 						} else {
 							res.add_frame(time, image::locator(filename, modif));
 						}
@@ -488,7 +491,7 @@ void terrain_builder::rotate(terrain_constraint& ret, int angle)
 		int ij;
 		int ji;
 		int jj;
-	} rotations[6] {{1, 0, 0, 1}, {1, 1, -1, 0}, {0, 1, -1, -1}, {-1, 0, 0, -1}, {-1, -1, 1, 0}, {0, -1, 1, 1}};
+	} rotations[6]{{1, 0, 0, 1}, {1, 1, -1, 0}, {0, 1, -1, -1}, {-1, 0, 0, -1}, {-1, -1, 1, 0}, {0, -1, 1, 1}};
 
 	// The following array of matrices is intended to rotate the (x,y)
 	// coordinates of a point in a wesnoth hex (and wesnoth hexes are not
@@ -523,13 +526,13 @@ void terrain_builder::rotate(terrain_constraint& ret, int angle)
 		double xy;
 		double yx;
 		double yy;
-	} xyrotations[6] {
-		{ 1.,         0.,  0., 1.    },
-		{ 1./2. , -3./4.,  1., 1./2. },
-		{ -1./2., -3./4.,   1, -1./2.},
-		{ -1.   ,     0.,  0., -1.   },
-		{ -1./2.,  3./4., -1., -1./2.},
-		{ 1./2. ,  3./4., -1., 1./2. },
+	} xyrotations[6]{
+		{1., 0., 0., 1.},
+		{1. / 2., -3. / 4., 1., 1. / 2.},
+		{-1. / 2., -3. / 4., 1, -1. / 2.},
+		{-1., 0., 0., -1.},
+		{-1. / 2., 3. / 4., -1., -1. / 2.},
+		{1. / 2., 3. / 4., -1., 1. / 2.},
 	};
 
 	assert(angle >= 0);
@@ -587,7 +590,7 @@ void terrain_builder::replace_rotate_tokens(rule_image& image, int angle, const 
 }
 
 void terrain_builder::replace_rotate_tokens(
-		rule_imagelist& list, int angle, const std::vector<std::string>& replacement)
+	rule_imagelist& list, int angle, const std::vector<std::string>& replacement)
 {
 	for(rule_image& img : list) {
 		replace_rotate_tokens(img, angle, replacement);
@@ -645,9 +648,8 @@ void terrain_builder::rotate_rule(building_rule& ret, int angle, const std::vect
 	replace_rotate_tokens(ret, angle, rot);
 }
 
-terrain_builder::rule_image_variant::rule_image_variant(const std::string& image_string,
-		const std::string& variations,
-		const std::chrono::milliseconds& random_start)
+terrain_builder::rule_image_variant::rule_image_variant(
+	const std::string& image_string, const std::string& variations, const std::chrono::milliseconds& random_start)
 	: image_string(image_string)
 	, variations(variations)
 	, images()
@@ -658,10 +660,10 @@ terrain_builder::rule_image_variant::rule_image_variant(const std::string& image
 }
 
 terrain_builder::rule_image_variant::rule_image_variant(const std::string& image_string,
-		const std::string& variations,
-		const std::string& tod,
-		const std::string& has_flag,
-		const std::chrono::milliseconds& random_start)
+	const std::string& variations,
+	const std::string& tod,
+	const std::string& has_flag,
+	const std::chrono::milliseconds& random_start)
 	: image_string(image_string)
 	, variations(variations)
 	, images()
@@ -723,7 +725,8 @@ void terrain_builder::add_images_from_config(rule_imagelist& images, const confi
 			// If an integer is given then assign that, but if a bool is given, then assign -1 if true and 0 if false
 			int random_start = variant["random_start"].to_bool(true) ? variant["random_start"].to_int(-1) : 0;
 
-			images.back().variants.emplace_back(name, variations, tod, has_flag, std::chrono::milliseconds{random_start});
+			images.back().variants.emplace_back(
+				name, variations, tod, has_flag, std::chrono::milliseconds{random_start});
 		}
 
 		// Adds the main (default) variant of the image at the end,
@@ -738,9 +741,9 @@ void terrain_builder::add_images_from_config(rule_imagelist& images, const confi
 }
 
 terrain_builder::terrain_constraint& terrain_builder::add_constraints(terrain_builder::constraint_set& constraints,
-		const map_location& loc,
-		const t_translation::ter_match& type,
-		const config& global_images)
+	const map_location& loc,
+	const t_translation::ter_match& type,
+	const config& global_images)
 {
 	terrain_constraint* cons = nullptr;
 	for(terrain_constraint& c : constraints) {
@@ -768,13 +771,13 @@ terrain_builder::terrain_constraint& terrain_builder::add_constraints(terrain_bu
 }
 
 void terrain_builder::add_constraints(terrain_builder::constraint_set& constraints,
-		const map_location& loc,
-		const config& cfg,
-		const config& global_images)
+	const map_location& loc,
+	const config& cfg,
+	const config& global_images)
 
 {
 	terrain_constraint& constraint = add_constraints(
-			constraints, loc, t_translation::ter_match(cfg["type"].str(), t_translation::WILDCARD), global_images);
+		constraints, loc, t_translation::ter_match(cfg["type"].str(), t_translation::WILDCARD), global_images);
 
 	std::vector<std::string> item_string = utils::square_parenthetical_split(cfg["set_flag"], ',', "[", "]");
 	constraint.set_flag.insert(constraint.set_flag.end(), item_string.begin(), item_string.end());
@@ -795,7 +798,7 @@ void terrain_builder::add_constraints(terrain_builder::constraint_set& constrain
 }
 
 void terrain_builder::parse_mapstring(
-		const std::string& mapstring, struct building_rule& br, anchormap& anchors, const config& global_images)
+	const std::string& mapstring, struct building_rule& br, anchormap& anchors, const config& global_images)
 {
 	const t_translation::ter_map map = t_translation::read_builder_map(mapstring);
 
@@ -1014,9 +1017,8 @@ void terrain_builder::add_off_map_rule(const std::string& image)
 	parse_global_config(game_config_view::wrap(cfg));
 }
 
-bool terrain_builder::rule_matches(const terrain_builder::building_rule& rule,
-		const map_location& loc,
-		const terrain_constraint* type_checked) const
+bool terrain_builder::rule_matches(
+	const terrain_builder::building_rule& rule, const map_location& loc, const terrain_constraint* type_checked) const
 {
 	// Don't match if the location isn't a multiple of mod_x and mod_y
 	if(rule.modulo_constraints.x > 0 && (loc.x % rule.modulo_constraints.x != 0)) {
@@ -1142,7 +1144,7 @@ void terrain_builder::build_terrains()
 
 			// Flag all hexes according to whether they're on the border or not,
 			// to make it easier for WML to draw the borders
-			if(draw_border_&& !map().on_board(loc)) {
+			if(draw_border_ && !map().on_board(loc)) {
 				tile_map_[loc].flags.insert("_border");
 			} else {
 				tile_map_[loc].flags.insert("_board");
@@ -1167,7 +1169,7 @@ void terrain_builder::build_terrains()
 			std::size_t constraint_size = 0;
 
 			for(terrain_by_type_map::iterator type_it = terrain_by_type_.begin(); type_it != terrain_by_type_.end();
-					++type_it) {
+				++type_it) {
 				const t_translation::terrain_code t = type_it->first;
 				if(terrain_matches(t, match)) {
 					const std::size_t match_size = type_it->second.size();

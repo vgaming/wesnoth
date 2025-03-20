@@ -17,23 +17,24 @@
 #include "config.hpp"
 
 #include "editor/action/mouse/mouse_action.hpp"
+#include "editor/action/mouse/mouse_action_item.hpp"
 #include "editor/action/mouse/mouse_action_map_label.hpp"
+#include "editor/action/mouse/mouse_action_select.hpp"
 #include "editor/action/mouse/mouse_action_unit.hpp"
 #include "editor/action/mouse/mouse_action_village.hpp"
-#include "editor/action/mouse/mouse_action_item.hpp"
-#include "editor/action/mouse/mouse_action_select.hpp"
 
 #include "game_config_view.hpp"
 #include "sdl/input.hpp" // get_mouse_state
 
-namespace editor {
+namespace editor
+{
 
-editor_toolkit::editor_toolkit(editor_display& gui, const CKey& key,
-		const game_config_view& game_config, context_manager& c_manager)
+editor_toolkit::editor_toolkit(
+	editor_display& gui, const CKey& key, const game_config_view& game_config, context_manager& c_manager)
 	: gui_(gui)
 	, key_(key)
 	, palette_manager_()
-	, mouse_action_(nullptr)  // Will be set before this constructor ends.
+	, mouse_action_(nullptr) // Will be set before this constructor ends.
 	, mouse_actions_()
 	, brush_(nullptr)
 	, brushes_()
@@ -47,10 +48,10 @@ editor_toolkit::~editor_toolkit() = default;
 
 void editor_toolkit::init_brushes(const game_config_view& game_config)
 {
-	for (const config &i : game_config.child_range("brush")) {
+	for(const config& i : game_config.child_range("brush")) {
 		brushes_.emplace_back(i);
 	}
-	if (brushes_.empty()) {
+	if(brushes_.empty()) {
 		ERR_ED << "No brushes defined!";
 		brushes_.emplace_back();
 		brushes_[0].add_relative_location(0, 0);
@@ -84,11 +85,11 @@ void editor_toolkit::init_mouse_actions(context_manager& cmanager)
 	mouse_actions_.emplace(hotkey::HOTKEY_EDITOR_TOOL_ITEM,
 		std::make_shared<mouse_action_item>(key_, *palette_manager_->item_palette_.get()));
 
-	for (const theme::menu& menu : gui_.get_theme().menus()) {
-		if (menu.items().size() == 1) {
+	for(const theme::menu& menu : gui_.get_theme().menus()) {
+		if(menu.items().size() == 1) {
 			hotkey::HOTKEY_COMMAND hk = hotkey::get_hotkey_command(menu.items().front()["id"]).command;
 			mouse_action_map::iterator i = mouse_actions_.find(hk);
-			if (i != mouse_actions_.end()) {
+			if(i != mouse_actions_.end()) {
 				i->second->set_toolbar_button(&menu);
 			}
 		}
@@ -98,11 +99,10 @@ void editor_toolkit::init_mouse_actions(context_manager& cmanager)
 	set_mouseover_overlay();
 }
 
-
 void editor_toolkit::hotkey_set_mouse_action(hotkey::HOTKEY_COMMAND command)
 {
 	mouse_action_map::iterator i = mouse_actions_.find(command);
-	if (i != mouse_actions_.end()) {
+	if(i != mouse_actions_.end()) {
 		palette_manager_->active_palette().hide(true);
 		mouse_action_ = i->second;
 		palette_manager_->adjust_size();
@@ -111,10 +111,8 @@ void editor_toolkit::hotkey_set_mouse_action(hotkey::HOTKEY_COMMAND command)
 		gui_.invalidate_game_status();
 		palette_manager_->active_palette().hide(false);
 	} else {
-		ERR_ED << "Invalid hotkey command ("
-			<< static_cast<int>(command) << ") passed to set_mouse_action";
+		ERR_ED << "Invalid hotkey command (" << static_cast<int>(command) << ") passed to set_mouse_action";
 	}
-
 }
 
 bool editor_toolkit::is_mouse_action_set(hotkey::HOTKEY_COMMAND command) const
@@ -132,7 +130,7 @@ void editor_toolkit::update_mouse_action_highlights()
 {
 	DBG_ED << __func__;
 	auto [x, y] = sdl::get_mouse_location();
-	map_location hex_clicked = gui_.hex_clicked_on(x,y);
+	map_location hex_clicked = gui_.hex_clicked_on(x, y);
 	get_mouse_action().update_brush_highlights(gui_, hex_clicked);
 }
 
@@ -146,10 +144,10 @@ void editor_toolkit::clear_mouseover_overlay()
 	gui_.clear_mouseover_hex_overlay();
 }
 
-void editor_toolkit::set_brush(const std::string& id) {
-
-	for (brush& i : brushes_) {
-		if (i.id() == id) {
+void editor_toolkit::set_brush(const std::string& id)
+{
+	for(brush& i : brushes_) {
+		if(i.id() == id) {
 			brush_ = &i;
 		}
 	}
@@ -157,7 +155,7 @@ void editor_toolkit::set_brush(const std::string& id) {
 
 void editor_toolkit::cycle_brush()
 {
-	if (brush_ == &brushes_.back()) {
+	if(brush_ == &brushes_.back()) {
 		brush_ = &brushes_.front();
 	} else {
 		++brush_;
@@ -171,5 +169,4 @@ void editor_toolkit::adjust_size()
 	palette_manager_->adjust_size();
 }
 
-
-} //Namespace editor
+} // Namespace editor

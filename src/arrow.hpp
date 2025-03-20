@@ -27,10 +27,9 @@ typedef std::vector<map_location> arrow_path_t;
 /**
  * Arrows destined to be drawn on the map. Created for the whiteboard system.
  */
-class arrow {
-
+class arrow
+{
 public:
-
 	arrow(const arrow&) = delete;
 	arrow& operator=(const arrow&) = delete;
 
@@ -53,7 +52,10 @@ public:
 	 */
 	void set_color(const std::string& color);
 
-	std::string get_color() const { return color_; }
+	std::string get_color() const
+	{
+		return color_;
+	}
 
 	/**
 	 * The style is simply the name of a subdirectory under images/arrows,
@@ -61,7 +63,10 @@ public:
 	 * If it doesn't exist or has missing images, you'll get "under construction"
 	 * symbols instead of arrow graphics.
 	 */
-	std::string get_style() const {return style_;}
+	std::string get_style() const
+	{
+		return style_;
+	}
 	void set_style(const std::string& style);
 	/** If you add more styles, you should look at move::update_arrow_style() */
 	static const std::string STYLE_STANDARD;
@@ -84,7 +89,6 @@ public:
 	void notify_arrow_changed();
 
 private:
-
 	/**
 	 * Calculate the symbols to place along the arrow path.
 	 * Invalidates every hex along the path.

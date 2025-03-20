@@ -74,31 +74,26 @@ void blacklist::parse_str_to_globlist(const std::string& str, blacklist::globlis
 }
 
 bool blacklist::is_blacklisted(const std::string& name,
-							   const std::string& title,
-							   const std::string& description,
-							   const std::string& author,
-							   const std::string& ip,
-							   const std::string& email) const
+	const std::string& title,
+	const std::string& description,
+	const std::string& author,
+	const std::string& ip,
+	const std::string& email) const
 {
 	// Checks done in increasing order of performance impact and decreasing
 	// order of relevance.
-	return is_in_ip_masklist(ip, ips_) ||
-		   is_in_globlist(email, emails_) ||
-		   is_in_globlist(name, names_) ||
-		   is_in_globlist(title, titles_) ||
-		   is_in_globlist(author, authors_) ||
-		   is_in_globlist(description, descriptions_);
+	return is_in_ip_masklist(ip, ips_) || is_in_globlist(email, emails_) || is_in_globlist(name, names_)
+		|| is_in_globlist(title, titles_) || is_in_globlist(author, authors_)
+		|| is_in_globlist(description, descriptions_);
 }
 
 bool blacklist::is_in_globlist(const std::string& str, const blacklist::globlist& glist) const
 {
-	if (!str.empty())
-	{
+	if(!str.empty()) {
 		const std::string& lc_str = utf8::lowercase(str);
-		for(const std::string& glob : glist)
-		{
+		for(const std::string& glob : glist) {
 			const std::string& lc_glob = utf8::lowercase(glob);
-			if (utils::wildcard_string_match(lc_str, lc_glob)) {
+			if(utils::wildcard_string_match(lc_str, lc_glob)) {
 				LOG_BL << "Blacklisted field found: " << str << " (" << glob << ")";
 				return true;
 			}
@@ -110,11 +105,9 @@ bool blacklist::is_in_globlist(const std::string& str, const blacklist::globlist
 
 bool blacklist::is_in_ip_masklist(const std::string& ip, const blacklist::globlist& mlist) const
 {
-	if (!ip.empty())
-	{
-		for(const std::string& ip_mask : mlist)
-		{
-			if (ip_matches(ip, ip_mask)) {
+	if(!ip.empty()) {
+		for(const std::string& ip_mask : mlist) {
+			if(ip_matches(ip, ip_mask)) {
 				LOG_BL << "Blacklisted IP found: " << ip << " (" << ip_mask << ")";
 				return true;
 			}
@@ -130,4 +123,4 @@ bool blacklist::ip_matches(const std::string& ip, const std::string& ip_mask) co
 	return utils::wildcard_string_match(ip, ip_mask);
 }
 
-}
+} // namespace campaignd

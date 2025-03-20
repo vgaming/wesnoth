@@ -23,7 +23,8 @@
 class config;
 class display;
 
-namespace soundsource {
+namespace soundsource
+{
 
 class sourcespec;
 
@@ -32,7 +33,8 @@ class sourcespec;
  * sounds effects associated with it, which are played randomly and with
  * appropriate delays, when sound emitting object is visible on screen.
  */
-class positional_source {
+class positional_source
+{
 	std::chrono::steady_clock::time_point last_played_;
 	std::chrono::milliseconds min_delay_;
 	int chance_;
@@ -56,15 +58,15 @@ public:
 	// chance is a chance ;-) (in %) that the sound source will emit
 	// sound every second after the delay has passed or once the source
 	// becomes visible
-	positional_source(const sourcespec &spec);
+	positional_source(const sourcespec& spec);
 	~positional_source();
 
 	bool is_global() const;
 
-	void update(const std::chrono::steady_clock::time_point& time, const display &disp);
-	void update_positions(const std::chrono::steady_clock::time_point& time, const display &disp);
+	void update(const std::chrono::steady_clock::time_point& time, const display& disp);
+	void update_positions(const std::chrono::steady_clock::time_point& time, const display& disp);
 
-	int calculate_volume(const map_location &loc, const display &disp);
+	int calculate_volume(const map_location& loc, const display& disp);
 
 	/**
 	 * Serializes attributes as WML config.
@@ -75,25 +77,24 @@ public:
 
 class manager : public events::observer
 {
-
 	typedef std::map<std::string, std::unique_ptr<positional_source>> positional_source_map;
-	typedef positional_source_map::iterator            positional_source_iterator;
-	typedef positional_source_map::const_iterator      positional_source_const_iterator;
+	typedef positional_source_map::iterator positional_source_iterator;
+	typedef positional_source_map::const_iterator positional_source_const_iterator;
 
 	positional_source_map sources_;
-	const display &disp_;
+	const display& disp_;
 
 public:
-	manager(const display &disp);
+	manager(const display& disp);
 	~manager();
 
 	// event interface
-	void handle_generic_event(const std::string &event_name);
+	void handle_generic_event(const std::string& event_name);
 
 	// add or replace a soundsource
-	void add(const sourcespec &source);
-	void remove(const std::string &id);
-	sourcespec get(const std::string &id);
+	void add(const sourcespec& source);
+	void remove(const std::string& id);
+	sourcespec get(const std::string& id);
 	bool contains(const std::string& id);
 	void update();
 
@@ -130,18 +131,19 @@ class sourcespec
 
 public:
 	/** Parameter-list constructor. */
-	sourcespec(const std::string& id, const std::string& files, const std::chrono::milliseconds& min_delay, int chance) :
-		id_(id),
-		files_(files),
-		min_delay_(min_delay),
-		chance_(chance),
-		loops_(0),
-		range_(3),
-		faderange_(14),
-		check_fogged_(false),
-		check_shrouded_(false),
-		locations_()
-	{}
+	sourcespec(const std::string& id, const std::string& files, const std::chrono::milliseconds& min_delay, int chance)
+		: id_(id)
+		, files_(files)
+		, min_delay_(min_delay)
+		, chance_(chance)
+		, loops_(0)
+		, range_(3)
+		, faderange_(14)
+		, check_fogged_(false)
+		, check_shrouded_(false)
+		, locations_()
+	{
+	}
 
 	/** WML constructor. */
 	sourcespec(const config& cfg);
@@ -152,60 +154,97 @@ public:
 	 */
 	void write(config& cfg) const;
 
-	int loops() const { return loops_; }
+	int loops() const
+	{
+		return loops_;
+	}
 
-	void set_loops(int value) {
+	void set_loops(int value)
+	{
 		loops_ = value;
 	}
 
-	bool check_fogged() const { return check_fogged_; }
-	bool check_shrouded() const { return check_shrouded_; }
+	bool check_fogged() const
+	{
+		return check_fogged_;
+	}
+	bool check_shrouded() const
+	{
+		return check_shrouded_;
+	}
 
-	void set_check_fogged(bool value) {
+	void set_check_fogged(bool value)
+	{
 		check_fogged_ = value;
 	}
 
-	void set_check_shrouded(bool value) {
+	void set_check_shrouded(bool value)
+	{
 		check_shrouded_ = value;
 	}
 
-	const std::vector<map_location>& get_locations() const {
+	const std::vector<map_location>& get_locations() const
+	{
 		return locations_;
 	}
 
-	void set_locations(const std::vector<map_location>& locs) {
+	void set_locations(const std::vector<map_location>& locs)
+	{
 		locations_ = locs;
 	}
 
-	int full_range() const { return range_; }
+	int full_range() const
+	{
+		return range_;
+	}
 
-	void set_full_range(int value) {
+	void set_full_range(int value)
+	{
 		range_ = value;
 	}
 
-	int fade_range() const { return faderange_; }
+	int fade_range() const
+	{
+		return faderange_;
+	}
 
-	void set_fade_range(int value) {
+	void set_fade_range(int value)
+	{
 		faderange_ = value;
 	}
 
-	auto minimum_delay() const { return min_delay_; }
+	auto minimum_delay() const
+	{
+		return min_delay_;
+	}
 
-	void set_minimum_delay(const std::chrono::milliseconds& value) {
+	void set_minimum_delay(const std::chrono::milliseconds& value)
+	{
 		min_delay_ = value;
 	}
 
-	int chance() const { return chance_; }
+	int chance() const
+	{
+		return chance_;
+	}
 
-	void set_chance(int value) {
+	void set_chance(int value)
+	{
 		chance_ = value;
 	}
 
-	const std::string& id() const { return id_; }
+	const std::string& id() const
+	{
+		return id_;
+	}
 
-	const std::string& files() const { return files_; }
+	const std::string& files() const
+	{
+		return files_;
+	}
 
-	void set_files(const std::string& f) {
+	void set_files(const std::string& f)
+	{
 		files_ = f;
 	}
 };

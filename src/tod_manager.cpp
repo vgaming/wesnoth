@@ -166,8 +166,7 @@ int tod_manager::get_current_area_time(int index) const
 int tod_manager::get_current_time(const map_location& loc) const
 {
 	if(loc != map_location::null_location()) {
-		for(auto i = areas_.rbegin(), i_end = areas_.rend();
-			i != i_end; ++i) {
+		for(auto i = areas_.rbegin(), i_end = areas_.rend(); i != i_end; ++i) {
 			if(i->hexes.find(loc) != i->hexes.end()) {
 				return i->currentTime;
 			}
@@ -180,8 +179,7 @@ int tod_manager::get_current_time(const map_location& loc) const
 const std::vector<time_of_day>& tod_manager::times(const map_location& loc) const
 {
 	if(loc != map_location::null_location()) {
-		for(auto i = areas_.rbegin(), i_end = areas_.rend();
-			i != i_end; ++i) {
+		for(auto i = areas_.rbegin(), i_end = areas_.rend(); i != i_end; ++i) {
 			if(i->hexes.find(loc) != i->hexes.end() && !i->times.empty())
 				return i->times;
 		}
@@ -197,8 +195,7 @@ const time_of_day& tod_manager::get_time_of_day(const map_location& loc, int n_t
 	}
 
 	if(loc != map_location::null_location()) {
-		for(auto i = areas_.rbegin(), i_end = areas_.rend();
-			i != i_end; ++i) {
+		for(auto i = areas_.rbegin(), i_end = areas_.rend(); i != i_end; ++i) {
 			if(i->hexes.find(loc) != i->hexes.end() && !i->times.empty())
 				return get_time_of_day_turn(i->times, n_turn, i->currentTime);
 		}
@@ -242,7 +239,8 @@ const time_of_day tod_manager::get_illuminated_time_of_day(
 			if(itor != units.end() && !itor->incapacitated()) {
 				unit_ability_list illum = itor->get_abilities("illuminates");
 				if(!illum.empty()) {
-					unit_abilities::effect illum_effect(illum, terrain_light, nullptr, unit_abilities::EFFECT_WITHOUT_CLAMP_MIN_MAX);
+					unit_abilities::effect illum_effect(
+						illum, terrain_light, nullptr, unit_abilities::EFFECT_WITHOUT_CLAMP_MIN_MAX);
 					const int unit_mod = illum_effect.get_composite_value();
 
 					// Record this value.
@@ -371,8 +369,7 @@ const std::set<map_location>& tod_manager::get_area_by_index(int index) const
 std::pair<int, std::string> tod_manager::get_area_on_hex(const map_location& loc) const
 {
 	if(loc != map_location::null_location()) {
-		for(auto i = areas_.rbegin(), i_end = areas_.rend();
-			i != i_end; ++i) {
+		for(auto i = areas_.rbegin(), i_end = areas_.rend(); i != i_end; ++i) {
 			if(i->hexes.find(loc) != i->hexes.end() && !i->times.empty())
 				return {std::distance(areas_.rbegin(), i), i->id};
 		}
@@ -460,10 +457,13 @@ void tod_manager::update_server_information() const
 		// NOTE: The current implementation does not guarantee that the server gets informed
 		// about those changes in 100% of cases. But that is ok because the information is only
 		// used to display the turn limit in the lobby (as opposed to things that cause OOS).
-		resources::controller->send_to_wesnothd(config {
-			"change_turns_wml", config {
-				"current", turn_,
-				"max", num_turns_,
+		resources::controller->send_to_wesnothd(config{
+			"change_turns_wml",
+			config{
+				"current",
+				turn_,
+				"max",
+				num_turns_,
 			},
 		});
 	}
@@ -512,7 +512,8 @@ void tod_manager::set_new_current_times(const int new_current_turn_number)
 	set_current_time(calculate_time_index_at_turn(times_.size(), new_current_turn_number, currentTime_));
 
 	for(area_time_of_day& area : areas_) {
-		set_current_time(calculate_time_index_at_turn(area.times.size(), new_current_turn_number, area.currentTime), area);
+		set_current_time(
+			calculate_time_index_at_turn(area.times.size(), new_current_turn_number, area.currentTime), area);
 	}
 }
 

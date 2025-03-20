@@ -138,5 +138,5 @@ std::unique_ptr<widget> builder_size_lock::build() const
 
 	return widget;
 }
-}
-}
+} // namespace implementation
+} // namespace gui2

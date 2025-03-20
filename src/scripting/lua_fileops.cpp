@@ -17,9 +17,9 @@
 
 #include "filesystem.hpp"
 #include "log.hpp"
-#include "scripting/lua_common.hpp"	// for chat_message, luaW_pcall
-#include "scripting/push_check.hpp"
 #include "picture.hpp"
+#include "scripting/lua_common.hpp" // for chat_message, luaW_pcall
+#include "scripting/push_check.hpp"
 #include "sdl/point.hpp"
 
 #include <algorithm>
@@ -33,16 +33,17 @@ static lg::log_domain log_scripting_lua("scripting/lua");
 #define ERR_LUA LOG_STREAM(err, log_scripting_lua)
 
 /**
-* Gets the dimension of an image.
-* - Arg 1: string.
-* - Ret 1: width.
-* - Ret 2: height.
-*/
-static int intf_get_image_size(lua_State *L)
+ * Gets the dimension of an image.
+ * - Arg 1: string.
+ * - Ret 1: width.
+ * - Ret 2: height.
+ */
+static int intf_get_image_size(lua_State* L)
 {
-	char const *m = luaL_checkstring(L, 1);
+	char const* m = luaL_checkstring(L, 1);
 	image::locator img(m);
-	if(!image::exists(img)) return 0;
+	if(!image::exists(img))
+		return 0;
 	const point s = get_size(img);
 	lua_pushinteger(L, s.x);
 	lua_pushinteger(L, s.y);
@@ -74,7 +75,8 @@ static int intf_resolve_asset(lua_State* L)
 	return 1;
 }
 
-namespace lua_fileops {
+namespace lua_fileops
+{
 static std::string get_calling_file(lua_State* L)
 {
 	std::string currentdir;
@@ -112,7 +114,7 @@ static bool canonical_path(std::string& filename, const std::string& currentdir)
 	if(std::find(filename.begin(), filename.end(), '\\') != filename.end()) {
 		return false;
 	}
-	//resolve /./
+	// resolve /./
 	while(true) {
 		std::size_t pos = filename.find("/./");
 		if(pos == std::string::npos) {
@@ -120,7 +122,7 @@ static bool canonical_path(std::string& filename, const std::string& currentdir)
 		}
 		filename = filename.replace(pos, 2, "");
 	}
-	//resolve //
+	// resolve //
 	while(true) {
 		std::size_t pos = filename.find("//");
 		if(pos == std::string::npos) {
@@ -128,7 +130,7 @@ static bool canonical_path(std::string& filename, const std::string& currentdir)
 		}
 		filename = filename.replace(pos, 1, "");
 	}
-	//resolve /../
+	// resolve /../
 	while(true) {
 		std::size_t pos = filename.find("/..");
 		if(pos == std::string::npos) {
@@ -138,7 +140,7 @@ static bool canonical_path(std::string& filename, const std::string& currentdir)
 		if(pos2 == std::string::npos || pos2 >= pos) {
 			return false;
 		}
-		filename = filename.replace(pos2, pos- pos2 + 3, "");
+		filename = filename.replace(pos2, pos - pos2 + 3, "");
 	}
 	if(filename.find("..") != std::string::npos) {
 		return false;
@@ -166,7 +168,7 @@ static bool resolve_filename(std::string& filename, const std::string& currentdi
 	return true;
 }
 
-int intf_canonical_path(lua_State *L)
+int intf_canonical_path(lua_State* L)
 {
 	std::string m = luaL_checkstring(L, 1);
 	if(canonical_path(m, get_calling_file(L))) {
@@ -182,7 +184,7 @@ int intf_canonical_path(lua_State *L)
  * - Arg 2: if true, the file must be a real file and not a directory
  * - Ret 1: boolean
  */
-int intf_have_file(lua_State *L)
+int intf_have_file(lua_State* L)
 {
 	std::string m = luaL_checkstring(L, 1);
 	if(!resolve_filename(m, get_calling_file(L))) {
@@ -200,7 +202,7 @@ int intf_have_file(lua_State *L)
  * - Arg 1: string containing the file name.
  * - Ret 1: string
  */
-int intf_read_file(lua_State *L)
+int intf_read_file(lua_State* L)
 {
 	std::string p = luaL_checkstring(L, 1);
 
@@ -233,7 +235,7 @@ int intf_read_file(lua_State *L)
 	}
 	luaL_Buffer b;
 	luaL_buffinit(L, &b);
-	//throws an exception if malloc failed.
+	// throws an exception if malloc failed.
 	char* out = luaL_prepbuffsize(&b, size);
 	fs->read(out, size);
 	if(fs->good()) {
@@ -250,16 +252,15 @@ public:
 		: buff_()
 		, pistream_(filesystem::istream_file(fname))
 	{
-
 	}
 
-	static const char * lua_read_data(lua_State * /*L*/, void *data, std::size_t *size)
+	static const char* lua_read_data(lua_State* /*L*/, void* data, std::size_t* size)
 	{
 		lua_filestream* lfs = static_cast<lua_filestream*>(data);
 
-		//int startpos = lfs->pistream_->tellg();
+		// int startpos = lfs->pistream_->tellg();
 		lfs->pistream_->read(lfs->buff_, luaL_buffersize);
-		//int newpos = lfs->pistream_->tellg();
+		// int newpos = lfs->pistream_->tellg();
 		*size = lfs->pistream_->gcount();
 #if 0
 		ERR_LUA << "read bytes from " << startpos << " to " << newpos << " in total " *size << " from steam";
@@ -272,14 +273,15 @@ public:
 		return lfs->buff_;
 	}
 
-	static int lua_loadfile(lua_State *L, const std::string& fname, const std::string& relativename)
+	static int lua_loadfile(lua_State* L, const std::string& fname, const std::string& relativename)
 	{
 		lua_filestream lfs(fname);
-		//lua uses '@' to know that this is a file (as opposed to something loaded via loadstring )
+		// lua uses '@' to know that this is a file (as opposed to something loaded via loadstring )
 		std::string chunkname = '@' + relativename;
 		LOG_LUA << "starting to read from " << fname;
-		return  lua_load(L, &lua_filestream::lua_read_data, &lfs, chunkname.c_str(), "t");
+		return lua_load(L, &lua_filestream::lua_read_data, &lfs, chunkname.c_str(), "t");
 	}
+
 private:
 	char buff_[luaL_buffersize];
 	const std::unique_ptr<std::istream> pistream_;
@@ -290,7 +292,7 @@ private:
  * - Arg 1: string containing the file name.
  * - Ret 1: the loaded contents of the file
  */
-int load_file(lua_State *L)
+int load_file(lua_State* L)
 {
 	std::string p = luaL_checkstring(L, -1);
 	std::string rel;
@@ -299,32 +301,24 @@ int load_file(lua_State *L)
 		return luaL_argerror(L, -1, "file not found");
 	}
 
-	try
-	{
+	try {
 		if(lua_filestream::lua_loadfile(L, p, rel)) {
 			return lua_error(L);
 		}
-	}
-	catch(const std::exception & ex)
-	{
+	} catch(const std::exception& ex) {
 		luaL_argerror(L, -1, ex.what());
 	}
-	lua_remove(L, -2);	//remove the filename from the stack
+	lua_remove(L, -2); // remove the filename from the stack
 
 	return 1;
 }
 
 int luaW_open(lua_State* L)
 {
-	static luaL_Reg const callbacks[] {
-		{ "have_file", &lua_fileops::intf_have_file },
-		{ "read_file", &lua_fileops::intf_read_file },
-		{ "canonical_path", &lua_fileops::intf_canonical_path },
-		{ "image_size", &intf_get_image_size },
-		{ "have_asset", &intf_have_asset },
-		{ "resolve_asset", &intf_resolve_asset },
-		{ nullptr, nullptr }
-	};
+	static luaL_Reg const callbacks[]{{"have_file", &lua_fileops::intf_have_file},
+		{"read_file", &lua_fileops::intf_read_file}, {"canonical_path", &lua_fileops::intf_canonical_path},
+		{"image_size", &intf_get_image_size}, {"have_asset", &intf_have_asset}, {"resolve_asset", &intf_resolve_asset},
+		{nullptr, nullptr}};
 	lua_newtable(L);
 	luaL_setfuncs(L, callbacks, 0);
 	return 1;

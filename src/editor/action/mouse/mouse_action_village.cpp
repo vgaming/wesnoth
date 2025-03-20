@@ -18,13 +18,16 @@
 
 #include "editor/editor_display.hpp"
 
-namespace editor {
+namespace editor
+{
 
 std::unique_ptr<editor_action> mouse_action_village::up_left(editor_display& disp, int x, int y)
 {
 	map_location hex = disp.hex_clicked_on(x, y);
-	if (!disp.get_map().on_board(hex))   return nullptr;
-	if (!disp.get_map().is_village(hex)) return nullptr;
+	if(!disp.get_map().on_board(hex))
+		return nullptr;
+	if(!disp.get_map().is_village(hex))
+		return nullptr;
 
 	return std::make_unique<editor_action_village>(hex, disp.playing_team_index());
 }
@@ -32,24 +35,19 @@ std::unique_ptr<editor_action> mouse_action_village::up_left(editor_display& dis
 std::unique_ptr<editor_action> mouse_action_village::up_right(editor_display& disp, int x, int y)
 {
 	map_location hex = disp.hex_clicked_on(x, y);
-	if (!disp.get_map().on_board(hex))   return nullptr;
-	if (!disp.get_map().is_village(hex)) return nullptr;
+	if(!disp.get_map().on_board(hex))
+		return nullptr;
+	if(!disp.get_map().is_village(hex))
+		return nullptr;
 
 	return std::make_unique<editor_action_village_delete>(hex);
 }
 
 void mouse_action_village::set_mouse_overlay(editor_display& disp)
 {
-	disp.set_mouseover_hex_overlay(
-		image::get_texture(
-			// center 60px icon on blank hex template
-			image::locator(
-				"misc/blank-hex.png",
-				"~BLIT(icons/action/editor-tool-village_60.png,6,6)"
-			)
-		)
-	);
+	disp.set_mouseover_hex_overlay(image::get_texture(
+		// center 60px icon on blank hex template
+		image::locator("misc/blank-hex.png", "~BLIT(icons/action/editor-tool-village_60.png,6,6)")));
 }
 
-
-} //end namespace editor
+} // end namespace editor

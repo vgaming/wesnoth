@@ -73,8 +73,8 @@
 #include "random.hpp"
 #include "serialization/binary_or_text.hpp"
 #include "side_controller.hpp"
-#include "utils/general.hpp"
 #include "team.hpp" // for team::attributes, team::variables
+#include "utils/general.hpp"
 #include "variable.hpp" // for config_variable_set
 #include "variable_info.hpp"
 
@@ -112,12 +112,12 @@ bool is_illegal_file_char(char c)
 {
 	return c == '/' || c == '\\' || c == ':' || (c >= 0x00 && c < 0x20)
 #ifdef _WIN32
-	|| c == '?' || c == '|' || c == '<' || c == '>' || c == '*' || c == '"'
+		|| c == '?' || c == '|' || c == '<' || c == '>' || c == '*' || c == '"'
 #endif
-	;
+		;
 }
 
-} // end anon namespace
+} // namespace
 
 saved_game::saved_game()
 	: has_carryover_expanded_(false)
@@ -175,7 +175,8 @@ void saved_game::set_random_seed()
 	}
 
 	std::stringstream stream;
-	stream << std::setfill('0') << std::setw(8) << std::hex << randomness::generator->get_random_int(0, std::numeric_limits<int>::max());
+	stream << std::setfill('0') << std::setw(8) << std::hex
+		   << randomness::generator->get_random_int(0, std::numeric_limits<int>::max());
 	carryover_["random_seed"] = stream.str();
 	carryover_["random_calls"] = 0;
 }
@@ -225,15 +226,15 @@ void saved_game::set_defaults()
 	const bool is_multiplayer_tag = classification().get_tagname() == "multiplayer";
 	const game_config_view& game_config = game_config_manager::get()->game_config();
 
-	static const std::vector<std::string> team_defaults {
+	static const std::vector<std::string> team_defaults{
 		"carryover_percentage",
 		"carryover_add",
 	};
 
 	if(auto campaign = game_config.find_child("campaign", "id", classification_.campaign)) {
 		// FIXME: The mp code could use `require_scenario` to check whether we have the addon in question installed.
-		//        But since [scenario]s are usually hidden behind `#ifdef CAMPAIGN_DEFINE` it would not be able to find them.
-		//        Investigate how this should actually work.
+		//        But since [scenario]s are usually hidden behind `#ifdef CAMPAIGN_DEFINE` it would not be able to find
+		//        them. Investigate how this should actually work.
 		bool require_campaign = campaign["require_campaign"].to_bool(true);
 		starting_point_["require_scenario"] = require_campaign;
 	}
@@ -309,8 +310,7 @@ void saved_game::expand_scenario()
 		game_config_manager::get()->load_game_config_for_game(classification(), carryover_["next_scenario"]);
 
 		const game_config_view& game_config = game_config_manager::get()->game_config();
-		auto scenario =
-			game_config.find_child(classification().get_tagname(), "id", carryover_["next_scenario"]);
+		auto scenario = game_config.find_child(classification().get_tagname(), "id", carryover_["next_scenario"]);
 
 		if(scenario) {
 			starting_point_type_ = starting_point::SCENARIO;
@@ -324,7 +324,8 @@ void saved_game::expand_scenario()
 			update_label();
 			set_defaults();
 		} else {
-			ERR_NG << "Couldn't find [" << classification().get_tagname() << "] with id=" << carryover_["next_scenario"];
+			ERR_NG << "Couldn't find [" << classification().get_tagname()
+				   << "] with id=" << carryover_["next_scenario"];
 			starting_point_type_ = starting_point::INVALID;
 			starting_point_.clear();
 		}
@@ -343,20 +344,23 @@ void saved_game::check_require_scenario()
 	config& content = scenario.add_child("content");
 	content["id"] = starting_point_["id"];
 	content["name"] = starting_point_["name"];
-	// TODO: would it be better if this used the actual tagname ([multiplayer]/[scenario]) instead of always using [scenario]?
+	// TODO: would it be better if this used the actual tagname ([multiplayer]/[scenario]) instead of always using
+	// [scenario]?
 	content["type"] = "scenario";
 
 	mp_settings_.update_addon_requirements(scenario);
 }
 
-// "non scenario" at the time of writing this meaning any era, campaign, mods, or resources (see expand_mp_events() below).
+// "non scenario" at the time of writing this meaning any era, campaign, mods, or resources (see expand_mp_events()
+// below).
 void saved_game::load_non_scenario(const std::string& type, const std::string& id, size_t pos)
 {
 	if(auto cfg = game_config_manager::get()->game_config().find_child(type, "id", id)) {
 		// Note the addon_id if this mod is required to play the game in mp.
 		std::string require_attr = "require_" + type;
 
-		// anything with no addon_id is from mainline, and therefore isn't required in the sense that all players already have it
+		// anything with no addon_id is from mainline, and therefore isn't required in the sense that all players
+		// already have it
 		const std::string version_default = cfg["addon_id"].empty() ? game_config::wesnoth_version.str() : "";
 		config non_scenario;
 		// if there's no addon_id, then this isn't an add-on
@@ -375,8 +379,7 @@ void saved_game::load_non_scenario(const std::string& type, const std::string& i
 		// Copy events
 		for(const config& modevent : cfg->child_range("event")) {
 			if(modevent["enable_if"].empty()
-				|| variable_to_bool(carryover_.child_or_empty("variables"), modevent["enable_if"])
-			) {
+				|| variable_to_bool(carryover_.child_or_empty("variables"), modevent["enable_if"])) {
 				starting_point_.add_child_at_total("event", modevent, pos++);
 			}
 		}
@@ -414,8 +417,7 @@ void saved_game::expand_mp_events()
 		std::set<std::string> loaded_resources;
 
 		std::transform(classification_.active_mods.begin(), classification_.active_mods.end(), std::back_inserter(mods),
-			[](const std::string& id) { return modevents_entry("modification", id); }
-		);
+			[](const std::string& id) { return modevents_entry("modification", id); });
 
 		// We don't want the error message below if there is no era (= if this is a sp game).
 		if(!classification_.era_id.empty()) {
@@ -452,8 +454,7 @@ void saved_game::expand_mp_options()
 		std::vector<modevents_entry> mods;
 
 		std::transform(classification_.active_mods.begin(), classification_.active_mods.end(), std::back_inserter(mods),
-			[](const std::string& id) { return modevents_entry("modification", id); }
-		);
+			[](const std::string& id) { return modevents_entry("modification", id); });
 
 		mods.emplace_back("era", classification_.era_id);
 		mods.emplace_back("multiplayer", get_scenario_id());
@@ -479,7 +480,9 @@ void saved_game::expand_mp_options()
 
 static void inherit_scenario(config& scenario, config& map_scen)
 {
-	config& map_scenario = map_scen.has_child("multiplayer") ? map_scen.mandatory_child("multiplayer") : (map_scen.has_child("scenario") ? map_scen.mandatory_child("scenario") : map_scen);
+	config& map_scenario = map_scen.has_child("multiplayer")
+		? map_scen.mandatory_child("multiplayer")
+		: (map_scen.has_child("scenario") ? map_scen.mandatory_child("scenario") : map_scen);
 	config sides;
 	sides.splice_children(map_scenario, "side");
 	scenario.append_children(map_scenario);
@@ -504,8 +507,8 @@ void saved_game::expand_map_file(config& scenario)
 			read(include_data_cfg, include_data);
 			inherit_scenario(scenario, include_data_cfg);
 		}
-		// this method gets called two additional times, so without this you end up calling inherit_scenario() three times total
-		// this is equivalent to the below check for map_data being empty
+		// this method gets called two additional times, so without this you end up calling inherit_scenario() three
+		// times total this is equivalent to the below check for map_data being empty
 		scenario["include_file"] = "";
 	}
 
@@ -513,7 +516,9 @@ void saved_game::expand_map_file(config& scenario)
 		std::string map_data = filesystem::read_map(scenario["map_file"]);
 		if(map_data.find("map_data") != std::string::npos) {
 			// we have a scenario, generated by the editor
-			deprecated_message("map_file cfg", DEP_LEVEL::FOR_REMOVAL, "1.19", "Providing a .cfg file to the map_file attribute is deprecated. Use map_file for .map files and include_file for .cfg files.");
+			deprecated_message("map_file cfg", DEP_LEVEL::FOR_REMOVAL, "1.19",
+				"Providing a .cfg file to the map_file attribute is deprecated. Use map_file for .map files and "
+				"include_file for .cfg files.");
 			config map_data_cfg;
 			read(map_data_cfg, map_data);
 			inherit_scenario(scenario, map_data_cfg);
@@ -534,8 +539,8 @@ void saved_game::expand_random_scenario()
 			LOG_NG << "randomly generating scenario...";
 			const cursor::setter cursor_setter(cursor::WAIT);
 
-			config scenario_new =
-				random_generate_scenario(starting_point_["scenario_generation"], starting_point_.mandatory_child("generator"), &carryover_.child_or_empty("variables"));
+			config scenario_new = random_generate_scenario(starting_point_["scenario_generation"],
+				starting_point_.mandatory_child("generator"), &carryover_.child_or_empty("variables"));
 
 			post_scenario_generation(starting_point_, scenario_new);
 			starting_point_ = std::move(scenario_new);
@@ -552,15 +557,15 @@ void saved_game::expand_random_scenario()
 			LOG_NG << "randomly generating map...";
 			const cursor::setter cursor_setter(cursor::WAIT);
 
-			starting_point_["map_data"] =
-				random_generate_map(starting_point_["map_generation"], starting_point_.mandatory_child("generator"), &carryover_.child_or_empty("variables"));
+			starting_point_["map_data"] = random_generate_map(starting_point_["map_generation"],
+				starting_point_.mandatory_child("generator"), &carryover_.child_or_empty("variables"));
 		}
 	}
 }
 
 void saved_game::post_scenario_generation(const config& old_scenario, config& generated_scenario)
 {
-	static const std::vector<std::string> attributes_to_copy {
+	static const std::vector<std::string> attributes_to_copy{
 		"id",
 		"addon_id",
 		"addon_title",
@@ -570,7 +575,8 @@ void saved_game::post_scenario_generation(const config& old_scenario, config& ge
 	};
 
 	// TODO: should we add "description" to this list?
-	// TODO: in theory it is possible that whether the scenario is required depends on the generated scenario, so maybe remove require_scenario from this list.
+	// TODO: in theory it is possible that whether the scenario is required depends on the generated scenario, so maybe
+	// remove require_scenario from this list.
 
 	for(const auto& str : attributes_to_copy) {
 		generated_scenario[str] = old_scenario[str];
@@ -583,7 +589,6 @@ void saved_game::post_scenario_generation(const config& old_scenario, config& ge
 		generated_scenario.add_child("story", story);
 	}
 }
-
 
 void saved_game::expand_carryover()
 {
@@ -827,8 +832,8 @@ void saved_game::set_data(config& cfg)
 		statistics_.read(*stats);
 	}
 
-	classification_ = game_classification{ cfg };
-	mp_settings_ = { cfg.child_or_empty("multiplayer") };
+	classification_ = game_classification{cfg};
+	mp_settings_ = {cfg.child_or_empty("multiplayer")};
 
 	cfg.clear();
 }

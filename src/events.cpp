@@ -17,13 +17,13 @@
 
 #include "cursor.hpp"
 #include "desktop/clipboard.hpp"
-#include "log.hpp"
 #include "draw_manager.hpp"
+#include "log.hpp"
 #include "preferences/preferences.hpp"
 #include "quit_confirmation.hpp"
 #include "sdl/userevent.hpp"
-#include "utils/ranges.hpp"
 #include "utils/general.hpp"
+#include "utils/ranges.hpp"
 #include "video.hpp"
 
 #if defined _WIN32
@@ -82,7 +82,7 @@ struct invoked_function_data
 		finished.set_value();
 	}
 };
-}
+} // namespace
 
 namespace events
 {
@@ -251,7 +251,7 @@ sdl_handler::sdl_handler(const bool auto_join)
 	}
 }
 
-sdl_handler::sdl_handler(const sdl_handler &that)
+sdl_handler::sdl_handler(const sdl_handler& that)
 	: has_joined_(that.has_joined_)
 	, has_joined_global_(that.has_joined_global_)
 {
@@ -260,7 +260,7 @@ sdl_handler::sdl_handler(const sdl_handler &that)
 		event_contexts.front().add_handler(this);
 	} else if(has_joined_) {
 		bool found_context = false;
-		for(auto &context : event_contexts | utils::views::reverse) {
+		for(auto& context : event_contexts | utils::views::reverse) {
 			if(context.has_handler(&that)) {
 				found_context = true;
 				context.add_handler(this);
@@ -268,18 +268,19 @@ sdl_handler::sdl_handler(const sdl_handler &that)
 			}
 		}
 
-		if (!found_context) {
-			throw std::logic_error("Copy-constructing a sdl_handler that has_joined_ but can't be found by searching contexts");
+		if(!found_context) {
+			throw std::logic_error(
+				"Copy-constructing a sdl_handler that has_joined_ but can't be found by searching contexts");
 		}
 	}
 }
 
-sdl_handler &sdl_handler::operator=(const sdl_handler &that)
+sdl_handler& sdl_handler::operator=(const sdl_handler& that)
 {
 	if(that.has_joined_global_) {
 		join_global();
 	} else if(that.has_joined_) {
-		for(auto &context : event_contexts | utils::views::reverse) {
+		for(auto& context : event_contexts | utils::views::reverse) {
 			if(context.has_handler(&that)) {
 				join(context);
 				break;
@@ -470,7 +471,7 @@ static std::thread::id main_thread;
 
 void set_main_thread()
 {
-	 main_thread = std::this_thread::get_id();
+	main_thread = std::this_thread::get_id();
 }
 
 // this should probably be elsewhere, but as the main thread is already
@@ -500,10 +501,9 @@ void pump()
 
 		++poll_count;
 
-		if(!begin_ignoring && temp_event.type == SDL_WINDOWEVENT && (
-			temp_event.window.event == SDL_WINDOWEVENT_ENTER ||
-			temp_event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
-		) {
+		if(!begin_ignoring && temp_event.type == SDL_WINDOWEVENT
+			&& (temp_event.window.event == SDL_WINDOWEVENT_ENTER
+				|| temp_event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)) {
 			begin_ignoring = poll_count;
 		} else if(begin_ignoring > 0 && is_input(temp_event)) {
 			// ignore user input events that occurred after the window was activated
@@ -529,63 +529,60 @@ void pump()
 		}
 
 #ifdef MOUSE_TOUCH_EMULATION
-		switch (event.type) {
-			// TODO: Implement SDL_MULTIGESTURE. Some day.
-			case SDL_MOUSEMOTION:
-				if(event.motion.which != SDL_TOUCH_MOUSEID && event.motion.state == 0) {
-					return;
-				}
+		switch(event.type) {
+		// TODO: Implement SDL_MULTIGESTURE. Some day.
+		case SDL_MOUSEMOTION:
+			if(event.motion.which != SDL_TOUCH_MOUSEID && event.motion.state == 0) {
+				return;
+			}
 
-				if(event.motion.state & SDL_BUTTON(SDL_BUTTON_RIGHT))
-				{
-					// Events are given by SDL in draw space
-					point c = video::game_canvas_size();
+			if(event.motion.state & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
+				// Events are given by SDL in draw space
+				point c = video::game_canvas_size();
 
-					// TODO: Check if SDL_FINGERMOTION is actually signaled for COMPLETE motions (I doubt, but tbs)
-					SDL_Event touch_event;
-					touch_event.type = SDL_FINGERMOTION;
-					touch_event.tfinger.type = SDL_FINGERMOTION;
-					touch_event.tfinger.timestamp = event.motion.timestamp;
-					touch_event.tfinger.touchId = 1;
-					touch_event.tfinger.fingerId = 1;
-					touch_event.tfinger.dx = static_cast<float>(event.motion.xrel) / c.x;
-					touch_event.tfinger.dy = static_cast<float>(event.motion.yrel) / c.y;
-					touch_event.tfinger.x = static_cast<float>(event.motion.x) / c.x;
-					touch_event.tfinger.y = static_cast<float>(event.motion.y) / c.y;
-					touch_event.tfinger.pressure = 1;
-					::SDL_PushEvent(&touch_event);
+				// TODO: Check if SDL_FINGERMOTION is actually signaled for COMPLETE motions (I doubt, but tbs)
+				SDL_Event touch_event;
+				touch_event.type = SDL_FINGERMOTION;
+				touch_event.tfinger.type = SDL_FINGERMOTION;
+				touch_event.tfinger.timestamp = event.motion.timestamp;
+				touch_event.tfinger.touchId = 1;
+				touch_event.tfinger.fingerId = 1;
+				touch_event.tfinger.dx = static_cast<float>(event.motion.xrel) / c.x;
+				touch_event.tfinger.dy = static_cast<float>(event.motion.yrel) / c.y;
+				touch_event.tfinger.x = static_cast<float>(event.motion.x) / c.x;
+				touch_event.tfinger.y = static_cast<float>(event.motion.y) / c.y;
+				touch_event.tfinger.pressure = 1;
+				::SDL_PushEvent(&touch_event);
 
-					event.motion.state = SDL_BUTTON(SDL_BUTTON_LEFT);
-					event.motion.which = SDL_TOUCH_MOUSEID;
-				}
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP:
-				if(event.button.button == SDL_BUTTON_RIGHT)
-				{
-					event.button.button = SDL_BUTTON_LEFT;
-					event.button.which = SDL_TOUCH_MOUSEID;
+				event.motion.state = SDL_BUTTON(SDL_BUTTON_LEFT);
+				event.motion.which = SDL_TOUCH_MOUSEID;
+			}
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+			if(event.button.button == SDL_BUTTON_RIGHT) {
+				event.button.button = SDL_BUTTON_LEFT;
+				event.button.which = SDL_TOUCH_MOUSEID;
 
-					// Events are given by SDL in draw space
-					point c = video::game_canvas_size();
+				// Events are given by SDL in draw space
+				point c = video::game_canvas_size();
 
-					SDL_Event touch_event;
-					touch_event.type = (event.type == SDL_MOUSEBUTTONDOWN) ? SDL_FINGERDOWN : SDL_FINGERUP;
-					touch_event.tfinger.type = touch_event.type;
-					touch_event.tfinger.timestamp = event.button.timestamp;
-					touch_event.tfinger.touchId = 1;
-					touch_event.tfinger.fingerId = 1;
-					touch_event.tfinger.dx = 0;
-					touch_event.tfinger.dy = 0;
-					touch_event.tfinger.x = static_cast<float>(event.button.x) / c.x;
-					touch_event.tfinger.y = static_cast<float>(event.button.y) / c.y;
-					touch_event.tfinger.pressure = 1;
-					::SDL_PushEvent(&touch_event);
-
-				}
-				break;
-			default:
-				break;
+				SDL_Event touch_event;
+				touch_event.type = (event.type == SDL_MOUSEBUTTONDOWN) ? SDL_FINGERDOWN : SDL_FINGERUP;
+				touch_event.tfinger.type = touch_event.type;
+				touch_event.tfinger.timestamp = event.button.timestamp;
+				touch_event.tfinger.touchId = 1;
+				touch_event.tfinger.fingerId = 1;
+				touch_event.tfinger.dx = 0;
+				touch_event.tfinger.dy = 0;
+				touch_event.tfinger.x = static_cast<float>(event.button.x) / c.x;
+				touch_event.tfinger.y = static_cast<float>(event.button.y) / c.y;
+				touch_event.tfinger.pressure = 1;
+				::SDL_PushEvent(&touch_event);
+			}
+			break;
+		default:
+			break;
 		}
 #endif
 
@@ -605,8 +602,7 @@ void pump()
 			// Size changed is called before resized.
 			// We can ensure the video framebuffer is valid here.
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
-				LOG_DP << "events/SIZE_CHANGED "
-					<< event.window.data1 << 'x' << event.window.data2;
+				LOG_DP << "events/SIZE_CHANGED " << event.window.data1 << 'x' << event.window.data2;
 				video::update_buffers(false);
 				break;
 
@@ -614,8 +610,7 @@ void pump()
 			// Here we can trigger any watchers for resize events.
 			// Video settings such as game_canvas_size() will be correct.
 			case SDL_WINDOWEVENT_RESIZED:
-				LOG_DP << "events/RESIZED "
-					<< event.window.data1 << 'x' << event.window.data2;
+				LOG_DP << "events/RESIZED " << event.window.data1 << 'x' << event.window.data2;
 				prefs::get().set_resolution(video::window_size());
 				break;
 
@@ -666,9 +661,8 @@ void pump()
 
 #ifndef __APPLE__
 		case SDL_KEYDOWN: {
-			if(event.key.keysym.sym == SDLK_F4 &&
-				(event.key.keysym.mod == KMOD_RALT || event.key.keysym.mod == KMOD_LALT)
-			) {
+			if(event.key.keysym.sym == SDLK_F4
+				&& (event.key.keysym.mod == KMOD_RALT || event.key.keysym.mod == KMOD_LALT)) {
 				quit_confirmation::quit_to_desktop();
 				continue; // this event is already handled
 			}
@@ -796,4 +790,4 @@ void call_in_main_thread(const std::function<void(void)>& f)
 	fdata.finished.get_future().wait();
 }
 
-} // end events namespace
+} // namespace events

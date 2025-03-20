@@ -19,8 +19,8 @@
 
 #include "gui/core/log.hpp"
 
-#include "gui/core/widget_definition.hpp"
 #include "gui/core/register_widget.hpp"
+#include "gui/core/widget_definition.hpp"
 #include "gui/dialogs/message.hpp"
 
 #include "cursor.hpp"
@@ -55,8 +55,7 @@ label::label(const implementation::builder_label& builder)
 		std::bind(&label::signal_handler_right_button_click, this, std::placeholders::_3));
 	connect_signal<event::MOUSE_MOTION>(
 		std::bind(&label::signal_handler_mouse_motion, this, std::placeholders::_3, std::placeholders::_5));
-	connect_signal<event::MOUSE_LEAVE>(
-		std::bind(&label::signal_handler_mouse_leave, this, std::placeholders::_3));
+	connect_signal<event::MOUSE_LEAVE>(std::bind(&label::signal_handler_mouse_leave, this, std::placeholders::_3));
 }
 
 void label::update_canvas()
@@ -115,11 +114,11 @@ void label::signal_handler_left_button_click(bool& handled)
 {
 	DBG_GUI_E << "label click";
 
-	if (!get_link_aware()) {
+	if(!get_link_aware()) {
 		return; // without marking event as "handled".
 	}
 
-	if (!desktop::open_object_is_supported()) {
+	if(!desktop::open_object_is_supported()) {
 		show_message("", _("Opening links is not supported, contact your packager"), dialogs::message::auto_close);
 		handled = true;
 		return;
@@ -132,8 +131,8 @@ void label::signal_handler_left_button_click(bool& handled)
 
 	std::string link = get_label_link(mouse);
 
-	if (link.length() == 0) {
-		return ; // without marking event as "handled"
+	if(link.length() == 0) {
+		return; // without marking event as "handled"
 	}
 
 	DBG_GUI_E << "Clicked Link:\"" << link << "\"";
@@ -150,8 +149,8 @@ void label::signal_handler_right_button_click(bool& handled)
 {
 	DBG_GUI_E << "label right click";
 
-	if (!get_link_aware()) {
-		return ; // without marking event as "handled".
+	if(!get_link_aware()) {
+		return; // without marking event as "handled".
 	}
 
 	point mouse = get_mouse_position();
@@ -161,15 +160,15 @@ void label::signal_handler_right_button_click(bool& handled)
 
 	std::string link = get_label_link(mouse);
 
-	if (link.length() == 0) {
-		return ; // without marking event as "handled"
+	if(link.length() == 0) {
+		return; // without marking event as "handled"
 	}
 
 	DBG_GUI_E << "Right Clicked Link:\"" << link << "\"";
 
 	desktop::clipboard::copy_to_clipboard(link);
 
-	(void) show_message("", _("Copied link!"), dialogs::message::auto_close);
+	(void)show_message("", _("Copied link!"), dialogs::message::auto_close);
 
 	handled = true;
 }
@@ -231,11 +230,14 @@ label_definition::label_definition(const config& cfg)
 
 label_definition::resolution::resolution(const config& cfg)
 	: resolution_definition(cfg)
-	, link_color(cfg["link_color"].empty() ? color_t::from_hex_string("ffff00") : color_t::from_rgba_string(cfg["link_color"].str()))
+	, link_color(cfg["link_color"].empty() ? color_t::from_hex_string("ffff00")
+										   : color_t::from_rgba_string(cfg["link_color"].str()))
 {
 	// Note the order should be the same as the enum state_t is label.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("label_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("label_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("label_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_disabled", missing_mandatory_wml_tag("label_definition][resolution", "state_disabled")));
 }
 
 // }---------- BUILDER -----------{
@@ -263,8 +265,7 @@ std::unique_ptr<widget> builder_label::build() const
 	lbl->set_text_alignment(text_alignment);
 	lbl->set_link_color(conf->link_color);
 
-	DBG_GUI_G << "Window builder: placed label '" << id << "' with definition '"
-			  << definition << "'.";
+	DBG_GUI_G << "Window builder: placed label '" << id << "' with definition '" << definition << "'.";
 
 	return lbl;
 }

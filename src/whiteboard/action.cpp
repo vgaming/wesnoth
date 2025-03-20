@@ -18,10 +18,10 @@
  */
 
 #include "whiteboard/action.hpp"
-#include "whiteboard/move.hpp"
 #include "whiteboard/attack.hpp"
-#include "whiteboard/recruit.hpp"
+#include "whiteboard/move.hpp"
 #include "whiteboard/recall.hpp"
+#include "whiteboard/recruit.hpp"
 #include "whiteboard/suppose_dead.hpp"
 
 #include "config.hpp"
@@ -29,7 +29,8 @@
 #include "resources.hpp"
 #include "units/unit.hpp"
 
-namespace wb {
+namespace wb
+{
 
 std::ostream& operator<<(std::ostream& s, const action_ptr& action)
 {
@@ -51,8 +52,8 @@ std::ostream& action::print(std::ostream& s) const
 config action::to_config() const
 {
 	config final_cfg;
-	final_cfg["type"]="action";
-	final_cfg["team_index_"]=static_cast<int>(team_index_);
+	final_cfg["type"] = "action";
+	final_cfg["team_index_"] = static_cast<int>(team_index_);
 	return final_cfg;
 }
 
@@ -105,9 +106,8 @@ action::action(const config& cfg, bool hidden)
 	, hidden_(hidden)
 {
 	// Construct and validate team_index_
-	int team_index_temp = cfg["team_index_"].to_int(-1); //default value: -1
-	if(team_index_temp < 0
-			|| team_index_temp >= static_cast<int>(resources::gameboard->teams().size()))
+	int team_index_temp = cfg["team_index_"].to_int(-1); // default value: -1
+	if(team_index_temp < 0 || team_index_temp >= static_cast<int>(resources::gameboard->teams().size()))
 		throw ctor_err("action: Invalid team_index_");
 	team_index_ = team_index_temp;
 }

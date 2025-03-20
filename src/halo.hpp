@@ -25,7 +25,6 @@ struct rect;
 namespace halo
 {
 
-
 class halo_impl;
 
 class halo_record;
@@ -50,17 +49,21 @@ public:
 	 * shroud is active.  (Note it will be shown with the fog active.)
 	 * If it is not attached to an item, the location should be set to -1, -1
 	 */
-	handle add(int x, int y, const std::string& image, const map_location& loc,
-			halo::ORIENTATION orientation=NORMAL, bool infinite=true);
+	handle add(int x,
+		int y,
+		const std::string& image,
+		const map_location& loc,
+		halo::ORIENTATION orientation = NORMAL,
+		bool infinite = true);
 
 	/** Set the position of an existing haloing effect, according to its handle. */
-	void set_location(const handle & h, int x, int y);
+	void set_location(const handle& h, int x, int y);
 
 	/** Remove the halo with the given handle. */
-	void remove(const handle & h);
+	void remove(const handle& h);
 
 	/** Process animations, remove deleted halos, and invalidate screen
-	  * regions now requiring redraw. */
+	 * regions now requiring redraw. */
 	void update();
 
 	/** Render halos in region. */
@@ -80,18 +83,19 @@ public:
 	halo_record& operator=(const halo_record&) = delete;
 
 	halo_record();
-	halo_record(int id, const std::shared_ptr<halo_impl> & my_manager);
+	halo_record(int id, const std::shared_ptr<halo_impl>& my_manager);
 	~halo_record();
 
-	bool valid() const {
+	bool valid() const
+	{
 		return id_ != NO_HALO && !my_manager_.expired();
 	}
 
 	friend class manager;
+
 private:
 	int id_;
 	std::weak_ptr<halo_impl> my_manager_;
-
 };
 
 } // end namespace halo

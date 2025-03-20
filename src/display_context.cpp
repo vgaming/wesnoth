@@ -15,11 +15,11 @@
 
 #include "display_context.hpp"
 
-#include "map/map.hpp"
 #include "map/location.hpp"
+#include "map/map.hpp"
 #include "team.hpp"
-#include "units/unit.hpp"
 #include "units/map.hpp"
+#include "units/unit.hpp"
 
 const team& display_context::get_team(int side) const
 {
@@ -31,21 +31,20 @@ bool display_context::has_team(int side) const
 	return side > 0 && side <= static_cast<int>(teams().size());
 }
 
-bool display_context::would_be_discovered(const map_location & loc, int side_num, bool see_all)
+bool display_context::would_be_discovered(const map_location& loc, int side_num, bool see_all)
 {
 	for(const map_location& u_loc : get_adjacent_tiles(loc)) {
 		unit_map::const_iterator u_it = units().find(u_loc);
-		if (!u_it.valid()) {
+		if(!u_it.valid()) {
 			continue;
 		}
-		const unit & u = *u_it;
-		if (get_team(side_num).is_enemy(u.side()) && !u.incapacitated()) {
+		const unit& u = *u_it;
+		if(get_team(side_num).is_enemy(u.side()) && !u.incapacitated()) {
 			// Enemy spotted in adjacent tiles, check if we can see him.
 			// Watch out to call invisible with see_all=true to avoid infinite recursive calls!
 			if(see_all) {
 				return true;
-			} else if (!get_team(side_num).fogged(u_loc)
-			&& !u.invisible(u_loc, true)) {
+			} else if(!get_team(side_num).fogged(u_loc) && !u.invisible(u_loc, true)) {
 				return true;
 			}
 		}
@@ -53,21 +52,24 @@ bool display_context::would_be_discovered(const map_location & loc, int side_num
 	return false;
 }
 
-const unit * display_context::get_visible_unit(const map_location & loc, const team &current_team, bool see_all) const
+const unit* display_context::get_visible_unit(const map_location& loc, const team& current_team, bool see_all) const
 {
-	if (!map().on_board(loc)) return nullptr;
+	if(!map().on_board(loc))
+		return nullptr;
 	const unit_map::const_iterator u = units().find(loc);
-	if (!u.valid() || !u->is_visible_to_team(current_team, see_all)) {
+	if(!u.valid() || !u->is_visible_to_team(current_team, see_all)) {
 		return nullptr;
 	}
 	return &*u;
 }
 
-unit_const_ptr display_context::get_visible_unit_shared_ptr(const map_location & loc, const team &current_team, bool see_all) const
+unit_const_ptr display_context::get_visible_unit_shared_ptr(
+	const map_location& loc, const team& current_team, bool see_all) const
 {
-	if (!map().on_board(loc)) return nullptr;
+	if(!map().on_board(loc))
+		return nullptr;
 	const unit_map::const_iterator u = units().find(loc);
-	if (!u.valid() || !u->is_visible_to_team(current_team, see_all)) {
+	if(!u.valid() || !u->is_visible_to_team(current_team, see_all)) {
 		return unit_const_ptr();
 	}
 	return u.get_shared_ptr();
@@ -91,29 +93,30 @@ display_context::can_move_result display_context::unit_can_move(const unit& u) c
 		const auto& attacks = u.attacks();
 
 		std::set<int> attackable_distances;
-	    for (const auto& attack : attacks) {
-	        for (int i = attack.min_range(); i <= attack.max_range(); ++i) {
-	            attackable_distances.insert(i);
-	        }
-	    }
+		for(const auto& attack : attacks) {
+			for(int i = attack.min_range(); i <= attack.max_range(); ++i) {
+				attackable_distances.insert(i);
+			}
+		}
 
 		if(!attackable_distances.empty()) {
 			int max_distance = *std::prev(attackable_distances.end());
 
-			for (int dx = -max_distance; dx <= max_distance; ++dx) {
-				for (int dy = -max_distance; dy <= max_distance && !result.attack_here; ++dy) {
+			for(int dx = -max_distance; dx <= max_distance; ++dx) {
+				for(int dy = -max_distance; dy <= max_distance && !result.attack_here; ++dy) {
 					// Adjust for hex grid
 					int adjusted_dy = dy + floor(dx / 2.0);
 
 					map_location locs(u.get_location().x + dx, u.get_location().y + adjusted_dy);
 					int distance = distance_between(u.get_location(), locs);
 
-					if (attackable_distances.find(distance) == attackable_distances.end()) {
+					if(attackable_distances.find(distance) == attackable_distances.end()) {
 						continue;
 					}
-					if (map().on_board(locs)) {
+					if(map().on_board(locs)) {
 						const unit_map::const_iterator i = units().find(locs);
-						if (i.valid() && !i->incapacitated() && current_team.is_enemy(i->side()) && i->is_visible_to_team(get_team(u.side()), false)) {
+						if(i.valid() && !i->incapacitated() && current_team.is_enemy(i->side())
+							&& i->is_visible_to_team(get_team(u.side()), false)) {
 							result.attack_here = true;
 						}
 					}
@@ -122,8 +125,8 @@ display_context::can_move_result display_context::unit_can_move(const unit& u) c
 		}
 	}
 	for(const map_location& adj : get_adjacent_tiles(u.get_location())) {
-		if (map().on_board(adj)) {
-			if (!result.move && u.movement_cost(map()[adj]) <= u.movement_left()) {
+		if(map().on_board(adj)) {
+			if(!result.move && u.movement_cost(map()[adj]) <= u.movement_left()) {
 				result.move = true;
 			}
 		}
@@ -162,8 +165,8 @@ int display_context::village_owner(const map_location& loc) const
  */
 bool display_context::is_observer() const
 {
-	for (const team &t : teams()) {
-		if (t.is_local())
+	for(const team& t : teams()) {
+		if(t.is_local())
 			return false;
 	}
 
@@ -175,8 +178,9 @@ bool display_context::is_observer() const
 int display_context::side_units(int side) const
 {
 	int res = 0;
-	for (const unit &u : units()) {
-		if (u.side() == side) ++res;
+	for(const unit& u : units()) {
+		if(u.side() == side)
+			++res;
 	}
 	return res;
 }
@@ -184,8 +188,9 @@ int display_context::side_units(int side) const
 int display_context::side_units_cost(int side) const
 {
 	int res = 0;
-	for (const unit &u : units()) {
-		if (u.side() == side) res += u.cost();
+	for(const unit& u : units()) {
+		if(u.side() == side)
+			res += u.cost();
 	}
 	return res;
 }
@@ -193,8 +198,9 @@ int display_context::side_units_cost(int side) const
 int display_context::side_upkeep(int side) const
 {
 	int res = 0;
-	for (const unit &u : units()) {
-		if (u.side() == side) res += u.upkeep();
+	for(const unit& u : units()) {
+		if(u.side() == side)
+			res += u.upkeep();
 	}
 	return res;
 }

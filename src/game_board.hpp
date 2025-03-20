@@ -19,8 +19,8 @@
 #include "side_controller.hpp"
 #include "team.hpp"
 #include "terrain/type_data.hpp"
-#include "units/map.hpp"
 #include "units/id.hpp"
+#include "units/map.hpp"
 #include "utils/optional_fwd.hpp"
 
 #include "utils/optional_fwd.hpp"
@@ -59,11 +59,10 @@ class game_board : public display_context
 	 *  - AI
 	 *  - Whiteboard
 	 *  - I think certain wml actions
-	 * For AI, the ai wants to move two units next to eachother so it can ask for attack calculations. This should not trigger
-	 * pathfinding modifications, so the version that directly changes the unit map is probably preferable, although it should be
-	 * refactored.
-	 * For whiteboard and wml actions, we generally do want pathfinding to be updated, so use the game_board constructors which I
-	 * have added to these structs instead.
+	 * For AI, the ai wants to move two units next to eachother so it can ask for attack calculations. This should not
+	 *trigger pathfinding modifications, so the version that directly changes the unit map is probably preferable,
+	 *although it should be refactored. For whiteboard and wml actions, we generally do want pathfinding to be updated,
+	 *so use the game_board constructors which I have added to these structs instead.
 	 *
 	 **/
 	friend struct temporary_unit_placer;
@@ -71,7 +70,10 @@ class game_board : public display_context
 	friend struct temporary_unit_remover;
 
 public:
-	n_unit::id_manager& unit_id_manager() { return unit_id_manager_; }
+	n_unit::id_manager& unit_id_manager()
+	{
+		return unit_id_manager_;
+	}
 	// Constructors, trivial dtor, and const accessors
 
 	game_board(const config& level);
@@ -126,14 +128,14 @@ public:
 
 	// Copy and swap idiom, because we have a scoped pointer.
 
-	game_board(const game_board & other);
+	game_board(const game_board& other);
 	game_board& operator=(const game_board& other) = delete;
 
-	friend void swap(game_board & one, game_board & other);
+	friend void swap(game_board& one, game_board& other);
 
 	// Saving
 
-	void write_config(config & cfg) const;
+	void write_config(config& cfg) const;
 
 	// Manipulators from play_controller
 
@@ -143,37 +145,54 @@ public:
 
 	void heal_all_survivors();
 
-	void check_victory(bool &, bool &, bool &, bool &, std::set<unsigned> &, bool);
+	void check_victory(bool&, bool&, bool&, bool&, std::set<unsigned>&, bool);
 
 	// Manipulator from playturn
 
-	void side_drop_to (int side_num, side_controller::type ctrl, side_proxy_controller::type proxy = side_proxy_controller::type::human);
-	void side_change_controller (int side_num, bool is_local, const std::string& pname, const std::string& controller_type);
+	void side_drop_to(int side_num,
+		side_controller::type ctrl,
+		side_proxy_controller::type proxy = side_proxy_controller::type::human);
+	void side_change_controller(
+		int side_num, bool is_local, const std::string& pname, const std::string& controller_type);
 
 	// Manipulator from actionwml
 
 	bool try_add_unit_to_recall_list(const map_location& loc, const unit_ptr& u);
-	utils::optional<std::string> replace_map(const gamemap & r);
+	utils::optional<std::string> replace_map(const gamemap& r);
 
-	bool change_terrain(const map_location &loc, const std::string &t, const std::string & mode, bool replace_if_failed); //used only by lua and debug commands
-	bool change_terrain(const map_location &loc, const t_translation::terrain_code &t, terrain_type_data::merge_mode& mode, bool replace_if_failed); //used only by lua and debug commands
+	bool change_terrain(const map_location& loc,
+		const std::string& t,
+		const std::string& mode,
+		bool replace_if_failed); // used only by lua and debug commands
+	bool change_terrain(const map_location& loc,
+		const t_translation::terrain_code& t,
+		terrain_type_data::merge_mode& mode,
+		bool replace_if_failed); // used only by lua and debug commands
 
 	// Global accessor from unit.hpp
 
-	unit_map::iterator find_visible_unit(const map_location &loc, const team& current_team, bool see_all = false);
-	unit_map::iterator find_visible_unit(const map_location & loc, std::size_t team, bool see_all = false) { return find_visible_unit(loc, teams_[team], see_all); }
-	bool has_visible_unit (const map_location & loc, const team & team, bool see_all = false) const;
-	bool has_visible_unit (const map_location & loc, std::size_t team, bool see_all = false) const { return has_visible_unit(loc, teams_[team], see_all); }
+	unit_map::iterator find_visible_unit(const map_location& loc, const team& current_team, bool see_all = false);
+	unit_map::iterator find_visible_unit(const map_location& loc, std::size_t team, bool see_all = false)
+	{
+		return find_visible_unit(loc, teams_[team], see_all);
+	}
+	bool has_visible_unit(const map_location& loc, const team& team, bool see_all = false) const;
+	bool has_visible_unit(const map_location& loc, std::size_t team, bool see_all = false) const
+	{
+		return has_visible_unit(loc, teams_[team], see_all);
+	}
 
 	// Wrapped functions from unit_map. These should ultimately provide notification to observers, pathfinding.
 
-	unit_map::iterator find_unit(const map_location & loc) { return units_.find(loc); }
+	unit_map::iterator find_unit(const map_location& loc)
+	{
+		return units_.find(loc);
+	}
 	/** Calculates whether a team is defeated */
 	bool team_is_defeated(const team& t) const;
 };
 
-void swap(game_board & one, game_board & other);
-
+void swap(game_board& one, game_board& other);
 
 /**
  * This object is used to temporary place a unit in the unit map, swapping out
@@ -184,7 +203,7 @@ struct temporary_unit_placer
 {
 	temporary_unit_placer(unit_map& m, const map_location& loc, unit& u);
 	temporary_unit_placer(game_board& m, const map_location& loc, unit& u);
-	virtual  ~temporary_unit_placer();
+	virtual ~temporary_unit_placer();
 
 private:
 	unit_map& m_;
@@ -205,14 +224,13 @@ struct temporary_unit_remover
 {
 	temporary_unit_remover(unit_map& m, const map_location& loc);
 	temporary_unit_remover(game_board& m, const map_location& loc);
-	virtual  ~temporary_unit_remover();
+	virtual ~temporary_unit_remover();
 
 private:
 	unit_map& m_;
 	const map_location loc_;
 	unit_ptr temp_;
 };
-
 
 /**
  * This object is used to temporary move a unit in the unit map, swapping out

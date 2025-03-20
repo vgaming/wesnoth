@@ -28,9 +28,9 @@
 #include "game_initialization/multiplayer.hpp"
 #include "generators/map_generator.hpp"
 #include "gettext.hpp"
-#include "gui/gui.hpp"
 #include "gui/dialogs/message.hpp"
 #include "gui/dialogs/outro.hpp"
+#include "gui/gui.hpp"
 #include "gui/widgets/retval.hpp"
 #include "log.hpp"
 #include "map/exception.hpp"
@@ -51,11 +51,9 @@ static lg::log_domain log_engine("engine");
 static lg::log_domain log_enginerefac("enginerefac");
 #define LOG_RG LOG_STREAM(info, log_enginerefac)
 
-level_result::type campaign_controller::playsingle_scenario(end_level_data &end_level)
+level_result::type campaign_controller::playsingle_scenario(end_level_data& end_level)
 {
-	const config& starting_point = is_replay_
-		? state_.get_replay_starting_point()
-		: state_.get_starting_point();
+	const config& starting_point = is_replay_ ? state_.get_replay_starting_point() : state_.get_starting_point();
 
 	playsingle_controller playcontroller(starting_point, state_);
 
@@ -82,7 +80,7 @@ level_result::type campaign_controller::playsingle_scenario(end_level_data &end_
 	return res;
 }
 
-level_result::type campaign_controller::playmp_scenario(end_level_data &end_level)
+level_result::type campaign_controller::playmp_scenario(end_level_data& end_level)
 {
 	playmp_controller playcontroller(state_.get_starting_point(), state_, mp_info_);
 	level_result::type res = playcontroller.play_scenario(state_.get_starting_point());
@@ -225,7 +223,8 @@ level_result::type campaign_controller::play_game()
 			// The host should send the complete savegame now that also contains the carryover sides start.
 		} else {
 			// clear previous game content information
-			// otherwise it keeps getting appended for each scenario resulting in incorrect data being sent to the server to be stored
+			// otherwise it keeps getting appended for each scenario resulting in incorrect data being sent to the
+			// server to be stored
 			state_.mp_settings().addons.clear();
 			// Retrieve next scenario data.
 			state_.expand_scenario();

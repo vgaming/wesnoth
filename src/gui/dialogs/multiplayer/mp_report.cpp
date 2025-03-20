@@ -63,8 +63,7 @@ void mp_report::pre_show()
 
 void mp_report::post_show()
 {
-	if(get_retval() == gui2::retval::OK)
-	{
+	if(get_retval() == gui2::retval::OK) {
 		const text_box& reportee = find_widget<const text_box>("reportee");
 		const text_box& report_reason = find_widget<const text_box>("report_reason");
 		const menu_button& occurrence_location = find_widget<const menu_button>("occurrence_location");
@@ -73,8 +72,7 @@ void mp_report::post_show()
 		std::ostringstream report;
 		report << "Reporting player '" << reportee.get_value() << "' for reason '" << report_reason.get_value() << "'."
 			   << " Location of occurrence is '" << occurrence_locations[occurrence_location.get_value()] << "'.";
-		if(additional_information.size() > 0)
-		{
+		if(additional_information.size() > 0) {
 			report << " Additional information provided: '" << additional_information << "'.";
 		}
 		report_text_ = report.str();
@@ -97,4 +95,4 @@ void mp_report::report_reason_changed(const std::string& text)
 	ok.set_active(!reportee_empty_ && !report_reason_empty_);
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

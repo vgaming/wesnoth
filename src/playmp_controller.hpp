@@ -38,6 +38,7 @@ public:
 	bool receive_from_wesnothd(config& cfg) const override;
 
 	void play_slice() override;
+
 protected:
 	virtual void handle_generic_event(const std::string& name) override;
 
@@ -61,15 +62,16 @@ protected:
 	void remove_blindfold();
 
 	blindfold blindfold_;
+
 private:
-	enum class PROCESS_DATA_RESULT
-	{
+	enum class PROCESS_DATA_RESULT {
 		CONTINUE,
 		/** when we couldn't handle the given action currently. */
 		CANNOT_HANDLE
 	};
 	/**
-	 * @param unsync_only if false (default) this can exceute synced (gamestate changing) turn commands (recall, move, etc.)
+	 * @param unsync_only if false (default) this can exceute synced (gamestate changing) turn commands (recall, move,
+	 * etc.)
 	 */
 	void process_network_data(bool unsync_only = false);
 
@@ -83,7 +85,7 @@ private:
 	void process_network_side_drop_impl(const config& t);
 
 	/// Handle incoming [change_controller] from the multiplayer server
-	void process_network_change_controller_impl(const config& );
+	void process_network_change_controller_impl(const config&);
 
 	/// Send [change_controller] to the multiplayer server
 	void send_change_side_controller(int side, const std::string& player);

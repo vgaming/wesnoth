@@ -23,8 +23,11 @@ class xy_pred
 {
 public:
 	virtual bool operator()(const map_location&) const = 0;
+
 protected:
-	virtual ~xy_pred() {}
+	virtual ~xy_pred()
+	{
+	}
 };
 
 /**
@@ -32,33 +35,32 @@ protected:
  * from @a center (or nothing if @a radius is not positive). @a result must be
  * a std::vector of locations.
  */
-void get_tile_ring(const map_location& center, const int radius,
-                   std::vector<map_location>& result);
+void get_tile_ring(const map_location& center, const int radius, std::vector<map_location>& result);
 
 /**
  * Function that will add to @a result all locations within @a radius tiles
  * of @a center (excluding @a center itself). @a result must be a std::vector
  * of locations.
  */
-void get_tiles_in_radius(const map_location& center, const int radius,
-                         std::vector<map_location>& result);
+void get_tiles_in_radius(const map_location& center, const int radius, std::vector<map_location>& result);
 
 /**
  * Function that will add to @a result all locations within @a radius tiles
  * of @a center (including @a center itself). @a result must be a std::set
  * of locations.
  */
-void get_tiles_radius(const map_location& center, std::size_t radius,
-                      std::set<map_location>& result);
+void get_tiles_radius(const map_location& center, std::size_t radius, std::set<map_location>& result);
 
 /**
  * Function that will add to @a result all elements of @a locs, plus all
  * on-board locations that are within @a radius tiles of an element of locs.
  * @a result must be a std::set of locations.
  */
-void get_tiles_radius(const gamemap& map, const std::vector<map_location>& locs,
-                      std::size_t radius, std::set<map_location>& result,
-                      bool with_border=false);
+void get_tiles_radius(const gamemap& map,
+	const std::vector<map_location>& locs,
+	std::size_t radius,
+	std::set<map_location>& result,
+	bool with_border = false);
 
 /**
  * Function that will add to @a result all elements of @a locs, plus all
@@ -66,6 +68,9 @@ void get_tiles_radius(const gamemap& map, const std::vector<map_location>& locs,
  * locs by a chain of at most @a radius tiles, each of which matches @a pred.
  * @a result must be a std::set of locations.
  */
-void get_tiles_radius(const gamemap& map, const std::vector<map_location>& locs,
-                      std::size_t radius, std::set<map_location>& result,
-                      bool with_border, const xy_pred &pred);
+void get_tiles_radius(const gamemap& map,
+	const std::vector<map_location>& locs,
+	std::size_t radius,
+	std::set<map_location>& result,
+	bool with_border,
+	const xy_pred& pred);

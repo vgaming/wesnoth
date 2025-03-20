@@ -34,7 +34,6 @@
 #include "video.hpp" // only for faked
 #include "whiteboard/manager.hpp"
 
-
 static lg::log_domain log_engine("engine");
 #define DBG_NG LOG_STREAM(debug, log_engine)
 #define LOG_NG LOG_STREAM(info, log_engine)
@@ -78,7 +77,7 @@ public:
 private:
 	std::stack<context::state>& contexts_;
 };
-}
+} // namespace context
 
 struct pump_impl
 {
@@ -140,7 +139,7 @@ private:
 	/** Tracks how many events have been processed. */
 	std::size_t pumped_count_;
 };
-} // end anonymous namespace (types)
+} // namespace
 
 namespace
 { // Support functions
@@ -181,7 +180,7 @@ pump_manager::~pump_manager()
 	resources::gamedata->get_variable("x2") = x2_;
 	resources::gamedata->get_variable("x1") = x1_;
 }
-}
+} // namespace
 
 /**
  * Processes an event through a single event handler.
@@ -313,7 +312,7 @@ void wml_event_pump::show_wml_messages()
 }
 
 void wml_event_pump::put_wml_message(
-		lg::logger& logger, const std::string& prefix, const std::string& message, bool in_chat)
+	lg::logger& logger, const std::string& prefix, const std::string& message, bool in_chat)
 {
 	FORCE_LOG_TO(logger, log_wml) << message;
 	if(in_chat) {
@@ -366,7 +365,6 @@ void wml_event_pump::set_action_canceled()
 	impl_->contexts_.top().action_canceled = true;
 }
 
-
 bool wml_event_pump::context_skip_messages()
 {
 	assert(impl_->contexts_.size() > 0);
@@ -397,27 +395,27 @@ void wml_event_pump::put_wml_message(const std::string& logger, const std::strin
 }
 
 pump_result_t wml_event_pump::fire(
-		const std::string& event, const entity_location& loc1, const entity_location& loc2, const config& data)
+	const std::string& event, const entity_location& loc1, const entity_location& loc2, const config& data)
 {
 	raise(event, loc1, loc2, data);
 	return (*this)();
 }
 
 pump_result_t wml_event_pump::fire(const std::string& event,
-		const std::string& id,
-		const entity_location& loc1,
-		const entity_location& loc2,
-		const config& data)
+	const std::string& id,
+	const entity_location& loc1,
+	const entity_location& loc2,
+	const config& data)
 {
 	raise(event, id, loc1, loc2, data);
 	return (*this)();
 }
 
 void wml_event_pump::raise(const std::string& event,
-		const std::string& id,
-		const entity_location& loc1,
-		const entity_location& loc2,
-		const config& data)
+	const std::string& id,
+	const entity_location& loc1,
+	const entity_location& loc2,
+	const config& data)
 {
 	if(game_display::get_singleton() == nullptr)
 		return;
@@ -442,8 +440,7 @@ pump_result_t wml_event_pump::operator()()
 
 	if(impl_->instance_count >= game_config::max_loop) {
 		ERR_NG << "game_events pump waiting to process new events because "
-			   << "recursion level would exceed maximum: "
-			   << game_config::max_loop;
+			   << "recursion level would exceed maximum: " << game_config::max_loop;
 		return pump_result_t();
 	}
 

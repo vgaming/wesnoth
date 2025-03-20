@@ -190,9 +190,8 @@ void campaign_selection::sort_campaigns(campaign_selection::CAMPAIGN_ORDER order
 				return false;
 			}
 
-			return ascending
-				? cpn_a->dates().first < cpn_b->dates().first
-				: cpn_a->dates().first > cpn_b->dates().first;
+			return ascending ? cpn_a->dates().first < cpn_b->dates().first
+							 : cpn_a->dates().first > cpn_b->dates().first;
 		});
 
 		break;
@@ -222,12 +221,12 @@ void campaign_selection::sort_campaigns(campaign_selection::CAMPAIGN_ORDER order
 		for(unsigned i = 0; i < levels.size(); ++i) {
 			bool found = false;
 			for(const auto& word : last_search_words_) {
-				found = translation::ci_search(levels[i]->name(), word) ||
-						translation::ci_search(levels[i]->data()["name"].t_str().base_str(), word) ||
-						translation::ci_search(levels[i]->description(), word) ||
-						translation::ci_search(levels[i]->data()["description"].t_str().base_str(), word) ||
-						translation::ci_search(levels[i]->data()["abbrev"], word) ||
-						translation::ci_search(levels[i]->data()["abbrev"].t_str().base_str(), word);
+				found = translation::ci_search(levels[i]->name(), word)
+					|| translation::ci_search(levels[i]->data()["name"].t_str().base_str(), word)
+					|| translation::ci_search(levels[i]->description(), word)
+					|| translation::ci_search(levels[i]->data()["description"].t_str().base_str(), word)
+					|| translation::ci_search(levels[i]->data()["abbrev"], word)
+					|| translation::ci_search(levels[i]->data()["abbrev"].t_str().base_str(), word);
 
 				if(!found) {
 					break;
@@ -239,7 +238,8 @@ void campaign_selection::sort_campaigns(campaign_selection::CAMPAIGN_ORDER order
 	}
 
 	// List of which options has been selected in the completion filter multimenu_button
-	boost::dynamic_bitset<> filter_comp_options = find_widget<multimenu_button>("filter_completion").get_toggle_states();
+	boost::dynamic_bitset<> filter_comp_options
+		= find_widget<multimenu_button>("filter_completion").get_toggle_states();
 
 	bool exists_in_filtered_result = false;
 	for(unsigned i = 0; i < levels.size(); ++i) {
@@ -248,21 +248,21 @@ void campaign_selection::sort_campaigns(campaign_selection::CAMPAIGN_ORDER order
 		auto did_complete_at = [](const config& c) { return c["completed_at"].to_bool(); };
 
 		// Check for non-completion on every difficulty save the first.
-		const bool only_first_completed = difficulties.size() > 1 &&
-			std::none_of(difficulties.begin() + 1, difficulties.end(), did_complete_at);
+		const bool only_first_completed
+			= difficulties.size() > 1 && std::none_of(difficulties.begin() + 1, difficulties.end(), did_complete_at);
 		const bool completed_easy = only_first_completed && did_complete_at(difficulties.front());
 		const bool completed_hardest = !difficulties.empty() && did_complete_at(difficulties.back());
 		const bool completed_mid = completed && !completed_hardest && !completed_easy;
 
-		if( show_items[i] && (
-					( (!completed) && filter_comp_options[0] )       // Selects all campaigns not finished by player
-				 || ( completed && filter_comp_options[4] )          // Selects all campaigns finished by player
-				 || ( completed_hardest && filter_comp_options[3] )  // Selects campaigns completed in hardest difficulty
-				 || ( completed_easy && filter_comp_options[1] )     // Selects campaigns completed in easiest difficulty
-				 || ( completed_mid && filter_comp_options[2])       // Selects campaigns completed in any other difficulty
-				 )) {
+		if(show_items[i]
+			&& (((!completed) && filter_comp_options[0])         // Selects all campaigns not finished by player
+				|| (completed && filter_comp_options[4])         // Selects all campaigns finished by player
+				|| (completed_hardest && filter_comp_options[3]) // Selects campaigns completed in hardest difficulty
+				|| (completed_easy && filter_comp_options[1])    // Selects campaigns completed in easiest difficulty
+				|| (completed_mid && filter_comp_options[2])     // Selects campaigns completed in any other difficulty
+				)) {
 			add_campaign_to_tree(levels[i]->data());
-			if (!exists_in_filtered_result) {
+			if(!exists_in_filtered_result) {
 				exists_in_filtered_result = levels[i]->id() == was_selected;
 			}
 		}
@@ -330,20 +330,16 @@ void campaign_selection::pre_show()
 	/***** Setup campaign tree. *****/
 	tree_view& tree = find_widget<tree_view>("campaign_tree");
 
-	connect_signal_notify_modified(tree,
-		std::bind(&campaign_selection::campaign_selected, this));
+	connect_signal_notify_modified(tree, std::bind(&campaign_selection::campaign_selected, this));
 
 	toggle_button& sort_name = find_widget<toggle_button>("sort_name");
 	toggle_button& sort_time = find_widget<toggle_button>("sort_time");
 
-	connect_signal_notify_modified(sort_name,
-		std::bind(&campaign_selection::toggle_sorting_selection, this, NAME));
+	connect_signal_notify_modified(sort_name, std::bind(&campaign_selection::toggle_sorting_selection, this, NAME));
 
-	connect_signal_notify_modified(sort_time,
-		std::bind(&campaign_selection::toggle_sorting_selection, this, DATE));
+	connect_signal_notify_modified(sort_time, std::bind(&campaign_selection::toggle_sorting_selection, this, DATE));
 
-	connect_signal_mouse_left_click(find_widget<button>("proceed"),
-		std::bind(&campaign_selection::proceed, this));
+	connect_signal_mouse_left_click(find_widget<button>("proceed"), std::bind(&campaign_selection::proceed, this));
 
 	keyboard_capture(filter);
 	add_to_keyboard_chain(&tree);
@@ -353,9 +349,8 @@ void campaign_selection::pre_show()
 
 	// Setup completion filter
 	multimenu_button& filter_comp = find_widget<multimenu_button>("filter_completion");
-	connect_signal_notify_modified(filter_comp,
-		std::bind(&campaign_selection::sort_campaigns, this, RANK, 1));
-	for (unsigned j = 0; j < filter_comp.num_options(); j++) {
+	connect_signal_notify_modified(filter_comp, std::bind(&campaign_selection::sort_campaigns, this, RANK, 1));
+	for(unsigned j = 0; j < filter_comp.num_options(); j++) {
 		filter_comp.select_option(j);
 	}
 
@@ -400,7 +395,10 @@ void campaign_selection::pre_show()
 	widget_data data;
 	widget_item item;
 
-	item["label"] = _("In addition to the mainline campaigns, Wesnoth also has an ever-growing list of add-on content created by other players available via the Add-ons server, included but not limited to more single and multiplayer campaigns, multiplayer maps, additional media and various other content! Be sure to give it a try!");
+	item["label"]
+		= _("In addition to the mainline campaigns, Wesnoth also has an ever-growing list of add-on content created by "
+			"other players available via the Add-ons server, included but not limited to more single and multiplayer "
+			"campaigns, multiplayer maps, additional media and various other content! Be sure to give it a try!");
 	data.emplace("description", item);
 	pages.add_page(data);
 	page_ids_.push_back(addons_);
@@ -419,9 +417,12 @@ void campaign_selection::pre_show()
 		widget_data data;
 		widget_item item;
 
-		// TRANSLATORS: "more than 15" gives a little leeway to add or remove one without changing the translatable text.
-		// It's already ambiguous, 1.18 has 19 campaigns, if you include the tutorial and multiplayer-only World Conquest.
-		item["label"] = _("Wesnoth normally includes more than 15 mainline campaigns, even before installing any from the add-ons server. If you’ve installed the game via a package manager, there’s probably a separate package to install the complete game data.");
+		// TRANSLATORS: "more than 15" gives a little leeway to add or remove one without changing the translatable
+		// text. It's already ambiguous, 1.18 has 19 campaigns, if you include the tutorial and multiplayer-only World
+		// Conquest.
+		item["label"] = _("Wesnoth normally includes more than 15 mainline campaigns, even before installing any from "
+						  "the add-ons server. If you’ve installed the game via a package manager, there’s probably a "
+						  "separate package to install the complete game data.");
 		data.emplace("description", item);
 
 		pages.add_page(data);
@@ -472,20 +473,24 @@ void campaign_selection::pre_show()
 	plugins_context_->set_accessor("find_level", [this](const config& cfg) {
 		const std::string id = cfg["id"].str();
 		auto result = engine_.find_level_by_id(id);
-		return config {
-			"index", result.second,
-			"type", level_type::get_string(result.first),
+		return config{
+			"index",
+			result.second,
+			"type",
+			level_type::get_string(result.first),
 		};
 	});
 
-	plugins_context_->set_accessor_int("find_mod", [this](const config& cfg) {
-		return engine_.find_extra_by_id(ng::create_engine::MOD, cfg["id"]);
-	});
+	plugins_context_->set_accessor_int(
+		"find_mod", [this](const config& cfg) { return engine_.find_extra_by_id(ng::create_engine::MOD, cfg["id"]); });
 
-	plugins_context_->set_callback("select_level", [this](const config& cfg) {
-		choice_ = cfg["index"].to_int();
-		engine_.set_current_level(choice_);
-	}, true);
+	plugins_context_->set_callback(
+		"select_level",
+		[this](const config& cfg) {
+			choice_ = cfg["index"].to_int();
+			engine_.set_current_level(choice_);
+		},
+		true);
 }
 
 void campaign_selection::add_campaign_to_tree(const config& campaign)
@@ -507,8 +512,8 @@ void campaign_selection::add_campaign_to_tree(const config& campaign)
 		auto did_complete_at = [](const config& c) { return c["completed_at"].to_bool(); };
 
 		// Check for non-completion on every difficulty save the first.
-		const bool only_first_completed = difficulties.size() > 1 &&
-			std::none_of(difficulties.begin() + 1, difficulties.end(), did_complete_at);
+		const bool only_first_completed
+			= difficulties.size() > 1 && std::none_of(difficulties.begin() + 1, difficulties.end(), did_complete_at);
 
 		/*
 		 * Criteria:
@@ -535,9 +540,7 @@ void campaign_selection::add_campaign_to_tree(const config& campaign)
 	auto& node = tree.add_node("campaign", data);
 	node.set_id(campaign["id"]);
 	connect_signal_mouse_left_double_click(
-		node.find_widget<toggle_panel>("tree_view_node_label"),
-		std::bind(&campaign_selection::proceed, this)
-	);
+		node.find_widget<toggle_panel>("tree_view_node_label"), std::bind(&campaign_selection::proceed, this));
 }
 
 void campaign_selection::proceed()
@@ -551,7 +554,7 @@ void campaign_selection::proceed()
 	assert(tree.selected_item());
 	const std::string& campaign_id = tree.selected_item()->id();
 	if(!campaign_id.empty()) {
-		if (campaign_id == addons_) {
+		if(campaign_id == addons_) {
 			set_retval(OPEN_ADDON_MANAGER);
 		} else {
 			auto iter = std::find(page_ids_.begin(), page_ids_.end(), campaign_id);
@@ -562,16 +565,15 @@ void campaign_selection::proceed()
 		}
 	}
 
-
-	rng_mode_ = RNG_MODE(std::clamp<unsigned>(find_widget<menu_button>("rng_menu").get_value(), RNG_DEFAULT, RNG_BIASED));
+	rng_mode_
+		= RNG_MODE(std::clamp<unsigned>(find_widget<menu_button>("rng_menu").get_value(), RNG_DEFAULT, RNG_BIASED));
 
 	prefs::get().set_modifications(engine_.active_mods(), false);
 }
 
 void campaign_selection::mod_toggled()
 {
-	boost::dynamic_bitset<> new_mod_states =
-		find_widget<multimenu_button>("mods_menu").get_toggle_states();
+	boost::dynamic_bitset<> new_mod_states = find_widget<multimenu_button>("mods_menu").get_toggle_states();
 
 	// Get a mask of any mods that were toggled, regardless of new state
 	mod_states_ = mod_states_ ^ new_mod_states;
@@ -586,4 +588,4 @@ void campaign_selection::mod_toggled()
 	mod_states_ = new_mod_states;
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

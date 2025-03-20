@@ -21,7 +21,6 @@
 #include "gui/core/register_widget.hpp"
 #include "wml_exception.hpp"
 
-
 #define LOG_SCOPE_HEADER get_control_type() + " [" + id() + "] " + __func__
 #define LOG_HEADER LOG_SCOPE_HEADER + ':'
 
@@ -62,8 +61,7 @@ void progress_bar::set_percentage(unsigned percentage)
 	if(percentage_ != percentage) {
 		percentage_ = percentage;
 
-		for(auto & c : get_canvases())
-		{
+		for(auto& c : get_canvases()) {
 			c.set_variable("percentage", wfl::variant(percentage));
 		}
 
@@ -90,7 +88,8 @@ progress_bar_definition::resolution::resolution(const config& cfg)
 	: resolution_definition(cfg)
 {
 	// Note the order should be the same as the enum state_t in progress_bar.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("progress_bar_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("progress_bar_definition][resolution", "state_enabled")));
 }
 
 // }---------- BUILDER -----------{
@@ -107,8 +106,7 @@ std::unique_ptr<widget> builder_progress_bar::build() const
 {
 	auto widget = std::make_unique<progress_bar>(*this);
 
-	DBG_GUI_G << "Window builder: placed progress bar '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed progress bar '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

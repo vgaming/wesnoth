@@ -15,16 +15,14 @@
 
 #include "gui/dialogs/surrender_quit.hpp"
 
-
 namespace gui2::dialogs
 {
 
 REGISTER_DIALOG(surrender_quit)
-
 
 surrender_quit::surrender_quit()
 	: modal_dialog(window_id())
 {
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

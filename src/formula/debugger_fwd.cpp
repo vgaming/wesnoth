@@ -18,38 +18,35 @@
  * Formula debugger - forward declaration and add_debug_info static function
  * */
 
-
 #include "formula/debugger_fwd.hpp"
 #include "formula/debugger.hpp"
 
-namespace wfl {
-
-formula_debugger* add_debug_info(formula_debugger *fdb, int arg_number, const std::string& f_name)
+namespace wfl
 {
-	if (fdb==nullptr) {
+
+formula_debugger* add_debug_info(formula_debugger* fdb, int arg_number, const std::string& f_name)
+{
+	if(fdb == nullptr) {
 		return nullptr;
 	}
-	fdb->add_debug_info(arg_number,f_name);
+	fdb->add_debug_info(arg_number, f_name);
 	return fdb;
 }
 
-
-variant evaluate_arg_callback(formula_debugger &fdb, const formula_expression &expression, const formula_callable &variables)
+variant evaluate_arg_callback(
+	formula_debugger& fdb, const formula_expression& expression, const formula_callable& variables)
 {
-	return fdb.evaluate_arg_callback(expression,variables);
+	return fdb.evaluate_arg_callback(expression, variables);
 }
 
-
-variant evaluate_formula_callback(formula_debugger &fdb, const formula &f, const formula_callable &variables)
+variant evaluate_formula_callback(formula_debugger& fdb, const formula& f, const formula_callable& variables)
 {
-	return fdb.evaluate_formula_callback(f,variables);
+	return fdb.evaluate_formula_callback(f, variables);
 }
 
-
-variant evaluate_formula_callback(formula_debugger &fdb, const formula &f)
+variant evaluate_formula_callback(formula_debugger& fdb, const formula& f)
 {
 	return fdb.evaluate_formula_callback(f);
 }
-
 
 } // end of namespace wfl

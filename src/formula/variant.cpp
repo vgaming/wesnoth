@@ -29,7 +29,6 @@ static lg::log_domain log_scripting_formula("scripting/formula");
 #define WRN_SF LOG_STREAM(warn, log_scripting_formula)
 #define ERR_SF LOG_STREAM(err, log_scripting_formula)
 
-
 namespace wfl
 {
 
@@ -46,13 +45,13 @@ static std::string was_expecting(const std::string& message, const variant& v)
 {
 	std::ostringstream ss;
 
-	ss << "TYPE ERROR: expected " << message << " but found "
-	   << v.type_string() << " (" << v.to_debug_string() << ")";
+	ss << "TYPE ERROR: expected " << message << " but found " << v.type_string() << " (" << v.to_debug_string() << ")";
 
 	return ss.str();
 }
 
-type_error::type_error(const std::string& str) : game::error(str)
+type_error::type_error(const std::string& str)
+	: game::error(str)
 {
 	PLAIN_LOG << "ERROR: " << message << "\n" << call_stack_manager::get();
 }
@@ -136,10 +135,10 @@ bool variant_iterator::operator!=(const variant_iterator& that) const
 	return !operator==(that);
 }
 
-
 variant::variant()
 	: value_(null_value)
-{}
+{
+}
 
 variant::variant(int n)
 	: value_(std::make_shared<variant_int>(n))
@@ -171,7 +170,7 @@ variant::variant(const std::string& str)
 	assert(value_.get());
 }
 
-variant::variant(const std::map<variant,variant>& map)
+variant::variant(const std::map<variant, variant>& map)
 	: value_((std::make_shared<variant_map>(map)))
 {
 	assert(value_.get());
@@ -290,8 +289,12 @@ variant variant::get_member(const std::string& name) const
 
 int variant::as_int() const
 {
-	if(is_null())    { return 0; }
-	if(is_decimal()) { return as_decimal() / 1000; }
+	if(is_null()) {
+		return 0;
+	}
+	if(is_decimal()) {
+		return as_decimal() / 1000;
+	}
 
 	must_be(formula_variant::type::integer);
 	return value_cast<variant_int>()->get_numeric_value();
@@ -364,7 +367,7 @@ variant variant::operator+(const variant& v) const
 	}
 
 	if(is_decimal() || v.is_decimal()) {
-		return variant(as_decimal() + v.as_decimal() , DECIMAL_VARIANT);
+		return variant(as_decimal() + v.as_decimal(), DECIMAL_VARIANT);
 	}
 
 	return variant(as_int() + v.as_int());
@@ -373,7 +376,7 @@ variant variant::operator+(const variant& v) const
 variant variant::operator-(const variant& v) const
 {
 	if(is_decimal() || v.is_decimal()) {
-		return variant(as_decimal() - v.as_decimal() , DECIMAL_VARIANT);
+		return variant(as_decimal() - v.as_decimal(), DECIMAL_VARIANT);
 	}
 
 	return variant(as_int() - v.as_int());
@@ -382,21 +385,20 @@ variant variant::operator-(const variant& v) const
 variant variant::operator*(const variant& v) const
 {
 	if(is_decimal() || v.is_decimal()) {
-
 		long long long_int = as_decimal();
 
 		long_int *= v.as_decimal();
 
 		long_int /= 100;
 
-		if(long_int%10 >= 5) {
+		if(long_int % 10 >= 5) {
 			long_int /= 10;
 			++long_int;
 		} else {
-			long_int/=10;
+			long_int /= 10;
 		}
 
-		return variant(static_cast<int>(long_int) , DECIMAL_VARIANT );
+		return variant(static_cast<int>(long_int), DECIMAL_VARIANT);
 	}
 
 	return variant(as_int() * v.as_int());
@@ -417,11 +419,11 @@ variant variant::operator/(const variant& v) const
 
 		long_int /= denominator;
 
-		if(long_int%10 >= 5) {
+		if(long_int % 10 >= 5) {
 			long_int /= 10;
 			++long_int;
 		} else {
-			long_int/=10;
+			long_int /= 10;
 		}
 
 		return variant(static_cast<int>(long_int), DECIMAL_VARIANT);
@@ -461,8 +463,7 @@ variant variant::operator%(const variant& v) const
 variant variant::operator^(const variant& v) const
 {
 	if(is_decimal() || v.is_decimal()) {
-
-		double res = std::pow(as_decimal() / 1000.0 , v.as_decimal() / 1000.0);
+		double res = std::pow(as_decimal() / 1000.0, v.as_decimal() / 1000.0);
 
 		if(std::isnan(res)) {
 			return variant();
@@ -613,10 +614,9 @@ void variant::must_be(formula_variant::type t) const
 void variant::must_both_be(formula_variant::type t, const variant& second) const
 {
 	if(type() != t || second.type() != t) {
-		throw type_error(formatter() << "TYPE ERROR: expected two "
-			<< variant_type_to_string(t) << " but found "
-			<<        type_string() << " (" <<        to_debug_string() << ")" << " and "
-			<< second.type_string() << " (" << second.to_debug_string() << ")");
+		throw type_error(formatter() << "TYPE ERROR: expected two " << variant_type_to_string(t) << " but found "
+									 << type_string() << " (" << to_debug_string() << ")" << " and "
+									 << second.type_string() << " (" << second.to_debug_string() << ")");
 	}
 }
 
@@ -664,7 +664,6 @@ variant variant::execute_variant(const variant& var)
 	std::vector<variant> made_moves;
 
 	while(!vars.empty()) {
-
 		if(vars.top().is_null()) {
 			vars.pop();
 			continue;
@@ -676,19 +675,19 @@ variant variant::execute_variant(const variant& var)
 				made_moves.push_back(vars.top());
 			}
 		} else if(vars.top().is_string() && vars.top().as_string() == "continue") {
-//			if(infinite_loop_guardian_.continue_check()) {
-				made_moves.push_back(vars.top());
-//			} else {
-				//too many calls in a row - possible infinite loop
-//				ERR_SF << "ERROR #5001 while executing 'continue' formula keyword";
+			//			if(infinite_loop_guardian_.continue_check()) {
+			made_moves.push_back(vars.top());
+			//			} else {
+			// too many calls in a row - possible infinite loop
+			//				ERR_SF << "ERROR #5001 while executing 'continue' formula keyword";
 
-//				if(safe_call)
-//					error = variant(new game_logic::safe_call_result(nullptr, 5001));
-//			}
+			//				if(safe_call)
+			//					error = variant(new game_logic::safe_call_result(nullptr, 5001));
+			//			}
 		} else if(vars.top().is_string() && (vars.top().as_string() == "end_turn" || vars.top().as_string() == "end")) {
 			break;
 		} else {
-			//this information is unneeded when evaluating formulas from commandline
+			// this information is unneeded when evaluating formulas from commandline
 			ERR_SF << "UNRECOGNIZED MOVE: " << vars.top().to_debug_string();
 		}
 
@@ -698,4 +697,4 @@ variant variant::execute_variant(const variant& var)
 	return variant(made_moves);
 }
 
-}
+} // namespace wfl

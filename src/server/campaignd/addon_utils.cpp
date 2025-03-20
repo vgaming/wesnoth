@@ -16,18 +16,19 @@
 
 #include "server/campaignd/addon_utils.hpp"
 
+#include "addon/validation.hpp"
 #include "config.hpp"
 #include "filesystem.hpp"
 #include "log.hpp"
 #include "serialization/string_utils.hpp"
-#include "addon/validation.hpp"
 
 #include <boost/algorithm/string.hpp>
 
 static lg::log_domain log_network("network");
 #define LOG_CS LOG_STREAM_NAMELESS(err, log_network)
 
-namespace {
+namespace
+{
 
 typedef std::map<std::string, std::string> plain_string_map;
 
@@ -40,7 +41,7 @@ typedef std::map<std::string, std::string> plain_string_map;
  * @param str     The format string.
  * @param symbols The symbols table.
  */
-std::string fast_interpolate_variables_into_string(const std::string &str, const plain_string_map * const symbols)
+std::string fast_interpolate_variables_into_string(const std::string& str, const plain_string_map* const symbols)
 {
 	std::string res = str;
 
@@ -55,7 +56,8 @@ std::string fast_interpolate_variables_into_string(const std::string &str, const
 
 } // end anonymous namespace
 
-namespace campaignd {
+namespace campaignd
+{
 
 // Markup characters recognized by GUI1 code. These must be
 // the same as the constants defined in marked-up_text.cpp.
@@ -76,8 +78,7 @@ std::string format_addon_feedback_url(const std::string& format, const config& p
 		// FIXME: We cannot use utils::interpolate_variables_into_string
 		//        because it is implemented using a lot of formula AI junk
 		//        that really doesn't belong in campaignd.
-		const std::string& res =
-			fast_interpolate_variables_into_string(format, &escaped);
+		const std::string& res = fast_interpolate_variables_into_string(format, &escaped);
 
 		if(res != format) {
 			return res;
@@ -110,8 +111,7 @@ void find_translations(const config& base_dir, config& addon)
 		}
 	}
 
-	for(const config &dir : base_dir.child_range("dir"))
-	{
+	for(const config& dir : base_dir.child_range("dir")) {
 		if(dir["name"] == "LC_MESSAGES") {
 			support_translation(addon, base_dir["name"]);
 		} else {
@@ -131,18 +131,15 @@ void add_license(config& cfg)
 	}
 
 	// Don't add if it already exists.
-	if(dir->find_child("file", "name", "COPYING.txt")
-	   || dir->find_child("file", "name", "COPYING")
-	   || dir->find_child("file", "name", "copying.txt")
-	   || dir->find_child("file", "name", "Copying.txt")
-	   || dir->find_child("file", "name", "COPYING.TXT"))
-	{
+	if(dir->find_child("file", "name", "COPYING.txt") || dir->find_child("file", "name", "COPYING")
+		|| dir->find_child("file", "name", "copying.txt") || dir->find_child("file", "name", "Copying.txt")
+		|| dir->find_child("file", "name", "COPYING.TXT")) {
 		return;
 	}
 
 	// Copy over COPYING.txt
 	const std::string& contents = filesystem::read_file("COPYING.txt");
-	if (contents.empty()) {
+	if(contents.empty()) {
 		LOG_CS << "Could not find COPYING.txt, path is \"" << game_config::path << "\"";
 		return;
 	}

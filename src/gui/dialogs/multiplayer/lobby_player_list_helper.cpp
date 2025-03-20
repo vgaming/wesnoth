@@ -15,13 +15,13 @@
 
 #include "gui/dialogs/multiplayer/lobby_player_list_helper.hpp"
 
-#include "serialization/markup.hpp"
 #include "game_initialization/lobby_data.hpp"
 #include "gettext.hpp"
 #include "gui/widgets/label.hpp"
 #include "gui/widgets/toggle_panel.hpp"
 #include "gui/widgets/tree_view.hpp"
 #include "gui/widgets/window.hpp"
+#include "serialization/markup.hpp"
 
 static lg::log_domain log_lobby("lobby");
 #define ERR_LB LOG_STREAM(err, log_lobby)
@@ -149,9 +149,7 @@ void lobby_player_list_helper::update(const std::vector<mp::user_info>& user_inf
 			info_map.try_emplace(node, info);
 
 			connect_signal_mouse_left_double_click(
-				node->find_widget<toggle_panel>("tree_view_node_label"),
-				std::bind(user_callback, info)
-			);
+				node->find_widget<toggle_panel>("tree_view_node_label"), std::bind(user_callback, info));
 		}
 
 		player_lists[i].update_player_count_label();
@@ -167,11 +165,8 @@ void lobby_player_list_helper::init(window& w)
 {
 	tree = w.find_widget<tree_view>("player_tree", false, true);
 
-	player_lists = {
-		sub_list{tree, _("Selected Game"), true},
-		sub_list{tree, _("Lobby"), true},
-		sub_list{tree, _("Other Games"), false}
-	};
+	player_lists = {sub_list{tree, _("Selected Game"), true}, sub_list{tree, _("Lobby"), true},
+		sub_list{tree, _("Other Games"), false}};
 }
 
 const mp::user_info* lobby_player_list_helper::get_selected_info() const

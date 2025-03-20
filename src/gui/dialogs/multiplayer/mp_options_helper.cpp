@@ -16,17 +16,16 @@
 
 #include "gui/dialogs/multiplayer/mp_options_helper.hpp"
 
-#include "preferences/preferences.hpp"
 #include "gui/widgets/button.hpp"
 #include "gui/widgets/menu_button.hpp"
 #include "gui/widgets/slider.hpp"
-#include "gui/widgets/toggle_button.hpp"
 #include "gui/widgets/text_box.hpp"
+#include "gui/widgets/toggle_button.hpp"
 #include "gui/widgets/tree_view.hpp"
 #include "gui/widgets/tree_view_node.hpp"
 #include "gui/widgets/window.hpp"
+#include "preferences/preferences.hpp"
 #include "wml_exception.hpp"
-
 
 namespace gui2::dialogs
 {
@@ -71,7 +70,7 @@ void mp_options_helper::update_game_options()
 
 	// For game options, we check for both types and remove them. This is to prevent options from a game
 	// of one type remaining visible when selecting a game of another type.
-	          remove_nodes_for_type("campaign");
+	remove_nodes_for_type("campaign");
 	int pos = remove_nodes_for_type("multiplayer");
 
 	display_custom_options(type, pos, create_engine_.current_level().data());
@@ -106,9 +105,7 @@ void mp_options_helper::update_mod_options()
 int mp_options_helper::remove_nodes_for_type(const std::string& type)
 {
 	// Remove all visible options of the specified source type
-	utils::erase_if(visible_options_, [&type](const option_source& source) {
-		return source.level_type == type;
-	});
+	utils::erase_if(visible_options_, [&type](const option_source& source) { return source.level_type == type; });
 
 	// Get the node data for this specific source type
 	type_node_data* data;
@@ -152,7 +149,8 @@ void mp_options_helper::update_options_data_map(toggle_button* widget, const opt
 	options_data_[source.id][widget->id()] = widget->get_value_bool();
 }
 
-void mp_options_helper::update_options_data_map_menu_button(menu_button* widget, const option_source& source, const config& cfg)
+void mp_options_helper::update_options_data_map_menu_button(
+	menu_button* widget, const option_source& source, const config& cfg)
 {
 	options_data_[source.id][widget->id()] = cfg.child_range("item")[widget->get_value()]["value"].str();
 }
@@ -175,7 +173,7 @@ void mp_options_helper::reset_options_data(const option_source& source, bool& ha
 
 template<typename T>
 std::pair<T*, config::attribute_value> mp_options_helper::add_node_and_get_widget(
-		tree_view_node& option_node, const std::string& id, data_map& data, const config& cfg)
+	tree_view_node& option_node, const std::string& id, data_map& data, const config& cfg)
 {
 	tree_view_node& node = option_node.add_child(id + "_node", data);
 
@@ -233,12 +231,14 @@ void mp_options_helper::display_custom_options(const std::string& type, int node
 				data.emplace("option_checkbox", item);
 
 				toggle_button* checkbox;
-				std::tie(checkbox, val) = add_node_and_get_widget<toggle_button>(option_node, "option_checkbox", data, option_cfg);
+				std::tie(checkbox, val)
+					= add_node_and_get_widget<toggle_button>(option_node, "option_checkbox", data, option_cfg);
 
 				checkbox->set_value(val.to_bool());
 
 				connect_signal_notify_modified(*checkbox,
-					std::bind(&mp_options_helper::update_options_data_map<toggle_button>, this, checkbox, visible_options_.back()));
+					std::bind(&mp_options_helper::update_options_data_map<toggle_button>, this, checkbox,
+						visible_options_.back()));
 
 			} else if(option_key == "spacer") {
 				option_node.add_child("options_spacer_node", empty_map);
@@ -263,7 +263,8 @@ void mp_options_helper::display_custom_options(const std::string& type, int node
 				}
 
 				menu_button* menu;
-				std::tie(menu, val) = add_node_and_get_widget<menu_button>(option_node, "option_menu_button", data, option_cfg);
+				std::tie(menu, val)
+					= add_node_and_get_widget<menu_button>(option_node, "option_menu_button", data, option_cfg);
 
 				// Needs to be called before set_selected
 				menu->set_values(combo_items);
@@ -275,7 +276,8 @@ void mp_options_helper::display_custom_options(const std::string& type, int node
 				}
 
 				connect_signal_notify_modified(*menu,
-					std::bind(&mp_options_helper::update_options_data_map_menu_button, this, menu, visible_options_.back(), option_cfg));
+					std::bind(&mp_options_helper::update_options_data_map_menu_button, this, menu,
+						visible_options_.back(), option_cfg));
 
 			} else if(option_key == "slider") {
 				item["label"] = option_cfg["name"];
@@ -289,17 +291,20 @@ void mp_options_helper::display_custom_options(const std::string& type, int node
 				slide->set_value(val.to_int());
 
 				connect_signal_notify_modified(*slide,
-					std::bind(&mp_options_helper::update_options_data_map<slider>, this, slide, visible_options_.back()));
+					std::bind(
+						&mp_options_helper::update_options_data_map<slider>, this, slide, visible_options_.back()));
 
 			} else if(option_key == "entry") {
 				item["label"] = option_cfg["name"];
 				data.emplace("text_entry_label", item);
 
 				text_box* textbox;
-				std::tie(textbox, val) = add_node_and_get_widget<text_box>(option_node, "option_text_entry", data, option_cfg);
+				std::tie(textbox, val)
+					= add_node_and_get_widget<text_box>(option_node, "option_text_entry", data, option_cfg);
 
 				textbox->set_value(val.str());
-				textbox->on_modified([this](const auto& box) { update_options_data_map(&box, visible_options_.back()); });
+				textbox->on_modified(
+					[this](const auto& box) { update_options_data_map(&box, visible_options_.back()); });
 			}
 		}
 
@@ -307,8 +312,8 @@ void mp_options_helper::display_custom_options(const std::string& type, int node
 		tree_view_node& node = option_node.add_child("options_default_button", empty_map);
 
 		connect_signal_mouse_left_click(node.find_widget<button>("reset_option_values"),
-			std::bind(&mp_options_helper::reset_options_data, this, visible_options_.back(),
-				std::placeholders::_3, std::placeholders::_4));
+			std::bind(&mp_options_helper::reset_options_data, this, visible_options_.back(), std::placeholders::_3,
+				std::placeholders::_4));
 	}
 }
 
@@ -323,7 +328,7 @@ config mp_options_helper::get_options_config()
 		mod.add_child("options", options_data_[source.id]);
 #else
 		for(const auto& [key, value] : options_data_[source.id].attribute_range()) {
-			mod.add_child("option", config {"id", key, "value", value});
+			mod.add_child("option", config{"id", key, "value", value});
 		}
 #endif
 	}
@@ -331,4 +336,4 @@ config mp_options_helper::get_options_config()
 	return options;
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

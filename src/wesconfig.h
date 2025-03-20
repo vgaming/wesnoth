@@ -12,11 +12,11 @@
 #ifndef RC_INVOKED
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 #ifndef LOCALEDIR
-#  define LOCALEDIR "translations"
+#define LOCALEDIR "translations"
 #endif
 
 #ifndef PACKAGE
@@ -34,17 +34,17 @@
 
 #endif /* !RC_INVOKED */
 
-//always use the version string in here, otherwise autotools can override in
-//a bad way...
+// always use the version string in here, otherwise autotools can override in
+// a bad way...
 #ifdef VERSION
-  #undef VERSION
+#undef VERSION
 #endif
 
 #define VERSION "1.19.10+dev"
 
 // Used for the Windows executables' version info resource.
-#define RC_VERSION_MAJOR        1
-#define RC_VERSION_MINOR        19
-#define RC_VERSION_REVISION     11
+#define RC_VERSION_MAJOR 1
+#define RC_VERSION_MINOR 19
+#define RC_VERSION_REVISION 11
 
 #endif

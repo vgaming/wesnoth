@@ -14,14 +14,15 @@
 	See the COPYING file for more details.
 */
 
-#include "config.hpp"
 #include "game_end_exceptions.hpp"
+#include "config.hpp"
 
 transient_end_level::transient_end_level()
 	: carryover_report(true)
 	, linger_mode(true)
 	, reveal_map(true)
-{}
+{
+}
 
 end_level_data::end_level_data()
 	: prescenario_save(true)

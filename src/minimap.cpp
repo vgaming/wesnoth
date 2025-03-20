@@ -22,9 +22,9 @@
 #include "draw.hpp"
 #include "game_board.hpp"
 #include "gettext.hpp"
-#include "picture.hpp"
 #include "log.hpp"
 #include "map/map.hpp"
+#include "picture.hpp"
 #include "preferences/preferences.hpp"
 #include "resources.hpp"
 #include "team.hpp"
@@ -35,27 +35,27 @@ static lg::log_domain log_display("display");
 #define DBG_DP LOG_STREAM(debug, log_display)
 #define WRN_DP LOG_STREAM(warn, log_display)
 
-namespace image {
+namespace image
+{
 
-std::function<rect(rect)> prep_minimap_for_rendering(
-		const gamemap& map,
-		const team* vw,
-		const unit_map* units,
-		const std::map<map_location, unsigned int>* reach_map,
-		bool ignore_terrain_disabled)
+std::function<rect(rect)> prep_minimap_for_rendering(const gamemap& map,
+	const team* vw,
+	const unit_map* units,
+	const std::map<map_location, unsigned int>* reach_map,
+	bool ignore_terrain_disabled)
 {
 	// Drawing mode flags.
-	const bool preferences_minimap_draw_terrain   = prefs::get().minimap_draw_terrain() || ignore_terrain_disabled;
+	const bool preferences_minimap_draw_terrain = prefs::get().minimap_draw_terrain() || ignore_terrain_disabled;
 	const bool preferences_minimap_terrain_coding = prefs::get().minimap_terrain_coding();
-	const bool preferences_minimap_draw_villages  = prefs::get().minimap_draw_villages();
-	const bool preferences_minimap_draw_units     = prefs::get().minimap_draw_units();
-	const bool preferences_minimap_unit_coding    = prefs::get().minimap_movement_coding();
+	const bool preferences_minimap_draw_villages = prefs::get().minimap_draw_villages();
+	const bool preferences_minimap_draw_units = prefs::get().minimap_draw_units();
+	const bool preferences_minimap_unit_coding = prefs::get().minimap_movement_coding();
 
 	const int scale = (preferences_minimap_draw_terrain && preferences_minimap_terrain_coding) ? 24 : 4;
 
 	DBG_DP << "Creating minimap: " << static_cast<int>(map.w() * scale * 0.75) << ", " << map.h() * scale;
 
-	const std::size_t map_width  = static_cast<size_t>(std::max(0, map.w())) * scale * 3 / 4;
+	const std::size_t map_width = static_cast<size_t>(std::max(0, map.w())) * scale * 3 / 4;
 	const std::size_t map_height = static_cast<size_t>(std::max(0, map.h())) * scale;
 
 	// No map!
@@ -71,9 +71,7 @@ std::function<rect(rect)> prep_minimap_for_rendering(
 	const display* disp = display::get_singleton();
 	const bool is_blindfolded = disp && disp->is_blindfolded();
 
-	const auto shrouded = [&](const map_location& loc) {
-		return is_blindfolded || (vw && vw->shrouded(loc));
-	};
+	const auto shrouded = [&](const map_location& loc) { return is_blindfolded || (vw && vw->shrouded(loc)); };
 
 	const auto fogged = [&](const map_location& loc) {
 		// Shrouded hex are not considered fogged (no need to fog a black image)
@@ -84,12 +82,8 @@ std::function<rect(rect)> prep_minimap_for_rendering(
 	// We need a balanced shift up and down of the hexes.
 	// If not, only the bottom half-hexes are clipped and it looks asymmetrical.
 	const auto get_dst_rect = [scale](const map_location& loc) {
-		return rect {
-			loc.x * scale             * 3 / 4                    - (scale / 4),
-			loc.y * scale + scale / 4 * (is_odd(loc.x) ? 1 : -1) - (scale / 4),
-			scale,
-			scale
-		};
+		return rect{loc.x * scale * 3 / 4 - (scale / 4),
+			loc.y * scale + scale / 4 * (is_odd(loc.x) ? 1 : -1) - (scale / 4), scale, scale};
 	};
 
 	// We want to draw the minimap with NN scaling.
@@ -134,8 +128,7 @@ std::function<rect(rect)> prep_minimap_for_rendering(
 
 						// NOTE: we skip the overlay when base is missing (to avoid hiding the error)
 						if(tile && map.tdata()->get_terrain_info(terrain).is_combined()
-							&& !terrain_info.minimap_image_overlay().empty())
-						{
+							&& !terrain_info.minimap_image_overlay().empty()) {
 							const std::string overlay_file = "terrain/" + terrain_info.minimap_image_overlay() + ".png";
 							const texture& overlay = image::get_texture(overlay_file); // image::HEXED
 
@@ -295,10 +288,7 @@ std::function<rect(rect)> prep_minimap_for_rendering(
 		const auto [raw_w, raw_h] = minimap.get_raw_size();
 
 		// Check which dimensions needs to be shrunk more
-		const double scale_ratio = std::min<double>(
-			dst.w * 1.0 / raw_w,
-			dst.h * 1.0 / raw_h
-		);
+		const double scale_ratio = std::min<double>(dst.w * 1.0 / raw_w, dst.h * 1.0 / raw_h);
 
 		// Preserve map aspect ratio within the requested area
 		const int scaled_w = static_cast<int>(raw_w * scale_ratio);
@@ -317,4 +307,4 @@ std::function<rect(rect)> prep_minimap_for_rendering(
 	};
 }
 
-}
+} // namespace image

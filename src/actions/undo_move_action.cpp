@@ -14,14 +14,14 @@
 
 #include "actions/undo_move_action.hpp"
 
-#include "resources.hpp"
-#include "units/map.hpp"
-#include "units/animation_component.hpp"
-#include "log.hpp"
+#include "game_board.hpp"
 #include "game_display.hpp"
+#include "log.hpp"
+#include "resources.hpp"
+#include "units/animation_component.hpp"
+#include "units/map.hpp"
 #include "units/udisplay.hpp"
 #include "units/unit.hpp"
-#include "game_board.hpp"
 
 static lg::log_domain log_engine("engine");
 #define ERR_NG LOG_STREAM(err, log_engine)
@@ -30,9 +30,10 @@ static lg::log_domain log_engine("engine");
 namespace actions::undo
 {
 move_action::move_action(const unit_const_ptr& moved,
-			const std::vector<map_location>::const_iterator & begin,
-			const std::vector<map_location>::const_iterator & end,
-			int sm, const map_location::direction dir)
+	const std::vector<map_location>::const_iterator& begin,
+	const std::vector<map_location>::const_iterator& end,
+	int sm,
+	const map_location::direction dir)
 	: undo_action()
 	, shroud_clearing_action(moved, begin, end)
 	, starting_moves(sm)
@@ -44,13 +45,13 @@ move_action::move_action(const unit_const_ptr& moved,
 /**
  * Writes this into the provided config.
  */
-void move_action::write(config & cfg) const
+void move_action::write(config& cfg) const
 {
 	undo_action::write(cfg);
 	shroud_clearing_action::write(cfg);
 	cfg["starting_direction"] = map_location::write_direction(starting_dir);
 	cfg["starting_moves"] = starting_moves;
-	config & child = cfg.mandatory_child("unit");
+	config& child = cfg.mandatory_child("unit");
 	child["goto_x"] = goto_hex.wml_x();
 	child["goto_y"] = goto_hex.wml_y();
 }
@@ -60,14 +61,14 @@ void move_action::write(config & cfg) const
  */
 static void reset_adjacent(bool& halo_adjacent, unit_map& units, const map_location& loc)
 {
-	if(halo_adjacent){
+	if(halo_adjacent) {
 		unit_map::iterator u = units.find(loc);
 		const auto adjacent = get_adjacent_tiles(loc);
 		for(unsigned i = 0; i < adjacent.size(); ++i) {
 			const unit_map::const_iterator it = units.find(adjacent[i]);
-			if (it == units.end() || it->incapacitated())
+			if(it == units.end() || it->incapacitated())
 				continue;
-			if ( &*it == &*u )
+			if(&*it == &*u)
 				continue;
 			it->anim_comp().set_standing();
 		}
@@ -80,8 +81,8 @@ static void reset_adjacent(bool& halo_adjacent, unit_map& units, const map_locat
  */
 bool move_action::undo(int)
 {
-	game_display & gui = *game_display::get_singleton();
-	unit_map &   units = resources::gameboard->units();
+	game_display& gui = *game_display::get_singleton();
+	unit_map& units = resources::gameboard->units();
 
 	// Copy some of our stored data.
 	const int saved_moves = starting_moves;
@@ -104,8 +105,8 @@ bool move_action::undo(int)
 	// Move the unit.
 	unit_display::move_unit(rev_route, u.get_shared_ptr(), true, starting_dir);
 	bool halo_adjacent = false;
-	for(const auto [_, cfg] : u->abilities().all_children_view()){
-		if(!cfg["halo_image"].empty() && cfg.has_child("affect_adjacent")){
+	for(const auto [_, cfg] : u->abilities().all_children_view()) {
+		if(!cfg["halo_image"].empty() && cfg.has_child("affect_adjacent")) {
 			halo_adjacent = true;
 			break;
 		}
@@ -126,4 +127,4 @@ bool move_action::undo(int)
 }
 static auto reg_undo_move = undo_action_container::subaction_factory<move_action>();
 
-}
+} // namespace actions::undo

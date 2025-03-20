@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include "gettext.hpp"
 #include "config.hpp"
 #include "events.hpp"
 #include "generic_event.hpp"
+#include "gettext.hpp"
 
 #include <map>
 #include <set>
@@ -31,18 +31,26 @@ namespace mp_sync
  */
 struct user_choice
 {
-	virtual ~user_choice() {}
+	virtual ~user_choice()
+	{
+	}
 	virtual config query_user(int side) const = 0;
 	virtual config random_choice(int side) const = 0;
 	/**
 	 * whether the choice is visible for the user like an advancement choice
 	 * a non-visible choice is for example get_global_variable
 	 */
-	virtual bool is_visible() const { return true; }
+	virtual bool is_visible() const
+	{
+		return true;
+	}
 	// TRANSLATORS: In networked games, this text is shown for other clients,
 	// while they wait for an action from another player.
 	// This text will be embedded into a sentence.
-	virtual std::string description() const { return _("waiting for^input"); }
+	virtual std::string description() const
+	{
+		return _("waiting for^input");
+	}
 };
 
 /**
@@ -66,17 +74,16 @@ struct user_choice
  *         about which player the data is expected from, and discard data
  *         from unexpected players.
  */
-config get_user_choice(const std::string &name, const user_choice &uch,
-	int side = 0);
+config get_user_choice(const std::string& name, const user_choice& uch, int side = 0);
 /**
  * Performs a choice for multiple sides for WML events.
- * uch is called on all sides specified in sides, this in done simultaneously on all those sides (or one after another if one client controls multiple sides)
- * and after all calls are executed the results are returned.
+ * uch is called on all sides specified in sides, this in done simultaneously on all those sides (or one after another
+ * if one client controls multiple sides) and after all calls are executed the results are returned.
  */
-std::map<int, config> get_user_choice_multiple_sides(const std::string &name, const user_choice &uch,
-	std::set<int> sides);
+std::map<int, config> get_user_choice_multiple_sides(
+	const std::string& name, const user_choice& uch, std::set<int> sides);
 
-}
+} // namespace mp_sync
 
 class user_choice_manager : events::pump_monitor
 {
@@ -85,7 +92,8 @@ class user_choice_manager : events::pump_monitor
 	// The results
 	std::map<int, config> res_;
 	// The side for which we should do a choice locally (0 if no such side exists)
-	// Note that even if there is currently no locally choice to do it is still possible that we need to do a local choice later because we took control over a side
+	// Note that even if there is currently no locally choice to do it is still possible that we need to do a local
+	// choice later because we took control over a side
 	int local_choice_;
 	// the message displayed for sides which currently don't have to do a choice.
 	std::string wait_message_;
@@ -96,28 +104,41 @@ class user_choice_manager : events::pump_monitor
 	const std::string& tagname_;
 	const int current_side_;
 	// private constructor, this object is only constructed by user_choice_manager::get_user_choice_internal
-	user_choice_manager(const std::string &name, const mp_sync::user_choice &uch, const std::set<int>& sides);
-	~user_choice_manager() {}
+	user_choice_manager(const std::string& name, const mp_sync::user_choice& uch, const std::set<int>& sides);
+	~user_choice_manager()
+	{
+	}
 	void search_in_replay();
+
 public:
 	void pull();
 	bool finished() const
-	{ return required_.size() == res_.size(); }
+	{
+		return required_.size() == res_.size();
+	}
 	bool has_local_choice() const
-	{ return local_choice_ != 0; }
+	{
+		return local_choice_ != 0;
+	}
 	/** Note: currently finished() does not imply !waiting() so you may need to check both. */
 	bool waiting() const
-	{ return local_choice_ == 0 && !oos_; }
+	{
+		return local_choice_ == 0 && !oos_;
+	}
 	void update_local_choice();
 	void ask_local_choice();
 	void fix_oos();
-	const std::string& wait_message() const { return wait_message_; }
+	const std::string& wait_message() const
+	{
+		return wait_message_;
+	}
 	/**
 	 * @param name the tagname for this user choice in the replay
 	 * @param uch the choice made
 	 * @param sides an array of team numbers (beginning with 1). the specified sides may not have an empty controller.
 	 */
-	static std::map<int, config> get_user_choice_internal(const std::string &name, const mp_sync::user_choice &uch, const std::set<int>& sides);
+	static std::map<int, config> get_user_choice_internal(
+		const std::string& name, const mp_sync::user_choice& uch, const std::set<int>& sides);
 	/** Inherited from events::pump_monitor */
 	void process();
 	events::generic_event changed_event_;

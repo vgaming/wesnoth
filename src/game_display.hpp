@@ -22,7 +22,6 @@ class game_board;
 #include "display_chat_manager.hpp"
 #include "pathfind/pathfind.hpp"
 
-
 // This needs to be separate from display.h because of the static
 // singleton member, which will otherwise trigger link failure
 // when building the editor.
@@ -31,10 +30,10 @@ class game_display : public display
 {
 public:
 	game_display(game_board& board,
-			std::weak_ptr<wb::manager> wb,
-			reports & reports_object,
-			const std::string& theme_id,
-			const config& level);
+		std::weak_ptr<wb::manager> wb,
+		reports& reports_object,
+		const std::string& theme_id,
+		const config& level);
 
 	~game_display();
 
@@ -53,13 +52,16 @@ public:
 	 */
 	void new_turn();
 
-	virtual const std::set<std::string>& observers() const override { return chat_man_->observers(); }
+	virtual const std::set<std::string>& observers() const override
+	{
+		return chat_man_->observers();
+	}
 	/**
 	 * Scrolls to the leader of a certain side.
 	 *
 	 * This will normally be the playing team.
 	 */
-	void scroll_to_leader(int side, SCROLL_TYPE scroll_type = ONSCREEN,bool force = true);
+	void scroll_to_leader(int side, SCROLL_TYPE scroll_type = ONSCREEN, bool force = true);
 
 	/**
 	 * Function to display a location as selected.
@@ -90,19 +92,22 @@ public:
 	 * for the unit to move along.
 	 * All other paths will be grayed out.
 	 */
-	void highlight_reach(const pathfind::paths &paths_list);
+	void highlight_reach(const pathfind::paths& paths_list);
 
 	/**
 	 * Add more paths to highlight.  Print numbers where they overlap.
 	 * Used by Show Enemy Moves.  If @a goal is not @c null_location, highlight
 	 * enemy units that can reach @a goal.
 	 */
-	void highlight_another_reach(const pathfind::paths &paths_list,
-			const map_location& goal = map_location::null_location());
+	void highlight_another_reach(
+		const pathfind::paths& paths_list, const map_location& goal = map_location::null_location());
 	/**
 	 * Return the locations of units that can reach @a goal (@see highlight_another_reach()).
 	 */
-	const std::set<map_location>& units_that_can_reach_goal() const { return units_that_can_reach_goal_; }
+	const std::set<map_location>& units_that_can_reach_goal() const
+	{
+		return units_that_can_reach_goal_;
+	}
 
 	/** Reset highlighting of paths. */
 	bool unhighlight_reach();
@@ -112,13 +117,16 @@ public:
 	 * unit. If nullptr, no route is displayed. @a route does not have to remain
 	 * valid after being set.
 	 */
-	void set_route(const pathfind::marked_route *route);
+	void set_route(const pathfind::marked_route* route);
 	/**
 	 * Gets the route along which footsteps are drawn to show movement of a
 	 * unit. If no route is currently being shown, the array get_route().steps
 	 * will be empty.
 	 */
-	const pathfind::marked_route& get_route() { return route_; }
+	const pathfind::marked_route& get_route()
+	{
+		return route_;
+	}
 
 	/** Function to float a label above a tile */
 	void float_label(const map_location& loc, const std::string& text, const color_t& color);
@@ -127,7 +135,10 @@ public:
 	void draw_movement_info(const map_location& loc);
 
 	/** Function to invalidate that unit status displayed on the sidebar. */
-	void invalidate_unit() { invalidateGameStatus_ = true; }
+	void invalidate_unit()
+	{
+		invalidateGameStatus_ = true;
+	}
 
 	/** Same as invalidate_unit() if moving the displayed unit. */
 	void invalidate_unit_after_move(const map_location& src, const map_location& dst);
@@ -179,21 +190,33 @@ public:
 	void set_attack_indicator(const map_location& src, const map_location& dst);
 	void clear_attack_indicator();
 	// TODO: compare reports::context::mhb()->current_unit_attacks_from()
-	const map_location& get_attack_indicator_src() { return attack_indicator_src_; }
-
-	/** Function to get attack direction suffix. */
-	std::string attack_indicator_direction() const {
-		return map_location::write_direction(
-			attack_indicator_src_.get_relative_dir(attack_indicator_dst_));
+	const map_location& get_attack_indicator_src()
+	{
+		return attack_indicator_src_;
 	}
 
-	virtual const map_location &displayed_unit_hex() const override { return displayedUnitHex_; }
+	/** Function to get attack direction suffix. */
+	std::string attack_indicator_direction() const
+	{
+		return map_location::write_direction(attack_indicator_src_.get_relative_dir(attack_indicator_dst_));
+	}
 
-	display_chat_manager & get_chat_manager() { return *chat_man_; }
+	virtual const map_location& displayed_unit_hex() const override
+	{
+		return displayedUnitHex_;
+	}
+
+	display_chat_manager& get_chat_manager()
+	{
+		return *chat_man_;
+	}
 
 	void begin_game();
 
-	virtual bool in_game() const override { return in_game_; }
+	virtual bool in_game() const override
+	{
+		return in_game_;
+	}
 
 	/**
 	 * Sets the linger mode for the display.
@@ -205,12 +228,14 @@ public:
 	 * the stuff back to a boolean
 	 */
 	enum game_mode {
-		RUNNING,         /**< no linger overlay, show fog and shroud. */
-		LINGER };     /**< linger overlay, show fog and shroud. */
+		RUNNING, /**< no linger overlay, show fog and shroud. */
+		LINGER
+	}; /**< linger overlay, show fog and shroud. */
 
 	void set_game_mode(const game_mode mode);
 
-	/** Sets whether the screen (map visuals) needs to be rebuilt. This is typically after the map has been changed by wml. */
+	/** Sets whether the screen (map visuals) needs to be rebuilt. This is typically after the map has been changed by
+	 * wml. */
 	void needs_rebuild(bool b);
 
 	/** Rebuilds the screen if needs_rebuild(true) was previously called, and resets the flag. */
@@ -236,5 +261,4 @@ private:
 	game_mode mode_;
 
 	bool needs_rebuild_;
-
 };

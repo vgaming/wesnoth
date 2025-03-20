@@ -31,16 +31,22 @@
 #include "desktop/windows_tray_notification.hpp"
 #endif
 
-namespace desktop {
+namespace desktop
+{
 
-namespace notifications {
+namespace notifications
+{
 
 #if !(defined(HAVE_LIBDBUS) || defined(__APPLE__) || defined(_WIN32))
 
-bool available() { return false; }
+bool available()
+{
+	return false;
+}
 
 void send(const std::string& /*owner*/, const std::string& /*message*/, type /*t*/)
-{}
+{
+}
 
 #else
 
@@ -72,23 +78,23 @@ void send(const std::string& owner, const std::string& message, type t)
 	std::string notification_title;
 	std::string notification_message;
 
-	switch (t) {
-		case CHAT:
-			notification_title = _("Chat message");
-			notification_message = owner + ": " + message;
-			break;
-		case TURN_CHANGED:
-		case OTHER:
-			notification_title = owner;
-			notification_message = message;
-			break;
+	switch(t) {
+	case CHAT:
+		notification_title = _("Chat message");
+		notification_message = owner + ": " + message;
+		break;
+	case TURN_CHANGED:
+	case OTHER:
+		notification_title = owner;
+		notification_message = message;
+		break;
 	}
 
 	windows_tray_notification::show(notification_title, notification_message);
 #endif
 }
-#endif //end #else (defined(HAVE_LIBDBUS) || defined(_WIN32))
+#endif // end #else (defined(HAVE_LIBDBUS) || defined(_WIN32))
 
-} //end namespace notifications
+} // end namespace notifications
 
-} //end namespace desktop
+} // end namespace desktop

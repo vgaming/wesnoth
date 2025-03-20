@@ -34,11 +34,11 @@ struct map_location;
 class display_context
 {
 public:
-	virtual const std::vector<team> & teams() const = 0;
-	virtual const gamemap & map() const = 0;
-	virtual const unit_map & units() const = 0;
-	virtual const std::vector<std::string> & hidden_label_categories() const = 0;
-	virtual std::vector<std::string> & hidden_label_categories() = 0;
+	virtual const std::vector<team>& teams() const = 0;
+	virtual const gamemap& map() const = 0;
+	virtual const unit_map& units() const = 0;
+	virtual const std::vector<std::string>& hidden_label_categories() const = 0;
+	virtual std::vector<std::string>& hidden_label_categories() = 0;
 
 	/** This getter takes a 1-based side number, not a 0-based team number. */
 	const team& get_team(int side) const;
@@ -52,12 +52,13 @@ public:
 	 * location would be revealed (perhaps ambushed), based on what team side_num can see.
 	 * If see_all is true then the calculation ignores fog, and enemy ambushers.
 	 */
-	bool would_be_discovered(const map_location & loc, int side_num, bool see_all = true);
+	bool would_be_discovered(const map_location& loc, int side_num, bool see_all = true);
 
 	// Needed for reports
 
-	const unit * get_visible_unit(const map_location &loc, const team &current_team, bool see_all = false) const;
-	unit_const_ptr get_visible_unit_shared_ptr(const map_location &loc, const team &current_team, bool see_all = false) const;
+	const unit* get_visible_unit(const map_location& loc, const team& current_team, bool see_all = false) const;
+	unit_const_ptr get_visible_unit_shared_ptr(
+		const map_location& loc, const team& current_team, bool see_all = false) const;
 
 	struct can_move_result
 	{
@@ -98,7 +99,7 @@ public:
 	 * Given the location of a village, will return the 1-based number
 	 * of the team that currently owns it, and 0 if it is unowned.
 	 */
-	int village_owner(const map_location & loc) const;
+	int village_owner(const map_location& loc) const;
 
 	// Accessors from unit.cpp
 
@@ -106,9 +107,9 @@ public:
 	int side_units(int side_num) const;
 
 	/** Returns the total cost of units of side @a side_num. */
-	int side_units_cost(int side_num) const ;
+	int side_units_cost(int side_num) const;
 
-	int side_upkeep(int side_num) const ;
+	int side_upkeep(int side_num) const;
 
 	// Accessor from team.cpp
 
@@ -116,7 +117,9 @@ public:
 	bool is_observer() const;
 
 	// Dtor
-	virtual ~display_context() {}
+	virtual ~display_context()
+	{
+	}
 };
 
 struct team_data

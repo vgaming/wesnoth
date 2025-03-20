@@ -22,7 +22,7 @@
 
 #include "ai/manager.hpp"
 #include "color.hpp"
-#include "formula/string_utils.hpp"     // for VGETTEXT
+#include "formula/string_utils.hpp" // for VGETTEXT
 #include "game_data.hpp"
 #include "game_events/pump.hpp"
 #include "lexical_cast.hpp"
@@ -49,79 +49,21 @@ static lg::log_domain log_engine_enemies("engine/enemies");
 
 // Update this list of attributes if you change what is used to define a side
 // (excluding those attributes used to define the side's leader).
-const std::set<std::string> team::attributes {
-	"ai_config",
-	"carryover_add",
-	"carryover_percentage",
-	"color",
-	"controller",
-	"current_player",
-	"defeat_condition",
-	"flag",
-	"flag_icon",
-	"fog",
-	"fog_data",
-	"gold",
-	"hidden",
-	"income",
-	"no_leader",
-	"objectives",
-	"objectives_changed",
-	"persistent",
-	"lost",
-	"recall_cost",
-	"recruit",
-	"previous_recruits",
-	"save_id",
-	"scroll_to_leader",
-	"share_vision",
-	"share_maps",
-	"share_view",
-	"shroud",
-	"shroud_data",
-	"start_gold",
-	"suppress_end_turn_confirmation",
-	"team_name",
-	"user_team_name",
-	"side_name",
-	"village_gold",
-	"village_support",
-	"is_local",
+const std::set<std::string> team::attributes{"ai_config", "carryover_add", "carryover_percentage", "color",
+	"controller", "current_player", "defeat_condition", "flag", "flag_icon", "fog", "fog_data", "gold", "hidden",
+	"income", "no_leader", "objectives", "objectives_changed", "persistent", "lost", "recall_cost", "recruit",
+	"previous_recruits", "save_id", "scroll_to_leader", "share_vision", "share_maps", "share_view", "shroud",
+	"shroud_data", "start_gold", "suppress_end_turn_confirmation", "team_name", "user_team_name", "side_name",
+	"village_gold", "village_support", "is_local",
 	// Multiplayer attributes.
-	"player_id",
-	"is_host",
-	"action_bonus_count",
-	"allow_changes",
-	"allow_player",
-	"color_lock",
-	"countdown_time",
-	"disallow_observers",
-	"faction",
-	"faction_from_recruit",
-	"faction_name",
-	"faction_lock",
-	"gold_lock",
-	"income_lock",
-	"leader_lock",
-	"random_leader",
-	"team_lock",
-	"terrain_liked",
-	"user_description",
-	"controller_lock",
-	"chose_random",
-	"disallow_shuffle",
-	"description"
-};
+	"player_id", "is_host", "action_bonus_count", "allow_changes", "allow_player", "color_lock", "countdown_time",
+	"disallow_observers", "faction", "faction_from_recruit", "faction_name", "faction_lock", "gold_lock", "income_lock",
+	"leader_lock", "random_leader", "team_lock", "terrain_liked", "user_description", "controller_lock", "chose_random",
+	"disallow_shuffle", "description"};
 
 // Update this list of child tags if you change what is used to define a side
 // (excluding those attributes used to define the side's leader).
-const std::set<std::string> team::tags {
-	"ai",
-	"leader",
-	"unit",
-	"variables",
-	"village"
-};
+const std::set<std::string> team::tags{"ai", "leader", "unit", "variables", "village"};
 team::team_info::team_info()
 	: gold(0)
 	, start_gold(0)
@@ -191,7 +133,8 @@ void team::team_info::read(const config& cfg)
 	allow_player = cfg["allow_player"].to_bool(true);
 	chose_random = cfg["chose_random"].to_bool(false);
 	no_leader = cfg["no_leader"].to_bool();
-	defeat_cond = defeat_condition::get_enum(cfg["defeat_condition"].str()).value_or(defeat_condition::type::no_leader_left);
+	defeat_cond
+		= defeat_condition::get_enum(cfg["defeat_condition"].str()).value_or(defeat_condition::type::no_leader_left);
 	lost = cfg["lost"].to_bool(false);
 	hidden = cfg["hidden"].to_bool();
 	no_turn_confirmation = cfg["suppress_end_turn_confirmation"].to_bool();
@@ -265,7 +208,8 @@ void team::team_info::read(const config& cfg)
 	share_vision = team_shared_vision::get_enum(cfg["share_vision"].str()).value_or(team_shared_vision::type::all);
 	handle_legacy_share_vision(cfg);
 
-	LOG_NG << "team_info::team_info(...): team_name: " << team_name << ", share_vision: " << team_shared_vision::get_string(share_vision) << ".";
+	LOG_NG << "team_info::team_info(...): team_name: " << team_name
+		   << ", share_vision: " << team_shared_vision::get_string(share_vision) << ".";
 }
 
 void team::team_info::handle_legacy_share_vision(const config& cfg)
@@ -369,7 +313,7 @@ void team::build(const config& cfg, const gamemap& map)
 	auto fog_override = cfg.optional_child("fog_override");
 	if(fog_override) {
 		const std::vector<map_location> fog_vector
-				= map.parse_location_range(fog_override["x"], fog_override["y"], true);
+			= map.parse_location_range(fog_override["x"], fog_override["y"], true);
 		fog_clearer_.insert(fog_vector.begin(), fog_vector.end());
 	}
 
@@ -411,13 +355,12 @@ void team::write(config& cfg) const
 	cfg["action_bonus_count"] = action_bonus_count_;
 }
 
-void team::fix_villages(const gamemap &map)
+void team::fix_villages(const gamemap& map)
 {
-	for (auto it = villages_.begin(); it != villages_.end(); ) {
-		if (map.is_village(*it)) {
+	for(auto it = villages_.begin(); it != villages_.end();) {
+		if(map.is_village(*it)) {
 			++it;
-		}
-		else {
+		} else {
 			it = villages_.erase(it);
 		}
 	}
@@ -555,7 +498,12 @@ public:
 	virtual config request() const
 	{
 		return config{
-				"new_controller", side_controller::get_string(new_controller_), "old_controller", side_controller::get_string(team_.controller()), "side", team_.side(),
+			"new_controller",
+			side_controller::get_string(new_controller_),
+			"old_controller",
+			side_controller::get_string(team_.controller()),
+			"side",
+			team_.side(),
 		};
 	}
 
@@ -568,7 +516,7 @@ private:
 	side_controller::type new_controller_;
 	const team& team_;
 };
-} // end anon namespace
+} // namespace
 
 void team::change_controller_by_wml(const std::string& new_controller_string)
 {
@@ -594,7 +542,7 @@ void team::change_controller_by_wml(const std::string& new_controller_string)
 		set_local(choice["is_local"].to_bool());
 	}
 
-	if(playsingle_controller* pc =  dynamic_cast<playsingle_controller*>(resources::controller)) {
+	if(playsingle_controller* pc = dynamic_cast<playsingle_controller*>(resources::controller)) {
 		if(pc->current_side() == side() && new_controller != controller()) {
 			pc->set_player_type_changed();
 		}
@@ -735,8 +683,8 @@ void team::remove_fog_override(const std::set<map_location>& hexes)
 {
 	// Take a set difference.
 	std::vector<map_location> result(fog_clearer_.size());
-	std::vector<map_location>::iterator result_end =
-		std::set_difference(fog_clearer_.begin(), fog_clearer_.end(), hexes.begin(), hexes.end(), result.begin());
+	std::vector<map_location>::iterator result_end
+		= std::set_difference(fog_clearer_.begin(), fog_clearer_.end(), hexes.begin(), hexes.end(), result.begin());
 
 	// Put the result into fog_clearer_.
 	fog_clearer_.clear();
@@ -761,7 +709,8 @@ int shroud_map::width() const
 
 int shroud_map::height() const
 {
-	if(data_.size() == 0) return 0;
+	if(data_.size() == 0)
+		return 0;
 	return std::max_element(data_.begin(), data_.end(), [](const auto& a, const auto& b) {
 		return a.size() < b.size();
 	})->size();
@@ -992,7 +941,7 @@ const t_string team::get_side_color_name_for_UI(unsigned side)
 	if(rgb_name.empty())
 		// TRANSLATORS: $color_id is the internal identifier of a side color, for example, 'lightred'.
 		// Translate the quotation marks only; leave "color_id" untranslated, as it's a variable name.
-		return VGETTEXT("“$color_id”", {{ "color_id", color_id }});
+		return VGETTEXT("“$color_id”", {{"color_id", color_id}});
 	else
 		return rgb_name;
 }

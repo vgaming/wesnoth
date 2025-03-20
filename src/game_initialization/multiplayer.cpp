@@ -42,8 +42,8 @@
 #include "utils/parse_network_address.hpp"
 #include "wesnothd_connection.hpp"
 
-#include <functional>
 #include "utils/optional_fwd.hpp"
+#include <functional>
 #include <thread>
 
 static lg::log_domain log_mp("mp/main");
@@ -269,7 +269,9 @@ std::unique_ptr<wesnothd_connection> mp_manager::open_connection(const std::stri
 			i18n_symbols["required_version"] = version;
 			i18n_symbols["your_version"] = game_config::wesnoth_version.str();
 
-			const std::string errorstring = VGETTEXT("The server accepts versions ‘$required_version’, but you are using version ‘$your_version’", i18n_symbols);
+			const std::string errorstring
+				= VGETTEXT("The server accepts versions ‘$required_version’, but you are using version ‘$your_version’",
+					i18n_symbols);
 			throw wesnothd_error(errorstring);
 		}
 
@@ -333,9 +335,10 @@ std::unique_ptr<wesnothd_connection> mp_manager::open_connection(const std::stri
 
 				if((*warning)["warning_code"] == MP_NAME_INACTIVE_WARNING) {
 					warning_msg = VGETTEXT("The nickname ‘$nick’ is inactive. "
-						"You cannot claim ownership of this nickname until you "
-						"activate your account via email or ask an "
-						"administrator to do it for you.", {{"nick", login}});
+										   "You cannot claim ownership of this nickname until you "
+										   "activate your account via email or ask an "
+										   "administrator to do it for you.",
+						{{"nick", login}});
 				} else {
 					warning_msg = (*warning)["message"].str();
 				}
@@ -343,7 +346,8 @@ std::unique_ptr<wesnothd_connection> mp_manager::open_connection(const std::stri
 				warning_msg += "\n\n";
 				warning_msg += _("Do you want to continue?");
 
-				if(gui2::show_message(_("Warning"), warning_msg, gui2::dialogs::message::yes_no_buttons) != gui2::retval::OK) {
+				if(gui2::show_message(_("Warning"), warning_msg, gui2::dialogs::message::yes_no_buttons)
+					!= gui2::retval::OK) {
 					return nullptr;
 				} else {
 					continue;
@@ -353,13 +357,15 @@ std::unique_ptr<wesnothd_connection> mp_manager::open_connection(const std::stri
 			auto error = data.optional_child("error");
 
 			// ... and get us out of here if the server did not complain
-			if(!error) break;
+			if(!error)
+				break;
 
 			do {
 				std::string password = prefs::get().password(host, login);
 
 				const bool fall_through = (*error)["force_confirmation"].to_bool()
-					? (gui2::show_message(_("Confirm"), (*error)["message"], gui2::dialogs::message::ok_cancel_buttons) == gui2::retval::CANCEL)
+					? (gui2::show_message(_("Confirm"), (*error)["message"], gui2::dialogs::message::ok_cancel_buttons)
+						  == gui2::retval::CANCEL)
 					: false;
 
 				// If:
@@ -369,11 +375,13 @@ std::unique_ptr<wesnothd_connection> mp_manager::open_connection(const std::stri
 				// * the connection is secure or the client was started with the option to use insecure connections
 				// send the password to the server
 				// otherwise go directly to the username/password dialog
-				if(!(*error)["password_request"].empty() && !password.empty() && !fall_through && (conn->using_tls() || game_config::allow_insecure)) {
+				if(!(*error)["password_request"].empty() && !password.empty() && !fall_through
+					&& (conn->using_tls() || game_config::allow_insecure)) {
 					// the possible cases here are that either:
 					// 1) TLS encryption is enabled, thus sending the plaintext password is still secure
-					// 2) TLS encryption is not enabled, in which case the server should not be requesting a password in the first place
-					// 3) This is being used for local testing/development, so using an insecure connection is enabled manually
+					// 2) TLS encryption is not enabled, in which case the server should not be requesting a password in
+					// the first place 3) This is being used for local testing/development, so using an insecure
+					// connection is enabled manually
 
 					sp["password"] = password;
 
@@ -386,7 +394,8 @@ std::unique_ptr<wesnothd_connection> mp_manager::open_connection(const std::stri
 					error = data.optional_child("error");
 
 					// ... and get us out of here if the server is happy now
-					if(!error) break;
+					if(!error)
+						break;
 				}
 
 				// Providing a password either was not attempted because we did not
@@ -401,7 +410,8 @@ std::unique_ptr<wesnothd_connection> mp_manager::open_connection(const std::stri
 				const auto extra_data = error->optional_child("data");
 				if(extra_data) {
 					using namespace std::chrono_literals;
-					i18n_symbols["duration"] = utils::format_timespan(chrono::parse_duration((*extra_data)["duration"], 0s));
+					i18n_symbols["duration"]
+						= utils::format_timespan(chrono::parse_duration((*extra_data)["duration"], 0s));
 				}
 
 				const std::string ec = (*error)["error_code"];
@@ -413,45 +423,58 @@ std::unique_ptr<wesnothd_connection> mp_manager::open_connection(const std::stri
 				} else if(ec == MP_NAME_TAKEN_ERROR) {
 					error_message = VGETTEXT("The nickname ‘$nick’ is already taken.", i18n_symbols);
 				} else if(ec == MP_INVALID_CHARS_IN_NAME_ERROR) {
-					error_message = VGETTEXT("The nickname ‘$nick’ contains invalid "
-							"characters. Only alpha-numeric characters (one at minimum), underscores and "
-							"hyphens are allowed.", i18n_symbols);
+					error_message
+						= VGETTEXT("The nickname ‘$nick’ contains invalid "
+								   "characters. Only alpha-numeric characters (one at minimum), underscores and "
+								   "hyphens are allowed.",
+							i18n_symbols);
 				} else if(ec == MP_NAME_TOO_LONG_ERROR) {
-					error_message = VGETTEXT("The nickname ‘$nick’ is too long. Nicks must be 20 characters or less.", i18n_symbols);
+					error_message = VGETTEXT(
+						"The nickname ‘$nick’ is too long. Nicks must be 20 characters or less.", i18n_symbols);
 				} else if(ec == MP_NAME_RESERVED_ERROR) {
-					error_message = VGETTEXT("The nickname ‘$nick’ is reserved and cannot be used by players.", i18n_symbols);
+					error_message
+						= VGETTEXT("The nickname ‘$nick’ is reserved and cannot be used by players.", i18n_symbols);
 				} else if(ec == MP_NAME_UNREGISTERED_ERROR) {
 					error_message = VGETTEXT("The nickname ‘$nick’ is not registered on this server.", i18n_symbols)
-							+ _(" This server disallows unregistered nicknames.");
+						+ _(" This server disallows unregistered nicknames.");
 				} else if(ec == MP_SERVER_IP_BAN_ERROR) {
 					if(extra_data) {
-						error_message = VGETTEXT("Your IP address is banned on this server for $duration|.", i18n_symbols);
+						error_message
+							= VGETTEXT("Your IP address is banned on this server for $duration|.", i18n_symbols);
 					} else {
 						error_message = _("Your IP address is banned on this server.");
 					}
 				} else if(ec == MP_NAME_AUTH_BAN_USER_ERROR) {
 					if(extra_data) {
-						error_message = VGETTEXT("The nickname ‘$nick’ is banned on this server’s forums for $duration|.", i18n_symbols);
+						error_message = VGETTEXT(
+							"The nickname ‘$nick’ is banned on this server’s forums for $duration|.", i18n_symbols);
 					} else {
-						error_message = VGETTEXT("The nickname ‘$nick’ is banned on this server’s forums.", i18n_symbols);
+						error_message
+							= VGETTEXT("The nickname ‘$nick’ is banned on this server’s forums.", i18n_symbols);
 					}
 				} else if(ec == MP_NAME_AUTH_BAN_IP_ERROR) {
 					if(extra_data) {
-						error_message = VGETTEXT("Your IP address is banned on this server’s forums for $duration|.", i18n_symbols);
+						error_message = VGETTEXT(
+							"Your IP address is banned on this server’s forums for $duration|.", i18n_symbols);
 					} else {
 						error_message = _("Your IP address is banned on this server’s forums.");
 					}
 				} else if(ec == MP_NAME_AUTH_BAN_EMAIL_ERROR) {
 					if(extra_data) {
-						error_message = VGETTEXT("The email address for the nickname ‘$nick’ is banned on this server’s forums for $duration|.", i18n_symbols);
+						error_message = VGETTEXT("The email address for the nickname ‘$nick’ is banned on this "
+												 "server’s forums for $duration|.",
+							i18n_symbols);
 					} else {
-						error_message = VGETTEXT("The email address for the nickname ‘$nick’ is banned on this server’s forums.", i18n_symbols);
+						error_message
+							= VGETTEXT("The email address for the nickname ‘$nick’ is banned on this server’s forums.",
+								i18n_symbols);
 					}
 				} else if(ec == MP_PASSWORD_REQUEST) {
 					error_message = VGETTEXT("The nickname ‘$nick’ is registered on this server.", i18n_symbols);
 				} else if(ec == MP_PASSWORD_REQUEST_FOR_LOGGED_IN_NAME) {
 					error_message = VGETTEXT("The nickname ‘$nick’ is registered on this server.", i18n_symbols)
-							+ "\n\n" + _("WARNING: There is already a client using this nickname, "
+						+ "\n\n"
+						+ _("WARNING: There is already a client using this nickname, "
 							"logging in will cause that client to be kicked!");
 				} else if(ec == MP_INCORRECT_PASSWORD_ERROR) {
 					error_message = _("The password you provided was incorrect.");
@@ -469,25 +492,26 @@ std::unique_ptr<wesnothd_connection> mp_manager::open_connection(const std::stri
 				events::call_in_main_thread([&dlg]() { dlg.show(); });
 
 				switch(dlg.get_retval()) {
-					// Log in with password
-					case gui2::retval::OK:
-						break;
-					// Cancel
-					default:
-						return nullptr;
+				// Log in with password
+				case gui2::retval::OK:
+					break;
+				// Cancel
+				default:
+					return nullptr;
 				}
 
-			// If we have got a new username we have to start all over again
+				// If we have got a new username we have to start all over again
 			} while(login == prefs::get().login());
 
 			// Somewhat hacky...
 			// If we broke out of the do-while loop above error is still going to be nullopt
-			if(!error) break;
+			if(!error)
+				break;
 		} // end login loop
 
 		if(const auto join_lobby = data.optional_child("join_lobby")) {
 			// Note any session data sent with the response. This should be the only place session_info is set.
-			session_info = { join_lobby.value() };
+			session_info = {join_lobby.value()};
 
 			// All done!
 			break;
@@ -585,7 +609,8 @@ void mp_manager::enter_create_mode(utils::optional<std::string> preset_scenario)
 	DBG_MP << "entering create mode";
 
 	if(preset_scenario) {
-		for(const config& game : game_config_manager::get()->game_config().mandatory_child("game_presets").child_range("game")) {
+		for(const config& game :
+			game_config_manager::get()->game_config().mandatory_child("game_presets").child_range("game")) {
 			if(game["scenario"].str() == preset_scenario.value()) {
 				gui2::dialogs::mp_create_game::quick_mp_setup(state, game);
 				enter_staging_mode(true);
@@ -691,7 +716,7 @@ bool mp_manager::post_scenario_wait(bool observe)
 	return dlg.show();
 }
 
-} // end anon namespace
+} // namespace
 
 /** Pubic entry points for the MP workflow */
 
@@ -776,9 +801,7 @@ void start_local_game_commandline(const commandline_options& cmdline_opts)
 		return;
 	}
 
-	state.set_carryover_sides_start(
-		config {"next_scenario", parameters.name}
-	);
+	state.set_carryover_sides_start(config{"next_scenario", parameters.name});
 
 	game_config_manager::get()->load_game_config_for_game(state.classification(), state.get_scenario_id());
 
@@ -803,11 +826,11 @@ void start_local_game_commandline(const commandline_options& cmdline_opts)
 
 	if(resources::recorder && cmdline_opts.multiplayer_label) {
 		std::string label = *cmdline_opts.multiplayer_label;
-		resources::recorder->add_log_data("ai_log","ai_label",label);
+		resources::recorder->add_log_data("ai_log", "ai_label", label);
 	}
 
 	unsigned int repeat = (cmdline_opts.multiplayer_repeat) ? *cmdline_opts.multiplayer_repeat : 1;
-	for(unsigned int i = 0; i < repeat; i++){
+	for(unsigned int i = 0; i < repeat; i++) {
 		saved_game state_copy(state);
 		campaign_controller controller(state_copy);
 		controller.play_game();

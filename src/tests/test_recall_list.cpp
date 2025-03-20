@@ -22,15 +22,19 @@
 #include "units/types.hpp"
 #include "units/unit.hpp"
 
-BOOST_AUTO_TEST_SUITE( recall_list_suite )
+BOOST_AUTO_TEST_SUITE(recall_list_suite)
 
-BOOST_AUTO_TEST_CASE( test_1 ) {
+BOOST_AUTO_TEST_CASE(test_1)
+{
 	config game_config(test_utils::get_test_config());
 
-	config orc_config {
-		"id",			"Orcish Grunt",
-		"random_traits", 	false,
-		"animate",		false,
+	config orc_config{
+		"id",
+		"Orcish Grunt",
+		"random_traits",
+		false,
+		"animate",
+		false,
 	};
 
 	unit_type orc_type(orc_config);
@@ -75,7 +79,6 @@ BOOST_AUTO_TEST_CASE( test_1 ) {
 	BOOST_CHECK_MESSAGE(recall_man[1] == orc1, "unexpected result at index [1]");
 	BOOST_CHECK_MESSAGE(recall_man.find_if_matches_id("larry") == orc1, "found something unexpected");
 	BOOST_CHECK_MESSAGE(recall_man.find_if_matches_id("moe") == orc2, "found something unexpected");
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

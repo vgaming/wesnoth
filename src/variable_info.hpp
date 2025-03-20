@@ -24,7 +24,10 @@
 class invalid_variablename_exception : public std::exception
 {
 public:
-	invalid_variablename_exception() : std::exception() {}
+	invalid_variablename_exception()
+		: std::exception()
+	{
+	}
 
 	const char* what() const noexcept
 	{
@@ -98,10 +101,8 @@ public:
 	variable_info_mutable(const std::string& name, config& game_vars)
 		: variable_info<V>(name, game_vars)
 	{
-		static_assert(!std::is_same_v<
-			variable_info_implementation::vi_policy_const, std::remove_const_t<V>>,
-			"variable_info_mutable cannot be specialized with 'vi_policy_const'"
-		);
+		static_assert(!std::is_same_v<variable_info_implementation::vi_policy_const, std::remove_const_t<V>>,
+			"variable_info_mutable cannot be specialized with 'vi_policy_const'");
 	}
 
 	/**
@@ -140,7 +141,7 @@ public:
 using variable_access_create = variable_info_mutable<variable_info_implementation::vi_policy_create>;
 
 /** 'Throw if nonexistent' access. */
-using variable_access_throw  = variable_info_mutable<variable_info_implementation::vi_policy_throw>;
+using variable_access_throw = variable_info_mutable<variable_info_implementation::vi_policy_throw>;
 
 /**
  * Read-only access.
@@ -148,11 +149,14 @@ using variable_access_throw  = variable_info_mutable<variable_info_implementatio
  * NOTE: in order to easily mark certain types in this specialization as const we specify
  * the policy as const here. This allows the use of const_clone.
  */
-using variable_access_const  = variable_info<const variable_info_implementation::vi_policy_const>;
+using variable_access_const = variable_info<const variable_info_implementation::vi_policy_const>;
 
-class variable_set {
+class variable_set
+{
 public:
-	virtual ~variable_set() {}
-	virtual config::attribute_value get_variable_const(const std::string &id) const = 0;
+	virtual ~variable_set()
+	{
+	}
+	virtual config::attribute_value get_variable_const(const std::string& id) const = 0;
 	virtual variable_access_const get_variable_access_read(const std::string& varname) const = 0;
 };

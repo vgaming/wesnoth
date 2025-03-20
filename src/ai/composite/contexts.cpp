@@ -22,7 +22,8 @@
 #include "ai/composite/contexts.hpp"
 
 // =======================================================================
-namespace ai {
+namespace ai
+{
 
 ai_context_proxy::ai_context_proxy()
 	: target_()
@@ -53,4 +54,4 @@ rca_context_proxy::~rca_context_proxy()
 {
 }
 
-} //end of namespace ai
+} // end of namespace ai

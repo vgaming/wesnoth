@@ -31,15 +31,15 @@
 #include "font/text.hpp"
 #include "global.hpp"
 #include "gui/core/event/handler.hpp" // is_in_dialog
-#include "preferences/preferences.hpp"
 #include "halo.hpp"
 #include "hotkey/command_executor.hpp"
 #include "log.hpp"
-#include "map/map.hpp"
 #include "map/label.hpp"
+#include "map/map.hpp"
 #include "minimap.hpp"
 #include "overlay.hpp"
 #include "play_controller.hpp" //note: this can probably be refactored out
+#include "preferences/preferences.hpp"
 #include "reports.hpp"
 #include "resources.hpp"
 #include "serialization/chrono.hpp"
@@ -48,10 +48,10 @@
 #include "terrain/builder.hpp"
 #include "time_of_day.hpp"
 #include "tooltips.hpp"
-#include "units/unit.hpp"
 #include "units/animation_component.hpp"
 #include "units/drawer.hpp"
 #include "units/orb_status.hpp"
+#include "units/unit.hpp"
 #include "utils/general.hpp"
 #include "video.hpp"
 #include "whiteboard/manager.hpp"
@@ -83,15 +83,16 @@ static lg::log_domain log_display("display");
 #define DBG_DP LOG_STREAM(debug, log_display)
 
 // These are macros instead of proper constants so that they auto-update if the game config is reloaded.
-#define zoom_levels      (game_config::zoom_levels)
+#define zoom_levels (game_config::zoom_levels)
 #define final_zoom_index (static_cast<int>(zoom_levels.size()) - 1)
-#define DefaultZoom      (game_config::tile_size)
-#define SmallZoom        (DefaultZoom / 2)
-#define MinZoom          (zoom_levels.front())
-#define MaxZoom          (zoom_levels.back())
+#define DefaultZoom (game_config::tile_size)
+#define SmallZoom (DefaultZoom / 2)
+#define MinZoom (zoom_levels.front())
+#define MaxZoom (zoom_levels.back())
 
-namespace {
-	int prevLabel = 0;
+namespace
+{
+int prevLabel = 0;
 }
 
 unsigned int display::zoom_ = DefaultZoom;
@@ -101,7 +102,7 @@ unsigned int display::last_zoom_ = SmallZoom;
 // Assumption: zoom_levels is a sorted vector of ascending tile sizes
 static int get_zoom_levels_index(unsigned int zoom_level)
 {
-	zoom_level = std::clamp(zoom_level, MinZoom, MaxZoom);	// ensure zoom_level is within zoom_levels bounds
+	zoom_level = std::clamp(zoom_level, MinZoom, MaxZoom); // ensure zoom_level is within zoom_levels bounds
 	auto iter = std::lower_bound(zoom_levels.begin(), zoom_levels.end(), zoom_level);
 
 	// find closest match
@@ -144,10 +145,10 @@ void display::remove_single_overlay(const map_location& loc, const std::string& 
 }
 
 display::display(const display_context* dc,
-		std::weak_ptr<wb::manager> wb,
-		reports& reports_object,
-		const std::string& theme_id,
-		const config& level)
+	std::weak_ptr<wb::manager> wb,
+	reports& reports_object,
+	const std::string& theme_id,
+	const config& level)
 	: dc_(dc)
 	, halo_man_()
 	, wb_(std::move(wb))
@@ -159,7 +160,8 @@ display::display(const display_context* dc,
 	, theme_(theme::get_theme_config(theme_id.empty() ? prefs::get().theme() : theme_id), video::game_canvas())
 	, zoom_index_(0)
 	, fake_unit_man_(new fake_unit_manager(*this))
-	, builder_(new terrain_builder(level, (dc_ ? &context().map() : nullptr), theme_.border().tile_image, theme_.border().show_border))
+	, builder_(new terrain_builder(
+		  level, (dc_ ? &context().map() : nullptr), theme_.border().tile_image, theme_.border().show_border))
 	, minimap_renderer_(nullptr)
 	, minimap_location_(sdl::empty_rect)
 	, redraw_background_(false)
@@ -204,7 +206,7 @@ display::display(const display_context* dc,
 	, arrows_map_()
 	, color_adjust_()
 {
-	//The following assertion fails when starting a campaign
+	// The following assertion fails when starting a campaign
 	assert(singleton_ == nullptr);
 	singleton_ = this;
 
@@ -222,7 +224,7 @@ display::display(const display_context* dc,
 		tile_size = DefaultZoom;
 	zoom_index_ = get_zoom_levels_index(tile_size);
 	zoom_ = zoom_levels[zoom_index_];
-	if(zoom_ != prefs::get().tile_size())	// correct saved tile_size if necessary
+	if(zoom_ != prefs::get().tile_size()) // correct saved tile_size if necessary
 		prefs::get().set_tile_size(zoom_);
 
 	init_flags();
@@ -261,7 +263,8 @@ void display::set_theme(const std::string& new_theme)
 void display::init_flags()
 {
 	flags_.clear();
-	if (!dc_) return;
+	if(!dc_)
+		return;
 	flags_.resize(context().teams().size());
 
 	for(const team& t : context().teams()) {
@@ -296,12 +299,13 @@ void display::reinit_flags_for_team(const team& t)
 			try {
 				time = std::max(1ms, std::chrono::milliseconds{std::stoi(sub_items.back())});
 			} catch(const std::invalid_argument&) {
-				ERR_DP << "Invalid time value found when constructing flag for side " << t.side() << ": " << sub_items.back();
+				ERR_DP << "Invalid time value found when constructing flag for side " << t.side() << ": "
+					   << sub_items.back();
 			}
 		}
 
 		std::stringstream temp;
-		temp << str << "~RC(" << old_rgb << ">"<< new_rgb << ")";
+		temp << str << "~RC(" << old_rgb << ">" << new_rgb << ")";
 		image::locator flag_image(temp.str());
 		temp_anim.add_frame(time, flag_image);
 	}
@@ -309,7 +313,7 @@ void display::reinit_flags_for_team(const team& t)
 	animated<image::locator>& f = flags_[t.side() - 1];
 	f = temp_anim;
 	auto time = f.get_end_time();
-	if (time > 0ms) {
+	if(time > 0ms) {
 		int start_time = randomness::rng::default_instance().get_random_int(0, time.count() - 1);
 		f.start_animation(std::chrono::milliseconds{start_time}, true);
 	} else {
@@ -325,9 +329,7 @@ texture display::get_flag(const map_location& loc)
 			auto& flag = flags_[t.side() - 1];
 			flag.update_last_draw_time();
 
-			const image::locator& image_flag = animate_map_
-				? flag.get_current_frame()
-				: flag.get_first_frame();
+			const image::locator& image_flag = animate_map_ ? flag.get_current_frame() : flag.get_first_frame();
 
 			return image::get_texture(image_flag, image::TOD_COLORED);
 		}
@@ -372,14 +374,16 @@ void display::set_playing_team_index(std::size_t teamindex)
 
 bool display::add_exclusive_draw(const map_location& loc, const unit& unit)
 {
-	if(!loc.valid()) return false;
+	if(!loc.valid())
+		return false;
 	auto [iter, success] = exclusive_unit_draw_requests_.emplace(loc, unit.id());
 	return success;
 }
 
 std::string display::remove_exclusive_draw(const map_location& loc)
 {
-	if(!loc.valid()) return {};
+	if(!loc.valid())
+		return {};
 	std::string id = exclusive_unit_draw_requests_[loc];
 	exclusive_unit_draw_requests_.erase(loc);
 	return id;
@@ -412,12 +416,12 @@ void display::adjust_color_overlay(int r, int g, int b)
 
 void display::fill_images_list(const std::string& prefix, std::vector<std::string>& images)
 {
-	if(prefix == ""){
+	if(prefix == "") {
 		return;
 	}
 
 	// search prefix.png, prefix1.png, prefix2.png ...
-	for(int i=0; ; ++i){
+	for(int i = 0;; ++i) {
 		std::ostringstream s;
 		s << prefix;
 		if(i != 0)
@@ -425,10 +429,10 @@ void display::fill_images_list(const std::string& prefix, std::vector<std::strin
 		s << ".png";
 		if(image::exists(s.str()))
 			images.push_back(s.str());
-		else if(i>0)
+		else if(i > 0)
 			break;
 	}
-	if (images.empty())
+	if(images.empty())
 		images.emplace_back();
 }
 
@@ -443,10 +447,10 @@ void display::reload_map()
 	builder_->reload_map();
 }
 
-void display::change_display_context(const display_context * dc)
+void display::change_display_context(const display_context* dc)
 {
 	dc_ = dc;
-	builder_->change_map(&context().map()); //TODO: Should display_context own and initialize the builder object?
+	builder_->change_map(&context().map()); // TODO: Should display_context own and initialize the builder object?
 }
 
 void display::blindfold(bool value)
@@ -568,18 +572,18 @@ map_location display::pixel_position_to_hex(int x, int y) const
 	const int tesselation_x_size = hex_width() * 2;
 	const int tesselation_y_size = s;
 	const int x_base = x / tesselation_x_size * 2;
-	const int x_mod  = x % tesselation_x_size;
+	const int x_mod = x % tesselation_x_size;
 	const int y_base = y / tesselation_y_size;
-	const int y_mod  = y % tesselation_y_size;
+	const int y_mod = y % tesselation_y_size;
 
 	int x_modifier = 0;
 	int y_modifier = 0;
 
-	if (y_mod < tesselation_y_size / 2) {
-		if ((x_mod * 2 + y_mod) < (s / 2)) {
+	if(y_mod < tesselation_y_size / 2) {
+		if((x_mod * 2 + y_mod) < (s / 2)) {
 			x_modifier = -1;
 			y_modifier = -1;
-		} else if ((x_mod * 2 - y_mod) < (s * 3 / 2)) {
+		} else if((x_mod * 2 - y_mod) < (s * 3 / 2)) {
 			x_modifier = 0;
 			y_modifier = 0;
 		} else {
@@ -588,10 +592,10 @@ map_location display::pixel_position_to_hex(int x, int y) const
 		}
 
 	} else {
-		if ((x_mod * 2 - (y_mod - s / 2)) < 0) {
+		if((x_mod * 2 - (y_mod - s / 2)) < 0) {
 			x_modifier = -1;
 			y_modifier = 0;
-		} else if ((x_mod * 2 + (y_mod - s / 2)) < s * 2) {
+		} else if((x_mod * 2 + (y_mod - s / 2)) < s * 2) {
 			x_modifier = 0;
 			y_modifier = 0;
 		} else {
@@ -605,7 +609,7 @@ map_location display::pixel_position_to_hex(int x, int y) const
 
 display::rect_of_hexes::iterator& display::rect_of_hexes::iterator::operator++()
 {
-	if (loc_.y < rect_.bottom[loc_.x & 1])
+	if(loc_.y < rect_.bottom[loc_.x & 1])
 		++loc_.y;
 	else {
 		++loc_.x;
@@ -622,7 +626,7 @@ display::rect_of_hexes::iterator display::rect_of_hexes::begin() const
 }
 display::rect_of_hexes::iterator display::rect_of_hexes::end() const
 {
-	return iterator(map_location(right+1, top[(right+1) & 1]), *this);
+	return iterator(map_location(right + 1, top[(right + 1) & 1]), *this);
 }
 
 const display::rect_of_hexes display::hexes_under_rect(const rect& r) const
@@ -640,8 +644,7 @@ const display::rect_of_hexes display::hexes_under_rect(const rect& r) const
 	double tile_size = hex_size();
 	double border = theme_.border().size;
 
-	return {
-		// we minus "0.(3)", for horizontal imbrication.
+	return {// we minus "0.(3)", for horizontal imbrication.
 		// reason is: two adjacent hexes each overlap 1/4 of their width, so for
 		// grid calculation 3/4 of tile width is used, which by default gives
 		// 18/54=0.(3). Note that, while tile_width is zoom dependent, 0.(3) is not.
@@ -653,15 +656,10 @@ const display::rect_of_hexes display::hexes_under_rect(const rect& r) const
 
 		// for odd x, we must shift up one half-hex. Since x will vary along the edge,
 		// we store here the y values for even and odd x, respectively
-		{
-			static_cast<int>(std::floor(-border + y / tile_size)),
-			static_cast<int>(std::floor(-border + y / tile_size - 0.5))
-		},
-		{
-			static_cast<int>(std::floor(-border + (y + r.h - 1) / tile_size)),
-			static_cast<int>(std::floor(-border + (y + r.h - 1) / tile_size - 0.5))
-		}
-	};
+		{static_cast<int>(std::floor(-border + y / tile_size)),
+			static_cast<int>(std::floor(-border + y / tile_size - 0.5))},
+		{static_cast<int>(std::floor(-border + (y + r.h - 1) / tile_size)),
+			static_cast<int>(std::floor(-border + (y + r.h - 1) / tile_size - 0.5))}};
 
 	// TODO: in some rare cases (1/16), a corner of the big rect is on a tile
 	// (the 72x72 rectangle containing the hex) but not on the hex itself
@@ -680,16 +678,15 @@ bool display::fogged(const map_location& loc) const
 
 point display::get_location(const map_location& loc) const
 {
-	return {
-		static_cast<int>(map_area().x + (loc.x + theme_.border().size) * hex_width() - viewport_origin_.x),
-		static_cast<int>(map_area().y + (loc.y + theme_.border().size) * zoom_ - viewport_origin_.y + (is_odd(loc.x) ? zoom_/2 : 0))
-	};
+	return {static_cast<int>(map_area().x + (loc.x + theme_.border().size) * hex_width() - viewport_origin_.x),
+		static_cast<int>(map_area().y + (loc.y + theme_.border().size) * zoom_ - viewport_origin_.y
+			+ (is_odd(loc.x) ? zoom_ / 2 : 0))};
 }
 
 rect display::get_location_rect(const map_location& loc) const
 {
 	// TODO: evaluate how these functions should be defined in terms of each other
-	return { get_location(loc), point{hex_size(), hex_size()} };
+	return {get_location(loc), point{hex_size(), hex_size()}};
 }
 
 map_location display::minimap_location_on(int x, int y)
@@ -726,12 +723,12 @@ map_location display::minimap_location_on(int x, int y)
 
 surface display::screenshot(bool map_screenshot)
 {
-	if (!map_screenshot) {
+	if(!map_screenshot) {
 		LOG_DP << "taking ordinary screenshot";
 		return video::read_pixels();
 	}
 
-	if (context().map().empty()) {
+	if(context().map().empty()) {
 		ERR_DP << "No map loaded, cannot create a map screenshot.";
 		return nullptr;
 	}
@@ -742,11 +739,10 @@ surface display::screenshot(bool map_screenshot)
 
 	// Reroute render output to a separate texture until the end of scope.
 	SDL_Rect area = max_map_area();
-	if (area.w > 1 << 16 || area.h > 1 << 16) {
+	if(area.w > 1 << 16 || area.h > 1 << 16) {
 		WRN_DP << "Excessively large map screenshot area";
 	}
-	LOG_DP << "creating " << area.w << " by " << area.h
-	       << " texture for map screenshot";
+	LOG_DP << "creating " << area.w << " by " << area.h << " texture for map screenshot";
 	texture output_texture(area.w, area.h, SDL_TEXTUREACCESS_TARGET);
 	auto target_setter = draw::set_render_target(output_texture);
 	auto clipper = draw::override_clip(area);
@@ -796,7 +792,7 @@ void display::layout_buttons()
 		if(auto b = find_menu_button(menu.get_id())) {
 			const rect& loc = menu.location(video::game_canvas());
 			b->set_location(loc);
-			b->set_measurements(0,0);
+			b->set_measurements(0, 0);
 			b->set_label(menu.title());
 			b->set_image(menu.image());
 		}
@@ -807,7 +803,7 @@ void display::layout_buttons()
 		if(auto b = find_action_button(action.get_id())) {
 			const rect& loc = action.location(video::game_canvas());
 			b->set_location(loc);
-			b->set_measurements(0,0);
+			b->set_measurements(0, 0);
 			b->set_label(action.title());
 			b->set_image(action.image());
 		}
@@ -834,7 +830,7 @@ gui::button::TYPE string_to_button_type(const std::string& type)
 namespace display_direction
 {
 
-	// named namespace called in game_display.cpp
+// named namespace called in game_display.cpp
 
 const std::string& get_direction(std::size_t n)
 {
@@ -878,8 +874,8 @@ void display::create_buttons()
 
 	DBG_DP << "creating action buttons...";
 	for(const auto& action : theme_.actions()) {
-		auto b = std::make_shared<gui::button>(action.title(), string_to_button_type(action.type()),
-			action.image(), gui::button::DEFAULT_SPACE, true, action.overlay(), font::SIZE_BUTTON_SMALL);
+		auto b = std::make_shared<gui::button>(action.title(), string_to_button_type(action.type()), action.image(),
+			gui::button::DEFAULT_SPACE, true, action.overlay(), font::SIZE_BUTTON_SMALL);
 
 		DBG_DP << "drawing button " << action.get_id();
 		b->set_id(action.get_id());
@@ -900,7 +896,7 @@ void display::create_buttons()
 	menu_buttons_ = std::move(menu_work);
 	action_buttons_ = std::move(action_work);
 
-	if (prevent_draw_) {
+	if(prevent_draw_) {
 		// buttons start hidden in this case
 		hide_buttons();
 	}
@@ -915,38 +911,38 @@ void display::draw_buttons()
 	// They will draw themselves. Keeping code in case this changes.
 	return;
 
-	//const rect clip = draw::get_clip();
-	//for(auto& btn : menu_buttons_) {
+	// const rect clip = draw::get_clip();
+	// for(auto& btn : menu_buttons_) {
 	//	if(clip.overlaps(btn->location())) {
 	//		btn->set_dirty(true);
 	//		btn->draw();
 	//	}
-	//}
+	// }
 
-	//for(auto& btn : action_buttons_) {
+	// for(auto& btn : action_buttons_) {
 	//	if(clip.overlaps(btn->location())) {
 	//		btn->set_dirty(true);
 	//		btn->draw();
 	//	}
-	//}
+	// }
 }
 
 void display::hide_buttons()
 {
-	for (auto& button : menu_buttons_) {
+	for(auto& button : menu_buttons_) {
 		button->hide();
 	}
-	for (auto& button : action_buttons_) {
+	for(auto& button : action_buttons_) {
 		button->hide();
 	}
 }
 
 void display::unhide_buttons()
 {
-	for (auto& button : menu_buttons_) {
+	for(auto& button : menu_buttons_) {
 		button->hide(false);
 	}
-	for (auto& button : action_buttons_) {
+	for(auto& button : action_buttons_) {
 		button->hide(false);
 	}
 }
@@ -1149,17 +1145,16 @@ void display::get_terrain_images(const map_location& loc, const std::string& tim
 		lt += image::get_light_string(d + 13, acol.r, acol.g, acol.b);
 	}
 
-	if(lt.empty()){
+	if(lt.empty()) {
 		tod_color col = tod.color + color_adjust_;
-		if(!col.is_zero()){
+		if(!col.is_zero()) {
 			// no real lightmap needed but still color the hex
 			lt = image::get_light_string(-1, col.r, col.g, col.b);
 		}
 	}
 
-	const terrain_builder::TERRAIN_TYPE builder_terrain_type = terrain_type == FOREGROUND
-		? terrain_builder::FOREGROUND
-		: terrain_builder::BACKGROUND;
+	const terrain_builder::TERRAIN_TYPE builder_terrain_type
+		= terrain_type == FOREGROUND ? terrain_builder::FOREGROUND : terrain_builder::BACKGROUND;
 
 	if(const terrain_builder::imagelist* const terrains = builder_->get_terrain_at(loc, timeid, builder_terrain_type)) {
 		// Cache the offmap name. Since it is themeable it can change, so don't make it static.
@@ -1192,41 +1187,38 @@ void display::get_terrain_images(const map_location& loc, const std::string& tim
 
 namespace
 {
-constexpr std::array layer_groups {
-	drawing_layer::terrain_bg,
-	drawing_layer::unit_first,
-	drawing_layer::unit_move_default
-};
+constexpr std::array layer_groups{
+	drawing_layer::terrain_bg, drawing_layer::unit_first, drawing_layer::unit_move_default};
 
 enum {
 	// you may adjust the following when needed:
 
 	// maximum border. 3 should be safe even if a larger border is in use somewhere
-	MAX_BORDER           = 3,
+	MAX_BORDER = 3,
 
 	// store x, y, and layer in one 32 bit integer
 	// 4 most significant bits == layer group   => 16
 	BITS_FOR_LAYER_GROUP = 4,
 
 	// 10 second most significant bits == y     => 1024
-	BITS_FOR_Y           = 10,
+	BITS_FOR_Y = 10,
 
 	// 1 third most significant bit == x parity => 2
-	BITS_FOR_X_PARITY    = 1,
+	BITS_FOR_X_PARITY = 1,
 
 	// 8 fourth most significant bits == layer   => 256
-	BITS_FOR_LAYER       = 8,
+	BITS_FOR_LAYER = 8,
 
 	// 9 least significant bits == x / 2        => 512 (really 1024 for x)
-	BITS_FOR_X_OVER_2    = 9,
+	BITS_FOR_X_OVER_2 = 9,
 
-	SHIFT_LAYER          = BITS_FOR_X_OVER_2,
+	SHIFT_LAYER = BITS_FOR_X_OVER_2,
 
-	SHIFT_X_PARITY       = BITS_FOR_LAYER    + SHIFT_LAYER,
+	SHIFT_X_PARITY = BITS_FOR_LAYER + SHIFT_LAYER,
 
-	SHIFT_Y              = BITS_FOR_X_PARITY + SHIFT_X_PARITY,
+	SHIFT_Y = BITS_FOR_X_PARITY + SHIFT_X_PARITY,
 
-	SHIFT_LAYER_GROUP    = BITS_FOR_Y        + SHIFT_Y
+	SHIFT_LAYER_GROUP = BITS_FOR_Y + SHIFT_Y
 };
 
 uint32_t generate_hex_key(const drawing_layer layer, const map_location& loc)
@@ -1248,7 +1240,7 @@ uint32_t generate_hex_key(const drawing_layer layer, const map_location& loc)
 	uint32_t key = 0;
 	static_assert(SHIFT_LAYER_GROUP + BITS_FOR_LAYER_GROUP == sizeof(key) * 8, "Bit field too small");
 
-	key  = (group_i  << SHIFT_LAYER_GROUP) | (static_cast<uint32_t>(loc.y + MAX_BORDER) << SHIFT_Y);
+	key = (group_i << SHIFT_LAYER_GROUP) | (static_cast<uint32_t>(loc.y + MAX_BORDER) << SHIFT_Y);
 	key |= (x_parity << SHIFT_X_PARITY);
 	key |= (static_cast<uint32_t>(layer) << SHIFT_LAYER) | static_cast<uint32_t>(loc.x + MAX_BORDER) / 2;
 
@@ -1256,7 +1248,8 @@ uint32_t generate_hex_key(const drawing_layer layer, const map_location& loc)
 }
 } // namespace
 
-void display::drawing_buffer_add(const drawing_layer layer, const map_location& loc, decltype(draw_helper::do_draw) draw_func)
+void display::drawing_buffer_add(
+	const drawing_layer layer, const map_location& loc, decltype(draw_helper::do_draw) draw_func)
 {
 	drawing_buffer_.AGGREGATE_EMPLACE(generate_hex_key(layer, loc), std::move(draw_func), get_location_rect(loc));
 }
@@ -1264,7 +1257,7 @@ void display::drawing_buffer_add(const drawing_layer layer, const map_location& 
 void display::drawing_buffer_commit()
 {
 	DBG_DP << "committing drawing buffer"
-	       << " with " << drawing_buffer_.size() << " items";
+		   << " with " << drawing_buffer_.size() << " items";
 
 	// std::list::sort() is a stable sort
 	drawing_buffer_.sort();
@@ -1308,7 +1301,8 @@ void display::update_fps_label()
 
 	const auto [min_iter, max_iter] = std::minmax_element(frametimes_.begin(), frametimes_.end());
 
-	const std::chrono::milliseconds render_avg = std::accumulate(frametimes_.begin(), frametimes_.end(), 0ms) / frametimes_.size();
+	const std::chrono::milliseconds render_avg
+		= std::accumulate(frametimes_.begin(), frametimes_.end(), 0ms) / frametimes_.size();
 
 	// NOTE: max FPS corresponds to the *shortest* time between frames (that is, min_iter)
 	const int avg_fps = calculate_fps(render_avg);
@@ -1337,12 +1331,15 @@ void display::update_fps_label()
 	std::ostringstream stream;
 #ifdef __cpp_lib_format
 	stream << "<tt>      " << std::format("{:<5}|{:<5}|{:<5}|{:<5}", "min", "avg", "max", "act") << "</tt>\n";
-	stream << "<tt>FPS:  " << std::format("{:<5}|{:<5}|{:<5}|{:<5}", min_fps, avg_fps, max_fps, fps_actual_) << "</tt>\n";
+	stream << "<tt>FPS:  " << std::format("{:<5}|{:<5}|{:<5}|{:<5}", min_fps, avg_fps, max_fps, fps_actual_)
+		   << "</tt>\n";
 	stream << "<tt>Time: " << std::format("{:5}|{:5}|{:5}", *max_iter, render_avg, *min_iter) << "</tt>\n";
 #else
 	stream << "<tt>      min  |avg  |max  |act  </tt>\n";
-	stream << "<tt>FPS:  " << std::left << std::setfill(' ') << std::setw(5) << min_fps << '|' << std::setw(5) << avg_fps << '|' << std::setw(5) << max_fps << '|' << std::setw(5) << fps_actual_ << "</tt>\n";
-	stream << "<tt>Time: " << std::left << std::setfill(' ') << std::setw(5) << max_iter->count() << '|' << std::setw(5) << render_avg.count() << '|' << std::setw(5) << min_iter->count() << "</tt>\n";
+	stream << "<tt>FPS:  " << std::left << std::setfill(' ') << std::setw(5) << min_fps << '|' << std::setw(5)
+		   << avg_fps << '|' << std::setw(5) << max_fps << '|' << std::setw(5) << fps_actual_ << "</tt>\n";
+	stream << "<tt>Time: " << std::left << std::setfill(' ') << std::setw(5) << max_iter->count() << '|' << std::setw(5)
+		   << render_avg.count() << '|' << std::setw(5) << min_iter->count() << "</tt>\n";
 #endif
 
 	if(game_config::debug) {
@@ -1380,22 +1377,21 @@ void display::clear_fps_label()
 void display::draw_panel(const theme::panel& panel)
 {
 	// Most panels are transparent.
-	if (panel.image().empty()) {
+	if(panel.image().empty()) {
 		return;
 	}
 
 	const rect& loc = panel.location(video::game_canvas());
 
-	if (!loc.overlaps(draw::get_clip())) {
+	if(!loc.overlaps(draw::get_clip())) {
 		return;
 	}
 
 	DBG_DP << "drawing panel " << panel.get_id() << ' ' << loc;
 
 	texture tex(image::get_texture(panel.image()));
-	if (!tex) {
-		ERR_DP << "failed to load panel " << panel.get_id()
-			<< " texture: " << panel.image();
+	if(!tex) {
+		ERR_DP << "failed to load panel " << panel.get_id() << " texture: " << panel.image();
 		return;
 	}
 
@@ -1406,7 +1402,7 @@ void display::draw_label(const theme::label& label)
 {
 	const rect& loc = label.location(video::game_canvas());
 
-	if (!loc.overlaps(draw::get_clip())) {
+	if(!loc.overlaps(draw::get_clip())) {
 		return;
 	}
 
@@ -1420,7 +1416,7 @@ void display::draw_label(const theme::label& label)
 		draw::blit(image::get_texture(icon), loc);
 
 		if(text.empty() == false) {
-			tooltips::add_tooltip(loc,text);
+			tooltips::add_tooltip(loc, text);
 		}
 	} else if(text.empty() == false) {
 		font::pango_text& renderer = font::get_text_renderer();
@@ -1434,7 +1430,7 @@ void display::draw_label(const theme::label& label)
 		renderer.set_maximum_height(loc.h, true);
 
 		auto t = renderer.render_and_get_texture();
-		draw::blit(t, rect{ loc.origin(), t.draw_size() });
+		draw::blit(t, rect{loc.origin(), t.draw_size()});
 	}
 }
 
@@ -1461,14 +1457,15 @@ bool display::draw_all_panels(const rect& region)
 }
 
 void display::draw_text_in_hex(const map_location& loc,
-		const drawing_layer layer,
-		const std::string& text,
-		std::size_t font_size,
-		color_t color,
-		double x_in_hex,
-		double y_in_hex)
+	const drawing_layer layer,
+	const std::string& text,
+	std::size_t font_size,
+	color_t color,
+	double x_in_hex,
+	double y_in_hex)
 {
-	if (text.empty()) return;
+	if(text.empty())
+		return;
 
 	auto& renderer = font::get_text_renderer();
 	renderer.set_text(text, false);
@@ -1479,7 +1476,7 @@ void display::draw_text_in_hex(const map_location& loc,
 	renderer.set_add_outline(true);
 
 	drawing_buffer_add(layer, loc, [x_in_hex, y_in_hex, tex = renderer.render_and_get_texture()](const rect& dest) {
-		draw::blit(tex, rect{ dest.point_at(x_in_hex, y_in_hex) - tex.draw_size() / 2, tex.draw_size() });
+		draw::blit(tex, rect{dest.point_at(x_in_hex, y_in_hex) - tex.draw_size() / 2, tex.draw_size()});
 	});
 }
 
@@ -1590,16 +1587,13 @@ void display::recalculate_minimap()
 	}
 
 	const rect& area = minimap_area();
-	if(area.empty()){
+	if(area.empty()) {
 		return;
 	}
 
-	minimap_renderer_ = image::prep_minimap_for_rendering(
-		context().map(),
-		context().teams().empty() ? nullptr : &viewing_team(),
-		nullptr,
-		(selectedHex_.valid() && !is_blindfolded()) ? &reach_map_ : nullptr
-	);
+	minimap_renderer_
+		= image::prep_minimap_for_rendering(context().map(), context().teams().empty() ? nullptr : &viewing_team(),
+			nullptr, (selectedHex_.valid() && !is_blindfolded()) ? &reach_map_ : nullptr);
 
 	redraw_minimap();
 }
@@ -1650,28 +1644,22 @@ void display::draw_minimap()
 	int view_w = static_cast<int>(map_out_rect.w * xscaling);
 	int view_h = static_cast<int>(map_out_rect.h * yscaling);
 
-	rect outline_rect {
-		minimap_location_.x + view_x - 1,
-		minimap_location_.y + view_y - 1,
-		view_w + 2,
-		view_h + 2
-	};
+	rect outline_rect{minimap_location_.x + view_x - 1, minimap_location_.y + view_y - 1, view_w + 2, view_h + 2};
 
 	draw::rect(outline_rect, 255, 255, 255);
 }
 
 void display::draw_minimap_units()
 {
-	if (!prefs::get().minimap_draw_units() || is_blindfolded()) return;
+	if(!prefs::get().minimap_draw_units() || is_blindfolded())
+		return;
 
 	double xscaling = 1.0 * minimap_location_.w / context().map().w();
 	double yscaling = 1.0 * minimap_location_.h / context().map().h();
 
 	for(const auto& u : context().units()) {
-		if (fogged(u.get_location()) ||
-		    (viewing_team().is_enemy(u.side()) &&
-		     u.invisible(u.get_location())) ||
-			 u.get_hidden()) {
+		if(fogged(u.get_location()) || (viewing_team().is_enemy(u.side()) && u.invisible(u.get_location()))
+			|| u.get_hidden()) {
 			continue;
 		}
 
@@ -1691,17 +1679,13 @@ void display::draw_minimap_units()
 		}
 
 		double u_x = u.get_location().x * xscaling;
-		double u_y = (u.get_location().y + (is_odd(u.get_location().x) ? 1 : -1)/4.0) * yscaling;
+		double u_y = (u.get_location().y + (is_odd(u.get_location().x) ? 1 : -1) / 4.0) * yscaling;
 		// use 4/3 to compensate the horizontal hexes imbrication
 		double u_w = 4.0 / 3.0 * xscaling;
 		double u_h = yscaling;
 
-		rect r {
-				  minimap_location_.x + int(std::round(u_x))
-				, minimap_location_.y + int(std::round(u_y))
-				, int(std::round(u_w))
-				, int(std::round(u_h))
-		};
+		rect r{minimap_location_.x + int(std::round(u_x)), minimap_location_.y + int(std::round(u_y)),
+			int(std::round(u_w)), int(std::round(u_h))};
 
 		draw::fill(r, col.r, col.g, col.b, col.a);
 	}
@@ -1831,14 +1815,13 @@ bool display::set_zoom(unsigned int amount, const bool validate_value_and_set_in
 	}
 
 	if(validate_value_and_set_index) {
-		zoom_index_ = get_zoom_levels_index (new_zoom);
+		zoom_index_ = get_zoom_levels_index(new_zoom);
 		new_zoom = zoom_levels[zoom_index_];
 	}
 
 	if((new_zoom / 4) * 4 != new_zoom) {
-		WRN_DP << "set_zoom forcing zoom " << new_zoom
-			<< " which is not a multiple of 4."
-			<< " This will likely cause graphical glitches.";
+		WRN_DP << "set_zoom forcing zoom " << new_zoom << " which is not a multiple of 4."
+			   << " This will likely cause graphical glitches.";
 	}
 
 	const rect outside_area = map_outside_area();
@@ -1880,7 +1863,7 @@ bool display::set_zoom(unsigned int amount, const bool validate_value_and_set_in
 
 void display::toggle_default_zoom()
 {
-	if (zoom_ != DefaultZoom) {
+	if(zoom_ != DefaultZoom) {
 		last_zoom_ = zoom_;
 		set_zoom(DefaultZoom);
 	} else {
@@ -1900,13 +1883,13 @@ bool display::tile_nearly_on_screen(const map_location& loc) const
 	const auto [x, y] = get_location(loc);
 	const rect area = map_area();
 	int hw = hex_width(), hs = hex_size();
-	return x + hs >= area.x - hw && x < area.x + area.w + hw &&
-	       y + hs >= area.y - hs && y < area.y + area.h + hs;
+	return x + hs >= area.x - hw && x < area.x + area.w + hw && y + hs >= area.y - hs && y < area.y + area.h + hs;
 }
 
 void display::scroll_to_xy(const point& screen_coordinates, SCROLL_TYPE scroll_type, bool force)
 {
-	if(!force && (view_locked_ || !prefs::get().scroll_to_action())) return;
+	if(!force && (view_locked_ || !prefs::get().scroll_to_action()))
+		return;
 	if(video::headless()) {
 		return;
 	}
@@ -1935,7 +1918,7 @@ void display::scroll_to_xy(const point& screen_coordinates, SCROLL_TYPE scroll_t
 	auto prev_time = std::chrono::steady_clock::now();
 
 	double velocity = 0.0;
-	while (dist_moved < dist_total) {
+	while(dist_moved < dist_total) {
 		events::pump();
 
 		auto time = std::chrono::steady_clock::now();
@@ -1956,22 +1939,22 @@ void display::scroll_to_xy(const point& screen_coordinates, SCROLL_TYPE scroll_t
 
 		// If we started to decelerate now, where would we stop?
 		double stop_time = velocity / decel;
-		double dist_stop = dist_moved + velocity*stop_time - 0.5*decel*stop_time*stop_time;
-		if (dist_stop > dist_total || velocity > velocity_max) {
+		double dist_stop = dist_moved + velocity * stop_time - 0.5 * decel * stop_time * stop_time;
+		if(dist_stop > dist_total || velocity > velocity_max) {
 			velocity -= decel * dt_as_double;
-			if (velocity < 1.0) velocity = 1.0;
+			if(velocity < 1.0)
+				velocity = 1.0;
 		} else {
 			velocity += accel * dt_as_double;
-			if (velocity > velocity_max) velocity = velocity_max;
+			if(velocity > velocity_max)
+				velocity = velocity_max;
 		}
 
 		dist_moved += velocity * dt_as_double;
-		if (dist_moved > dist_total) dist_moved = dist_total;
+		if(dist_moved > dist_total)
+			dist_moved = dist_total;
 
-		point next_pos(
-			std::round(move.x * dist_moved / dist_total),
-			std::round(move.y * dist_moved / dist_total)
-		);
+		point next_pos(std::round(move.x * dist_moved / dist_total), std::round(move.y * dist_moved / dist_total));
 
 		point diff = next_pos - prev_pos;
 		scroll(diff, true);
@@ -1992,16 +1975,18 @@ void display::scroll_to_tile(const map_location& loc, SCROLL_TYPE scroll_type, b
 	scroll_to_tiles({loc}, scroll_type, check_fogged, false, 0.0, force);
 }
 
-void display::scroll_to_tiles(map_location loc1, map_location loc2,
-                              SCROLL_TYPE scroll_type, bool check_fogged,
-                              double add_spacing, bool force)
+void display::scroll_to_tiles(
+	map_location loc1, map_location loc2, SCROLL_TYPE scroll_type, bool check_fogged, double add_spacing, bool force)
 {
 	scroll_to_tiles({loc1, loc2}, scroll_type, check_fogged, false, add_spacing, force);
 }
 
 void display::scroll_to_tiles(const std::vector<map_location>& locs,
-                              SCROLL_TYPE scroll_type, bool check_fogged,
-                              bool only_if_possible, double add_spacing, bool force)
+	SCROLL_TYPE scroll_type,
+	bool check_fogged,
+	bool only_if_possible,
+	double add_spacing,
+	bool force)
 {
 	// basically we calculate the min/max coordinates we want to have on-screen
 	int minx = 0;
@@ -2011,28 +1996,31 @@ void display::scroll_to_tiles(const std::vector<map_location>& locs,
 	bool valid = false;
 
 	for(const map_location& loc : locs) {
-		if(context().map().on_board(loc) == false) continue;
-		if(check_fogged && fogged(loc)) continue;
+		if(context().map().on_board(loc) == false)
+			continue;
+		if(check_fogged && fogged(loc))
+			continue;
 
 		const auto [x, y] = get_location(loc);
 
-		if (!valid) {
+		if(!valid) {
 			minx = x;
 			maxx = x;
 			miny = y;
 			maxy = y;
 			valid = true;
 		} else {
-			int minx_new = std::min<int>(minx,x);
-			int miny_new = std::min<int>(miny,y);
-			int maxx_new = std::max<int>(maxx,x);
-			int maxy_new = std::max<int>(maxy,y);
+			int minx_new = std::min<int>(minx, x);
+			int miny_new = std::min<int>(miny, y);
+			int maxx_new = std::max<int>(maxx, x);
+			int maxy_new = std::max<int>(maxy, y);
 			rect r = map_area();
 			r.x = minx_new;
 			r.y = miny_new;
 			if(outside_area(r, maxx_new, maxy_new)) {
 				// we cannot fit all locations to the screen
-				if (only_if_possible) return;
+				if(only_if_possible)
+					return;
 				break;
 			}
 			minx = minx_new;
@@ -2041,13 +2029,14 @@ void display::scroll_to_tiles(const std::vector<map_location>& locs,
 			maxy = maxy_new;
 		}
 	}
-	//if everything is fogged or the location list is empty
-	if(!valid) return;
+	// if everything is fogged or the location list is empty
+	if(!valid)
+		return;
 
-	if (scroll_type == ONSCREEN || scroll_type == ONSCREEN_WARP) {
+	if(scroll_type == ONSCREEN || scroll_type == ONSCREEN_WARP) {
 		int spacing = std::round(add_spacing * hex_size());
 		rect r = map_area().padded_by(-spacing); // Shrink
-		if (!outside_area(r, minx,miny) && !outside_area(r, maxx,maxy)) {
+		if(!outside_area(r, minx, miny) && !outside_area(r, maxx, maxy)) {
 			return;
 		}
 	}
@@ -2062,7 +2051,7 @@ void display::scroll_to_tiles(const std::vector<map_location>& locs,
 	// target the center
 	point target = locs_bbox.center();
 
-	if (scroll_type == ONSCREEN || scroll_type == ONSCREEN_WARP) {
+	if(scroll_type == ONSCREEN || scroll_type == ONSCREEN_WARP) {
 		// when doing an ONSCREEN scroll we do not center the target unless needed
 		rect r = map_area();
 		auto [map_center_x, map_center_y] = r.center();
@@ -2080,11 +2069,13 @@ void display::scroll_to_tiles(const std::vector<map_location>& locs,
 		w -= locs_bbox.w;
 		h -= locs_bbox.h;
 
-		if (w < 1) w = 1;
-		if (h < 1) h = 1;
+		if(w < 1)
+			w = 1;
+		if(h < 1)
+			h = 1;
 
-		r.x = target.x - w/2;
-		r.y = target.y - h/2;
+		r.x = target.x - w / 2;
+		r.y = target.y - h / 2;
 		r.w = w;
 		r.h = h;
 
@@ -2092,16 +2083,16 @@ void display::scroll_to_tiles(const std::vector<map_location>& locs,
 		// we take the one with the minimum distance to map_center
 		// which will always be at the border of r
 
-		if (map_center_x < r.x) {
+		if(map_center_x < r.x) {
 			target.x = r.x;
 			target.y = std::clamp(map_center_y, r.y, r.y + r.h - 1);
-		} else if (map_center_x > r.x+r.w-1) {
+		} else if(map_center_x > r.x + r.w - 1) {
 			target.x = r.x + r.w - 1;
 			target.y = std::clamp(map_center_y, r.y, r.y + r.h - 1);
-		} else if (map_center_y < r.y) {
+		} else if(map_center_y < r.y) {
 			target.y = r.y;
 			target.x = std::clamp(map_center_x, r.x, r.x + r.w - 1);
-		} else if (map_center_y > r.y+r.h-1) {
+		} else if(map_center_y > r.y + r.h - 1) {
 			target.y = r.y + r.h - 1;
 			target.x = std::clamp(map_center_x, r.x, r.x + r.w - 1);
 		} else {
@@ -2112,7 +2103,6 @@ void display::scroll_to_tiles(const std::vector<map_location>& locs,
 
 	scroll_to_xy(target, scroll_type, force);
 }
-
 
 void display::bounds_check_position()
 {
@@ -2149,7 +2139,7 @@ double display::turbo_speed() const
 void display::set_prevent_draw(bool pd)
 {
 	prevent_draw_ = pd;
-	if (!pd) {
+	if(!pd) {
 		// ensure buttons are visible
 		unhide_buttons();
 	}
@@ -2160,7 +2150,8 @@ bool display::get_prevent_draw()
 	return prevent_draw_;
 }
 
-submerge_data display::get_submerge_data(const rect& dest, double submerge, const point& size, uint8_t alpha, bool hreverse, bool vreverse)
+submerge_data display::get_submerge_data(
+	const rect& dest, double submerge, const point& size, uint8_t alpha, bool hreverse, bool vreverse)
 {
 	submerge_data data;
 	if(submerge <= 0.0) {
@@ -2207,9 +2198,7 @@ submerge_data display::get_submerge_data(const rect& dest, double submerge, cons
 	return data;
 }
 
-void display::fade_tod_mask(
-	const std::string& old_mask,
-	const std::string& new_mask)
+void display::fade_tod_mask(const std::string& old_mask, const std::string& new_mask)
 {
 	// TODO: hwaccel - this needs testing as it's not used in mainline
 	tod_hex_mask1 = image::get_texture(old_mask, image::HEXED);
@@ -2294,7 +2283,7 @@ void display::queue_rerender()
 
 	if(resources::controller) {
 		hotkey::command_executor* command_executor = resources::controller->get_hotkey_command_executor();
-		if(command_executor != nullptr)	{
+		if(command_executor != nullptr) {
 			// This function adds button overlays,
 			// it needs to be run after recreating the buttons.
 			command_executor->set_button_state();
@@ -2341,7 +2330,7 @@ void display::draw()
 		DBG_DP << "display::draw denied";
 		return;
 	}
-	//DBG_DP << "display::draw";
+	// DBG_DP << "display::draw";
 
 	// I have no idea why this is messing with sync context,
 	// but i'm not going to touch it.
@@ -2373,8 +2362,8 @@ void display::draw()
 
 void display::update()
 {
-	//DBG_DP << "display::update";
-	// Ensure render textures are correctly sized and up-to-date.
+	// DBG_DP << "display::update";
+	//  Ensure render textures are correctly sized and up-to-date.
 	update_render_textures();
 
 	// Trigger cache rebuild if animated water preference has changed.
@@ -2390,14 +2379,14 @@ void display::update()
 
 void display::layout()
 {
-	//DBG_DP << "display::layout";
+	// DBG_DP << "display::layout";
 
 	// There's nothing that actually does layout here, it all happens in
 	// response to events. This isn't ideal, but neither is changing that.
 
 	// Post-layout / Pre-render
 
-	if (!context().map().empty()) {
+	if(!context().map().empty()) {
 		if(redraw_background_) {
 			invalidateAll_ = true;
 		}
@@ -2423,7 +2412,7 @@ void display::render()
 {
 	// This should render the game map and units.
 	// It is not responsible for halos and floating labels.
-	//DBG_DP << "display::render";
+	// DBG_DP << "display::render";
 
 	// No need to render if we aren't going to draw anything.
 	if(prevent_draw_) {
@@ -2513,7 +2502,7 @@ void display::update_render_textures()
 	point dsize = front_.draw_size();
 	bool raw_size_changed = size.x != oarea.w || size.y != oarea.h;
 	bool draw_size_changed = dsize.x != darea.w || dsize.y != darea.h;
-	if (!raw_size_changed && !draw_size_changed) {
+	if(!raw_size_changed && !draw_size_changed) {
 		// buffers are fine
 		return;
 	}
@@ -2532,7 +2521,7 @@ void display::update_render_textures()
 	// Fill entire texture with black, just in case
 	for(int i = 0; i < 2; ++i) {
 		auto setter = draw::set_render_target(i ? back_ : front_);
-		draw::fill(0,0,0);
+		draw::fill(0, 0, 0);
 	}
 
 	// Fill in the background area on both textures.
@@ -2623,20 +2612,22 @@ void display::draw_hex(const map_location& loc)
 		get_terrain_images(loc, tod.id, BACKGROUND); // updates terrain_image_vector_
 		num_images_bg = terrain_image_vector_.size();
 
-		drawing_buffer_add(drawing_layer::terrain_bg, loc, [images = std::exchange(terrain_image_vector_, {})](const rect& dest) {
-			for(const texture& t : images) {
-				draw::blit(t, dest);
-			}
-		});
+		drawing_buffer_add(
+			drawing_layer::terrain_bg, loc, [images = std::exchange(terrain_image_vector_, {})](const rect& dest) {
+				for(const texture& t : images) {
+					draw::blit(t, dest);
+				}
+			});
 
 		get_terrain_images(loc, tod.id, FOREGROUND); // updates terrain_image_vector_
 		num_images_fg = terrain_image_vector_.size();
 
-		drawing_buffer_add(drawing_layer::terrain_fg, loc, [images = std::exchange(terrain_image_vector_, {})](const rect& dest) {
-			for(const texture& t : images) {
-				draw::blit(t, dest);
-			}
-		});
+		drawing_buffer_add(
+			drawing_layer::terrain_fg, loc, [images = std::exchange(terrain_image_vector_, {})](const rect& dest) {
+				for(const texture& t : images) {
+					draw::blit(t, dest);
+				}
+			});
 
 		// Draw the grid, if that's been enabled
 		if(prefs::get().grid()) {
@@ -2647,7 +2638,8 @@ void display::draw_hex(const map_location& loc)
 				[tex = image::get_texture(grid_top, image::TOD_COLORED)](const rect& dest) { draw::blit(tex, dest); });
 
 			drawing_buffer_add(drawing_layer::grid_bottom, loc,
-				[tex = image::get_texture(grid_bottom, image::TOD_COLORED)](const rect& dest) { draw::blit(tex, dest); });
+				[tex = image::get_texture(grid_bottom, image::TOD_COLORED)](
+					const rect& dest) { draw::blit(tex, dest); });
 		}
 
 		// overlays (TODO: can we just draw all the overlays in one pass instead of per-hex?)
@@ -2655,8 +2647,8 @@ void display::draw_hex(const map_location& loc)
 
 		// village-control flags.
 		if(context().map().is_village(loc)) {
-			drawing_buffer_add(drawing_layer::terrain_bg, loc,
-				[tex = get_flag(loc)](const rect& dest) { draw::blit(tex, dest); });
+			drawing_buffer_add(
+				drawing_layer::terrain_bg, loc, [tex = get_flag(loc)](const rect& dest) { draw::blit(tex, dest); });
 		}
 	}
 
@@ -2704,11 +2696,12 @@ void display::draw_hex(const map_location& loc)
 	}
 
 	if(!is_shrouded) {
-		drawing_buffer_add(drawing_layer::fog_shroud, loc, [images = get_fog_shroud_images(loc, image::TOD_COLORED)](const rect& dest) {
-			for(const texture& t : images) {
-				draw::blit(t, dest);
-			}
-		});
+		drawing_buffer_add(drawing_layer::fog_shroud, loc,
+			[images = get_fog_shroud_images(loc, image::TOD_COLORED)](const rect& dest) {
+				for(const texture& t : images) {
+					draw::blit(t, dest);
+				}
+			});
 	}
 
 	if(debug_flag_set(DEBUG_FOREGROUND)) {
@@ -2757,7 +2750,7 @@ void display::draw_hex(const map_location& loc)
 
 		drawing_buffer_add(drawing_layer::fog_shroud, loc, [tex = renderer.render_and_get_texture()](const rect& dest) {
 			// Center text in dest rect
-			const rect text_dest { dest.center() - tex.draw_size() / 2, tex.draw_size() };
+			const rect text_dest{dest.center() - tex.draw_size() / 2, tex.draw_size()};
 
 			// Add a little padding to the bg
 			const rect bg_dest = text_dest.padded_by(3);
@@ -2795,7 +2788,8 @@ void display::draw_overlays_at(const map_location& loc)
 			const auto team_names = utils::split_view(ov.team_name);
 
 			bool item_visible_for_team = std::find_first_of(team_names.begin(), team_names.end(),
-				current_team_names.begin(), current_team_names.end()) != team_names.end();
+											 current_team_names.begin(), current_team_names.end())
+				!= team_names.end();
 
 			if(!item_visible_for_team) {
 				continue;
@@ -2841,13 +2835,13 @@ void display::draw_overlays_at(const map_location& loc)
  * If a config is not supplied, it will be generated via
  * reports::generate_report().
  */
-void display::refresh_report(const std::string& report_name, const config * new_cfg)
+void display::refresh_report(const std::string& report_name, const config* new_cfg)
 {
-	const theme::status_item *item = theme_.get_status_item(report_name);
-	if (!item) {
+	const theme::status_item* item = theme_.get_status_item(report_name);
+	if(!item) {
 		// This should be a warning, but unfortunately there are too many
 		// unused reports to easily deal with.
-		//WRN_DP << "no report '" << report_name << "' in theme";
+		// WRN_DP << "no report '" << report_name << "' in theme";
 		return;
 	}
 
@@ -2855,22 +2849,22 @@ void display::refresh_report(const std::string& report_name, const config * new_
 
 	utils::optional_reference<events::mouse_handler> mhb = utils::nullopt;
 
-	if (resources::controller) {
+	if(resources::controller) {
 		mhb = resources::controller->get_mouse_handler_base();
 	}
 
 	reports::context temp_context = reports::context(*dc_, *this, *resources::tod_manager, wb_.lock(), mhb);
 
 	const config generated_cfg = new_cfg ? config() : reports_object_->generate_report(report_name, temp_context);
-	if ( new_cfg == nullptr )
+	if(new_cfg == nullptr)
 		new_cfg = &generated_cfg;
 
 	rect& loc = reportLocations_[report_name];
 	const rect& new_loc = item->location(video::game_canvas());
-	config &report = reports_[report_name];
+	config& report = reports_[report_name];
 
 	// Report and its location is unchanged since last time. Do nothing.
-	if (loc == new_loc && report == *new_cfg) {
+	if(loc == new_loc && report == *new_cfg) {
 		return;
 	}
 
@@ -2888,20 +2882,21 @@ void display::refresh_report(const std::string& report_name, const config * new_
 	// but it seems to be working so i'm not changing it.
 	tooltips::clear_tooltips(loc);
 
-	if (report.empty()) return;
+	if(report.empty())
+		return;
 
 	// Add prefix, postfix elements.
 	// Make sure that they get the same tooltip
 	// as the guys around them.
 	std::string str = item->prefix();
-	if (!str.empty()) {
-		config &e = report.add_child_at("element", config(), 0);
+	if(!str.empty()) {
+		config& e = report.add_child_at("element", config(), 0);
 		e["text"] = str;
 		e["tooltip"] = report.mandatory_child("element")["tooltip"];
 	}
 	str = item->postfix();
-	if (!str.empty()) {
-		config &e = report.add_child("element");
+	if(!str.empty()) {
+		config& e = report.add_child("element");
 		e["text"] = str;
 		e["tooltip"] = report.mandatory_child("element", -1)["tooltip"];
 	}
@@ -2913,11 +2908,11 @@ void display::refresh_report(const std::string& report_name, const config * new_
 
 void display::draw_report(const std::string& report_name, bool tooltip_test)
 {
-	const theme::status_item *item = theme_.get_status_item(report_name);
-	if (!item) {
+	const theme::status_item* item = theme_.get_status_item(report_name);
+	if(!item) {
 		// This should be a warning, but unfortunately there are too many
 		// unused reports to easily deal with.
-		//WRN_DP << "no report '" << report_name << "' in theme";
+		// WRN_DP << "no report '" << report_name << "' in theme";
 		return;
 	}
 
@@ -2933,33 +2928,32 @@ void display::draw_report(const std::string& report_name, bool tooltip_test)
 	std::ostringstream ellipsis_tooltip;
 	rect ellipsis_area = loc;
 
-	for (config::const_child_itors elements = report.child_range("element");
-		 elements.begin() != elements.end(); elements.pop_front())
-	{
-		rect area {x, y, loc.w + loc.x - x, loc.h + loc.y - y};
-		if (area.h <= 0) break;
+	for(config::const_child_itors elements = report.child_range("element"); elements.begin() != elements.end();
+		elements.pop_front()) {
+		rect area{x, y, loc.w + loc.x - x, loc.h + loc.y - y};
+		if(area.h <= 0)
+			break;
 
 		std::string t = elements.front()["text"];
-		if (!t.empty())
-		{
-			if (used_ellipsis) goto skip_element;
+		if(!t.empty()) {
+			if(used_ellipsis)
+				goto skip_element;
 
 			// Draw a text element.
 			font::pango_text& text = font::get_text_renderer();
 			bool eol = false;
-			if (t[t.size() - 1] == '\n') {
+			if(t[t.size() - 1] == '\n') {
 				eol = true;
 				t = t.substr(0, t.size() - 1);
 			}
 			// If stripping left the text empty, skip it.
-			if (t.empty()) {
+			if(t.empty()) {
 				// Blank text has a null size when rendered.
 				// It does not, however, have a null size when the size
 				// is requested with get_size(). Hence this check.
 				continue;
 			}
-			text.set_link_aware(false)
-				.set_text(t, true);
+			text.set_link_aware(false).set_text(t, true);
 			text.set_family_class(font::family_class::sans_serif)
 				.set_font_size(item->font_size())
 				.set_font_style(font::pango_text::STYLE_NORMAL)
@@ -2975,12 +2969,11 @@ void display::draw_report(const std::string& report_name, bool tooltip_test)
 			// check if next element is text with almost no space to show it
 			const int minimal_text = 12; // width in pixels
 			config::const_child_iterator ee = elements.begin();
-			if (!eol && loc.w - (x - loc.x + tsize.x) < minimal_text &&
-				++ee != elements.end() && !(*ee)["text"].empty())
-			{
+			if(!eol && loc.w - (x - loc.x + tsize.x) < minimal_text && ++ee != elements.end()
+				&& !(*ee)["text"].empty()) {
 				// make this element longer to trigger rendering of ellipsis
 				// (to indicate that next elements have not enough space)
-				//NOTE this space should be longer than minimal_text pixels
+				// NOTE this space should be longer than minimal_text pixels
 				t = t + "    ";
 				text.set_text(t, true);
 				tsize = text.get_size();
@@ -2994,65 +2987,64 @@ void display::draw_report(const std::string& report_name, bool tooltip_test)
 
 			area.w = tsize.x;
 			area.h = tsize.y;
-			if (!tooltip_test) {
+			if(!tooltip_test) {
 				draw::blit(text.render_and_get_texture(), area);
 			}
-			if (area.h > tallest) {
+			if(area.h > tallest) {
 				tallest = area.h;
 			}
-			if (eol) {
+			if(eol) {
 				x = loc.x;
 				y += tallest;
 				tallest = 0;
 			} else {
 				x += area.w;
 			}
-		}
-		else if (!(t = elements.front()["image"].str()).empty())
-		{
-			if (used_ellipsis) goto skip_element;
+		} else if(!(t = elements.front()["image"].str()).empty()) {
+			if(used_ellipsis)
+				goto skip_element;
 
 			// Draw an image element.
 			texture img(image::get_texture(t));
 
-			if (!img) {
+			if(!img) {
 				ERR_DP << "could not find image for report: '" << t << "'";
 				continue;
 			}
 
-			if (area.w < img.w() && image_count) {
+			if(area.w < img.w() && image_count) {
 				// We have more than one image, and this one doesn't fit.
 				img = image::get_texture(game_config::images::ellipsis);
 				used_ellipsis = true;
 			}
 
-			if (img.w() < area.w) area.w = img.w();
-			if (img.h() < area.h) area.h = img.h();
-			if (!tooltip_test) {
+			if(img.w() < area.w)
+				area.w = img.w();
+			if(img.h() < area.h)
+				area.h = img.h();
+			if(!tooltip_test) {
 				draw::blit(img, area);
 			}
 
 			++image_count;
-			if (area.h > tallest) {
+			if(area.h > tallest) {
 				tallest = area.h;
 			}
 
-			if (!used_ellipsis) {
+			if(!used_ellipsis) {
 				x += area.w;
 			} else {
 				ellipsis_area = area;
 			}
-		}
-		else
-		{
+		} else {
 			// No text nor image, skip this element
 			continue;
 		}
 
-		skip_element:
+	skip_element:
 		t = elements.front()["tooltip"].t_str().c_str();
-		if (!t.empty()) {
-			if (tooltip_test && !used_ellipsis) {
+		if(!t.empty()) {
+			if(tooltip_test && !used_ellipsis) {
 				tooltips::add_tooltip(area, t, elements.front()["help"].t_str().c_str());
 			} else {
 				// Collect all tooltips for the ellipsis.
@@ -3060,13 +3052,13 @@ void display::draw_report(const std::string& report_name, bool tooltip_test)
 				// TODO: assign an action
 				ellipsis_tooltip << t;
 				config::const_child_iterator ee = elements.begin();
-				if (++ee != elements.end())
+				if(++ee != elements.end())
 					ellipsis_tooltip << "\n  _________\n\n";
 			}
 		}
 	}
 
-	if (tooltip_test && used_ellipsis) {
+	if(tooltip_test && used_ellipsis) {
 		tooltips::add_tooltip(ellipsis_area, ellipsis_tooltip.str());
 	}
 }
@@ -3107,7 +3099,7 @@ bool display::invalidate(const std::set<map_location>& locs)
 	if(invalidateAll_ && !map_screenshot_)
 		return false;
 	bool ret = false;
-	for (const map_location& loc : locs) {
+	for(const map_location& loc : locs) {
 		ret = invalidated_.insert(loc).second || ret;
 	}
 	return ret;
@@ -3118,17 +3110,17 @@ bool display::propagate_invalidation(const std::set<map_location>& locs)
 	if(invalidateAll_)
 		return false;
 
-	if(locs.size()<=1)
+	if(locs.size() <= 1)
 		return false; // propagation never needed
 
 	bool result = false;
 	{
 		// search the first hex invalidated (if any)
 		std::set<map_location>::const_iterator i = locs.begin();
-		for(; i != locs.end() && invalidated_.count(*i) == 0 ; ++i) {}
+		for(; i != locs.end() && invalidated_.count(*i) == 0; ++i) {
+		}
 
-		if (i != locs.end()) {
-
+		if(i != locs.end()) {
 			// propagate invalidation
 			// 'i' is already in, but I suspect that splitting the range is bad
 			// especially because locs are often adjacents
@@ -3154,7 +3146,7 @@ bool display::invalidate_locations_in_rect(const SDL_Rect& rect)
 
 	bool result = false;
 	for(const map_location& loc : hexes_under_rect(rect)) {
-		//DBG_DP << "invalidating " << loc.x << ',' << loc.y;
+		// DBG_DP << "invalidating " << loc.x << ',' << loc.y;
 		result |= invalidate(loc);
 	}
 	return result;
@@ -3164,8 +3156,7 @@ void display::invalidate_animations_location(const map_location& loc)
 {
 	if(context().map().is_village(loc)) {
 		const int owner = context().village_owner(loc) - 1;
-		if(owner >= 0 && flags_[owner].need_update()
-			&& (!fogged(loc) || !viewing_team().is_enemy(owner + 1))) {
+		if(owner >= 0 && flags_[owner].need_update() && (!fogged(loc) || !viewing_team().is_enemy(owner + 1))) {
 			invalidate(loc);
 		}
 	}
@@ -3211,7 +3202,7 @@ void display::invalidate_animations()
 
 void display::reset_standing_animations()
 {
-	for(const unit & u : context().units()) {
+	for(const unit& u : context().units()) {
 		u.anim_comp().set_standing();
 	}
 }
@@ -3230,7 +3221,7 @@ void display::remove_arrow(arrow& arrow)
 	}
 }
 
-void display::update_arrow(arrow & arrow)
+void display::update_arrow(arrow& arrow)
 {
 	for(const map_location& loc : arrow.get_previous_path()) {
 		arrows_map_[loc].remove(&arrow);
@@ -3266,25 +3257,26 @@ void display::read(const config& cfg)
 
 void display::process_reachmap_changes()
 {
-	if (!reach_map_changed_) return;
-	if (reach_map_.empty() != reach_map_old_.empty()) {
+	if(!reach_map_changed_)
+		return;
+	if(reach_map_.empty() != reach_map_old_.empty()) {
 		// Invalidate everything except the non-darkened tiles
-		reach_map &full = reach_map_.empty() ? reach_map_old_ : reach_map_;
+		reach_map& full = reach_map_.empty() ? reach_map_old_ : reach_map_;
 
-		for (const auto& hex : get_visible_hexes()) {
+		for(const auto& hex : get_visible_hexes()) {
 			reach_map::iterator reach = full.find(hex);
-			if (reach != full.end()) {
+			if(reach != full.end()) {
 				// Location needs to be darkened or brightened
 				invalidate(hex);
 			}
 		}
-	} else if (!reach_map_.empty()) {
+	} else if(!reach_map_.empty()) {
 		// Invalidate new and old reach
 		reach_map::iterator reach, reach_old;
-		for (reach = reach_map_.begin(); reach != reach_map_.end(); ++reach) {
+		for(reach = reach_map_.begin(); reach != reach_map_.end(); ++reach) {
 			invalidate(reach->first);
 		}
-		for (reach_old = reach_map_old_.begin(); reach_old != reach_map_old_.end(); ++reach_old) {
+		for(reach_old = reach_map_old_.begin(); reach_old != reach_map_old_.end(); ++reach_old) {
 			invalidate(reach_old->first);
 		}
 	}
@@ -3292,11 +3284,11 @@ void display::process_reachmap_changes()
 	reach_map_changed_ = false;
 
 	// Make sure there are teams before trying to access units.
-	if(!context().teams().empty()){
+	if(!context().teams().empty()) {
 		// Update the reachmap-context team, the selected unit's team shall override the displayed unit's.
 		if(context().units().count(selectedHex_)) {
 			reach_map_team_index_ = context().get_visible_unit(selectedHex_, viewing_team())->side();
-		} else if(context().get_visible_unit(mouseoverHex_, viewing_team()) != nullptr){
+		} else if(context().get_visible_unit(mouseoverHex_, viewing_team()) != nullptr) {
 			reach_map_team_index_ = context().get_visible_unit(mouseoverHex_, viewing_team())->side();
 		} else {
 			/**
@@ -3310,4 +3302,4 @@ void display::process_reachmap_changes()
 	}
 }
 
-display *display::singleton_ = nullptr;
+display* display::singleton_ = nullptr;

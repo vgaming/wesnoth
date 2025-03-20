@@ -20,14 +20,14 @@
 #include "cursor.hpp"
 #include "desktop/clipboard.hpp"
 #include "desktop/open.hpp"
+#include "font/text.hpp"
+#include "gettext.hpp"
 #include "gui/core/log.hpp"
 #include "gui/core/register_widget.hpp"
 #include "gui/dialogs/message.hpp"
 #include "gui/widgets/window.hpp"
 #include "serialization/unicode.hpp"
-#include "font/text.hpp"
 #include "wml_exception.hpp"
-#include "gettext.hpp"
 
 #include <functional>
 
@@ -55,14 +55,14 @@ multiline_text::multiline_text(const implementation::builder_multiline_text& bui
 {
 	set_wants_mouse_left_double_click();
 
-	connect_signal<event::MOUSE_MOTION>(std::bind(
-			&multiline_text::signal_handler_mouse_motion, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_5));
+	connect_signal<event::MOUSE_MOTION>(std::bind(&multiline_text::signal_handler_mouse_motion, this,
+		std::placeholders::_2, std::placeholders::_3, std::placeholders::_5));
 	connect_signal<event::LEFT_BUTTON_DOWN>(std::bind(
-			&multiline_text::signal_handler_left_button_down, this, std::placeholders::_2, std::placeholders::_3));
-	connect_signal<event::LEFT_BUTTON_UP>(std::bind(
-			&multiline_text::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
+		&multiline_text::signal_handler_left_button_down, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::LEFT_BUTTON_UP>(
+		std::bind(&multiline_text::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
 	connect_signal<event::LEFT_BUTTON_DOUBLE_CLICK>(std::bind(
-			&multiline_text::signal_handler_left_button_double_click, this, std::placeholders::_2, std::placeholders::_3));
+		&multiline_text::signal_handler_left_button_double_click, this, std::placeholders::_2, std::placeholders::_3));
 
 	const auto conf = cast_config_to<multiline_text_definition>();
 	assert(conf);
@@ -141,14 +141,12 @@ void multiline_text::update_canvas()
 	const int max_width = get_text_maximum_width();
 	const int max_height = get_text_maximum_height();
 	unsigned byte_pos = start + length;
-	if (get_use_markup() && (start + length > utf8::size(plain_text()) + 1)) {
+	if(get_use_markup() && (start + length > utf8::size(plain_text()) + 1)) {
 		byte_pos = utf8::size(plain_text());
 	}
 	const point cpos = get_cursor_pos_from_index(byte_pos);
 
-	for(auto & tmp : get_canvases())
-	{
-
+	for(auto& tmp : get_canvases()) {
 		tmp.set_variable("text", wfl::variant(get_value()));
 		tmp.set_variable("text_markup", wfl::variant(get_use_markup()));
 		tmp.set_variable("text_x_offset", wfl::variant(text_x_offset_));
@@ -191,7 +189,7 @@ void multiline_text::delete_char(const bool before_cursor)
 
 void multiline_text::delete_selection()
 {
-	if(get_selection_length() == 0 || (!is_editable()) ) {
+	if(get_selection_length() == 0 || (!is_editable())) {
 		return;
 	}
 
@@ -217,8 +215,8 @@ void multiline_text::handle_mouse_selection(point mouse, const bool start_select
 	point text_offset(text_x_offset_, text_y_offset_);
 	// FIXME we don't test for overflow in width
 	if(mouse < text_offset
-		|| mouse.y >= static_cast<int>(text_y_offset_ + get_lines_count() * font::get_line_spacing_factor() * text_height_))
-	{
+		|| mouse.y
+			>= static_cast<int>(text_y_offset_ + get_lines_count() * font::get_line_spacing_factor() * text_height_)) {
 		return;
 	}
 
@@ -235,12 +233,14 @@ void multiline_text::handle_mouse_selection(point mouse, const bool start_select
 	dragging_ |= start_selection;
 }
 
-unsigned multiline_text::get_line_end_offset(unsigned line_no) {
+unsigned multiline_text::get_line_end_offset(unsigned line_no)
+{
 	const auto line = get_line(line_no);
 	return (line->start_index + line->length);
 }
 
-unsigned multiline_text::get_line_start_offset(unsigned line_no) {
+unsigned multiline_text::get_line_start_offset(unsigned line_no)
+{
 	return get_line(line_no)->start_index;
 }
 
@@ -261,8 +261,7 @@ void multiline_text::update_offsets()
 
 	// Since this variable doesn't change set it here instead of in
 	// update_canvas().
-	for(auto & tmp : get_canvases())
-	{
+	for(auto& tmp : get_canvases()) {
 		tmp.set_variable("text_font_height", wfl::variant(text_height_));
 	}
 
@@ -298,8 +297,7 @@ bool multiline_text::history_down()
 
 void multiline_text::handle_key_tab(SDL_Keymod modifier, bool& handled)
 {
-	if(!is_editable())
-	{
+	if(!is_editable()) {
 		return;
 	}
 
@@ -317,12 +315,11 @@ void multiline_text::handle_key_tab(SDL_Keymod modifier, bool& handled)
 
 void multiline_text::handle_key_enter(SDL_Keymod modifier, bool& handled)
 {
-	if (is_editable() && !(modifier & (KMOD_CTRL | KMOD_ALT | KMOD_GUI))) {
+	if(is_editable() && !(modifier & (KMOD_CTRL | KMOD_ALT | KMOD_GUI))) {
 		insert_char("\n");
 		handled = true;
 	}
 }
-
 
 void multiline_text::handle_key_clear_line(SDL_Keymod /*modifier*/, bool& handled)
 {
@@ -340,17 +337,17 @@ void multiline_text::handle_key_down_arrow(SDL_Keymod modifier, bool& handled)
 	unsigned offset = get_selection_start();
 	const unsigned line_num = get_line_number(offset);
 
-	if (line_num == get_lines_count()-1) {
+	if(line_num == get_lines_count() - 1) {
 		return;
 	}
 
 	const unsigned line_start = get_line_start_offset(line_num);
-	const unsigned next_line_start = get_line_start_offset(line_num+1);
-	const unsigned next_line_end = get_line_end_offset(line_num+1);
+	const unsigned next_line_start = get_line_start_offset(line_num + 1);
+	const unsigned next_line_end = get_line_end_offset(line_num + 1);
 
 	offset = std::min(offset - line_start + next_line_start, next_line_end) + get_selection_length();
 
-	if (offset <= get_length()) {
+	if(offset <= get_length()) {
 		set_cursor(offset, (modifier & KMOD_SHIFT) != 0);
 	}
 
@@ -367,18 +364,18 @@ void multiline_text::handle_key_up_arrow(SDL_Keymod modifier, bool& handled)
 	unsigned offset = get_selection_start();
 	const unsigned line_num = get_line_number(offset);
 
-	if (line_num == 0) {
+	if(line_num == 0) {
 		return;
 	}
 
 	const unsigned line_start = get_line_start_offset(line_num);
-	const unsigned prev_line_start = get_line_start_offset(line_num-1);
-	const unsigned prev_line_end = get_line_end_offset(line_num-1);
+	const unsigned prev_line_start = get_line_start_offset(line_num - 1);
+	const unsigned prev_line_end = get_line_end_offset(line_num - 1);
 
 	offset = std::min(offset - line_start + prev_line_start, prev_line_end) + get_selection_length();
 
 	/* offset is unsigned int */
-	if (offset <= get_length()) {
+	if(offset <= get_length()) {
 		set_cursor(offset, (modifier & KMOD_SHIFT) != 0);
 	}
 
@@ -386,9 +383,7 @@ void multiline_text::handle_key_up_arrow(SDL_Keymod modifier, bool& handled)
 	queue_redraw();
 }
 
-void multiline_text::signal_handler_mouse_motion(const event::ui_event event,
-											bool& handled,
-											const point& coordinate)
+void multiline_text::signal_handler_mouse_motion(const event::ui_event event, bool& handled, const point& coordinate)
 {
 	DBG_GUI_E << get_control_type() << "[" << id() << "]: " << event << ".";
 
@@ -400,7 +395,7 @@ void multiline_text::signal_handler_mouse_motion(const event::ui_event event,
 		}
 
 		point mouse = coordinate - get_origin();
-		if (!get_label_link(mouse).empty()) {
+		if(!get_label_link(mouse).empty()) {
 			cursor::set(cursor::HYPERLINK);
 		} else {
 			cursor::set(cursor::IBEAM);
@@ -410,8 +405,7 @@ void multiline_text::signal_handler_mouse_motion(const event::ui_event event,
 	handled = true;
 }
 
-void multiline_text::signal_handler_left_button_down(const event::ui_event event,
-												bool& handled)
+void multiline_text::signal_handler_left_button_down(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -420,18 +414,21 @@ void multiline_text::signal_handler_left_button_down(const event::ui_event event
 
 	point mouse_pos = get_mouse_position();
 
-	if (get_link_aware()) {
+	if(get_link_aware()) {
 		std::string link = get_label_link(mouse_pos - get_origin());
 		DBG_GUI_E << "Clicked Link:\"" << link << "\"";
 
-		if (!link.empty()) {
-			if (desktop::open_object_is_supported()) {
+		if(!link.empty()) {
+			if(desktop::open_object_is_supported()) {
 				if(show_message(_("Open link?"), link, dialogs::message::yes_no_buttons) == gui2::retval::OK) {
 					desktop::open_object(link);
 				}
 			} else {
 				desktop::clipboard::copy_to_clipboard(link);
-				show_message("", _("Opening links is not supported, contact your packager. Link URL has been copied to the clipboard."), dialogs::message::auto_close);
+				show_message("",
+					_("Opening links is not supported, contact your packager. Link URL has been copied to the "
+					  "clipboard."),
+					dialogs::message::auto_close);
 			}
 		} else {
 			handle_mouse_selection(mouse_pos, true);
@@ -443,8 +440,7 @@ void multiline_text::signal_handler_left_button_down(const event::ui_event event
 	handled = true;
 }
 
-void multiline_text::signal_handler_left_button_up(const event::ui_event event,
-											  bool& handled)
+void multiline_text::signal_handler_left_button_up(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -452,9 +448,7 @@ void multiline_text::signal_handler_left_button_up(const event::ui_event event,
 	handled = true;
 }
 
-void
-multiline_text::signal_handler_left_button_double_click(const event::ui_event event,
-												   bool& handled)
+void multiline_text::signal_handler_left_button_double_click(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -478,10 +472,14 @@ multiline_text_definition::resolution::resolution(const config& cfg)
 	, text_y_offset(cfg["text_y_offset"])
 {
 	// Note the order should be the same as the enum state_t in multiline_text.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("multiline_text_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("multiline_text_definition][resolution", "state_disabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_focused", missing_mandatory_wml_tag("multiline_text_definition][resolution", "state_focused")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_hovered", missing_mandatory_wml_tag("multiline_text_definition][resolution", "state_hovered")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("multiline_text_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_disabled", missing_mandatory_wml_tag("multiline_text_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_focused", missing_mandatory_wml_tag("multiline_text_definition][resolution", "state_focused")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_hovered", missing_mandatory_wml_tag("multiline_text_definition][resolution", "state_hovered")));
 }
 
 // }---------- BUILDER -----------{
@@ -513,8 +511,7 @@ std::unique_ptr<widget> builder_multiline_text::build() const
 		widget->set_history(history);
 	}
 
-	DBG_GUI_G << "Window builder: placed text box '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed text box '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

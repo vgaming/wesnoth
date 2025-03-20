@@ -12,8 +12,8 @@
 	See the COPYING file for more details.
 */
 
-#include "formula/variant.hpp"
 #include "formula/variant_value.hpp"
+#include "formula/variant.hpp"
 
 #include <utility>
 
@@ -51,8 +51,8 @@ std::string variant_decimal::to_string_impl(const bool sign_value) const
 {
 	std::ostringstream ss;
 
-	int fractional =  value_ % 1000;
-	int integer    = (value_ - fractional) / 1000;
+	int fractional = value_ % 1000;
+	int integer = (value_ - fractional) / 1000;
 
 	if(sign_value) {
 		// Make sure we get the sign on small negative values.
@@ -86,7 +86,8 @@ variant_callable::variant_callable(const_formula_callable_ptr callable)
 	}
 }
 
-variant_callable::~variant_callable() {
+variant_callable::~variant_callable()
+{
 	if(callable_) {
 		callable_->unsubscribe_dtor(this);
 	}
@@ -256,7 +257,7 @@ std::string variant_container<T>::string_cast() const
 template<typename T>
 std::string variant_container<T>::get_serialized_string() const
 {
-	return to_string_impl(true, true,   [](const variant& v) { return v.serialize_to_string(); });
+	return to_string_impl(true, true, [](const variant& v) { return v.serialize_to_string(); });
 }
 
 template<typename T>

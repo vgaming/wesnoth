@@ -76,8 +76,12 @@ bool wmi_manager::erase(const std::string& id)
  * NOTE: The return value could be altered if it is decided that
  * play_controller::execute_command() needs something different.
  */
-bool wmi_manager::fire_item(
-		const std::string& id, const map_location& hex, game_data& gamedata, filter_context& fc, unit_map& units, bool is_key_hold_repeat) const
+bool wmi_manager::fire_item(const std::string& id,
+	const map_location& hex,
+	game_data& gamedata,
+	filter_context& fc,
+	unit_map& units,
+	bool is_key_hold_repeat) const
 {
 	// Does this item exist?
 	item_ptr wmi = get_item(id);
@@ -112,11 +116,8 @@ bool wmi_manager::fire_item(
  * @param gamedata          Used to check whether to show if selecting is required.
  * @param units             Used to highlight a unit if needed.
  */
-void wmi_manager::get_items(const map_location& hex,
-		std::vector<config>& items,
-		filter_context& fc,
-		game_data& gamedata,
-		unit_map& units) const
+void wmi_manager::get_items(
+	const map_location& hex, std::vector<config>& items, filter_context& fc, game_data& gamedata, unit_map& units) const
 {
 	if(empty()) {
 		// Nothing to do (skip setting game variables).
@@ -124,7 +125,6 @@ void wmi_manager::get_items(const map_location& hex,
 	}
 
 	// Prepare for can show().
-
 
 	config::attribute_value x1 = gamedata.get_variable("x1");
 	config::attribute_value y1 = gamedata.get_variable("y1");
@@ -138,9 +138,9 @@ void wmi_manager::get_items(const map_location& hex,
 
 		// Can this item be shown?
 		if(item->use_wml_menu() && (!item->is_synced() || resources::controller->can_use_synced_wml_menu())
-				&& item->can_show(hex, gamedata, fc)) {
+			&& item->can_show(hex, gamedata, fc)) {
 			// Include this item.
-			items.emplace_back("id", item->hotkey_id() , "label", item->menu_text(), "icon", item->image());
+			items.emplace_back("id", item->hotkey_id(), "label", item->menu_text(), "icon", item->image());
 		}
 	}
 	gamedata.get_variable("x1") = x1;

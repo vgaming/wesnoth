@@ -13,11 +13,11 @@
 	See the COPYING file for more details.
 */
 
-#include "sdl/point.hpp"
 #include "sdl/rect.hpp"
+#include "sdl/point.hpp"
 
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 #include <ostream>
 
 bool operator==(const SDL_Rect& a, const SDL_Rect& b)
@@ -27,7 +27,7 @@ bool operator==(const SDL_Rect& a, const SDL_Rect& b)
 
 bool operator!=(const SDL_Rect& a, const SDL_Rect& b)
 {
-	return !operator==(a,b);
+	return !operator==(a, b);
 }
 
 std::ostream& operator<<(std::ostream& s, const SDL_Rect& r)
@@ -64,10 +64,14 @@ bool rect::contains(const point& point) const
 
 bool rect::contains(const SDL_Rect& r) const
 {
-	if(this->x > r.x) return false;
-	if(this->y > r.y) return false;
-	if(this->x + this->w < r.x + r.w) return false;
-	if(this->y + this->h < r.y + r.h) return false;
+	if(this->x > r.x)
+		return false;
+	if(this->y > r.y)
+		return false;
+	if(this->x + this->w < r.x + r.w)
+		return false;
+	if(this->y + this->h < r.y + r.h)
+		return false;
 	return true;
 }
 
@@ -124,10 +128,8 @@ rect rect::shifted_by(const point& other) const
 
 point rect::point_at(double x, double y) const
 {
-	return {
-		static_cast<int>(this->x + std::round(this->w * std::clamp(x, 0.0, 1.0))),
-		static_cast<int>(this->y + std::round(this->h * std::clamp(y, 0.0, 1.0)))
-	};
+	return {static_cast<int>(this->x + std::round(this->w * std::clamp(x, 0.0, 1.0))),
+		static_cast<int>(this->y + std::round(this->h * std::clamp(y, 0.0, 1.0)))};
 }
 
 std::ostream& operator<<(std::ostream& s, const rect& r)

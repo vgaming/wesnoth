@@ -29,18 +29,18 @@
 #include "map/map.hpp"
 #include "resources.hpp"
 #include "team.hpp"
-#include "units/unit.hpp"
 #include "units/map.hpp"
+#include "units/unit.hpp"
 #include "wml_exception.hpp"
 
-#include <vector>
 #include <algorithm>
+#include <vector>
 
 static lg::log_domain log_engine("engine");
 #define ERR_PF LOG_STREAM(err, log_engine)
 
-namespace pathfind {
-
+namespace pathfind
+{
 
 /**
  * Function that will find a location on the board that is as near
@@ -51,55 +51,60 @@ namespace pathfind {
  * If @a shroud_check is provided, only locations not covered by this
  * team's shroud will be considered.
  */
-map_location find_vacant_tile(const map_location& loc, VACANT_TILE_TYPE vacancy,
-                              const unit* pass_check, const team* shroud_check, const game_board* board)
+map_location find_vacant_tile(const map_location& loc,
+	VACANT_TILE_TYPE vacancy,
+	const unit* pass_check,
+	const team* shroud_check,
+	const game_board* board)
 {
-	if (!board) {
+	if(!board) {
 		board = resources::gameboard;
 		assert(board);
 	}
-	const gamemap & map = board->map();
-	const unit_map & units = board->units();
+	const gamemap& map = board->map();
+	const unit_map& units = board->units();
 
-	if (!map.on_board(loc)) return map_location();
+	if(!map.on_board(loc))
+		return map_location();
 
-	const bool do_shroud = shroud_check  &&  shroud_check->uses_shroud();
+	const bool do_shroud = shroud_check && shroud_check->uses_shroud();
 	std::set<map_location> pending_tiles_to_check, tiles_checked;
 	pending_tiles_to_check.insert(loc);
 	// Iterate out 50 hexes from loc
-	for (int distance = 0; distance < 50; ++distance) {
-		if (pending_tiles_to_check.empty())
+	for(int distance = 0; distance < 50; ++distance) {
+		if(pending_tiles_to_check.empty())
 			return map_location();
-		//Copy over the hexes to check and clear the old set
+		// Copy over the hexes to check and clear the old set
 		std::set<map_location> tiles_checking;
 		tiles_checking.swap(pending_tiles_to_check);
-		//Iterate over all the hexes we need to check
-		for (const map_location &l : tiles_checking)
-		{
+		// Iterate over all the hexes we need to check
+		for(const map_location& l : tiles_checking) {
 			// Skip shrouded locations.
-			if ( do_shroud  &&  shroud_check->shrouded(l) )
+			if(do_shroud && shroud_check->shrouded(l))
 				continue;
-			//If this area is not a castle but should, skip it.
-			if ( vacancy == VACANT_CASTLE  &&  !map.is_castle(l) ) continue;
-			const bool pass_check_and_unreachable = pass_check
-				&& pass_check->movement_cost(map[l]) == movetype::UNREACHABLE;
-			//If the unit can't reach the tile and we have searched
-			//an area of at least radius 10 (arbitrary), skip the tile.
-			//Necessary for cases such as an unreachable
-			//starting hex surrounded by 6 other unreachable hexes, in which case
-			//the algorithm would not even search distance==1
-			//even if there's a reachable hex for distance==2.
-			if (pass_check_and_unreachable && distance > 10) continue;
-			//If the hex is empty and we do either no pass check or the hex is reachable, return it.
-			if (units.find(l) == units.end() && !pass_check_and_unreachable) return l;
+			// If this area is not a castle but should, skip it.
+			if(vacancy == VACANT_CASTLE && !map.is_castle(l))
+				continue;
+			const bool pass_check_and_unreachable
+				= pass_check && pass_check->movement_cost(map[l]) == movetype::UNREACHABLE;
+			// If the unit can't reach the tile and we have searched
+			// an area of at least radius 10 (arbitrary), skip the tile.
+			// Necessary for cases such as an unreachable
+			// starting hex surrounded by 6 other unreachable hexes, in which case
+			// the algorithm would not even search distance==1
+			// even if there's a reachable hex for distance==2.
+			if(pass_check_and_unreachable && distance > 10)
+				continue;
+			// If the hex is empty and we do either no pass check or the hex is reachable, return it.
+			if(units.find(l) == units.end() && !pass_check_and_unreachable)
+				return l;
 
 			for(const map_location& l2 : get_adjacent_tiles(l)) {
-				if (!map.on_board(l2)) continue;
+				if(!map.on_board(l2))
+					continue;
 				// Add the tile to be checked if it hasn't already been and
 				// isn't being checked.
-				if (tiles_checked.find(l2) == tiles_checked.end() &&
-				    tiles_checking.find(l2) == tiles_checking.end())
-				{
+				if(tiles_checked.find(l2) == tiles_checked.end() && tiles_checking.find(l2) == tiles_checking.end()) {
 					pending_tiles_to_check.insert(l2);
 				}
 			}
@@ -114,12 +119,11 @@ map_location find_vacant_tile(const map_location& loc, VACANT_TILE_TYPE vacancy,
  * near a leader.
  * If no valid location can be found, it will return a null location.
  */
-map_location find_vacant_castle(const unit & leader)
+map_location find_vacant_castle(const unit& leader)
 {
-	return find_vacant_tile(leader.get_location(), VACANT_CASTLE,
-	                        nullptr, &resources::gameboard->get_team(leader.side()));
+	return find_vacant_tile(
+		leader.get_location(), VACANT_CASTLE, nullptr, &resources::gameboard->get_team(leader.side()));
 }
-
 
 /**
  * Determines if a given location is in an enemy zone of control.
@@ -131,13 +135,12 @@ map_location find_vacant_castle(const unit & leader)
  *
  * @return true iff a visible enemy exerts zone of control over loc.
  */
-bool enemy_zoc(const team& current_team, const map_location& loc,
-               const team& viewing_team, bool see_all)
+bool enemy_zoc(const team& current_team, const map_location& loc, const team& viewing_team, bool see_all)
 {
 	// Check the adjacent tiles.
 	for(const map_location& adj : get_adjacent_tiles(loc)) {
-		const unit *u = resources::gameboard->get_visible_unit(adj, viewing_team, see_all);
-		if ( u  &&  current_team.is_enemy(u->side())  &&  u->emits_zoc() )
+		const unit* u = resources::gameboard->get_visible_unit(adj, viewing_team, see_all);
+		if(u && current_team.is_enemy(u->side()) && u->emits_zoc())
 			return true;
 	}
 
@@ -145,88 +148,103 @@ bool enemy_zoc(const team& current_team, const map_location& loc,
 	return false;
 }
 
+namespace
+{
+/**
+ * Nodes used by find_routes().
+ * These store the information necessary for extending the path
+ * and for tracing the route back to the source.
+ */
+struct findroute_node
+{
+	int moves_left, turns_left;
+	map_location prev;
+	// search_num is used to detect which nodes have been collected
+	// in the current search. (More than just a boolean value so
+	// that nodes can be stored between searches.)
+	unsigned search_num;
 
-namespace {
-	/**
-	 * Nodes used by find_routes().
-	 * These store the information necessary for extending the path
-	 * and for tracing the route back to the source.
-	 */
-	struct findroute_node {
-		int moves_left, turns_left;
-		map_location prev;
-		// search_num is used to detect which nodes have been collected
-		// in the current search. (More than just a boolean value so
-		// that nodes can be stored between searches.)
-		unsigned search_num;
+	// Constructors.
+	findroute_node(int moves, int turns, const map_location& prev_loc, unsigned search_count)
+		: moves_left(moves)
+		, turns_left(turns)
+		, prev(prev_loc)
+		, search_num(search_count)
+	{
+	}
+	findroute_node()
+		: moves_left(0)
+		, turns_left(0)
+		, prev()
+		, search_num(0)
+	{
+	}
 
-		// Constructors.
-		findroute_node(int moves, int turns, const map_location &prev_loc, unsigned search_count)
-			: moves_left(moves)
-			, turns_left(turns)
-			, prev(prev_loc)
-			, search_num(search_count)
-		{ }
-		findroute_node()
-			: moves_left(0)
-			, turns_left(0)
-			, prev()
-			, search_num(0)
-		{ }
+	// Compare these nodes based on movement consumed.
+	bool operator<(const findroute_node& o) const
+	{
+		return std::tie(turns_left, moves_left) > std::tie(o.turns_left, o.moves_left);
+	}
+};
 
-		// Compare these nodes based on movement consumed.
-		bool operator<(const findroute_node& o) const
-		{
-			return std::tie(turns_left, moves_left) > std::tie(o.turns_left, o.moves_left);
-		}
-	};
+/**
+ * Converts map locations to and from integer indices.
+ */
+struct findroute_indexer
+{
+	int w, h; // Width and height of the map.
 
-	/**
-	 * Converts map locations to and from integer indices.
-	 */
-	struct findroute_indexer {
-		int w, h; // Width and height of the map.
+	// Constructor:
+	findroute_indexer(int a, int b)
+		: w(a)
+		, h(b)
+	{
+	}
+	// Convert to an index: (throws on out of bounds)
+	unsigned operator()(int x, int y) const
+	{
+		VALIDATE(this->on_board(x, y), "Pathfind: Location not on board");
+		return x + static_cast<unsigned>(y) * w;
+	}
+	unsigned operator()(const map_location& loc) const
+	{
+		return (*this)(loc.x, loc.y);
+	}
+	// Convert from an index:
+	map_location operator()(unsigned index) const
+	{
+		return map_location(static_cast<int>(index % w), static_cast<int>(index / w));
+	}
+	// Check if location is on board
+	inline bool on_board(const map_location& loc) const
+	{
+		return this->on_board(loc.x, loc.y);
+	}
+	inline bool on_board(int x, int y) const
+	{
+		return (x >= 0) && (x < w) && (y >= 0) && (y < h);
+	}
+};
 
-		// Constructor:
-		findroute_indexer(int a, int b) : w(a), h(b) { }
-		// Convert to an index: (throws on out of bounds)
-		unsigned operator()(int x, int y) const {
-			VALIDATE(this->on_board(x,y),
-				"Pathfind: Location not on board");
-			return x + static_cast<unsigned>(y)*w;
-		}
-		unsigned operator()(const map_location& loc) const {
-			return (*this)(loc.x, loc.y);
-		}
-		// Convert from an index:
-		map_location operator()(unsigned index) const {
-			return map_location(
-				static_cast<int>(index%w),
-				static_cast<int>(index/w));
-		}
-		// Check if location is on board
-		inline bool on_board(const map_location& loc) const {
-			return this->on_board(loc.x, loc.y);
-		}
-		inline bool on_board(int x, int y) const {
-			return (x >= 0) && (x < w) && (y >= 0) && (y < h);
-		}
-	};
+/**
+ * A function object for comparing indices.
+ */
+struct findroute_comp
+{
+	const std::vector<findroute_node>& nodes;
 
-	/**
-	 * A function object for comparing indices.
-	 */
-	struct findroute_comp {
-		const std::vector<findroute_node>& nodes;
-
-		// Constructor:
-		findroute_comp(const std::vector<findroute_node>& n) : nodes(n) { }
-		// Binary predicate evaluating the order of its arguments:
-		bool operator()(int l, int r) const {
-			return nodes[r] < nodes[l];
-		}
-	};
-}
+	// Constructor:
+	findroute_comp(const std::vector<findroute_node>& n)
+		: nodes(n)
+	{
+	}
+	// Binary predicate evaluating the order of its arguments:
+	bool operator()(int l, int r) const
+	{
+		return nodes[r] < nodes[l];
+	}
+};
+} // namespace
 
 /**
  * Creates a list of routes that a unit can traverse from the provided location.
@@ -267,27 +285,34 @@ namespace {
  * @param[in]  check_vision  If true, use vision check for teleports, that is, ignore
  *                           units potentially blocking the teleport exit
  */
-static void find_routes(
-		const map_location & origin, const movetype::terrain_costs & costs,
-		bool slowed, int moves_left, int max_moves, int turns_left,
-		paths::dest_vect & destinations, std::set<map_location> * edges,
-		const unit * teleporter, const team * current_team,
-		const unit * skirmisher, const team * viewing_team,
-		const std::map<map_location, int> * jamming_map=nullptr,
-		std::vector<std::pair<int, int>> * full_cost_map=nullptr, bool check_vision=false)
+static void find_routes(const map_location& origin,
+	const movetype::terrain_costs& costs,
+	bool slowed,
+	int moves_left,
+	int max_moves,
+	int turns_left,
+	paths::dest_vect& destinations,
+	std::set<map_location>* edges,
+	const unit* teleporter,
+	const team* current_team,
+	const unit* skirmisher,
+	const team* viewing_team,
+	const std::map<map_location, int>* jamming_map = nullptr,
+	std::vector<std::pair<int, int>>* full_cost_map = nullptr,
+	bool check_vision = false)
 {
 	const gamemap& map = resources::gameboard->map();
 
-	const bool see_all =  viewing_team == nullptr;
+	const bool see_all = viewing_team == nullptr;
 	// When see_all is true, the viewing team never matters, but we still
 	// need to supply one to some functions.
-	if ( viewing_team == nullptr )
+	if(viewing_team == nullptr)
 		viewing_team = &resources::gameboard->teams().front();
 
 	// Build a teleport map, if needed.
-	const teleport_map teleports = teleporter ?
-			get_teleport_locations(*teleporter, *viewing_team, see_all, current_team == nullptr, check_vision) :
-			teleport_map();
+	const teleport_map teleports = teleporter
+		? get_teleport_locations(*teleporter, *viewing_team, see_all, current_team == nullptr, check_vision)
+		: teleport_map();
 
 	// Since this is called so often, keep memory reserved for the node list.
 	static std::vector<findroute_node> nodes;
@@ -295,7 +320,7 @@ static void find_routes(
 	// Incrementing search_counter means we ignore results from earlier searches.
 	++search_counter;
 	// Whenever the counter cycles, trash the contents of nodes and restart at 1.
-	if ( search_counter == 0 ) {
+	if(search_counter == 0) {
 		nodes.resize(0);
 		search_counter = 1;
 	}
@@ -308,11 +333,11 @@ static void find_routes(
 
 	// Check if full_cost_map has the correct size.
 	// If not, ignore it. If yes, initialize the start position.
-	if ( full_cost_map ) {
-		if ( full_cost_map->size() != static_cast<unsigned>(map.w() * map.h()) )
+	if(full_cost_map) {
+		if(full_cost_map->size() != static_cast<unsigned>(map.w() * map.h()))
 			full_cost_map = nullptr;
 		else {
-			if ( (*full_cost_map)[index(origin)].second == 0 )
+			if((*full_cost_map)[index(origin)].second == 0)
 				(*full_cost_map)[index(origin)].first = 0;
 			(*full_cost_map)[index(origin)].second += 1;
 		}
@@ -323,13 +348,11 @@ static void find_routes(
 	int nb_dest = 1;
 
 	// Record the starting location.
-	nodes[index(origin)] = findroute_node(moves_left, turns_left,
-	                                      map_location::null_location(),
-	                                      search_counter);
+	nodes[index(origin)] = findroute_node(moves_left, turns_left, map_location::null_location(), search_counter);
 	// Begin the search at the starting location.
-	std::vector<unsigned> hexes_to_process(1, index(origin));  // Will be maintained as a heap.
+	std::vector<unsigned> hexes_to_process(1, index(origin)); // Will be maintained as a heap.
 
-	while ( !hexes_to_process.empty() ) {
+	while(!hexes_to_process.empty()) {
 		// Process the hex closest to the origin.
 		const unsigned cur_index = hexes_to_process.front();
 		const map_location cur_hex = index(cur_index);
@@ -343,32 +366,31 @@ static void find_routes(
 		get_adjacent_tiles(cur_hex, adj_locs.data());
 
 		// Sort adjacents by on-boardness
-		auto off_board_it = std::partition(adj_locs.begin(), adj_locs.end(), [&index](map_location loc){
-			return index.on_board(loc);
-		});
+		auto off_board_it = std::partition(
+			adj_locs.begin(), adj_locs.end(), [&index](map_location loc) { return index.on_board(loc); });
 		// Store off-board edges if needed
-		if(edges != nullptr){
+		if(edges != nullptr) {
 			edges->insert(off_board_it, adj_locs.end());
 		}
 		// Remove off-board map locations
 		adj_locs.erase(off_board_it, adj_locs.end());
 
-		if ( teleporter ) {
+		if(teleporter) {
 			auto allowed_teleports = teleports.get_adjacents(cur_hex);
 			adj_locs.insert(adj_locs.end(), allowed_teleports.begin(), allowed_teleports.end());
 		}
-		for ( int i = adj_locs.size()-1; i >= 0; --i ) {
+		for(int i = adj_locs.size() - 1; i >= 0; --i) {
 			// Get the node associated with this location.
-			const map_location & next_hex = adj_locs[i];
+			const map_location& next_hex = adj_locs[i];
 			const unsigned next_index = index(next_hex);
-			findroute_node & next = nodes[next_index];
+			findroute_node& next = nodes[next_index];
 
 			// Skip nodes we have already collected.
 			// (Since no previously checked routes were longer than
 			// the current one, the current route cannot be shorter.)
 			// (Significant difference from classic Dijkstra: we have
 			// vertex weights, not edge weights.)
-			if ( next.search_num == search_counter )
+			if(next.search_num == search_counter)
 				continue;
 
 			// If we go to next, it will be from current.
@@ -376,53 +398,52 @@ static void find_routes(
 
 			// Calculate the cost of entering next_hex.
 			int cost = costs.cost(map[next_hex], slowed);
-			if ( jamming_map ) {
-				const std::map<map_location, int>::const_iterator jam_it =
-					jamming_map->find(next_hex);
-				if ( jam_it != jamming_map->end() )
+			if(jamming_map) {
+				const std::map<map_location, int>::const_iterator jam_it = jamming_map->find(next_hex);
+				if(jam_it != jamming_map->end())
 					cost += jam_it->second;
 			}
 
 			// Calculate movement remaining after entering next_hex.
 			next.moves_left = current.moves_left - cost;
 			next.turns_left = current.turns_left;
-			if ( next.moves_left < 0 ) {
+			if(next.moves_left < 0) {
 				// Have to delay until the next turn.
 				next.turns_left--;
 				next.moves_left = max_moves - cost;
 			}
-			if ( next.moves_left < 0 || next.turns_left < 0 ) {
+			if(next.moves_left < 0 || next.turns_left < 0) {
 				// Either can never enter this hex or out of turns.
-				if ( edges != nullptr )
+				if(edges != nullptr)
 					edges->insert(next_hex);
 				continue;
 			}
 
-			if ( current_team ) {
+			if(current_team) {
 				// Account for enemy units.
-				const unit *v = resources::gameboard->get_visible_unit(next_hex, *viewing_team, see_all);
-				if ( v && current_team->is_enemy(v->side()) ) {
+				const unit* v = resources::gameboard->get_visible_unit(next_hex, *viewing_team, see_all);
+				if(v && current_team->is_enemy(v->side())) {
 					// Cannot enter enemy hexes.
-					if ( edges != nullptr )
+					if(edges != nullptr)
 						edges->insert(next_hex);
 					continue;
 				}
 
-				if ( skirmisher  &&  next.moves_left > 0  &&
-				     enemy_zoc(*current_team, next_hex, *viewing_team, see_all)  &&
-				     !skirmisher->get_ability_bool("skirmisher", next_hex) ) {
+				if(skirmisher && next.moves_left > 0 && enemy_zoc(*current_team, next_hex, *viewing_team, see_all)
+					&& !skirmisher->get_ability_bool("skirmisher", next_hex)) {
 					next.moves_left = 0;
 				}
 			}
 
-			if ( !see_all && viewing_team && current_team && viewing_team != current_team && viewing_team->shrouded(next_hex) ) {
+			if(!see_all && viewing_team && current_team && viewing_team != current_team
+				&& viewing_team->shrouded(next_hex)) {
 				// bug #2199: in "Show Enemy Moves", don't pathfind enemy units through the player's shroud
 				continue;
 			}
 
 			// Update full_cost_map
-			if ( full_cost_map ) {
-				if ( (*full_cost_map)[next_index].second == 0 )
+			if(full_cost_map) {
+				if((*full_cost_map)[next_index].second == 0)
 					(*full_cost_map)[next_index].first = 0;
 				int summed_cost = (turns_left - next.turns_left + 1) * max_moves - next.moves_left;
 				(*full_cost_map)[next_index].first += summed_cost;
@@ -438,55 +459,56 @@ static void find_routes(
 
 			// Bookkeeping (for later).
 			++nb_dest;
-			if ( next_hex.x < xmin )
+			if(next_hex.x < xmin)
 				xmin = next_hex.x;
-			else if ( xmax < next_hex.x )
+			else if(xmax < next_hex.x)
 				xmax = next_hex.x;
-			if ( next_hex.y < ymin )
+			if(next_hex.y < ymin)
 				ymin = next_hex.y;
-			else if ( ymax < next_hex.y )
+			else if(ymax < next_hex.y)
 				ymax = next_hex.y;
-		}//for (i)
-	}//while (hexes_to_process)
+		} // for (i)
+	} // while (hexes_to_process)
 
 	// Currently the only caller who uses full_cost_map doesn't need the
 	// destinations. We can skip this part.
-	if ( full_cost_map ) {
+	if(full_cost_map) {
 		return;
 	}
 
 	// Build the routes for every map_location that we reached.
 	// The ordering must be compatible with map_location::operator<.
 	destinations.reserve(nb_dest);
-	for (int x = xmin; x <= xmax; ++x) {
-		for (int y = ymin; y <= ymax; ++y)
-		{
-			const findroute_node &n = nodes[index(x,y)];
-			if ( n.search_num == search_counter ) {
-				paths::step s =
-					{ map_location(x,y), n.prev, n.moves_left + n.turns_left*max_moves };
+	for(int x = xmin; x <= xmax; ++x) {
+		for(int y = ymin; y <= ymax; ++y) {
+			const findroute_node& n = nodes[index(x, y)];
+			if(n.search_num == search_counter) {
+				paths::step s = {map_location(x, y), n.prev, n.moves_left + n.turns_left * max_moves};
 				destinations.push_back(s);
 			}
 		}
 	}
 }
 
-static bool step_compare(const paths::step& a, const map_location& b) {
+static bool step_compare(const paths::step& a, const map_location& b)
+{
 	return a.curr < b;
 }
 
-paths::dest_vect::const_iterator paths::dest_vect::find(const map_location &loc) const
+paths::dest_vect::const_iterator paths::dest_vect::find(const map_location& loc) const
 {
 	const_iterator i = std::lower_bound(begin(), end(), loc, step_compare);
-	if (i != end() && i->curr != loc) return end();
+	if(i != end() && i->curr != loc)
+		return end();
 	return i;
 }
 
-void paths::dest_vect::insert(const map_location &loc)
+void paths::dest_vect::insert(const map_location& loc)
 {
 	iterator i = std::lower_bound(begin(), end(), loc, step_compare);
-	if (i != end() && i->curr == loc) return;
-	paths::step s { loc, map_location(), 0 };
+	if(i != end() && i->curr == loc)
+		return;
+	paths::step s{loc, map_location(), 0};
 	std::vector<step>::insert(i, s);
 }
 
@@ -494,10 +516,10 @@ void paths::dest_vect::insert(const map_location &loc)
  * Returns the path going from the source point (included) to the
  * destination point @a j (excluded).
  */
-std::vector<map_location> paths::dest_vect::get_path(const const_iterator &j) const
+std::vector<map_location> paths::dest_vect::get_path(const const_iterator& j) const
 {
 	std::vector<map_location> path;
-	if (!j->prev.valid()) {
+	if(!j->prev.valid()) {
 		path.push_back(j->curr);
 	} else {
 		const_iterator i = j;
@@ -505,13 +527,13 @@ std::vector<map_location> paths::dest_vect::get_path(const const_iterator &j) co
 			i = find(i->prev);
 			assert(i != end());
 			path.push_back(i->curr);
-		} while (i->prev.valid());
+		} while(i->prev.valid());
 	}
 	std::reverse(path.begin(), path.end());
 	return path;
 }
 
-bool paths::dest_vect::contains(const map_location &loc) const
+bool paths::dest_vect::contains(const map_location& loc) const
 {
 	return find(loc) != end();
 }
@@ -529,26 +551,20 @@ bool paths::dest_vect::contains(const map_location &loc) const
  * @param see_all          Set to true to remove unit visibility from consideration.
  * @param ignore_units     Set to true if units should never obstruct paths (implies ignoring ZoC as well).
  */
-paths::paths(const unit& u, bool force_ignore_zoc,
-		bool allow_teleport, const team &viewing_team,
-		int additional_turns, bool see_all, bool ignore_units)
+paths::paths(const unit& u,
+	bool force_ignore_zoc,
+	bool allow_teleport,
+	const team& viewing_team,
+	int additional_turns,
+	bool see_all,
+	bool ignore_units)
 	: destinations()
 {
 	try {
-		find_routes(
-			u.get_location(),
-			u.movement_type().get_movement(),
-			u.get_state(unit::STATE_SLOWED),
-			u.movement_left(),
-			u.total_movement(),
-			additional_turns,
-			destinations,
-			nullptr,
-			allow_teleport   ? &u      : nullptr,
-			ignore_units     ? nullptr : &resources::gameboard->get_team(u.side()),
-			force_ignore_zoc ? nullptr : &u,
-			see_all          ? nullptr : &viewing_team
-		);
+		find_routes(u.get_location(), u.movement_type().get_movement(), u.get_state(unit::STATE_SLOWED),
+			u.movement_left(), u.total_movement(), additional_turns, destinations, nullptr,
+			allow_teleport ? &u : nullptr, ignore_units ? nullptr : &resources::gameboard->get_team(u.side()),
+			force_ignore_zoc ? nullptr : &u, see_all ? nullptr : &viewing_team);
 	} catch(const std::out_of_range&) {
 		// Invalid unit side.
 	}
@@ -573,9 +589,9 @@ paths::~paths()
  *                   (does not have to be the unit's location).
  * @param jamming_map The relevant "jamming" of the costs being used.
  */
-vision_path::vision_path(const unit& viewer, const map_location& loc,
-                         const std::map<map_location, int>& jamming_map)
-	: paths(), edges()
+vision_path::vision_path(const unit& viewer, const map_location& loc, const std::map<map_location, int>& jamming_map)
+	: paths()
+	, edges()
 {
 	const int sight_range = viewer.vision();
 
@@ -583,9 +599,8 @@ vision_path::vision_path(const unit& viewer, const map_location& loc,
 	// ignore units, ignore ZoC (no effect), and don't build a cost_map.
 	// The viewing team needs to be the unit's team here.
 	const team& viewing_team = resources::gameboard->get_team(viewer.side());
-	find_routes(loc, viewer.movement_type().get_vision(),
-	            viewer.get_state(unit::STATE_SLOWED), sight_range, sight_range,
-	            0, destinations, &edges, &viewer, nullptr, nullptr, &viewing_team, &jamming_map, nullptr, true);
+	find_routes(loc, viewer.movement_type().get_vision(), viewer.get_state(unit::STATE_SLOWED), sight_range,
+		sight_range, 0, destinations, &edges, &viewer, nullptr, nullptr, &viewing_team, &jamming_map, nullptr, true);
 }
 
 /**
@@ -600,26 +615,26 @@ vision_path::vision_path(const unit& viewer, const map_location& loc,
  *                     (does not have to be the unit's location).
  * @param jamming_map The relevant "jamming" of the costs being used.
  */
-vision_path::vision_path(const movetype::terrain_costs & view_costs, bool slowed,
-                         int sight_range, const map_location & loc,
-                         const std::map<map_location, int>& jamming_map)
-	: paths(), edges()
+vision_path::vision_path(const movetype::terrain_costs& view_costs,
+	bool slowed,
+	int sight_range,
+	const map_location& loc,
+	const std::map<map_location, int>& jamming_map)
+	: paths()
+	, edges()
 {
 	// The three nullptr parameters indicate (in order):
 	// ignore units, ignore ZoC (no effect), and don't build a cost_map.
 	const unit_map::const_iterator u = resources::gameboard->units().find(loc);
 
-	if(u.valid())
-	{
+	if(u.valid()) {
 		// The viewing team needs to be the unit's team here.
 		const team& viewing_team = resources::gameboard->get_team(u->side());
-		find_routes(loc, view_costs, slowed, sight_range, sight_range, 0,
-					destinations, &edges, &*u, nullptr, nullptr, &viewing_team, &jamming_map, nullptr, true);
-	}
-	else
-	{
-		find_routes(loc, view_costs, slowed, sight_range, sight_range, 0,
-					destinations, &edges, nullptr, nullptr, nullptr, nullptr, &jamming_map, nullptr, true);
+		find_routes(loc, view_costs, slowed, sight_range, sight_range, 0, destinations, &edges, &*u, nullptr, nullptr,
+			&viewing_team, &jamming_map, nullptr, true);
+	} else {
+		find_routes(loc, view_costs, slowed, sight_range, sight_range, 0, destinations, &edges, nullptr, nullptr,
+			nullptr, nullptr, &jamming_map, nullptr, true);
 	}
 }
 
@@ -627,7 +642,6 @@ vision_path::vision_path(const movetype::terrain_costs & view_costs, bool slowed
 vision_path::~vision_path()
 {
 }
-
 
 /**
  * Constructs a list of jamming paths for a unit.
@@ -645,9 +659,8 @@ jamming_path::jamming_path(const unit& jammer, const map_location& loc)
 
 	// The five nullptr parameters indicate (in order): no edges, no teleports,
 	// ignore units, ignore ZoC (no effect), and see all (no effect).
-	find_routes(loc, jammer.movement_type().get_jamming(),
-	            jammer.get_state(unit::STATE_SLOWED), jamming_range, jamming_range,
-	            0, destinations, nullptr, nullptr, nullptr, nullptr, nullptr);
+	find_routes(loc, jammer.movement_type().get_jamming(), jammer.get_state(unit::STATE_SLOWED), jamming_range,
+		jamming_range, 0, destinations, nullptr, nullptr, nullptr, nullptr, nullptr);
 }
 
 /** Default destructor */
@@ -655,15 +668,17 @@ jamming_path::~jamming_path()
 {
 }
 
-marked_route mark_route(const plain_route &rt, bool update_move_cost)
+marked_route mark_route(const plain_route& rt, bool update_move_cost)
 {
 	marked_route res;
 
-	if (rt.steps.empty()) return marked_route();
+	if(rt.steps.empty())
+		return marked_route();
 	res.route = rt;
 
 	unit_map::const_iterator it = resources::gameboard->units().find(rt.steps.front());
-	if (it == resources::gameboard->units().end()) return marked_route();
+	if(it == resources::gameboard->units().end())
+		return marked_route();
 	const unit& u = *it;
 
 	int turns = 0;
@@ -674,22 +689,23 @@ marked_route mark_route(const plain_route &rt, bool update_move_cost)
 
 	std::vector<map_location>::const_iterator i = rt.steps.begin();
 
-	for (; i !=rt.steps.end(); ++i) {
-		bool last_step = (i+1 == rt.steps.end());
+	for(; i != rt.steps.end(); ++i) {
+		bool last_step = (i + 1 == rt.steps.end());
 
 		// move_cost of the next step is irrelevant for the last step
-		assert(last_step || resources::gameboard->map().on_board(*(i+1)));
-		const int move_cost = last_step ? 0 : u.movement_cost(static_cast<const game_board*>(resources::gameboard)->map()[*(i+1)]);
+		assert(last_step || resources::gameboard->map().on_board(*(i + 1)));
+		const int move_cost
+			= last_step ? 0 : u.movement_cost(static_cast<const game_board*>(resources::gameboard)->map()[*(i + 1)]);
 
 		const team& viewing_team = display::get_singleton()->viewing_team();
 
-		if (last_step || zoc || move_cost > movement) {
+		if(last_step || zoc || move_cost > movement) {
 			// check if we stop an a village and so maybe capture it
 			// if it's an enemy unit and a fogged village, we assume a capture
 			// (if he already owns it, we can't know that)
 			// if it's not an enemy, we can always know if he owns the village
-			bool capture = resources::gameboard->map().is_village(*i) && ( !unit_team.owns_village(*i)
-				 || (viewing_team.is_enemy(u.side()) && viewing_team.fogged(*i)) );
+			bool capture = resources::gameboard->map().is_village(*i)
+				&& (!unit_team.owns_village(*i) || (viewing_team.is_enemy(u.side()) && viewing_team.fogged(*i)));
 
 			++turns;
 
@@ -707,14 +723,13 @@ marked_route mark_route(const plain_route &rt, bool update_move_cost)
 			total_costs += movement;
 			movement = u.total_movement();
 			if(move_cost > movement) {
-				return res; //we can't reach destination
+				return res; // we can't reach destination
 			}
 		}
 
-		zoc = enemy_zoc(unit_team, *(i + 1), viewing_team)
-					&& !u.get_ability_bool("skirmisher", *(i+1));
+		zoc = enemy_zoc(unit_team, *(i + 1), viewing_team) && !u.get_ability_bool("skirmisher", *(i + 1));
 
-		if (zoc) {
+		if(zoc) {
 			total_costs += movement;
 			movement = 0;
 		} else {
@@ -729,15 +744,24 @@ marked_route mark_route(const plain_route &rt, bool update_move_cost)
 	return res;
 }
 
-shortest_path_calculator::shortest_path_calculator(const unit& u, const team& t,
-		const std::vector<team>& teams, const gamemap& map,
-		bool ignore_unit, bool ignore_defense, bool see_all)
-	: unit_(u), viewing_team_(t), teams_(teams), map_(map),
-	  movement_left_(unit_.movement_left()),
-	  total_movement_(unit_.total_movement()),
-	  ignore_unit_(ignore_unit), ignore_defense_(ignore_defense),
-	  see_all_(see_all)
-{}
+shortest_path_calculator::shortest_path_calculator(const unit& u,
+	const team& t,
+	const std::vector<team>& teams,
+	const gamemap& map,
+	bool ignore_unit,
+	bool ignore_defense,
+	bool see_all)
+	: unit_(u)
+	, viewing_team_(t)
+	, teams_(teams)
+	, map_(map)
+	, movement_left_(unit_.movement_left())
+	, total_movement_(unit_.total_movement())
+	, ignore_unit_(ignore_unit)
+	, ignore_defense_(ignore_defense)
+	, see_all_(see_all)
+{
+}
 
 double shortest_path_calculator::cost(const map_location& loc, const double so_far) const
 {
@@ -745,7 +769,7 @@ double shortest_path_calculator::cost(const map_location& loc, const double so_f
 
 	// loc is shrouded, consider it impassable
 	// NOTE: This is why AI must avoid to use shroud
-	if (!see_all_ && viewing_team_.shrouded(loc))
+	if(!see_all_ && viewing_team_.shrouded(loc))
 		return getNoPathValue();
 
 	const t_translation::terrain_code terrain = map_[loc];
@@ -757,26 +781,24 @@ double shortest_path_calculator::cost(const map_location& loc, const double so_f
 	// needed to reach the previous hex.
 	// total_movement_ is not zero, thanks to the pathfinding heuristic
 	int remaining_movement = movement_left_ - static_cast<int>(so_far);
-	if (remaining_movement < 0) {
+	if(remaining_movement < 0) {
 		remaining_movement = total_movement_ - (-remaining_movement) % total_movement_;
 	}
 
-	if (terrain_cost >= movetype::UNREACHABLE || (total_movement_ < terrain_cost && remaining_movement < terrain_cost)) {
+	if(terrain_cost >= movetype::UNREACHABLE || (total_movement_ < terrain_cost && remaining_movement < terrain_cost)) {
 		return getNoPathValue();
 	}
 
 	int other_unit_subcost = 0;
-	if (!ignore_unit_) {
-		const unit *other_unit =
-			resources::gameboard->get_visible_unit(loc, viewing_team_, see_all_);
+	if(!ignore_unit_) {
+		const unit* other_unit = resources::gameboard->get_visible_unit(loc, viewing_team_, see_all_);
 
 		// We can't traverse visible enemy and we also prefer empty hexes
 		// (less blocking in multi-turn moves and better when exploring fog,
 		// because we can't stop on a friend)
 
-		if (other_unit)
-		{
-			if (teams_[unit_.side() - 1].is_enemy(other_unit->side()))
+		if(other_unit) {
+			if(teams_[unit_.side() - 1].is_enemy(other_unit->side()))
 				return getNoPathValue();
 			else
 				// This value will be used with the defense_subcost (see below)
@@ -793,15 +815,15 @@ double shortest_path_calculator::cost(const map_location& loc, const double so_f
 	// costing 3 MP. We don't have enough MP now, so we must end our turn here,
 	// thus spend our remaining MP by waiting (next turn, with full MP, we will
 	// be able to move on that hex)
-	if (remaining_movement < terrain_cost) {
+	if(remaining_movement < terrain_cost) {
 		move_cost += remaining_movement;
 		remaining_movement = total_movement_; // we consider having full MP now
 	}
 
 	// check ZoC
-	if (!ignore_unit_ && remaining_movement != terrain_cost
-	    && enemy_zoc(teams_[unit_.side()-1], loc, viewing_team_, see_all_)
-			&& !unit_.get_ability_bool("skirmisher", loc)) {
+	if(!ignore_unit_ && remaining_movement != terrain_cost
+		&& enemy_zoc(teams_[unit_.side() - 1], loc, viewing_team_, see_all_)
+		&& !unit_.get_ability_bool("skirmisher", loc)) {
 		// entering ZoC cost all remaining MP
 		move_cost += remaining_movement;
 	} else {
@@ -820,31 +842,36 @@ double shortest_path_calculator::cost(const map_location& loc, const double so_f
 	return move_cost + (defense_subcost + other_unit_subcost) / 10000.0;
 }
 
-move_type_path_calculator::move_type_path_calculator(const movetype& mt, int movement_left, int total_movement, const team& t, const gamemap& map)
-	: movement_type_(mt), movement_left_(movement_left),
-	  total_movement_(total_movement), viewing_team_(t), map_(map)
-{}
+move_type_path_calculator::move_type_path_calculator(
+	const movetype& mt, int movement_left, int total_movement, const team& t, const gamemap& map)
+	: movement_type_(mt)
+	, movement_left_(movement_left)
+	, total_movement_(total_movement)
+	, viewing_team_(t)
+	, map_(map)
+{
+}
 
 // This is an simplified version of shortest_path_calculator (see above for explanation)
 double move_type_path_calculator::cost(const map_location& loc, const double so_far) const
 {
 	assert(map_.on_board(loc));
-	if (viewing_team_.shrouded(loc))
+	if(viewing_team_.shrouded(loc))
 		return getNoPathValue();
 
 	const t_translation::terrain_code terrain = map_[loc];
 	const int terrain_cost = movement_type_.movement_cost(terrain);
 
-	if (total_movement_ < terrain_cost)
+	if(total_movement_ < terrain_cost)
 		return getNoPathValue();
 
 	int remaining_movement = movement_left_ - static_cast<int>(so_far);
-	if (remaining_movement < 0)
+	if(remaining_movement < 0)
 		remaining_movement = total_movement_ - (-remaining_movement) % total_movement_;
 
 	int move_cost = 0;
 
-	if (remaining_movement < terrain_cost) {
+	if(remaining_movement < terrain_cost) {
 		move_cost += remaining_movement;
 	}
 
@@ -853,10 +880,11 @@ double move_type_path_calculator::cost(const map_location& loc, const double so_
 	return move_cost;
 }
 
-
 emergency_path_calculator::emergency_path_calculator(const unit& u, const gamemap& map)
-	: unit_(u), map_(map)
-{}
+	: unit_(u)
+	, map_(map)
+{
+}
 
 double emergency_path_calculator::cost(const map_location& loc, const double) const
 {
@@ -866,7 +894,8 @@ double emergency_path_calculator::cost(const map_location& loc, const double) co
 }
 
 dummy_path_calculator::dummy_path_calculator(const unit&, const gamemap&)
-{}
+{
+}
 
 double dummy_path_calculator::cost(const map_location&, const double) const
 {
@@ -886,11 +915,17 @@ double dummy_path_calculator::cost(const map_location&, const double) const
  * @param see_all          Set to true to remove unit visibility from consideration.
  * @param ignore_units     Set to true if units should never obstruct paths (implies ignoring ZoC as well).
  */
-full_cost_map::full_cost_map(const unit& u, bool force_ignore_zoc,
-		bool allow_teleport, const team &viewing_team,
-		bool see_all, bool ignore_units)
-	:force_ignore_zoc_(force_ignore_zoc), allow_teleport_(allow_teleport),
-	 viewing_team_(viewing_team), see_all_(see_all), ignore_units_(ignore_units)
+full_cost_map::full_cost_map(const unit& u,
+	bool force_ignore_zoc,
+	bool allow_teleport,
+	const team& viewing_team,
+	bool see_all,
+	bool ignore_units)
+	: force_ignore_zoc_(force_ignore_zoc)
+	, allow_teleport_(allow_teleport)
+	, viewing_team_(viewing_team)
+	, see_all_(see_all)
+	, ignore_units_(ignore_units)
 {
 	const gamemap& map = resources::gameboard->map();
 	cost_map = std::vector<std::pair<int, int>>(static_cast<size_t>(map.w()) * map.h(), std::pair(-1, 0));
@@ -901,11 +936,13 @@ full_cost_map::full_cost_map(const unit& u, bool force_ignore_zoc,
  * Same as other constructor but without unit. Use this when working
  * with add_unit().
  */
-full_cost_map::full_cost_map(bool force_ignore_zoc,
-		bool allow_teleport, const team &viewing_team,
-		bool see_all, bool ignore_units)
-	:force_ignore_zoc_(force_ignore_zoc), allow_teleport_(allow_teleport),
-	 viewing_team_(viewing_team), see_all_(see_all), ignore_units_(ignore_units)
+full_cost_map::full_cost_map(
+	bool force_ignore_zoc, bool allow_teleport, const team& viewing_team, bool see_all, bool ignore_units)
+	: force_ignore_zoc_(force_ignore_zoc)
+	, allow_teleport_(allow_teleport)
+	, viewing_team_(viewing_team)
+	, see_all_(see_all)
+	, ignore_units_(ignore_units)
 {
 	const gamemap& map = resources::gameboard->map();
 	cost_map = std::vector<std::pair<int, int>>(static_cast<size_t>(map.w()) * map.h(), std::pair(-1, 0));
@@ -922,22 +959,10 @@ void full_cost_map::add_unit(const unit& u, bool use_max_moves)
 		// We don't need the destinations, but find_routes() wants to have this parameter
 		paths::dest_vect dummy = paths::dest_vect();
 
-		find_routes(
-			u.get_location(),
-			u.movement_type().get_movement(),
-			u.get_state(unit::STATE_SLOWED),
-			(use_max_moves) ? u.total_movement() : u.movement_left(),
-			u.total_movement(),
-			99,
-			dummy,
-			nullptr,
-			allow_teleport_   ? &u      : nullptr,
-			ignore_units_     ? nullptr : &resources::gameboard->get_team(u.side()),
-			force_ignore_zoc_ ? nullptr : &u,
-			see_all_          ? nullptr : &viewing_team_,
-			nullptr,
-			&cost_map
-		);
+		find_routes(u.get_location(), u.movement_type().get_movement(), u.get_state(unit::STATE_SLOWED),
+			(use_max_moves) ? u.total_movement() : u.movement_left(), u.total_movement(), 99, dummy, nullptr,
+			allow_teleport_ ? &u : nullptr, ignore_units_ ? nullptr : &resources::gameboard->get_team(u.side()),
+			force_ignore_zoc_ ? nullptr : &u, see_all_ ? nullptr : &viewing_team_, nullptr, &cost_map);
 	} catch(const std::out_of_range&) {
 		// Invalid unit side.
 	}
@@ -952,7 +977,7 @@ void full_cost_map::add_unit(const unit& u, bool use_max_moves)
  */
 void full_cost_map::add_unit(const map_location& origin, const unit_type* const ut, int side)
 {
-	if (!ut) {
+	if(!ut) {
 		return;
 	}
 	unit_ptr u = unit::create(*ut, side, false);
@@ -972,8 +997,8 @@ std::pair<int, int> full_cost_map::get_pair_at(map_location loc) const
 	const gamemap& map = resources::gameboard->map();
 	assert(cost_map.size() == static_cast<unsigned>(map.w() * map.h()));
 
-	if (!map.on_board(loc)) {
-		return std::pair(-1, 0);  // invalid
+	if(!map.on_board(loc)) {
+		return std::pair(-1, 0); // invalid
 	}
 
 	return cost_map[loc.x + (loc.y * map.w())];
@@ -999,10 +1024,10 @@ int full_cost_map::get_cost_at(map_location loc) const
 double full_cost_map::get_average_cost_at(map_location loc) const
 {
 	auto p = get_pair_at(loc);
-	if (p.second == 0) {
+	if(p.second == 0) {
 		return -1;
 	} else {
-		return static_cast<double>(p.first) /p.second;
+		return static_cast<double>(p.first) / p.second;
 	}
 }
-}//namespace pathfind
+} // namespace pathfind

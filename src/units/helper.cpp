@@ -18,25 +18,26 @@
  * Support functions for dealing with units.
  */
 
+#include "units/helper.hpp"
 #include "actions/create.hpp"
 #include "formula/string_utils.hpp"
-#include "resources.hpp"
-#include "units/unit.hpp"
-#include "units/helper.hpp"
-#include "units/types.hpp"
 #include "play_controller.hpp"
+#include "resources.hpp"
 #include "serialization/markup.hpp"
+#include "units/types.hpp"
+#include "units/unit.hpp"
 #include "utils/general.hpp"
 #include "whiteboard/manager.hpp"
 
-namespace unit_helper {
+namespace unit_helper
+{
 
-int number_of_possible_advances(const unit &u)
+int number_of_possible_advances(const unit& u)
 {
 	return u.advances_to().size() + u.get_modification_advances().size();
 }
 
-bool will_certainly_advance(const unit_map::iterator &u)
+bool will_certainly_advance(const unit_map::iterator& u)
 {
 	if(!u.valid()) {
 		return false;
@@ -57,7 +58,8 @@ std::string resistance_color(const int resistance)
 	return game_config::red_to_green(50.0 + resistance * 5.0 / 6.0, false).to_hex_string();
 }
 
-static std::string unit_level_tooltip(const int level, const std::vector<std::string> &adv_to_types, const std::vector<config> &adv_to_mods)
+static std::string unit_level_tooltip(
+	const int level, const std::vector<std::string>& adv_to_types, const std::vector<config>& adv_to_mods)
 {
 	std::ostringstream tooltip;
 	tooltip << _("Level: ") << markup::bold(level) << "\n";
@@ -80,12 +82,12 @@ static std::string unit_level_tooltip(const int level, const std::vector<std::st
 	return tooltip.str();
 }
 
-std::string unit_level_tooltip(const unit &u)
+std::string unit_level_tooltip(const unit& u)
 {
 	return unit_level_tooltip(u.level(), u.advances_to_translated(), u.get_modification_advances());
 }
 
-std::string unit_level_tooltip(const unit_type &type)
+std::string unit_level_tooltip(const unit_type& type)
 {
 	const auto mod_adv_iters = type.modification_advancements();
 	const std::vector<config> mod_advancements(mod_adv_iters.begin(), mod_adv_iters.end());
@@ -101,11 +103,10 @@ std::string maybe_inactive(const std::string& str, bool active)
 std::string format_cost_string(int unit_recall_cost, bool active)
 {
 	std::stringstream str;
-	if (active) {
+	if(active) {
 		str << markup::img("themes/gold.png") << unit_recall_cost;
 	} else {
-		str << markup::img("themes/gold.png~GS()")
-			<< maybe_inactive(std::to_string(unit_recall_cost), false);
+		str << markup::img("themes/gold.png~GS()") << maybe_inactive(std::to_string(unit_recall_cost), false);
 	}
 	return str.str();
 }
@@ -136,8 +137,7 @@ std::string format_level_string(const int level, bool recallable)
 {
 	if(!recallable) {
 		// Same logic as when recallable, but always in inactive_color.
-		return markup::span_color(font::INACTIVE_COLOR,
-			(level < 2 ? std::to_string(level) : markup::bold(level)));
+		return markup::span_color(font::INACTIVE_COLOR, (level < 2 ? std::to_string(level) : markup::bold(level)));
 	} else if(level < 1) {
 		return markup::span_color(font::INACTIVE_COLOR, level);
 	} else if(level == 1) {
@@ -153,7 +153,7 @@ std::string format_level_string(const int level, bool recallable)
 
 std::string format_movement_string(const int moves_left, const int moves_max, bool active)
 {
-	if (!active) {
+	if(!active) {
 		return markup::span_color(font::GRAY_COLOR, moves_left, "/", moves_max);
 	} else if(moves_left == 0) {
 		return markup::span_color(font::BAD_COLOR, moves_left, "/", moves_max);
@@ -168,10 +168,7 @@ std::string format_movement_string(const int moves_left, const int moves_max, bo
 // example, if you start AOI S5 with 0GP and recruit a Mage, two reasons apply,
 // leader not on keep (extrarecruit=Mage) and not enough gold.
 t_string recruit_message(
-	const std::string& type_id,
-	map_location& target_hex,
-	map_location& recruited_from,
-	team& current_team)
+	const std::string& type_id, map_location& target_hex, map_location& recruited_from, team& current_team)
 {
 	const unit_type* u_type = unit_types.find(type_id);
 	if(u_type == nullptr) {
@@ -182,7 +179,7 @@ t_string recruit_message(
 	// search for the unit to be recruited in recruits
 	if(!utils::contains(actions::get_recruits(current_team.side(), target_hex), type_id)) {
 		return VGETTEXT("You cannot recruit a $unit_type_name at this time.",
-				utils::string_map{{ "unit_type_name", u_type->type_name() }});
+			utils::string_map{{"unit_type_name", u_type->type_name()}});
 	}
 
 	// TODO take a wb::future_map RAII as units_dialog does
@@ -190,11 +187,10 @@ t_string recruit_message(
 	{
 		wb::future_map future;
 		wb_gold = (resources::controller->get_whiteboard()
-			? resources::controller->get_whiteboard()->get_spent_gold_for(current_team.side())
-			: 0);
+				? resources::controller->get_whiteboard()->get_spent_gold_for(current_team.side())
+				: 0);
 	}
-	if(u_type->cost() > current_team.gold() - wb_gold)
-	{
+	if(u_type->cost() > current_team.gold() - wb_gold) {
 		if(wb_gold > 0)
 			// TRANSLATORS: "plan" refers to Planning Mode
 			return _("At this point in your plan, you will not have enough gold to recruit this unit.");
@@ -216,4 +212,4 @@ t_string recruit_message(
 	return {};
 }
 
-}
+} // namespace unit_helper

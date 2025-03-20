@@ -89,7 +89,6 @@ public:
 		tested_ = true;
 #endif
 		return opt_ != nullptr;
-
 	}
 
 	explicit operator bool() const
@@ -142,6 +141,7 @@ public:
 		return true;
 #endif
 	}
+
 private:
 	T* opt_;
 #ifdef DEBUG_CONFIG
@@ -149,23 +149,27 @@ private:
 #endif
 };
 
-bool operator==(const config &, const config &);
-inline bool operator!=(const config &a, const config &b) { return !operator==(a, b); }
-std::ostream &operator << (std::ostream &, const config &);
+bool operator==(const config&, const config&);
+inline bool operator!=(const config& a, const config& b)
+{
+	return !operator==(a, b);
+}
+std::ostream& operator<<(std::ostream&, const config&);
 
 /** A config object defines a single node in a WML file, with access to child nodes. */
 class config
 {
 	friend bool operator==(const config& a, const config& b);
+
 public:
 	// Create an empty node.
 	config();
 
-	config(const config &);
-	config &operator=(const config &);
+	config(const config&);
+	config& operator=(const config&);
 
-	config(config &&);
-	config &operator=(config &&);
+	config(config&&);
+	config& operator=(config&&);
 
 	/**
 	 * Creates a config object with an empty child of name @a child.
@@ -197,39 +201,110 @@ public:
 	{
 		typedef config value_type;
 		typedef std::random_access_iterator_tag iterator_category;
-		typedef config *pointer;
-		typedef config &reference;
+		typedef config* pointer;
+		typedef config& reference;
 		typedef child_list::iterator Itor;
 		typedef Itor::difference_type difference_type;
 		typedef child_iterator this_type;
-		explicit child_iterator(const Itor &i): i_(i) {}
+		explicit child_iterator(const Itor& i)
+			: i_(i)
+		{
+		}
 
-		child_iterator &operator++() { ++i_; return *this; }
-		child_iterator operator++(int) { return child_iterator(i_++); }
-		child_iterator &operator--() { --i_; return *this; }
-		child_iterator operator--(int) { return child_iterator(i_--); }
+		child_iterator& operator++()
+		{
+			++i_;
+			return *this;
+		}
+		child_iterator operator++(int)
+		{
+			return child_iterator(i_++);
+		}
+		child_iterator& operator--()
+		{
+			--i_;
+			return *this;
+		}
+		child_iterator operator--(int)
+		{
+			return child_iterator(i_--);
+		}
 
-		reference operator*() const { return **i_; }
-		pointer operator->() const { return &**i_; }
+		reference operator*() const
+		{
+			return **i_;
+		}
+		pointer operator->() const
+		{
+			return &**i_;
+		}
 
-		bool operator==(const child_iterator &i) const { return i_ == i.i_; }
-		bool operator!=(const child_iterator &i) const { return i_ != i.i_; }
-		bool operator==(const const_child_iterator &i) const { return i == *this; }
-		bool operator!=(const const_child_iterator &i) const { return i != *this; }
+		bool operator==(const child_iterator& i) const
+		{
+			return i_ == i.i_;
+		}
+		bool operator!=(const child_iterator& i) const
+		{
+			return i_ != i.i_;
+		}
+		bool operator==(const const_child_iterator& i) const
+		{
+			return i == *this;
+		}
+		bool operator!=(const const_child_iterator& i) const
+		{
+			return i != *this;
+		}
 
-		friend bool operator<(const this_type& a, const this_type& b) { return a.i_ < b.i_; }
-		friend bool operator<=(const this_type& a, const this_type& b) { return a.i_ <= b.i_; }
-		friend bool operator>=(const this_type& a, const this_type& b) { return a.i_ >= b.i_; }
-		friend bool operator>(const this_type& a, const this_type& b) { return a.i_ > b.i_; }
+		friend bool operator<(const this_type& a, const this_type& b)
+		{
+			return a.i_ < b.i_;
+		}
+		friend bool operator<=(const this_type& a, const this_type& b)
+		{
+			return a.i_ <= b.i_;
+		}
+		friend bool operator>=(const this_type& a, const this_type& b)
+		{
+			return a.i_ >= b.i_;
+		}
+		friend bool operator>(const this_type& a, const this_type& b)
+		{
+			return a.i_ > b.i_;
+		}
 
-		this_type& operator+=(Itor::difference_type n) { i_ += n; return *this; }
-		this_type& operator-=(Itor::difference_type n) { i_ -= n; return *this; }
+		this_type& operator+=(Itor::difference_type n)
+		{
+			i_ += n;
+			return *this;
+		}
+		this_type& operator-=(Itor::difference_type n)
+		{
+			i_ -= n;
+			return *this;
+		}
 
-		config &operator[](Itor::difference_type n) const { return *i_[n]; }
-		friend Itor::difference_type operator-(const this_type& a, const this_type& b) { return a.i_ - b.i_; }
-		friend this_type operator-(const this_type& a, Itor::difference_type n) { return this_type(a.i_ - n); }
-		friend this_type operator+(const this_type& a, Itor::difference_type n) { return this_type(a.i_ + n); }
-		friend this_type operator+(Itor::difference_type n, const this_type& a) { return this_type(a.i_ + n); }
+		config& operator[](Itor::difference_type n) const
+		{
+			return *i_[n];
+		}
+		friend Itor::difference_type operator-(const this_type& a, const this_type& b)
+		{
+			return a.i_ - b.i_;
+		}
+		friend this_type operator-(const this_type& a, Itor::difference_type n)
+		{
+			return this_type(a.i_ - n);
+		}
+		friend this_type operator+(const this_type& a, Itor::difference_type n)
+		{
+			return this_type(a.i_ + n);
+		}
+		friend this_type operator+(Itor::difference_type n, const this_type& a)
+		{
+			return this_type(a.i_ + n);
+		}
+
 	private:
 		Itor i_;
 		friend struct const_child_iterator;
@@ -239,40 +314,113 @@ public:
 	{
 		typedef const config value_type;
 		typedef std::random_access_iterator_tag iterator_category;
-		typedef const config *pointer;
-		typedef const config &reference;
+		typedef const config* pointer;
+		typedef const config& reference;
 		typedef child_list::const_iterator Itor;
 		typedef Itor::difference_type difference_type;
 		typedef const_child_iterator this_type;
-		explicit const_child_iterator(const Itor &i): i_(i) {}
-		const_child_iterator(const child_iterator &i): i_(i.i_) {}
+		explicit const_child_iterator(const Itor& i)
+			: i_(i)
+		{
+		}
+		const_child_iterator(const child_iterator& i)
+			: i_(i.i_)
+		{
+		}
 
-		const_child_iterator &operator++() { ++i_; return *this; }
-		const_child_iterator operator++(int) { return const_child_iterator(i_++); }
-		const_child_iterator &operator--() { --i_; return *this; }
-		const_child_iterator operator--(int) { return const_child_iterator(i_--); }
+		const_child_iterator& operator++()
+		{
+			++i_;
+			return *this;
+		}
+		const_child_iterator operator++(int)
+		{
+			return const_child_iterator(i_++);
+		}
+		const_child_iterator& operator--()
+		{
+			--i_;
+			return *this;
+		}
+		const_child_iterator operator--(int)
+		{
+			return const_child_iterator(i_--);
+		}
 
-		reference operator*() const { return **i_; }
-		pointer operator->() const { return &**i_; }
+		reference operator*() const
+		{
+			return **i_;
+		}
+		pointer operator->() const
+		{
+			return &**i_;
+		}
 
-		bool operator==(const const_child_iterator &i) const { return i_ == i.i_; }
-		bool operator!=(const const_child_iterator &i) const { return i_ != i.i_; }
-		bool operator==(const child_iterator &i) const { return i_ == i.i_; }
-		bool operator!=(const child_iterator &i) const { return i_ != i.i_; }
+		bool operator==(const const_child_iterator& i) const
+		{
+			return i_ == i.i_;
+		}
+		bool operator!=(const const_child_iterator& i) const
+		{
+			return i_ != i.i_;
+		}
+		bool operator==(const child_iterator& i) const
+		{
+			return i_ == i.i_;
+		}
+		bool operator!=(const child_iterator& i) const
+		{
+			return i_ != i.i_;
+		}
 
-		friend bool operator<(const this_type& a, const this_type& b) { return a.i_ < b.i_; }
-		friend bool operator<=(const this_type& a, const this_type& b) { return a.i_ <= b.i_; }
-		friend bool operator>=(const this_type& a, const this_type& b) { return a.i_ >= b.i_; }
-		friend bool operator>(const this_type& a, const this_type& b) { return a.i_ > b.i_; }
+		friend bool operator<(const this_type& a, const this_type& b)
+		{
+			return a.i_ < b.i_;
+		}
+		friend bool operator<=(const this_type& a, const this_type& b)
+		{
+			return a.i_ <= b.i_;
+		}
+		friend bool operator>=(const this_type& a, const this_type& b)
+		{
+			return a.i_ >= b.i_;
+		}
+		friend bool operator>(const this_type& a, const this_type& b)
+		{
+			return a.i_ > b.i_;
+		}
 
-		this_type& operator+=(Itor::difference_type n) { i_ += n; return *this; }
-		this_type& operator-=(Itor::difference_type n) { i_ -= n; return *this; }
+		this_type& operator+=(Itor::difference_type n)
+		{
+			i_ += n;
+			return *this;
+		}
+		this_type& operator-=(Itor::difference_type n)
+		{
+			i_ -= n;
+			return *this;
+		}
 
-		const config &operator[](Itor::difference_type n) const { return *i_[n]; }
-		friend Itor::difference_type operator-(const this_type& a, const this_type& b) { return a.i_ - b.i_; }
-		friend this_type operator-(const this_type& a, Itor::difference_type n) { return this_type(a.i_ - n); }
-		friend this_type operator+(const this_type& a, Itor::difference_type n) { return this_type(a.i_ + n); }
-		friend this_type operator+(Itor::difference_type n, const this_type& a) { return this_type(a.i_ + n); }
+		const config& operator[](Itor::difference_type n) const
+		{
+			return *i_[n];
+		}
+		friend Itor::difference_type operator-(const this_type& a, const this_type& b)
+		{
+			return a.i_ - b.i_;
+		}
+		friend this_type operator-(const this_type& a, Itor::difference_type n)
+		{
+			return this_type(a.i_ - n);
+		}
+		friend this_type operator+(const this_type& a, Itor::difference_type n)
+		{
+			return this_type(a.i_ + n);
+		}
+		friend this_type operator+(Itor::difference_type n, const this_type& a)
+		{
+			return this_type(a.i_ + n);
+		}
 
 	private:
 		Itor i_;
@@ -290,11 +438,7 @@ public:
 	 */
 	using attribute_value = config_attribute_value;
 
-	typedef std::map<
-		std::string
-		, attribute_value
-		, std::less<>
-	> attribute_map;
+	typedef std::map<std::string, attribute_value, std::less<>> attribute_map;
 	typedef attribute_map::value_type attribute;
 	struct const_attribute_iterator;
 
@@ -302,24 +446,59 @@ public:
 	{
 		typedef attribute value_type;
 		typedef std::bidirectional_iterator_tag iterator_category;
-		typedef attribute *pointer;
-		typedef attribute &reference;
+		typedef attribute* pointer;
+		typedef attribute& reference;
 		typedef attribute_map::iterator Itor;
 		typedef Itor::difference_type difference_type;
-		explicit attribute_iterator(const Itor &i): i_(i) {}
+		explicit attribute_iterator(const Itor& i)
+			: i_(i)
+		{
+		}
 
-		attribute_iterator &operator++() { ++i_; return *this; }
-		attribute_iterator operator++(int) { return attribute_iterator(i_++); }
-		attribute_iterator &operator--() { --i_; return *this; }
-		attribute_iterator operator--(int) { return attribute_iterator(i_--); }
+		attribute_iterator& operator++()
+		{
+			++i_;
+			return *this;
+		}
+		attribute_iterator operator++(int)
+		{
+			return attribute_iterator(i_++);
+		}
+		attribute_iterator& operator--()
+		{
+			--i_;
+			return *this;
+		}
+		attribute_iterator operator--(int)
+		{
+			return attribute_iterator(i_--);
+		}
 
-		reference operator*() const { return *i_; }
-		pointer operator->() const { return &*i_; }
+		reference operator*() const
+		{
+			return *i_;
+		}
+		pointer operator->() const
+		{
+			return &*i_;
+		}
 
-		bool operator==(const attribute_iterator &i) const { return i_ == i.i_; }
-		bool operator!=(const attribute_iterator &i) const { return i_ != i.i_; }
-		bool operator==(const const_attribute_iterator &i) const { return i == *this; }
-		bool operator!=(const const_attribute_iterator &i) const { return i != *this; }
+		bool operator==(const attribute_iterator& i) const
+		{
+			return i_ == i.i_;
+		}
+		bool operator!=(const attribute_iterator& i) const
+		{
+			return i_ != i.i_;
+		}
+		bool operator==(const const_attribute_iterator& i) const
+		{
+			return i == *this;
+		}
+		bool operator!=(const const_attribute_iterator& i) const
+		{
+			return i != *this;
+		}
 
 	private:
 		friend struct config::const_attribute_iterator;
@@ -330,26 +509,64 @@ public:
 	{
 		typedef const attribute value_type;
 		typedef std::bidirectional_iterator_tag iterator_category;
-		typedef const attribute *pointer;
-		typedef const attribute &reference;
+		typedef const attribute* pointer;
+		typedef const attribute& reference;
 		typedef attribute_map::const_iterator Itor;
 		typedef Itor::difference_type difference_type;
-		explicit const_attribute_iterator(const Itor &i): i_(i) {}
-		const_attribute_iterator(attribute_iterator& i): i_(i.i_) {}
+		explicit const_attribute_iterator(const Itor& i)
+			: i_(i)
+		{
+		}
+		const_attribute_iterator(attribute_iterator& i)
+			: i_(i.i_)
+		{
+		}
 
-		const_attribute_iterator &operator++() { ++i_; return *this; }
-		const_attribute_iterator operator++(int) { return const_attribute_iterator(i_++); }
+		const_attribute_iterator& operator++()
+		{
+			++i_;
+			return *this;
+		}
+		const_attribute_iterator operator++(int)
+		{
+			return const_attribute_iterator(i_++);
+		}
 
-		const_attribute_iterator &operator--() { --i_; return *this; }
-		const_attribute_iterator operator--(int) { return const_attribute_iterator(i_--); }
+		const_attribute_iterator& operator--()
+		{
+			--i_;
+			return *this;
+		}
+		const_attribute_iterator operator--(int)
+		{
+			return const_attribute_iterator(i_--);
+		}
 
-		reference operator*() const { return *i_; }
-		pointer operator->() const { return &*i_; }
+		reference operator*() const
+		{
+			return *i_;
+		}
+		pointer operator->() const
+		{
+			return &*i_;
+		}
 
-		bool operator==(const const_attribute_iterator &i) const { return i_ == i.i_; }
-		bool operator!=(const const_attribute_iterator &i) const { return i_ != i.i_; }
-		bool operator==(const attribute_iterator &i) const { return i_ == i.i_; }
-		bool operator!=(const attribute_iterator &i) const { return i_ != i.i_; }
+		bool operator==(const const_attribute_iterator& i) const
+		{
+			return i_ == i.i_;
+		}
+		bool operator!=(const const_attribute_iterator& i) const
+		{
+			return i_ != i.i_;
+		}
+		bool operator==(const attribute_iterator& i) const
+		{
+			return i_ == i.i_;
+		}
+		bool operator!=(const attribute_iterator& i) const
+		{
+			return i_ != i.i_;
+		}
 
 	private:
 		Itor i_;
@@ -377,7 +594,7 @@ public:
 	/**
 	 * Returns the first child with the given @a key, or an empty config if there is none.
 	 */
-	const config & child_or_empty(config_key_type key) const;
+	const config& child_or_empty(config_key_type key) const;
 
 	/**
 	 * Returns the nth child with the given @a key, or
@@ -441,7 +658,8 @@ public:
 	 * @param message An explanation of the deprecation, possibly mentioning an alternative
 	 * @note The deprecation message will be a level 3 deprecation.
 	 */
-	optional_config_impl<const config> get_deprecated_child(config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const;
+	optional_config_impl<const config> get_deprecated_child(
+		config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const;
 
 	/**
 	 * Get a deprecated child range and log a deprecation message
@@ -451,7 +669,8 @@ public:
 	 * @param message An explanation of the deprecation, possibly mentioning an alternative
 	 * @note The deprecation message will be a level 3 deprecation.
 	 */
-	const_child_itors get_deprecated_child_range(config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const;
+	const_child_itors get_deprecated_child_range(
+		config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const;
 
 	config& add_child(config_key_type key);
 	config& add_child(config_key_type key, const config& val);
@@ -460,9 +679,9 @@ public:
 	 * @param val the contents of the tag
 	 * @param index is the index of the new child within all children of type key.
 	 */
-	config& add_child_at(config_key_type key, const config &val, std::size_t index);
+	config& add_child_at(config_key_type key, const config& val, std::size_t index);
 
-	config &add_child(config_key_type key, config &&val);
+	config& add_child(config_key_type key, config&& val);
 
 	/**
 	 * Returns a reference to the attribute with the given @a key.
@@ -480,14 +699,14 @@ public:
 	 * Returns a pointer to the attribute with the given @a key
 	 * or nullptr if it does not exist.
 	 */
-	const attribute_value *get(config_key_type key) const;
+	const attribute_value* get(config_key_type key) const;
 
-    /**
-     * Chooses a value. If the value specified by @a key is
-     * blank, then @a default_key is chosen instead.
-     * If both values are blank or not set, then an empty value is returned.
-     */
-    const attribute_value& get_or(const config_key_type key, const config_key_type default_key) const;
+	/**
+	 * Chooses a value. If the value specified by @a key is
+	 * blank, then @a default_key is chosen instead.
+	 * If both values are blank or not set, then an empty value is returned.
+	 */
+	const attribute_value& get_or(const config_key_type key, const config_key_type default_key) const;
 
 	/**
 	 * Function to handle backward compatibility
@@ -498,8 +717,11 @@ public:
 	 * @param in_tag The name of the tag these attributes appear in
 	 * @param message An explanation of the deprecation, to be output if @a old_key is present.
 	 * @note The deprecation message will be a level 1 deprecation.
-	*/
-	const attribute_value &get_old_attribute(config_key_type key, const std::string &old_key, const std::string& in_tag, const std::string& message = "") const;
+	 */
+	const attribute_value& get_old_attribute(config_key_type key,
+		const std::string& old_key,
+		const std::string& in_tag,
+		const std::string& message = "") const;
 
 	/**
 	 * Get a deprecated attribute without a direct substitute,
@@ -509,7 +731,8 @@ public:
 	 * @param level The deprecation level
 	 * @param message An explanation of the deprecation, possibly mentioning an alternative
 	 */
-	const attribute_value& get_deprecated_attribute(config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const;
+	const attribute_value& get_deprecated_attribute(
+		config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const;
 
 	/**
 	 * Inserts an attribute into the config
@@ -526,15 +749,18 @@ public:
 	 * Returns a reference to the first child with the given @a key.
 	 * Creates the child if it does not yet exist.
 	 */
-	config &child_or_add(config_key_type key);
+	config& child_or_add(config_key_type key);
 
 	bool has_attribute(config_key_type key) const;
 
 	void remove_attribute(config_key_type key);
-	void merge_attributes(const config &);
+	void merge_attributes(const config&);
 
 	template<typename... T>
-	void remove_attributes(T... keys) { (remove_attribute(keys), ...); }
+	void remove_attributes(T... keys)
+	{
+		(remove_attribute(keys), ...);
+	}
 
 	/**
 	 * Copies attributes that exist in the source config.
@@ -581,25 +807,27 @@ public:
 	 * Returns the first child of tag @a key with a @a name attribute
 	 * containing @a value.
 	 */
-	optional_config_impl<config> find_child(config_key_type key, const std::string &name,
-		const std::string &value);
+	optional_config_impl<config> find_child(config_key_type key, const std::string& name, const std::string& value);
 
-	optional_config_impl<const config> find_child(config_key_type key, const std::string &name,
-		const std::string &value) const
-	{ return const_cast<config *>(this)->find_child(key, name, value); }
+	optional_config_impl<const config> find_child(
+		config_key_type key, const std::string& name, const std::string& value) const
+	{
+		return const_cast<config*>(this)->find_child(key, name, value);
+	}
 
-	config& find_mandatory_child(config_key_type key, const std::string &name,
-		const std::string &value);
+	config& find_mandatory_child(config_key_type key, const std::string& name, const std::string& value);
 
-	const config& find_mandatory_child(config_key_type key, const std::string &name,
-		const std::string &value) const;
+	const config& find_mandatory_child(config_key_type key, const std::string& name, const std::string& value) const;
 
 private:
 	void clear_children_impl(config_key_type key);
 
 public:
 	template<typename... T>
-	void clear_children(T... keys) { (clear_children_impl(keys), ...); }
+	void clear_children(T... keys)
+	{
+		(clear_children_impl(keys), ...);
+	}
 
 	/**
 	 * Moves all the children with tag @a key from @a src to this.
@@ -624,25 +852,43 @@ public:
 	std::string debug() const;
 	std::string hash() const;
 
-	struct error : public game::error {
-		error(const std::string& message) : game::error(message) {}
+	struct error : public game::error
+	{
+		error(const std::string& message)
+			: game::error(message)
+		{
+		}
 	};
 
 	struct child_pos
 	{
-		child_pos(child_map::iterator p, std::size_t i) : pos(p), index(i) {}
+		child_pos(child_map::iterator p, std::size_t i)
+			: pos(p)
+			, index(i)
+		{
+		}
 		child_map::iterator pos;
 		std::size_t index;
 
-		bool operator==(const child_pos& o) const { return pos == o.pos && index == o.index; }
-		bool operator!=(const child_pos& o) const { return !operator==(o); }
+		bool operator==(const child_pos& o) const
+		{
+			return pos == o.pos && index == o.index;
+		}
+		bool operator!=(const child_pos& o) const
+		{
+			return !operator==(o);
+		}
 	};
 
 	struct any_child
 	{
-		const child_map::key_type &key;
-		config &cfg;
-		any_child(const child_map::key_type *k, config *c): key(*k), cfg(*c) {}
+		const child_map::key_type& key;
+		config& cfg;
+		any_child(const child_map::key_type* k, config* c)
+			: key(*k)
+			, cfg(*c)
+		{
+		}
 	};
 
 	struct const_all_children_iterator;
@@ -652,8 +898,14 @@ public:
 		struct arrow_helper
 		{
 			any_child data;
-			arrow_helper(const all_children_iterator &i): data(*i) {}
-			const any_child *operator->() const { return &data; }
+			arrow_helper(const all_children_iterator& i)
+				: data(*i)
+			{
+			}
+			const any_child* operator->() const
+			{
+				return &data;
+			}
 		};
 
 		typedef any_child value_type;
@@ -663,34 +915,101 @@ public:
 		typedef std::vector<child_pos>::iterator Itor;
 		typedef Itor::difference_type difference_type;
 		typedef all_children_iterator this_type;
-		explicit all_children_iterator(const Itor &i): i_(i) {}
+		explicit all_children_iterator(const Itor& i)
+			: i_(i)
+		{
+		}
 
-		all_children_iterator &operator++() { ++i_; return *this; }
-		all_children_iterator operator++(int) { return all_children_iterator(i_++); }
-		this_type &operator--() { --i_; return *this; }
-		this_type operator--(int) { return this_type(i_--); }
+		all_children_iterator& operator++()
+		{
+			++i_;
+			return *this;
+		}
+		all_children_iterator operator++(int)
+		{
+			return all_children_iterator(i_++);
+		}
+		this_type& operator--()
+		{
+			--i_;
+			return *this;
+		}
+		this_type operator--(int)
+		{
+			return this_type(i_--);
+		}
 
 		reference operator*() const;
-		pointer operator->() const { return *this; }
+		pointer operator->() const
+		{
+			return *this;
+		}
 
-		bool operator==(const all_children_iterator &i) const { return i_ == i.i_; }
-		bool operator!=(const all_children_iterator &i) const { return i_ != i.i_; }
-		bool operator==(const const_all_children_iterator &i) const { return i_ == i.i_; }
-		bool operator!=(const const_all_children_iterator &i) const { return i_ != i.i_; }
+		bool operator==(const all_children_iterator& i) const
+		{
+			return i_ == i.i_;
+		}
+		bool operator!=(const all_children_iterator& i) const
+		{
+			return i_ != i.i_;
+		}
+		bool operator==(const const_all_children_iterator& i) const
+		{
+			return i_ == i.i_;
+		}
+		bool operator!=(const const_all_children_iterator& i) const
+		{
+			return i_ != i.i_;
+		}
 
-		friend bool operator<(const this_type& a, const this_type& b) { return a.i_ < b.i_; }
-		friend bool operator<=(const this_type& a, const this_type& b) { return a.i_ <= b.i_; }
-		friend bool operator>=(const this_type& a, const this_type& b) { return a.i_ >= b.i_; }
-		friend bool operator>(const this_type& a, const this_type& b) { return a.i_ > b.i_; }
+		friend bool operator<(const this_type& a, const this_type& b)
+		{
+			return a.i_ < b.i_;
+		}
+		friend bool operator<=(const this_type& a, const this_type& b)
+		{
+			return a.i_ <= b.i_;
+		}
+		friend bool operator>=(const this_type& a, const this_type& b)
+		{
+			return a.i_ >= b.i_;
+		}
+		friend bool operator>(const this_type& a, const this_type& b)
+		{
+			return a.i_ > b.i_;
+		}
 
-		this_type& operator+=(difference_type n) { i_ += n; return *this; }
-		this_type& operator-=(difference_type n) { i_ -= n; return *this; }
+		this_type& operator+=(difference_type n)
+		{
+			i_ += n;
+			return *this;
+		}
+		this_type& operator-=(difference_type n)
+		{
+			i_ -= n;
+			return *this;
+		}
 
-		reference operator[](difference_type n) const { return any_child(&i_[n].pos->first, i_[n].pos->second[i_->index].get()); }
-		friend difference_type operator-(const this_type& a, const this_type& b) { return a.i_ - b.i_; }
-		friend this_type operator-(const this_type& a, difference_type n) { return this_type(a.i_ - n); }
-		friend this_type operator+(const this_type& a, difference_type n) { return this_type(a.i_ + n); }
-		friend this_type operator+(difference_type n, const this_type& a) { return this_type(a.i_ + n); }
+		reference operator[](difference_type n) const
+		{
+			return any_child(&i_[n].pos->first, i_[n].pos->second[i_->index].get());
+		}
+		friend difference_type operator-(const this_type& a, const this_type& b)
+		{
+			return a.i_ - b.i_;
+		}
+		friend this_type operator-(const this_type& a, difference_type n)
+		{
+			return this_type(a.i_ - n);
+		}
+		friend this_type operator+(const this_type& a, difference_type n)
+		{
+			return this_type(a.i_ + n);
+		}
+		friend this_type operator+(difference_type n, const this_type& a)
+		{
+			return this_type(a.i_ + n);
+		}
 
 	private:
 		Itor i_;
@@ -704,8 +1023,14 @@ public:
 		struct arrow_helper
 		{
 			const any_child data;
-			arrow_helper(const const_all_children_iterator &i): data(*i) {}
-			const any_child *operator->() const { return &data; }
+			arrow_helper(const const_all_children_iterator& i)
+				: data(*i)
+			{
+			}
+			const any_child* operator->() const
+			{
+				return &data;
+			}
 		};
 
 		typedef const any_child value_type;
@@ -715,35 +1040,105 @@ public:
 		typedef std::vector<child_pos>::const_iterator Itor;
 		typedef Itor::difference_type difference_type;
 		typedef const_all_children_iterator this_type;
-		explicit const_all_children_iterator(const Itor &i): i_(i) {}
-		const_all_children_iterator(const all_children_iterator& i): i_(i.i_) {}
+		explicit const_all_children_iterator(const Itor& i)
+			: i_(i)
+		{
+		}
+		const_all_children_iterator(const all_children_iterator& i)
+			: i_(i.i_)
+		{
+		}
 
-		const_all_children_iterator &operator++() { ++i_; return *this; }
-		const_all_children_iterator operator++(int) { return const_all_children_iterator(i_++); }
-		this_type &operator--() { --i_; return *this; }
-		this_type operator--(int) { return this_type(i_--); }
+		const_all_children_iterator& operator++()
+		{
+			++i_;
+			return *this;
+		}
+		const_all_children_iterator operator++(int)
+		{
+			return const_all_children_iterator(i_++);
+		}
+		this_type& operator--()
+		{
+			--i_;
+			return *this;
+		}
+		this_type operator--(int)
+		{
+			return this_type(i_--);
+		}
 
 		reference operator*() const;
-		pointer operator->() const { return *this; }
+		pointer operator->() const
+		{
+			return *this;
+		}
 
-		bool operator==(const const_all_children_iterator &i) const { return i_ == i.i_; }
-		bool operator!=(const const_all_children_iterator &i) const { return i_ != i.i_; }
-		bool operator==(const all_children_iterator &i) const { return i_ == i.i_; }
-		bool operator!=(const all_children_iterator &i) const { return i_ != i.i_; }
+		bool operator==(const const_all_children_iterator& i) const
+		{
+			return i_ == i.i_;
+		}
+		bool operator!=(const const_all_children_iterator& i) const
+		{
+			return i_ != i.i_;
+		}
+		bool operator==(const all_children_iterator& i) const
+		{
+			return i_ == i.i_;
+		}
+		bool operator!=(const all_children_iterator& i) const
+		{
+			return i_ != i.i_;
+		}
 
-		friend bool operator<(const this_type& a, const this_type& b) { return a.i_ < b.i_; }
-		friend bool operator<=(const this_type& a, const this_type& b) { return a.i_ <= b.i_; }
-		friend bool operator>=(const this_type& a, const this_type& b) { return a.i_ >= b.i_; }
-		friend bool operator>(const this_type& a, const this_type& b) { return a.i_ > b.i_; }
+		friend bool operator<(const this_type& a, const this_type& b)
+		{
+			return a.i_ < b.i_;
+		}
+		friend bool operator<=(const this_type& a, const this_type& b)
+		{
+			return a.i_ <= b.i_;
+		}
+		friend bool operator>=(const this_type& a, const this_type& b)
+		{
+			return a.i_ >= b.i_;
+		}
+		friend bool operator>(const this_type& a, const this_type& b)
+		{
+			return a.i_ > b.i_;
+		}
 
-		this_type& operator+=(difference_type n) { i_ += n; return *this; }
-		this_type& operator-=(difference_type n) { i_ -= n; return *this; }
+		this_type& operator+=(difference_type n)
+		{
+			i_ += n;
+			return *this;
+		}
+		this_type& operator-=(difference_type n)
+		{
+			i_ -= n;
+			return *this;
+		}
 
-		reference operator[](difference_type n) const { return any_child(&i_[n].pos->first, i_[n].pos->second[i_->index].get()); }
-		friend difference_type operator-(const this_type& a, const this_type& b) { return a.i_ - b.i_; }
-		friend this_type operator-(const this_type& a, difference_type n) { return this_type(a.i_ - n); }
-		friend this_type operator+(const this_type& a, difference_type n) { return this_type(a.i_ + n); }
-		friend this_type operator+(difference_type n, const this_type& a) { return this_type(a.i_ + n); }
+		reference operator[](difference_type n) const
+		{
+			return any_child(&i_[n].pos->first, i_[n].pos->second[i_->index].get());
+		}
+		friend difference_type operator-(const this_type& a, const this_type& b)
+		{
+			return a.i_ - b.i_;
+		}
+		friend this_type operator-(const this_type& a, difference_type n)
+		{
+			return this_type(a.i_ - n);
+		}
+		friend this_type operator+(const this_type& a, difference_type n)
+		{
+			return this_type(a.i_ + n);
+		}
+		friend this_type operator+(difference_type n, const this_type& a)
+		{
+			return this_type(a.i_ + n);
+		}
 
 	private:
 		Itor i_;
@@ -756,7 +1151,7 @@ public:
 	 * @param val the contents of the tag
 	 * @param pos is the index of the new child in _all_ children.
 	 */
-	config& add_child_at_total(config_key_type key, const config &val, std::size_t pos);
+	config& add_child_at_total(config_key_type key, const config& val, std::size_t pos);
 	std::size_t find_total_first_of(config_key_type key, std::size_t start = 0);
 
 	typedef boost::iterator_range<all_children_iterator> all_children_itors;
@@ -779,7 +1174,7 @@ private:
 	static auto any_tag_view(const child_pos& elem) -> std::pair<const child_map::key_type&, Res>
 	{
 		const auto& [key, list] = *elem.pos;
-		return { key, *list[elem.index] };
+		return {key, *list[elem.index]};
 	}
 
 public:
@@ -788,17 +1183,23 @@ public:
 	/** In-order iteration over all children. */
 	template<typename Self>
 	auto all_children_view(this Self&& self)
-	{ return self.ordered_children | std::views::transform(&config::any_tag_view<Self>); }
+	{
+		return self.ordered_children | std::views::transform(&config::any_tag_view<Self>);
+	}
 
 #else
 
 	/** In-order iteration over all children. */
 	auto all_children_view() const
-	{ return ordered_children | utils::views::transform(&config::any_tag_view<const config&>); }
+	{
+		return ordered_children | utils::views::transform(&config::any_tag_view<const config&>);
+	}
 
 	/** In-order iteration over all children. */
 	auto all_children_view()
-	{ return ordered_children | utils::views::transform(&config::any_tag_view<config&>); }
+	{
+		return ordered_children | utils::views::transform(&config::any_tag_view<config&>);
+	}
 
 #endif // __cpp_explicit_this_parameter
 
@@ -827,7 +1228,7 @@ public:
 	 * Use clear_diff_track with the same diff object to clear the tracking
 	 * info and actually delete the nodes.
 	 */
-	void apply_diff(const config& diff, bool track = false); //throw error
+	void apply_diff(const config& diff, bool track = false); // throw error
 
 	/**
 	 * Clear any tracking info from a previous apply_diff call with tracking.
@@ -851,7 +1252,7 @@ public:
 	 */
 	void inherit_attributes(const config& c);
 
-	bool matches(const config &filter) const;
+	bool matches(const config& filter) const;
 
 	/**
 	 * Append data from another config object to this one.
@@ -863,12 +1264,12 @@ public:
 	/**
 	 * Adds children from @a cfg.
 	 */
-	void append_children(const config &cfg);
+	void append_children(const config& cfg);
 
 	/**
 	 * Adds children from @a cfg.
 	 */
-	void append_children(const config &cfg, config_key_type key);
+	void append_children(const config& cfg, config_key_type key);
 
 	/** Moves children with the given name from the given config to this one. */
 	void append_children_by_move(config& cfg, config_key_type key);
@@ -876,7 +1277,7 @@ public:
 	/**
 	 * Adds attributes from @a cfg.
 	 */
-	void append_attributes(const config &cfg);
+	void append_attributes(const config& cfg);
 
 	/**
 	 * All children with the given key will be merged
@@ -891,7 +1292,7 @@ public:
 	 */
 	void merge_children_by_attribute(config_key_type key, config_key_type attribute);
 
-	//this is a cheap O(1) operation
+	// this is a cheap O(1) operation
 	void swap(config& cfg);
 
 	/**
@@ -910,7 +1311,7 @@ private:
 	/**
 	 * Removes the child at position @a pos of @a l.
 	 */
-	std::vector<child_pos>::iterator remove_child(const child_map::iterator &l, std::size_t pos);
+	std::vector<child_pos>::iterator remove_child(const child_map::iterator& l, std::size_t pos);
 
 	/** All the attributes of this node. */
 	attribute_map values_;
@@ -921,7 +1322,6 @@ private:
 	std::vector<child_pos> ordered_children;
 };
 
-
 using optional_config = optional_config_impl<config>;
 using optional_const_config = optional_config_impl<const config>;
 /** Implement non-member swap function for std::swap (calls @ref config::swap). */
@@ -929,20 +1329,20 @@ void swap(config& lhs, config& rhs);
 
 namespace detail
 {
-	template<typename Key, typename Value, typename... Rest>
-	inline void config_construct_unpack(config& cfg, Key&& key, Value&& val, Rest... fwd)
-	{
-		if constexpr(std::is_same_v<std::decay_t<Value>, config>) {
-			cfg.add_child(std::forward<Key>(key), std::forward<Value>(val));
-		} else {
-			cfg.insert(std::forward<Key>(key), std::forward<Value>(val));
-		}
+template<typename Key, typename Value, typename... Rest>
+inline void config_construct_unpack(config& cfg, Key&& key, Value&& val, Rest... fwd)
+{
+	if constexpr(std::is_same_v<std::decay_t<Value>, config>) {
+		cfg.add_child(std::forward<Key>(key), std::forward<Value>(val));
+	} else {
+		cfg.insert(std::forward<Key>(key), std::forward<Value>(val));
+	}
 
-		if constexpr(sizeof...(Rest) > 0) {
-			config_construct_unpack(cfg, std::forward<Rest>(fwd)...);
-		}
+	if constexpr(sizeof...(Rest) > 0) {
+		config_construct_unpack(cfg, std::forward<Rest>(fwd)...);
 	}
 }
+} // namespace detail
 
 template<typename... Args>
 inline config::config(config_key_type first, Args&&... args)

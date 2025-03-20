@@ -17,20 +17,20 @@
 
 #include "filesystem.hpp"
 #include "game_config_manager.hpp"
-#include "preferences/preferences.hpp"
 #include "game_initialization/component_availability.hpp"
 #include "generators/map_create.hpp"
 #include "gui/dialogs/campaign_difficulty.hpp"
 #include "log.hpp"
 #include "map/exception.hpp"
 #include "map/map.hpp"
+#include "preferences/preferences.hpp"
 #include "saved_game.hpp"
 #include "side_controller.hpp"
 #include "wml_exception.hpp"
 
 #include "serialization/chrono.hpp"
-#include "serialization/preprocessor.hpp"
 #include "serialization/parser.hpp"
+#include "serialization/preprocessor.hpp"
 
 #include <sstream>
 
@@ -41,7 +41,8 @@ static lg::log_domain log_mp_create_engine("mp/create/engine");
 #define WRN_MP LOG_STREAM(warn, log_mp_create_engine)
 #define DBG_MP LOG_STREAM(debug, log_mp_create_engine)
 
-namespace ng {
+namespace ng
+{
 
 level::level(const config& data)
 	: data_(data)
@@ -159,7 +160,8 @@ random_map::random_map(const config& data)
 	if(!data.has_child("generator")) {
 		data_.clear();
 		generator_data_.clear();
-		data_["description"] = "Error: Random map found with missing generator information. Scenario should have a [generator] child.";
+		data_["description"]
+			= "Error: Random map found with missing generator information. Scenario should have a [generator] child.";
 		data_["error_message"] = "missing [generator] tag";
 	} else {
 		generator_data_ = data.mandatory_child("generator");
@@ -168,7 +170,8 @@ random_map::random_map(const config& data)
 	if(!data.has_attribute("scenario_generation") && !data.has_attribute("map_generation")) {
 		data_.clear();
 		generator_data_.clear();
-		data_["description"] = "Error: Random map found with missing generator information. Scenario should have a [generator] child.";
+		data_["description"]
+			= "Error: Random map found with missing generator information. Scenario should have a [generator] child.";
 		data_["error_message"] = "couldn't find 'scenario_generation' or 'map_generation' attribute";
 	}
 }
@@ -211,7 +214,7 @@ void campaign::set_metadata()
 	int min = data_["min_players"].to_int(1);
 	int max = data_["max_players"].to_int(1);
 
-	min_players_ = max_players_ =  min;
+	min_players_ = max_players_ = min;
 
 	if(max > min) {
 		max_players_ = max;
@@ -266,11 +269,11 @@ create_engine::create_engine(saved_game& state)
 	dependency_manager_.reset(new depcheck::manager(game_config_, state_.classification().is_multiplayer()));
 
 	// TODO: the editor dir is already configurable, is the preferences value
-	filesystem::get_files_in_dir(filesystem::get_legacy_editor_dir() + "/maps", &user_map_names_,
-		nullptr, filesystem::name_mode::FILE_NAME_ONLY);
+	filesystem::get_files_in_dir(filesystem::get_legacy_editor_dir() + "/maps", &user_map_names_, nullptr,
+		filesystem::name_mode::FILE_NAME_ONLY);
 
-	filesystem::get_files_in_dir(filesystem::get_legacy_editor_dir() + "/scenarios", &user_scenario_names_,
-		nullptr, filesystem::name_mode::FILE_NAME_ONLY);
+	filesystem::get_files_in_dir(filesystem::get_legacy_editor_dir() + "/scenarios", &user_scenario_names_, nullptr,
+		filesystem::name_mode::FILE_NAME_ONLY);
 
 	DBG_MP << "initializing all levels, eras and mods";
 
@@ -295,10 +298,10 @@ void create_engine::init_generated_level_data()
 {
 	DBG_MP << "initializing generated level data";
 
-	//DBG_MP << "current data:";
-	//DBG_MP << current_level().data().debug();
+	// DBG_MP << "current data:";
+	// DBG_MP << current_level().data().debug();
 
-	random_map * cur_lev = dynamic_cast<random_map *> (&current_level());
+	random_map* cur_lev = dynamic_cast<random_map*>(&current_level());
 
 	if(!cur_lev) {
 		WRN_MP << "Tried to initialized generated level data on a level that wasn't a random map";
@@ -306,8 +309,7 @@ void create_engine::init_generated_level_data()
 	}
 
 	try {
-		if(!cur_lev->generate_whole_scenario())
-		{
+		if(!cur_lev->generate_whole_scenario()) {
 			DBG_MP << "** replacing map **";
 
 			config data = cur_lev->data();
@@ -316,7 +318,7 @@ void create_engine::init_generated_level_data()
 
 			cur_lev->set_data(data);
 
-		} else { //scenario generation
+		} else { // scenario generation
 
 			DBG_MP << "** replacing scenario **";
 
@@ -334,7 +336,7 @@ void create_engine::init_generated_level_data()
 
 			cur_lev->set_data(data);
 		}
-	} catch (const mapgen_exception & e) {
+	} catch(const mapgen_exception& e) {
 		config data = cur_lev->data();
 
 		data["error_message"] = e.what();
@@ -342,8 +344,8 @@ void create_engine::init_generated_level_data()
 		cur_lev->set_data(data);
 	}
 
-	//DBG_MP << "final data:";
-	//DBG_MP << current_level().data().debug();
+	// DBG_MP << "final data:";
+	// DBG_MP << current_level().data().debug();
 }
 
 bool create_engine::current_level_has_side_data()
@@ -372,9 +374,11 @@ void create_engine::prepare_for_new_level()
 void create_engine::prepare_for_era_and_mods()
 {
 	get_parameters();
-	state_.classification().era_define = game_config_.find_mandatory_child("era", "id", state_.classification().era_id)["define"].str();
+	state_.classification().era_define
+		= game_config_.find_mandatory_child("era", "id", state_.classification().era_id)["define"].str();
 	for(const std::string& mod_id : state_.classification().active_mods) {
-		state_.classification().mod_defines.push_back(game_config_.find_mandatory_child("modification", "id", mod_id)["define"].str());
+		state_.classification().mod_defines.push_back(
+			game_config_.find_mandatory_child("modification", "id", mod_id)["define"].str());
 	}
 }
 
@@ -384,9 +388,7 @@ void create_engine::prepare_for_scenario()
 
 	state_.classification().scenario_define = current_level().data()["define"].str();
 
-	state_.set_carryover_sides_start(
-		config {"next_scenario", current_level().data()["id"]}
-	);
+	state_.set_carryover_sides_start(config{"next_scenario", current_level().data()["id"]});
 }
 
 void create_engine::prepare_for_campaign(const std::string& difficulty)
@@ -406,16 +408,14 @@ void create_engine::prepare_for_campaign(const std::string& difficulty)
 	state_.classification().abbrev = current_level_data["abbrev"].str();
 
 	state_.classification().end_text = current_level_data["end_text"].str();
-	state_.classification().end_text_duration = chrono::parse_duration<std::chrono::milliseconds>(current_level_data["end_text_duration"]);
+	state_.classification().end_text_duration
+		= chrono::parse_duration<std::chrono::milliseconds>(current_level_data["end_text_duration"]);
 	state_.classification().end_credits = current_level_data["end_credits"].to_bool(true);
 
 	state_.classification().campaign_define = current_level_data["define"].str();
-	state_.classification().campaign_xtra_defines =
-		utils::split(current_level_data["extra_defines"]);
+	state_.classification().campaign_xtra_defines = utils::split(current_level_data["extra_defines"]);
 
-	state_.set_carryover_sides_start(
-		config {"next_scenario", current_level_data["first_scenario"]}
-	);
+	state_.set_carryover_sides_start(config{"next_scenario", current_level_data["first_scenario"]});
 }
 
 std::string create_engine::select_campaign_difficulty(int set_value)
@@ -441,12 +441,11 @@ std::string create_engine::select_campaign_difficulty(int set_value)
 	// Use a minimalistic interface to get the specified define
 	if(set_value != -1) {
 		if(set_value > static_cast<int>(difficulties.size())) {
-			PLAIN_LOG << "incorrect difficulty number: [" <<
-				set_value << "]. maximum is [" << difficulties.size() << "].\n";
+			PLAIN_LOG << "incorrect difficulty number: [" << set_value << "]. maximum is [" << difficulties.size()
+					  << "].\n";
 			return "FAIL";
 		} else if(set_value < 1) {
-			PLAIN_LOG << "incorrect difficulty number: [" <<
-				set_value << "]. minimum is [1].\n";
+			PLAIN_LOG << "incorrect difficulty number: [" << set_value << "]. minimum is [1].\n";
 			return "FAIL";
 		} else {
 			return difficulties[set_value - 1];
@@ -472,7 +471,8 @@ void create_engine::prepare_for_saved_game()
 
 	// The save might be a start-of-scenario save so make sure we have the scenario data loaded.
 	state_.expand_scenario();
-	state_.mp_settings().saved_game = state_.is_mid_game_save() ? saved_game_mode::type::midgame : saved_game_mode::type::scenaro_start;
+	state_.mp_settings().saved_game
+		= state_.is_mid_game_save() ? saved_game_mode::type::midgame : saved_game_mode::type::scenaro_start;
 }
 
 void create_engine::prepare_for_other()
@@ -518,7 +518,7 @@ void create_engine::set_current_level(const std::size_t index)
 {
 	try {
 		current_level_index_ = type_map_.at(current_level_type_).games_filtered.at(index);
-	} catch (const std::out_of_range&) {
+	} catch(const std::out_of_range&) {
 		current_level_index_ = 0u;
 	}
 
@@ -626,9 +626,8 @@ std::vector<create_engine::extras_metadata_ptr> create_engine::active_mods_data(
 	const std::vector<extras_metadata_ptr>& mods = get_const_extras_by_type(MP_EXTRA::MOD);
 
 	std::vector<extras_metadata_ptr> data_vec;
-	std::copy_if(mods.begin(), mods.end(), std::back_inserter(data_vec), [this](const extras_metadata_ptr& mod) {
-		return dependency_manager_->is_modification_active(mod->id);
-	});
+	std::copy_if(mods.begin(), mods.end(), std::back_inserter(data_vec),
+		[this](const extras_metadata_ptr& mod) { return dependency_manager_->is_modification_active(mod->id); });
 
 	return data_vec;
 }
@@ -657,8 +656,7 @@ void create_engine::init_all_levels()
 
 		// User maps.
 		int dep_index_offset = 0;
-		for(std::size_t i = 0; i < user_map_names_.size(); i++)
-		{
+		for(std::size_t i = 0; i < user_map_names_.size(); i++) {
 			config user_map_data = gen_mp_data;
 			user_map_data["map_data"] = filesystem::read_map(user_map_names_[i]);
 
@@ -669,19 +667,20 @@ void create_engine::init_all_levels()
 			std::unique_ptr<gamemap> map;
 			try {
 				map.reset(new gamemap(user_map_data["map_data"]));
-			} catch (const incorrect_map_format_error& e) {
+			} catch(const incorrect_map_format_error& e) {
 				// Set map content to nullptr, so that it fails can_launch_game()
 				map.reset(nullptr);
 				user_map_data["description"] = _("Map could not be loaded: ") + e.message;
 
 				ERR_CF << "map could not be loaded: " << e.message;
-			} catch (const wml_exception&) {
+			} catch(const wml_exception&) {
 				add_map = false;
 				dep_index_offset++;
 			}
 
 			if(add_map) {
-				type_map_[level_type::type::user_map].games.emplace_back(new user_map(user_map_data, user_map_names_[i], map.get()));
+				type_map_[level_type::type::user_map].games.emplace_back(
+					new user_map(user_map_data, user_map_names_[i], map.get()));
 
 				// Since user maps are treated as scenarios, some dependency info is required
 				config depinfo;
@@ -693,23 +692,25 @@ void create_engine::init_all_levels()
 
 		// User made scenarios.
 		dep_index_offset = 0;
-		for(std::size_t i = 0; i < user_scenario_names_.size(); i++)
-		{
+		for(std::size_t i = 0; i < user_scenario_names_.size(); i++) {
 			config data;
 			try {
 				// Only attempt to load .cfg files (.cfg extension is enforced in Editor save)
-				if (!filesystem::is_cfg(user_scenario_names_[i]))
+				if(!filesystem::is_cfg(user_scenario_names_[i]))
 					continue;
 
-				read(data, *preprocess_file(filesystem::get_legacy_editor_dir() + "/scenarios/" + user_scenario_names_[i]));
-			} catch(const config::error & e) {
+				read(data,
+					*preprocess_file(filesystem::get_legacy_editor_dir() + "/scenarios/" + user_scenario_names_[i]));
+			} catch(const config::error& e) {
 				ERR_CF << "Caught a config error while parsing user made (editor) scenarios:\n" << e.message;
-				ERR_CF << "Skipping file: " << (filesystem::get_legacy_editor_dir() + "/scenarios/" + user_scenario_names_[i]);
+				ERR_CF << "Skipping file: "
+					   << (filesystem::get_legacy_editor_dir() + "/scenarios/" + user_scenario_names_[i]);
 				continue;
 			}
 
 			scenario_ptr new_scenario(new scenario(data));
-			if(new_scenario->id().empty()) continue;
+			if(new_scenario->id().empty())
+				continue;
 
 			type_map_[level_type::type::user_scenario].games.push_back(std::move(new_scenario));
 
@@ -722,8 +723,7 @@ void create_engine::init_all_levels()
 	}
 
 	// Stand-alone scenarios.
-	for(const config& data : game_config_.child_range("multiplayer"))
-	{
+	for(const config& data : game_config_.child_range("multiplayer")) {
 		if(!data["allow_new_game"].to_bool(true))
 			continue;
 
@@ -738,8 +738,7 @@ void create_engine::init_all_levels()
 	}
 
 	// Campaigns.
-	for(const config& data : game_config_.child_range("campaign"))
-	{
+	for(const config& data : game_config_.child_range("campaign")) {
 		if(data["id"].empty()) {
 			if(data["name"].empty()) {
 				ERR_CF << "Found a [campaign] with neither a name nor an id attribute, ignoring it";
@@ -770,8 +769,7 @@ void create_engine::init_all_levels()
 	std::stable_sort(sp_campaigns.begin(), sp_campaigns.end(),
 		[](const create_engine::level_ptr& a, const create_engine::level_ptr& b) {
 			return a->data()["rank"].to_int(1000) < b->data()["rank"].to_int(1000);
-		}
-	);
+		});
 }
 
 void create_engine::init_extras(const MP_EXTRA extra_type)
@@ -779,18 +777,16 @@ void create_engine::init_extras(const MP_EXTRA extra_type)
 	std::vector<extras_metadata_ptr>& extras = get_extras_by_type(extra_type);
 	const std::string extra_name = (extra_type == ERA) ? "era" : "modification";
 
-	component_availability::type default_availabilty = (extra_type == ERA)
-		? component_availability::type::mp
-		: component_availability::type::hybrid;
+	component_availability::type default_availabilty
+		= (extra_type == ERA) ? component_availability::type::mp : component_availability::type::hybrid;
 
 	std::set<std::string> found_ids;
-	for(const config& extra : game_config_.child_range(extra_name))
-	{
-		component_availability::type type = component_availability::get_enum(extra["type"].str()).value_or(default_availabilty);
+	for(const config& extra : game_config_.child_range(extra_name)) {
+		component_availability::type type
+			= component_availability::get_enum(extra["type"].str()).value_or(default_availabilty);
 		const bool mp = state_.classification().is_multiplayer();
 
-		if((type != component_availability::type::mp || mp) && (type != component_availability::type::sp || !mp) )
-		{
+		if((type != component_availability::type::mp || mp) && (type != component_availability::type::sp || !mp)) {
 			if(found_ids.insert(extra["id"]).second) {
 				extras_metadata_ptr new_extras_metadata(new extras_metadata());
 				new_extras_metadata->id = extra["id"].str();
@@ -799,8 +795,7 @@ void create_engine::init_extras(const MP_EXTRA extra_type)
 				new_extras_metadata->cfg = &extra;
 
 				extras.push_back(std::move(new_extras_metadata));
-			}
-			else {
+			} else {
 				ERR_CF << "found " << extra_name << " with id=" << extra["id"] << " twice";
 			}
 		}
@@ -841,14 +836,13 @@ std::vector<std::size_t> create_engine::get_filtered_level_indices(level_type::t
 	return type_map_.at(type).games_filtered;
 }
 
-const std::vector<create_engine::extras_metadata_ptr>&
-	create_engine::get_const_extras_by_type(const MP_EXTRA extra_type) const
+const std::vector<create_engine::extras_metadata_ptr>& create_engine::get_const_extras_by_type(
+	const MP_EXTRA extra_type) const
 {
 	return (extra_type == ERA) ? eras_ : mods_;
 }
 
-std::vector<create_engine::extras_metadata_ptr>&
-	create_engine::get_extras_by_type(const MP_EXTRA extra_type)
+std::vector<create_engine::extras_metadata_ptr>& create_engine::get_extras_by_type(const MP_EXTRA extra_type)
 {
 	return (extra_type == ERA) ? eras_ : mods_;
 }

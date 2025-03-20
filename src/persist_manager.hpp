@@ -21,19 +21,21 @@
 
 class persist_context;
 
-class persist_manager {
-	protected:
-		typedef std::map<std::string, std::unique_ptr<persist_context>> context_map;
+class persist_manager
+{
+protected:
+	typedef std::map<std::string, std::unique_ptr<persist_context>> context_map;
 
-		bool in_transaction_;
-		context_map contexts_;
-	public:
-		bool start_transaction();
-		bool end_transaction();
-		bool cancel_transaction();
+	bool in_transaction_;
+	context_map contexts_;
 
-		persist_manager();
-		virtual ~persist_manager();
+public:
+	bool start_transaction();
+	bool end_transaction();
+	bool cancel_transaction();
 
-		persist_context &get_context(const std::string &ns);
+	persist_manager();
+	virtual ~persist_manager();
+
+	persist_context& get_context(const std::string& ns);
 };

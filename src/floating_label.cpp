@@ -43,7 +43,7 @@ int label_id = 1;
 
 std::stack<std::set<int>> label_contexts;
 
-}
+} // namespace
 
 using namespace std::chrono_literals;
 
@@ -119,7 +119,7 @@ bool floating_label::create_texture()
 		return false;
 	}
 
-	DBG_FT << "creating floating label texture, text: " << text_.substr(0,15);
+	DBG_FT << "creating floating label texture, text: " << text_.substr(0, 15);
 	font::pango_text& text = font::get_text_renderer();
 
 	text.set_link_aware(false)
@@ -169,7 +169,7 @@ void floating_label::update(const clock::time_point& time)
 	}
 
 	point new_pos = get_pos(time);
-	rect draw_loc {new_pos.x, new_pos.y, tex_.w(), tex_.h()};
+	rect draw_loc{new_pos.x, new_pos.y, tex_.w(), tex_.h()};
 
 	uint8_t new_alpha = get_alpha(time);
 
@@ -224,7 +224,7 @@ void floating_label::set_lifetime(const std::chrono::milliseconds& lifetime, con
 {
 	lifetime_ = lifetime;
 	fadeout_ = fadeout;
-	time_start_	= std::chrono::steady_clock::now();
+	time_start_ = std::chrono::steady_clock::now();
 }
 
 std::chrono::milliseconds floating_label::get_time_alive(const clock::time_point& current_time) const
@@ -235,10 +235,8 @@ std::chrono::milliseconds floating_label::get_time_alive(const clock::time_point
 point floating_label::get_pos(const clock::time_point& time)
 {
 	auto time_alive = get_time_alive(time);
-	return {
-		static_cast<int>(time_alive.count() * xmove_ + xpos(tex_.w())),
-		static_cast<int>(time_alive.count() * ymove_ + ypos_)
-	};
+	return {static_cast<int>(time_alive.count() * xmove_ + xpos(tex_.w())),
+		static_cast<int>(time_alive.count() * ymove_ + ypos_)};
 }
 
 uint8_t floating_label::get_alpha(const clock::time_point& time)
@@ -248,7 +246,7 @@ uint8_t floating_label::get_alpha(const clock::time_point& time)
 		if(time_alive >= lifetime_ && tex_ != nullptr) {
 			// fade out moving floating labels
 			int alpha_sub = 255 * (time_alive - lifetime_) / fadeout_;
-			if (alpha_sub >= 255) {
+			if(alpha_sub >= 255) {
 				return 0;
 			} else {
 				return 255 - alpha_sub;
@@ -320,7 +318,7 @@ SDL_Rect get_floating_label_rect(int handle)
 {
 	const label_map::iterator i = labels.find(handle);
 	if(i != labels.end()) {
-		if (i->second.create_texture()) {
+		if(i->second.create_texture()) {
 			SDL_Point size = i->second.get_draw_size();
 			return {0, 0, size.x, size.y};
 		}
@@ -337,13 +335,13 @@ floating_label_context::floating_label_context()
 		}
 	}
 
-	//TODO: 'pause' floating labels in other contexrs
+	// TODO: 'pause' floating labels in other contexrs
 	label_contexts.emplace();
 }
 
 floating_label_context::~floating_label_context()
 {
-	//TODO: 'pause' floating labels in other contexrs
+	// TODO: 'pause' floating labels in other contexrs
 	const std::set<int>& context = label_contexts.top();
 
 	while(!context.empty()) {
@@ -387,8 +385,8 @@ void update_floating_labels()
 		}
 	}
 
-	//remove expired labels
-	for(label_map::iterator j = labels.begin(); j != labels.end(); ) {
+	// remove expired labels
+	for(label_map::iterator j = labels.begin(); j != labels.end();) {
 		if(context.count(j->first) > 0 && j->second.expired(time)) {
 			DBG_FT << "removing expired floating label " << j->first;
 			context.erase(j->first);
@@ -399,4 +397,4 @@ void update_floating_labels()
 	}
 }
 
-}
+} // namespace font

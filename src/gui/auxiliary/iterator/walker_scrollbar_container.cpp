@@ -23,7 +23,9 @@ namespace gui2::iteration
 {
 
 scrollbar_container::scrollbar_container(gui2::scrollbar_container& container)
-	: container_(container), widget_(&container), itor_(container.begin())
+	: container_(container)
+	, widget_(&container)
+	, itor_(container.begin())
 {
 }
 
@@ -34,36 +36,36 @@ walker_base::state_t scrollbar_container::next(const level level)
 	}
 
 	switch(level) {
-		case self:
-			if(widget_) {
-				widget_ = nullptr;
+	case self:
+		if(widget_) {
+			widget_ = nullptr;
+			return invalid;
+		}
+		assert(false);
+		return fail;
+	case internal:
+		if(!entered_grid) {
+			entered_grid = true;
+			in_grid = true;
+			return valid;
+		}
+		if(in_grid) {
+			++itor_;
+			if(itor_ == container_.end()) {
+				in_grid = false;
+				entered_children = true;
+				itor_ = container_.content_grid()->begin();
 				return invalid;
 			}
-			assert(false);
-			return fail;
-		case internal:
-			if(!entered_grid) {
-				entered_grid = true;
-				in_grid = true;
-				return valid;
-			}
-			if(in_grid) {
-				++itor_;
-				if(itor_ == container_.end()) {
-					in_grid = false;
-					entered_children = true;
-					itor_ = container_.content_grid()->begin();
-					return invalid;
-				}
-				return valid;
-			}
-			assert(false);
-			return fail;
-		case child:
-			if(itor_ != container_.content_grid()->end()) {
-				++itor_;
-				return itor_ == container_.content_grid()->end() ? invalid : valid;
-			}
+			return valid;
+		}
+		assert(false);
+		return fail;
+	case child:
+		if(itor_ != container_.content_grid()->end()) {
+			++itor_;
+			return itor_ == container_.content_grid()->end() ? invalid : valid;
+		}
 	}
 
 	assert(false);
@@ -73,12 +75,12 @@ walker_base::state_t scrollbar_container::next(const level level)
 bool scrollbar_container::at_end(const level level) const
 {
 	switch(level) {
-		case self:
-			return widget_ == nullptr;
-		case internal:
-			return entered_grid && !in_grid;
-		case child:
-			return entered_children && (itor_ == container_.content_grid()->end());
+	case self:
+		return widget_ == nullptr;
+	case internal:
+		return entered_grid && !in_grid;
+	case child:
+		return entered_children && (itor_ == container_.content_grid()->end());
 	}
 
 	assert(false);
@@ -88,20 +90,20 @@ bool scrollbar_container::at_end(const level level) const
 gui2::widget* scrollbar_container::get(const level level)
 {
 	switch(level) {
-		case self:
-			return widget_;
-		case internal:
-			if(!in_grid || itor_ == container_.end()) {
-				return nullptr;
-			} else {
-				return *itor_;
-			}
-		case child:
-			if(!entered_children || itor_ == container_.content_grid()->end()) {
-				return nullptr;
-			} else {
-				return *itor_;
-			}
+	case self:
+		return widget_;
+	case internal:
+		if(!in_grid || itor_ == container_.end()) {
+			return nullptr;
+		} else {
+			return *itor_;
+		}
+	case child:
+		if(!entered_children || itor_ == container_.content_grid()->end()) {
+			return nullptr;
+		} else {
+			return *itor_;
+		}
 	}
 
 	assert(false);

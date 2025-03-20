@@ -42,7 +42,7 @@ const char UNTRANSLATABLE_PART = 0x02;
 const char TEXTDOMAIN_SEPARATOR = 0x03;
 const char ID_TRANSLATABLE_PART = 0x04;
 const char PLURAL_PART = 0x05;
-}
+} // namespace
 
 std::size_t t_string_base::hash_value() const
 {
@@ -582,11 +582,10 @@ const std::string& t_string_base::str() const
 		if(w.translatable()) {
 			if(w.countable()) {
 				std::string plural(w.plural_begin(), w.plural_end());
-				translated_value_ +=
-					translation::dsngettext(w.textdomain().c_str(), part.c_str(), plural.c_str(), w.count());
+				translated_value_
+					+= translation::dsngettext(w.textdomain().c_str(), part.c_str(), plural.c_str(), w.count());
 			} else {
-				translated_value_ +=
-					translation::dsgettext(w.textdomain().c_str(), part.c_str());
+				translated_value_ += translation::dsgettext(w.textdomain().c_str(), part.c_str());
 			}
 		} else {
 			translated_value_ += part;

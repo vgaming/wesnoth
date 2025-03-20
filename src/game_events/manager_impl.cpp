@@ -15,8 +15,8 @@
 
 #include "game_events/manager_impl.hpp"
 
-#include "game_events/handlers.hpp"
 #include "formula/string_utils.hpp"
+#include "game_events/handlers.hpp"
 #include "log.hpp"
 #include "serialization/string_utils.hpp"
 #include "utils/general.hpp"
@@ -86,14 +86,16 @@ bool event_handlers::cmp(const handler_ptr& lhs, const handler_ptr& rhs)
  * An event with a nonempty ID will not be added if an event with that
  * ID already exists.
  */
-pending_event_handler event_handlers::add_event_handler(const std::string& name, const std::string& id, bool repeat, double priority, bool is_menu_item)
+pending_event_handler event_handlers::add_event_handler(
+	const std::string& name, const std::string& id, bool repeat, double priority, bool is_menu_item)
 {
 	if(!id.empty()) {
 		// Ignore this handler if there is already one with this ID.
 		auto find_it = id_map_.find(id);
 
 		if(find_it != id_map_.end() && !find_it->second.expired()) {
-			LOG_EH << "ignoring event handler for name='" << name << "' with id '" << id << "' because an event with that id already exists";
+			LOG_EH << "ignoring event handler for name='" << name << "' with id '" << id
+				   << "' because an event with that id already exists";
 			return {*this, nullptr};
 		}
 	}
@@ -153,7 +155,8 @@ void event_handlers::finish_adding_event_handler(const handler_ptr& handler)
 
 pending_event_handler::~pending_event_handler()
 {
-	if(valid()) list_.finish_adding_event_handler(handler_);
+	if(valid())
+		list_.finish_adding_event_handler(handler_);
 }
 
 /**
@@ -197,15 +200,11 @@ void event_handlers::clean_up_expired_handlers(const std::string& event_name)
 	// Then remove any now-unlockable weak_ptrs from the by-name list.
 	// Might be more than one so we split.
 	for(const std::string& name : utils::split(event_name)) {
-		by_name_[standardize_name(name)].remove_if(
-			[](const weak_handler_ptr& ptr) { return ptr.expired(); }
-		);
+		by_name_[standardize_name(name)].remove_if([](const weak_handler_ptr& ptr) { return ptr.expired(); });
 	}
 
 	// And finally remove any now-unlockable weak_ptrs from the with-variables name list.
-	dynamic_.remove_if(
-		[](const weak_handler_ptr& ptr) { return ptr.expired(); }
-	);
+	dynamic_.remove_if([](const weak_handler_ptr& ptr) { return ptr.expired(); });
 }
 
 const handler_ptr event_handlers::get_event_handler_by_id(const std::string& id)

@@ -85,10 +85,10 @@ private:
 	void parse_variable();
 
 	std::string lineno_string(utils::string_map& map,
-			const std::string& lineno,
-			const std::string& error_string,
-			const std::string& hint_string = "",
-			const std::string& debug_string = "");
+		const std::string& lineno,
+		const std::string& error_string,
+		const std::string& hint_string = "",
+		const std::string& debug_string = "");
 
 	void error(const std::string& message, const std::string& pos_format = "");
 
@@ -140,10 +140,9 @@ void parser::operator()()
 			break;
 
 		default:
-			if(static_cast<unsigned char>(tok_.current_token().value[0]) == 0xEF &&
-			   static_cast<unsigned char>(tok_.next_token().value[0])    == 0xBB &&
-			   static_cast<unsigned char>(tok_.next_token().value[0])    == 0xBF
-			) {
+			if(static_cast<unsigned char>(tok_.current_token().value[0]) == 0xEF
+				&& static_cast<unsigned char>(tok_.next_token().value[0]) == 0xBB
+				&& static_cast<unsigned char>(tok_.next_token().value[0]) == 0xBF) {
 				utils::string_map i18n_symbols;
 				std::stringstream ss;
 				ss << tok_.get_start_line() << " " << tok_.get_file();
@@ -175,11 +174,8 @@ void parser::operator()()
 		std::stringstream ss;
 		ss << elements.top().start_line << " " << elements.top().file;
 
-		error(lineno_string(i18n_symbols, ss.str(),
-			_("Missing closing tag for tag [$tag]"),
-			_("expected at $pos")),
-			_("opened at $pos")
-		);
+		error(lineno_string(i18n_symbols, ss.str(), _("Missing closing tag for tag [$tag]"), _("expected at $pos")),
+			_("opened at $pos"));
 	}
 }
 
@@ -263,11 +259,9 @@ void parser::parse_element()
 			std::stringstream ss;
 			ss << elements.top().start_line << " " << elements.top().file;
 
-			error(lineno_string(i18n_symbols, ss.str(),
-				_("Found invalid closing tag [/$tag2] for tag [$tag1]"),
-				_("opened at $pos")),
-				_("closed at $pos")
-			);
+			error(lineno_string(i18n_symbols, ss.str(), _("Found invalid closing tag [/$tag2] for tag [$tag1]"),
+					  _("opened at $pos")),
+				_("closed at $pos"));
 		}
 
 		if(validator_) {
@@ -436,10 +430,10 @@ finish:
  * This function is crap. Don't use it on a string_map with prefixes.
  */
 std::string parser::lineno_string(utils::string_map& i18n_symbols,
-		const std::string& lineno,
-		const std::string& error_string,
-		const std::string& hint_string,
-		const std::string& debug_string)
+	const std::string& lineno,
+	const std::string& error_string,
+	const std::string& hint_string,
+	const std::string& debug_string)
 {
 	i18n_symbols["pos"] = ::lineno_string(lineno);
 	std::string result = error_string;
@@ -486,7 +480,6 @@ void parser::error(const std::string& error_type, const std::string& pos_format)
 
 	throw config::error(message);
 }
-
 
 // ==================================================================================
 // HELPERS FOR WRITE_KEY_VAL
@@ -619,8 +612,7 @@ void write_key_val_visitor::operator()(const t_string& value) const
 	out_ << '\n';
 }
 
-} // end anon namespace
-
+} // namespace
 
 // ==================================================================================
 // PUBLIC FUNCTION IMPLEMENTATIONS
@@ -682,7 +674,7 @@ void read_compressed(config& cfg, std::istream& file, abstract_validator* valida
 
 	if(!filter.good()) {
 		LOG_CF << " filter.peek() != EOF but !filter.good()."
-		       << "This indicates a malformed gz stream and can make Wesnoth crash.";
+			   << "This indicates a malformed gz stream and can make Wesnoth crash.";
 	}
 
 	parser(cfg, filter, validator)();
@@ -701,10 +693,10 @@ void read_bz2(config& cfg, std::istream& file, abstract_validator* validator)
 }
 
 void write_key_val(std::ostream& out,
-		const std::string& key,
-		const config::attribute_value& value,
-		unsigned level,
-		std::string& textdomain)
+	const std::string& key,
+	const config::attribute_value& value,
+	unsigned level,
+	std::string& textdomain)
 {
 	value.apply_visitor(write_key_val_visitor(out, level, textdomain, key));
 }

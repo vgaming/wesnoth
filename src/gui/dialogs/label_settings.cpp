@@ -17,7 +17,6 @@
 #include "gui/dialogs/label_settings.hpp"
 
 #include "display.hpp"
-#include "serialization/markup.hpp"
 #include "formatter.hpp"
 #include "formula/string_utils.hpp"
 #include "gettext.hpp"
@@ -26,6 +25,7 @@
 #include "gui/widgets/toggle_button.hpp"
 #include "gui/widgets/window.hpp"
 #include "map/label.hpp"
+#include "serialization/markup.hpp"
 #include "team.hpp"
 
 #include <vector>
@@ -108,7 +108,8 @@ void label_settings::pre_show()
 		toggle_button& status = grid->find_widget<toggle_button>("cat_status");
 		status.set_value(visible);
 
-		connect_signal_notify_modified(status, std::bind(&label_settings::toggle_category, this, std::placeholders::_1, category));
+		connect_signal_notify_modified(
+			status, std::bind(&label_settings::toggle_category, this, std::placeholders::_1, category));
 
 		if(category.substr(0, 5) == "side:") {
 			label& cat_name = grid->find_widget<label>("cat_name");
@@ -137,4 +138,4 @@ void label_settings::toggle_category(widget& box, const std::string& category)
 	all_labels_[category] = static_cast<toggle_button&>(box).get_value_bool();
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

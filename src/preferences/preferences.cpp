@@ -22,19 +22,19 @@
 #include "preferences/preferences.hpp"
 
 #include "cursor.hpp"
-#include "game_board.hpp"
-#include "game_display.hpp"
 #include "formula/string_utils.hpp"
+#include "game_board.hpp"
 #include "game_config.hpp"
 #include "game_data.hpp"
+#include "game_display.hpp"
 #include "gettext.hpp"
 #include "gui/dialogs/file_dialog.hpp"
 #include "gui/dialogs/theme_list.hpp"
 #include "gui/dialogs/transient_message.hpp"
 #include "hotkey/hotkey_item.hpp"
 #include "log.hpp"
-#include "map_settings.hpp"
 #include "map/map.hpp"
+#include "map_settings.hpp"
 #include "resources.hpp"
 #include "serialization/chrono.hpp"
 #include "serialization/parser.hpp"
@@ -42,8 +42,8 @@
 #include "units/unit.hpp"
 #include "video.hpp"
 
-#include <sys/stat.h> // for setting the permissions of the preferences file
 #include <boost/algorithm/string.hpp>
+#include <sys/stat.h> // for setting the permissions of the preferences file
 
 #ifdef _WIN32
 #include "serialization/unicode_cast.hpp"
@@ -51,15 +51,15 @@
 #endif
 
 #ifndef __APPLE__
-#include <openssl/evp.h>
 #include <openssl/err.h>
+#include <openssl/evp.h>
 #else
 #include <CommonCrypto/CommonCryptor.h>
 #endif
 
 static lg::log_domain log_config("config");
-#define ERR_CFG LOG_STREAM(err , log_config)
-#define DBG_CFG LOG_STREAM(debug , log_config)
+#define ERR_CFG LOG_STREAM(err, log_config)
+#define DBG_CFG LOG_STREAM(debug, log_config)
 
 static lg::log_domain log_filesystem("filesystem");
 #define ERR_FS LOG_STREAM(err, log_filesystem)
@@ -70,22 +70,22 @@ static lg::log_domain advanced_preferences("advanced_preferences");
 using namespace std::chrono_literals;
 
 prefs::prefs()
-: preferences_()
-, fps_(false)
-, completed_campaigns_()
-, encountered_units_set_()
-, encountered_terrains_set_()
-, history_map_()
-, acquaintances_()
-, option_values_()
-, options_initialized_(false)
-, mp_modifications_()
-, mp_modifications_initialized_(false)
-, sp_modifications_()
-, sp_modifications_initialized_(false)
-, message_private_on_(false)
-, credentials_()
-, advanced_prefs_()
+	: preferences_()
+	, fps_(false)
+	, completed_campaigns_()
+	, encountered_units_set_()
+	, encountered_terrains_set_()
+	, history_map_()
+	, acquaintances_()
+	, option_values_()
+	, options_initialized_(false)
+	, mp_modifications_()
+	, mp_modifications_initialized_(false)
+	, sp_modifications_()
+	, sp_modifications_initialized_(false)
+	, message_private_on_(false)
+	, credentials_()
+	, advanced_prefs_()
 {
 	load_preferences();
 	load_credentials();
@@ -153,7 +153,7 @@ prefs::~prefs()
 		if(!no_preferences_save) {
 			write_preferences();
 		}
-	} catch (...) {
+	} catch(...) {
 		ERR_FS << "Failed to write preferences due to exception: " << utils::get_unknown_exception_type();
 	}
 }
@@ -180,7 +180,8 @@ void prefs::load_advanced_prefs(const game_config_view& gc)
 		}
 	}
 
-	std::sort(advanced_prefs_.begin(), advanced_prefs_.end(), [](const auto& lhs, const auto& rhs) { return translation::icompare(lhs.name, rhs.name) < 0; });
+	std::sort(advanced_prefs_.begin(), advanced_prefs_.end(),
+		[](const auto& lhs, const auto& rhs) { return translation::icompare(lhs.name, rhs.name) < 0; });
 }
 
 void prefs::migrate_preferences(const std::string& migrate_prefs_file)
@@ -192,14 +193,16 @@ void prefs::migrate_preferences(const std::string& migrate_prefs_file)
 			filesystem::copy_file(migrate_prefs_file, filesystem::get_synced_prefs_file());
 		} else {
 			config current_cfg;
-			filesystem::scoped_istream current_stream = filesystem::istream_file(filesystem::get_synced_prefs_file(), false);
+			filesystem::scoped_istream current_stream
+				= filesystem::istream_file(filesystem::get_synced_prefs_file(), false);
 			read(current_cfg, *current_stream);
 			config old_cfg;
 			filesystem::scoped_istream old_stream = filesystem::istream_file(migrate_prefs_file, false);
 			read(old_cfg, *old_stream);
 
 			// when both files have the same attribute, use the one from whichever was most recently modified
-			bool current_prefs_are_older = filesystem::file_modified_time(filesystem::get_synced_prefs_file()) < filesystem::file_modified_time(migrate_prefs_file);
+			bool current_prefs_are_older = filesystem::file_modified_time(filesystem::get_synced_prefs_file())
+				< filesystem::file_modified_time(migrate_prefs_file);
 			for(const auto& [key, value] : old_cfg.attribute_range()) {
 				if(current_prefs_are_older || !current_cfg.has_attribute(key)) {
 					preferences_[key] = value;
@@ -238,13 +241,14 @@ std::set<std::string> prefs::all_attributes()
 void prefs::load_preferences()
 {
 	preferences_.clear();
-	try{
+	try {
 		config default_prefs;
 		config unsynced_prefs;
 		config synced_prefs;
 #ifdef DEFAULT_PREFS_PATH
 		// NOTE: the system preferences file is only ever relevant for the first time wesnoth starts
-		//	   any default values will subsequently be written to the normal preferences files, which takes precedence over any values in the system preferences file
+		//	   any default values will subsequently be written to the normal preferences files, which takes precedence
+		//over any values in the system preferences file
 		{
 			filesystem::scoped_istream stream = filesystem::istream_file(filesystem::get_default_prefs_file(), false);
 			read(default_prefs, *stream);
@@ -318,7 +322,8 @@ void prefs::load_preferences()
 
 	encountered_units_set_ = utils::split_set(preferences_[prefs_list::encountered_units].str());
 
-	const t_translation::ter_list terrain(t_translation::read_list(preferences_[prefs_list::encountered_terrain_list].str()));
+	const t_translation::ter_list terrain(
+		t_translation::read_list(preferences_[prefs_list::encountered_terrain_list].str()));
 	encountered_terrains_set_.insert(terrain.begin(), terrain.end());
 
 	if(auto history = get_child(prefs_list::history)) {
@@ -396,7 +401,8 @@ void prefs::write_preferences()
 	}
 
 	try {
-		filesystem::scoped_ostream unsynced_prefs_file = filesystem::ostream_file(filesystem::get_unsynced_prefs_file());
+		filesystem::scoped_ostream unsynced_prefs_file
+			= filesystem::ostream_file(filesystem::get_unsynced_prefs_file());
 		write(*unsynced_prefs_file, unsynced);
 	} catch(const filesystem::io_exception&) {
 		ERR_FS << "error writing to unsynced preferences file '" << filesystem::get_unsynced_prefs_file() << "'";
@@ -412,7 +418,8 @@ void prefs::write_preferences()
 	}
 	if(!unsynced_prefs_file_existed) {
 		if(chmod(filesystem::get_unsynced_prefs_file().c_str(), 0600) == -1) {
-			ERR_FS << "error setting permissions of unsynced preferences file '" << filesystem::get_unsynced_prefs_file() << "'";
+			ERR_FS << "error setting permissions of unsynced preferences file '"
+				   << filesystem::get_unsynced_prefs_file() << "'";
 		}
 	}
 #endif
@@ -447,7 +454,8 @@ void prefs::load_credentials()
 		ERR_CFG << "Invalid data in credentials file";
 		return;
 	}
-	for(const std::string& elem : utils::split(std::string(data.begin(), data.end()), pref_constants::CREDENTIAL_SEPARATOR, utils::REMOVE_EMPTY)) {
+	for(const std::string& elem : utils::split(
+			std::string(data.begin(), data.end()), pref_constants::CREDENTIAL_SEPARATOR, utils::REMOVE_EMPTY)) {
 		std::size_t at = elem.find_last_of('@');
 		std::size_t eq = elem.find_first_of('=', at + 1);
 		if(at != std::string::npos && eq != std::string::npos) {
@@ -480,7 +488,8 @@ void prefs::save_credentials()
 	}
 	try {
 		filesystem::scoped_ostream credentials_file = filesystem::ostream_file(filesystem::get_credentials_file());
-		preferences::secure_buffer encrypted = aes_encrypt(credentials_data, build_key("global", get_system_username()));
+		preferences::secure_buffer encrypted
+			= aes_encrypt(credentials_data, build_key("global", get_system_username()));
 		credentials_file->write(reinterpret_cast<const char*>(encrypted.data()), encrypted.size());
 	} catch(const filesystem::io_exception&) {
 		ERR_CFG << "error writing to credentials file '" << filesystem::get_credentials_file() << "'";
@@ -498,7 +507,8 @@ void prefs::save_credentials()
 //
 // helpers
 //
-void prefs::set_child(const std::string& key, const config& val) {
+void prefs::set_child(const std::string& key, const config& val)
+{
 	preferences_.clear_children(key);
 	preferences_.add_child(key, val);
 }
@@ -508,11 +518,12 @@ optional_const_config prefs::get_child(const std::string& key)
 	return preferences_.optional_child(key);
 }
 
-std::string prefs::get(const std::string& key, const std::string& def) {
+std::string prefs::get(const std::string& key, const std::string& def)
+{
 	return preferences_[key].empty() ? def : preferences_[key];
 }
 
-config::attribute_value prefs::get_as_attribute(const std::string &key)
+config::attribute_value prefs::get_as_attribute(const std::string& key)
 {
 	return preferences_[key];
 }
@@ -520,8 +531,9 @@ config::attribute_value prefs::get_as_attribute(const std::string &key)
 //
 // accessors
 //
-static std::string fix_orb_color_name(const std::string& color) {
-	if (color.substr(0,4) == "orb_") {
+static std::string fix_orb_color_name(const std::string& color)
+{
+	if(color.substr(0, 4) == "orb_") {
 		if(color[4] >= '0' && color[4] <= '9') {
 			return color.substr(5);
 		} else {
@@ -531,72 +543,86 @@ static std::string fix_orb_color_name(const std::string& color) {
 	return color;
 }
 
-std::string prefs::allied_color() {
+std::string prefs::allied_color()
+{
 	std::string ally_color = preferences_[prefs_list::ally_orb_color].str();
-	if (ally_color.empty())
+	if(ally_color.empty())
 		return game_config::colors::ally_orb_color;
 	return fix_orb_color_name(ally_color);
 }
-void prefs::set_allied_color(const std::string& color_id) {
+void prefs::set_allied_color(const std::string& color_id)
+{
 	preferences_[prefs_list::ally_orb_color] = color_id;
 }
 
-std::string prefs::enemy_color() {
+std::string prefs::enemy_color()
+{
 	std::string enemy_color = preferences_[prefs_list::enemy_orb_color].str();
-	if (enemy_color.empty())
+	if(enemy_color.empty())
 		return game_config::colors::enemy_orb_color;
 	return fix_orb_color_name(enemy_color);
 }
-void prefs::set_enemy_color(const std::string& color_id) {
+void prefs::set_enemy_color(const std::string& color_id)
+{
 	preferences_[prefs_list::enemy_orb_color] = color_id;
 }
 
-std::string prefs::moved_color() {
+std::string prefs::moved_color()
+{
 	std::string moved_color = preferences_[prefs_list::moved_orb_color].str();
-	if (moved_color.empty())
+	if(moved_color.empty())
 		return game_config::colors::moved_orb_color;
 	return fix_orb_color_name(moved_color);
 }
-void prefs::set_moved_color(const std::string& color_id) {
+void prefs::set_moved_color(const std::string& color_id)
+{
 	preferences_[prefs_list::moved_orb_color] = color_id;
 }
 
-std::string prefs::unmoved_color() {
+std::string prefs::unmoved_color()
+{
 	std::string unmoved_color = preferences_[prefs_list::unmoved_orb_color].str();
-	if (unmoved_color.empty())
+	if(unmoved_color.empty())
 		return game_config::colors::unmoved_orb_color;
 	return fix_orb_color_name(unmoved_color);
 }
-void prefs::set_unmoved_color(const std::string& color_id) {
+void prefs::set_unmoved_color(const std::string& color_id)
+{
 	preferences_[prefs_list::unmoved_orb_color] = color_id;
 }
 
-std::string prefs::partial_color() {
+std::string prefs::partial_color()
+{
 	std::string partmoved_color = preferences_[prefs_list::partial_orb_color].str();
-	if (partmoved_color.empty())
+	if(partmoved_color.empty())
 		return game_config::colors::partial_orb_color;
 	return fix_orb_color_name(partmoved_color);
 }
-void prefs::set_partial_color(const std::string& color_id) {
+void prefs::set_partial_color(const std::string& color_id)
+{
 	preferences_[prefs_list::partial_orb_color] = color_id;
 }
-std::string prefs::reach_map_color() {
+std::string prefs::reach_map_color()
+{
 	std::string reachmap_color = preferences_[prefs_list::reach_map_color].str();
-	if (reachmap_color.empty())
+	if(reachmap_color.empty())
 		return game_config::colors::reach_map_color;
 	return fix_orb_color_name(reachmap_color);
 }
-void prefs::set_reach_map_color(const std::string& color_id) {
+void prefs::set_reach_map_color(const std::string& color_id)
+{
 	preferences_[prefs_list::reach_map_color] = color_id;
 }
 
-std::string prefs::reach_map_enemy_color() {
+std::string prefs::reach_map_enemy_color()
+{
 	std::string reachmap_enemy_color = preferences_[prefs_list::reach_map_enemy_color].str();
-	if (reachmap_enemy_color.empty())
+	if(reachmap_enemy_color.empty())
 		return game_config::colors::reach_map_enemy_color;
 	return fix_orb_color_name(reachmap_enemy_color);
 }
-void prefs::set_reach_map_enemy_color(const std::string& color_id) {
+void prefs::set_reach_map_enemy_color(const std::string& color_id)
+{
 	preferences_[prefs_list::reach_map_enemy_color] = color_id;
 }
 
@@ -630,10 +656,8 @@ point prefs::resolution()
 		return point(pref_constants::def_window_width, pref_constants::def_window_height);
 	}
 
-	return point(
-		std::max<unsigned>(x_res, pref_constants::min_window_width),
-		std::max<unsigned>(y_res, pref_constants::min_window_height)
-	);
+	return point(std::max<unsigned>(x_res, pref_constants::min_window_width),
+		std::max<unsigned>(y_res, pref_constants::min_window_height));
 }
 
 void prefs::set_resolution(const point& res)
@@ -645,12 +669,15 @@ void prefs::set_resolution(const point& res)
 int prefs::pixel_scale()
 {
 	// For now this has a minimum value of 1 and a maximum of 4.
-	return std::max<int>(std::min<int>(preferences_[prefs_list::pixel_scale].to_int(1), pref_constants::max_pixel_scale), pref_constants::min_pixel_scale);
+	return std::max<int>(
+		std::min<int>(preferences_[prefs_list::pixel_scale].to_int(1), pref_constants::max_pixel_scale),
+		pref_constants::min_pixel_scale);
 }
 
 void prefs::set_pixel_scale(const int scale)
 {
-	preferences_[prefs_list::pixel_scale] = std::clamp(scale, pref_constants::min_pixel_scale, pref_constants::max_pixel_scale);
+	preferences_[prefs_list::pixel_scale]
+		= std::clamp(scale, pref_constants::min_pixel_scale, pref_constants::max_pixel_scale);
 }
 
 bool prefs::turbo()
@@ -670,12 +697,15 @@ void prefs::set_turbo(bool ison)
 int prefs::font_scaling()
 {
 	// Clip at 80 because if it's too low it'll cause crashes
-	return std::max<int>(std::min<int>(preferences_[prefs_list::font_scale].to_int(100), pref_constants::max_font_scaling), pref_constants::min_font_scaling);
+	return std::max<int>(
+		std::min<int>(preferences_[prefs_list::font_scale].to_int(100), pref_constants::max_font_scaling),
+		pref_constants::min_font_scaling);
 }
 
 void prefs::set_font_scaling(int scale)
 {
-	preferences_[prefs_list::font_scale] = std::clamp(scale, pref_constants::min_font_scaling, pref_constants::max_font_scaling);
+	preferences_[prefs_list::font_scale]
+		= std::clamp(scale, pref_constants::min_font_scaling, pref_constants::max_font_scaling);
 }
 
 int prefs::font_scaled(int size)
@@ -695,13 +725,13 @@ void prefs::keepalive_timeout(int seconds)
 
 std::size_t prefs::sound_buffer_size()
 {
-	// Sounds don't sound good on Windows unless the buffer size is 4k,
-	// but this seems to cause crashes on other systems...
-	#ifdef _WIN32
-		const std::size_t buf_size = 4096;
-	#else
-		const std::size_t buf_size = 1024;
-	#endif
+// Sounds don't sound good on Windows unless the buffer size is 4k,
+// but this seems to cause crashes on other systems...
+#ifdef _WIN32
+	const std::size_t buf_size = 4096;
+#else
+	const std::size_t buf_size = 1024;
+#endif
 
 	return preferences_[prefs_list::sound_buffer_size].to_int(buf_size);
 }
@@ -709,7 +739,7 @@ std::size_t prefs::sound_buffer_size()
 void prefs::save_sound_buffer_size(const std::size_t size)
 {
 	const std::string new_size = std::to_string(size);
-	if (preferences_[prefs_list::sound_buffer_size] == new_size)
+	if(preferences_[prefs_list::sound_buffer_size] == new_size)
 		return;
 
 	preferences_[prefs_list::sound_buffer_size] = new_size;
@@ -845,7 +875,8 @@ bool prefs::sound()
 	return preferences_[prefs_list::sound].to_bool(true);
 }
 
-bool prefs::set_sound(bool ison) {
+bool prefs::set_sound(bool ison)
+{
 	if(!sound() && ison) {
 		preferences_[prefs_list::sound] = true;
 		if(!music_on() && !turn_bell() && !ui_sound_on()) {
@@ -868,7 +899,8 @@ bool prefs::music_on()
 	return preferences_[prefs_list::music].to_bool(true);
 }
 
-bool prefs::set_music(bool ison) {
+bool prefs::set_music(bool ison)
+{
 	if(!music_on() && ison) {
 		preferences_[prefs_list::music] = true;
 		if(!sound() && !turn_bell() && !ui_sound_on()) {
@@ -876,8 +908,7 @@ bool prefs::set_music(bool ison) {
 				preferences_[prefs_list::music] = false;
 				return false;
 			}
-		}
-		else
+		} else
 			sound::play_music();
 	} else if(music_on() && !ison) {
 		preferences_[prefs_list::music] = false;
@@ -935,12 +966,11 @@ void prefs::clear_hotkeys()
 	preferences_.clear_children("hotkey");
 }
 
-void prefs::add_alias(const std::string &alias, const std::string &command)
+void prefs::add_alias(const std::string& alias, const std::string& command)
 {
-	config &alias_list = preferences_.child_or_add("alias");
+	config& alias_list = preferences_.child_or_add("alias");
 	alias_list[alias] = command;
 }
-
 
 optional_const_config prefs::get_alias()
 {
@@ -954,7 +984,7 @@ unsigned int prefs::sample_rate()
 
 void prefs::save_sample_rate(const unsigned int rate)
 {
-	if (sample_rate() == rate)
+	if(sample_rate() == rate)
 		return;
 
 	preferences_[prefs_list::sample_rate] = rate;
@@ -975,7 +1005,8 @@ bool prefs::use_twelve_hour_clock_format()
 
 sort_order::type prefs::addon_manager_saved_order_direction()
 {
-	return sort_order::get_enum(preferences_[prefs_list::addon_manager_saved_order_direction].to_int()).value_or(sort_order::type::none);
+	return sort_order::get_enum(preferences_[prefs_list::addon_manager_saved_order_direction].to_int())
+		.value_or(sort_order::type::none);
 }
 
 void prefs::set_addon_manager_saved_order_direction(sort_order::type value)
@@ -985,10 +1016,8 @@ void prefs::set_addon_manager_saved_order_direction(sort_order::type value)
 
 bool prefs::achievement(const std::string& content_for, const std::string& id)
 {
-	for(config& ach : preferences_.child_range(prefs_list::achievements))
-	{
-		if(ach["content_for"].str() == content_for)
-		{
+	for(config& ach : preferences_.child_range(prefs_list::achievements)) {
+		if(ach["content_for"].str() == content_for) {
 			std::vector<std::string> ids = utils::split(ach["ids"]);
 			return std::find(ids.begin(), ids.end(), id) != ids.end();
 		}
@@ -998,22 +1027,17 @@ bool prefs::achievement(const std::string& content_for, const std::string& id)
 
 void prefs::set_achievement(const std::string& content_for, const std::string& id)
 {
-	for(config& ach : preferences_.child_range(prefs_list::achievements))
-	{
+	for(config& ach : preferences_.child_range(prefs_list::achievements)) {
 		// if achievements already exist for this content and the achievement has not already been set, add it
-		if(ach["content_for"].str() == content_for)
-		{
+		if(ach["content_for"].str() == content_for) {
 			std::vector<std::string> ids = utils::split(ach["ids"]);
 
-			if(ids.empty())
-			{
+			if(ids.empty()) {
 				ach["ids"] = id;
-			}
-			else if(std::find(ids.begin(), ids.end(), id) == ids.end())
-			{
+			} else if(std::find(ids.begin(), ids.end(), id) == ids.end()) {
 				ach["ids"] = ach["ids"].str() + "," + id;
 			}
-			ach.remove_children("in_progress", [&id](config cfg){return cfg["id"].str() == id;});
+			ach.remove_children("in_progress", [&id](config cfg) { return cfg["id"].str() == id; });
 			return;
 		}
 	}
@@ -1025,37 +1049,33 @@ void prefs::set_achievement(const std::string& content_for, const std::string& i
 	preferences_.add_child(prefs_list::achievements, ach);
 }
 
-int prefs::progress_achievement(const std::string& content_for, const std::string& id, int limit, int max_progress, int amount)
+int prefs::progress_achievement(
+	const std::string& content_for, const std::string& id, int limit, int max_progress, int amount)
 {
-	if(achievement(content_for, id))
-	{
+	if(achievement(content_for, id)) {
 		return -1;
 	}
 
-	for(config& ach : preferences_.child_range(prefs_list::achievements))
-	{
+	for(config& ach : preferences_.child_range(prefs_list::achievements)) {
 		// if achievements already exist for this content and the achievement has not already been set, add it
-		if(ach["content_for"].str() == content_for)
-		{
+		if(ach["content_for"].str() == content_for) {
 			// check if this achievement has progressed before - if so then increment it
-			for(config& in_progress : ach.child_range("in_progress"))
-			{
-				if(in_progress["id"].str() == id)
-				{
+			for(config& in_progress : ach.child_range("in_progress")) {
+				if(in_progress["id"].str() == id) {
 					// don't let using 'limit' decrease the achievement's current progress
 					int starting_progress = in_progress["progress_at"].to_int();
 					if(starting_progress >= limit) {
 						return starting_progress;
 					}
 
-					in_progress["progress_at"] = std::clamp(starting_progress + amount, 0, std::min(limit, max_progress));
+					in_progress["progress_at"]
+						= std::clamp(starting_progress + amount, 0, std::min(limit, max_progress));
 					return in_progress["progress_at"].to_int();
 				}
 			}
 
 			// else this is the first time this achievement is progressing
-			if(amount != 0)
-			{
+			if(amount != 0) {
 				config set_progress;
 				set_progress["id"] = id;
 				set_progress["progress_at"] = std::clamp(amount, 0, std::min(limit, max_progress));
@@ -1067,9 +1087,9 @@ int prefs::progress_achievement(const std::string& content_for, const std::strin
 		}
 	}
 
-	// else not only has this achievement not progressed before, this is the first achievement for this achievement group to be added
-	if(amount != 0)
-	{
+	// else not only has this achievement not progressed before, this is the first achievement for this achievement
+	// group to be added
+	if(amount != 0) {
 		config ach;
 		config set_progress;
 
@@ -1089,20 +1109,15 @@ int prefs::progress_achievement(const std::string& content_for, const std::strin
 bool prefs::sub_achievement(const std::string& content_for, const std::string& id, const std::string& sub_id)
 {
 	// this achievement is already completed
-	if(achievement(content_for, id))
-	{
+	if(achievement(content_for, id)) {
 		return true;
 	}
 
-	for(config& ach : preferences_.child_range(prefs_list::achievements))
-	{
-		if(ach["content_for"].str() == content_for)
-		{
+	for(config& ach : preferences_.child_range(prefs_list::achievements)) {
+		if(ach["content_for"].str() == content_for) {
 			// check if the specific sub-achievement has been completed but the overall achievement is not completed
-			for(const auto& in_progress : ach.child_range("in_progress"))
-			{
-				if(in_progress["id"] == id)
-				{
+			for(const auto& in_progress : ach.child_range("in_progress")) {
+				if(in_progress["id"] == id) {
 					std::vector<std::string> sub_ids = utils::split(in_progress["sub_ids"]);
 					return std::find(sub_ids.begin(), sub_ids.end(), sub_id) != sub_ids.end();
 				}
@@ -1115,29 +1130,23 @@ bool prefs::sub_achievement(const std::string& content_for, const std::string& i
 void prefs::set_sub_achievement(const std::string& content_for, const std::string& id, const std::string& sub_id)
 {
 	// this achievement is already completed
-	if(achievement(content_for, id))
-	{
+	if(achievement(content_for, id)) {
 		return;
 	}
 
-	for(config& ach : preferences_.child_range(prefs_list::achievements))
-	{
+	for(config& ach : preferences_.child_range(prefs_list::achievements)) {
 		// if achievements already exist for this content and the achievement has not already been set, add it
-		if(ach["content_for"].str() == content_for)
-		{
+		if(ach["content_for"].str() == content_for) {
 			// check if this achievement has had sub-achievements set before
-			for(config& in_progress : ach.child_range("in_progress"))
-			{
-				if(in_progress["id"].str() == id)
-				{
+			for(config& in_progress : ach.child_range("in_progress")) {
+				if(in_progress["id"].str() == id) {
 					std::vector<std::string> sub_ids = utils::split(ach["ids"]);
 
-					if(std::find(sub_ids.begin(), sub_ids.end(), sub_id) == sub_ids.end())
-					{
+					if(std::find(sub_ids.begin(), sub_ids.end(), sub_id) == sub_ids.end()) {
 						in_progress["sub_ids"] = in_progress["sub_ids"].str() + "," + sub_id;
 					}
 
-					in_progress["progress_at"] = sub_ids.size()+1;
+					in_progress["progress_at"] = sub_ids.size() + 1;
 					return;
 				}
 			}
@@ -1152,7 +1161,8 @@ void prefs::set_sub_achievement(const std::string& content_for, const std::strin
 		}
 	}
 
-	// else not only has this achievement not had a sub-achievement completed before, this is the first achievement for this achievement group to be added
+	// else not only has this achievement not had a sub-achievement completed before, this is the first achievement for
+	// this achievement group to be added
 	config ach;
 	config set_progress;
 
@@ -1211,8 +1221,7 @@ std::vector<std::string> prefs::do_read_editor_mru()
 		return mru;
 	}
 
-	for(const config& child : cfg->child_range("entry"))
-	{
+	for(const config& child : cfg->child_range("entry")) {
 		const std::string& entry = child["path"].str();
 		if(!entry.empty()) {
 			mru.push_back(entry);
@@ -1229,8 +1238,7 @@ void prefs::do_commit_editor_mru(const std::vector<std::string>& mru)
 	config cfg;
 	unsigned n = 0;
 
-	for(const std::string& entry : mru)
-	{
+	for(const std::string& entry : mru) {
 		if(entry.empty()) {
 			continue;
 		}
@@ -1299,16 +1307,15 @@ bool prefs::show_theme_dialog()
 {
 	std::vector<theme_info> themes = theme::get_basic_theme_info();
 
-	if (themes.empty()) {
-		gui2::show_transient_message("",
-			_("No known themes. Try changing from within an existing game."));
+	if(themes.empty()) {
+		gui2::show_transient_message("", _("No known themes. Try changing from within an existing game."));
 
 		return false;
 	}
 
 	gui2::dialogs::theme_list dlg(themes);
 
-	for (std::size_t k = 0; k < themes.size(); ++k) {
+	for(std::size_t k = 0; k < themes.size(); ++k) {
 		if(themes[k].id == theme()) {
 			dlg.set_selected_index(static_cast<int>(k));
 		}
@@ -1317,7 +1324,7 @@ bool prefs::show_theme_dialog()
 	dlg.show();
 	const int action = dlg.selected_index();
 
-	if (action >= 0) {
+	if(action >= 0) {
 		set_theme(themes[action].id);
 		if(display::get_singleton() && resources::gamedata && resources::gamedata->get_theme().empty()) {
 			display::get_singleton()->set_theme(themes[action].id);
@@ -1334,20 +1341,21 @@ void prefs::show_wesnothd_server_search()
 	const std::string filename = filesystem::get_wesnothd_name();
 
 	const std::string& old_path = filesystem::directory_name(get_mp_server_program_name());
-	std::string path =
-		!old_path.empty() && filesystem::is_directory(old_path)
-		? old_path : filesystem::get_exe_dir();
+	std::string path = !old_path.empty() && filesystem::is_directory(old_path) ? old_path : filesystem::get_exe_dir();
 
-	const std::string msg = VGETTEXT("The <b>$filename</b> server application provides multiplayer server functionality and is required for hosting local network games. It will normally be found in the same folder as the game executable.", {{"filename", filename}});
+	const std::string msg = VGETTEXT(
+		"The <b>$filename</b> server application provides multiplayer server functionality and is required for hosting "
+		"local network games. It will normally be found in the same folder as the game executable.",
+		{{"filename", filename}});
 
 	gui2::dialogs::file_dialog dlg;
 
 	dlg.set_title(_("Find Server Application"))
-	.set_message(msg)
-	.set_ok_label(_("Select"))
-	.set_read_only(true)
-	.set_filename(filename)
-	.set_path(path);
+		.set_message(msg)
+		.set_ok_label(_("Select"))
+		.set_read_only(true)
+		.set_filename(filename)
+		.set_path(path);
 
 	if(dlg.show()) {
 		path = dlg.path();
@@ -1423,7 +1431,8 @@ std::map<std::string, std::string> prefs::get_acquaintances_nice(const std::stri
 	return ac_nice;
 }
 
-std::pair<preferences::acquaintance*, bool> prefs::add_acquaintance(const std::string& nick, const std::string& mode, const std::string& notes)
+std::pair<preferences::acquaintance*, bool> prefs::add_acquaintance(
+	const std::string& nick, const std::string& mode, const std::string& notes)
 {
 	if(!utils::isvalid_wildcard(nick)) {
 		return std::pair(nullptr, false);
@@ -1928,7 +1937,7 @@ std::string prefs::get_system_username()
 	wchar_t buffer[300];
 	DWORD size = 300;
 	if(GetUserNameW(buffer, &size)) {
-		//size includes a terminating null character.
+		// size includes a terminating null character.
 		assert(size > 0);
 		return unicode_cast<std::string>(std::wstring_view{buffer});
 	}
@@ -1945,49 +1954,46 @@ preferences::secure_buffer prefs::build_key(const std::string& server, const std
 	std::string sysname = get_system_username();
 	preferences::secure_buffer result(std::max<std::size_t>(server.size() + login.size() + sysname.size(), 32));
 	unsigned char i = 0;
-	std::generate(result.begin(), result.end(), [&i]() {return 'x' ^ i++;});
+	std::generate(result.begin(), result.end(), [&i]() { return 'x' ^ i++; });
 	std::copy(login.begin(), login.end(), result.begin());
 	std::copy(sysname.begin(), sysname.end(), result.begin() + login.size());
 	std::copy(server.begin(), server.end(), result.begin() + login.size() + sysname.size());
 	return result;
 }
 
-preferences::secure_buffer prefs::aes_encrypt(const preferences::secure_buffer& plaintext, const preferences::secure_buffer& key)
+preferences::secure_buffer prefs::aes_encrypt(
+	const preferences::secure_buffer& plaintext, const preferences::secure_buffer& key)
 {
 #ifndef __APPLE__
 	int update_length;
 	int extra_length;
 	int total_length;
 	// AES IV is generally 128 bits
-	const unsigned char iv[] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
+	const unsigned char iv[] = {1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8};
 	unsigned char encrypted_buffer[1024];
 
-	if(plaintext.size() > 1008)
-	{
+	if(plaintext.size() > 1008) {
 		ERR_CFG << "Cannot encrypt data larger than 1008 bytes.";
 		return preferences::secure_buffer();
 	}
 	DBG_CFG << "Encrypting data with length: " << plaintext.size();
 
-	EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-	if(!ctx)
-	{
+	EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+	if(!ctx) {
 		ERR_CFG << "AES EVP_CIPHER_CTX_new failed with error:";
 		ERR_CFG << ERR_error_string(ERR_get_error(), nullptr);
 		return preferences::secure_buffer();
 	}
 
 	// TODO: use EVP_EncryptInit_ex2 once openssl 3.0 is more widespread
-	if(EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key.data(), iv) != 1)
-	{
+	if(EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key.data(), iv) != 1) {
 		ERR_CFG << "AES EVP_EncryptInit_ex failed with error:";
 		ERR_CFG << ERR_error_string(ERR_get_error(), nullptr);
 		EVP_CIPHER_CTX_free(ctx);
 		return preferences::secure_buffer();
 	}
 
-	if(EVP_EncryptUpdate(ctx, encrypted_buffer, &update_length, plaintext.data(), plaintext.size()) != 1)
-	{
+	if(EVP_EncryptUpdate(ctx, encrypted_buffer, &update_length, plaintext.data(), plaintext.size()) != 1) {
 		ERR_CFG << "AES EVP_EncryptUpdate failed with error:";
 		ERR_CFG << ERR_error_string(ERR_get_error(), nullptr);
 		EVP_CIPHER_CTX_free(ctx);
@@ -1995,8 +2001,7 @@ preferences::secure_buffer prefs::aes_encrypt(const preferences::secure_buffer& 
 	}
 	DBG_CFG << "Update length: " << update_length;
 
-	if(EVP_EncryptFinal_ex(ctx, encrypted_buffer + update_length, &extra_length) != 1)
-	{
+	if(EVP_EncryptFinal_ex(ctx, encrypted_buffer + update_length, &extra_length) != 1) {
 		ERR_CFG << "AES EVP_EncryptFinal failed with error:";
 		ERR_CFG << ERR_error_string(ERR_get_error(), nullptr);
 		EVP_CIPHER_CTX_free(ctx);
@@ -2006,14 +2011,14 @@ preferences::secure_buffer prefs::aes_encrypt(const preferences::secure_buffer& 
 
 	EVP_CIPHER_CTX_free(ctx);
 
-	total_length = update_length+extra_length;
+	total_length = update_length + extra_length;
 	preferences::secure_buffer result;
-	for(int i = 0; i < total_length; i++)
-	{
+	for(int i = 0; i < total_length; i++) {
 		result.push_back(encrypted_buffer[i]);
 	}
 
-	DBG_CFG << "Successfully encrypted plaintext value of '" << utils::join(plaintext, "") << "' having length " << plaintext.size();
+	DBG_CFG << "Successfully encrypted plaintext value of '" << utils::join(plaintext, "") << "' having length "
+			<< plaintext.size();
 	DBG_CFG << "For a total encrypted length of: " << total_length;
 
 	return result;
@@ -2021,17 +2026,8 @@ preferences::secure_buffer prefs::aes_encrypt(const preferences::secure_buffer& 
 	size_t outWritten = 0;
 	preferences::secure_buffer result(plaintext.size(), '\0');
 
-	CCCryptorStatus ccStatus = CCCrypt(kCCDecrypt,
-		kCCAlgorithmRC4,
-		kCCOptionPKCS7Padding,
-		key.data(),
-		key.size(),
-		nullptr,
-		plaintext.data(),
-		plaintext.size(),
-		result.data(),
-		result.size(),
-		&outWritten);
+	CCCryptorStatus ccStatus = CCCrypt(kCCDecrypt, kCCAlgorithmRC4, kCCOptionPKCS7Padding, key.data(), key.size(),
+		nullptr, plaintext.data(), plaintext.size(), result.data(), result.size(), &outWritten);
 
 	assert(ccStatus == kCCSuccess);
 	assert(outWritten == plaintext.size());
@@ -2040,42 +2036,39 @@ preferences::secure_buffer prefs::aes_encrypt(const preferences::secure_buffer& 
 #endif
 }
 
-preferences::secure_buffer prefs::aes_decrypt(const preferences::secure_buffer& encrypted, const preferences::secure_buffer& key)
+preferences::secure_buffer prefs::aes_decrypt(
+	const preferences::secure_buffer& encrypted, const preferences::secure_buffer& key)
 {
 #ifndef __APPLE__
 	int update_length;
 	int extra_length;
 	int total_length;
 	// AES IV is generally 128 bits
-	const unsigned char iv[] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
+	const unsigned char iv[] = {1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8};
 	unsigned char plaintext_buffer[1024];
 
-	if(encrypted.size() > 1024)
-	{
+	if(encrypted.size() > 1024) {
 		ERR_CFG << "Cannot decrypt data larger than 1024 bytes.";
 		return preferences::secure_buffer();
 	}
 	DBG_CFG << "Decrypting data with length: " << encrypted.size();
 
-	EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-	if(!ctx)
-	{
+	EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+	if(!ctx) {
 		ERR_CFG << "AES EVP_CIPHER_CTX_new failed with error:";
 		ERR_CFG << ERR_error_string(ERR_get_error(), nullptr);
 		return preferences::secure_buffer();
 	}
 
 	// TODO: use EVP_DecryptInit_ex2 once openssl 3.0 is more widespread
-	if(EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key.data(), iv) != 1)
-	{
+	if(EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key.data(), iv) != 1) {
 		ERR_CFG << "AES EVP_DecryptInit_ex failed with error:";
 		ERR_CFG << ERR_error_string(ERR_get_error(), nullptr);
 		EVP_CIPHER_CTX_free(ctx);
 		return preferences::secure_buffer();
 	}
 
-	if(EVP_DecryptUpdate(ctx, plaintext_buffer, &update_length, encrypted.data(), encrypted.size()) != 1)
-	{
+	if(EVP_DecryptUpdate(ctx, plaintext_buffer, &update_length, encrypted.data(), encrypted.size()) != 1) {
 		ERR_CFG << "AES EVP_DecryptUpdate failed with error:";
 		ERR_CFG << ERR_error_string(ERR_get_error(), nullptr);
 		EVP_CIPHER_CTX_free(ctx);
@@ -2083,8 +2076,7 @@ preferences::secure_buffer prefs::aes_decrypt(const preferences::secure_buffer& 
 	}
 	DBG_CFG << "Update length: " << update_length;
 
-	if(EVP_DecryptFinal_ex(ctx, plaintext_buffer + update_length, &extra_length) != 1)
-	{
+	if(EVP_DecryptFinal_ex(ctx, plaintext_buffer + update_length, &extra_length) != 1) {
 		ERR_CFG << "AES EVP_DecryptFinal failed with error:";
 		ERR_CFG << ERR_error_string(ERR_get_error(), nullptr);
 		EVP_CIPHER_CTX_free(ctx);
@@ -2094,10 +2086,9 @@ preferences::secure_buffer prefs::aes_decrypt(const preferences::secure_buffer& 
 
 	EVP_CIPHER_CTX_free(ctx);
 
-	total_length = update_length+extra_length;
+	total_length = update_length + extra_length;
 	preferences::secure_buffer result;
-	for(int i = 0; i < total_length; i++)
-	{
+	for(int i = 0; i < total_length; i++) {
 		result.push_back(plaintext_buffer[i]);
 	}
 
@@ -2109,17 +2100,8 @@ preferences::secure_buffer prefs::aes_decrypt(const preferences::secure_buffer& 
 	size_t outWritten = 0;
 	preferences::secure_buffer result(encrypted.size(), '\0');
 
-	CCCryptorStatus ccStatus = CCCrypt(kCCDecrypt,
-		kCCAlgorithmRC4,
-		kCCOptionPKCS7Padding,
-		key.data(),
-		key.size(),
-		nullptr,
-		encrypted.data(),
-		encrypted.size(),
-		result.data(),
-		result.size(),
-		&outWritten);
+	CCCryptorStatus ccStatus = CCCrypt(kCCDecrypt, kCCAlgorithmRC4, kCCOptionPKCS7Padding, key.data(), key.size(),
+		nullptr, encrypted.data(), encrypted.size(), result.data(), result.size(), &outWritten);
 
 	assert(ccStatus == kCCSuccess);
 	assert(outWritten == encrypted.size());
@@ -2233,9 +2215,8 @@ std::string prefs::password(const std::string& server, const std::string& login)
 			return "";
 		}
 	}
-	auto cred = std::find_if(credentials_.begin(), credentials_.end(), [&](const preferences::login_info& cred) {
-		return cred.server == server && cred.username == login_clean;
-	});
+	auto cred = std::find_if(credentials_.begin(), credentials_.end(),
+		[&](const preferences::login_info& cred) { return cred.server == server && cred.username == login_clean; });
 	if(cred == credentials_.end()) {
 		return "";
 	}
@@ -2255,9 +2236,8 @@ void prefs::set_password(const std::string& server, const std::string& login, co
 		credentials_.emplace_back(login_clean, server, aes_encrypt(temp, build_key(server, login_clean)));
 		return;
 	}
-	auto cred = std::find_if(credentials_.begin(), credentials_.end(), [&](const preferences::login_info& cred) {
-		return cred.server == server && cred.username == login_clean;
-	});
+	auto cred = std::find_if(credentials_.begin(), credentials_.end(),
+		[&](const preferences::login_info& cred) { return cred.server == server && cred.username == login_clean; });
 	if(cred == credentials_.end()) {
 		// This is equivalent to emplace_back, but also returns the iterator to the new element
 		cred = credentials_.emplace(credentials_.end(), login_clean, server);

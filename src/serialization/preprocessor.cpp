@@ -23,16 +23,16 @@
 
 #include "buffered_istream.hpp"
 #include "config.hpp"
+#include "deprecation.hpp"
+#include "game_version.hpp"
 #include "log.hpp"
 #include "serialization/binary_or_text.hpp"
 #include "serialization/parser.hpp"
 #include "serialization/string_utils.hpp"
-#include "game_version.hpp"
 #include "wesconfig.h"
-#include "deprecation.hpp"
 
-#include <stdexcept>
 #include <deque>
+#include <stdexcept>
 
 static lg::log_domain log_preprocessor("preprocessor");
 #define ERR_PREPROC LOG_STREAM(err, log_preprocessor)
@@ -125,7 +125,6 @@ static std::string get_location(const std::string& loc)
 	return res;
 }
 
-
 // ==================================================================================
 // PREPROC_DEFINE IMPLEMENTATION
 // ==================================================================================
@@ -158,7 +157,8 @@ void preproc_define::write_argument(config_writer& writer, const std::string& ar
 	writer.close_child(key);
 }
 
-void preproc_define::write_argument(config_writer& writer, const std::string& arg, const std::string& default_value) const
+void preproc_define::write_argument(
+	config_writer& writer, const std::string& arg, const std::string& default_value) const
 {
 	const std::string key = "argument";
 
@@ -298,7 +298,6 @@ private:
 
 	int old_linenum_;
 };
-
 
 // ==================================================================================
 // PREPROCESSOR BUFFER
@@ -471,16 +470,17 @@ int preprocessor_streambuf::underflow()
 }
 
 /**
-* Restores the old preprocessing context.
-* Appends location and domain directives to the buffer, so that the parser
-* notices these changes.
-*/
+ * Restores the old preprocessing context.
+ * Appends location and domain directives to the buffer, so that the parser
+ * notices these changes.
+ */
 void preprocessor_streambuf::restore_old_preprocessor()
 {
 	preprocessor* current = this->current();
 
 	if(!current->old_location_.empty()) {
-		buffer_ << INLINED_PREPROCESS_DIRECTIVE_CHAR << "line " << current->old_linenum_ << ' ' << current->old_location_ << '\n';
+		buffer_ << INLINED_PREPROCESS_DIRECTIVE_CHAR << "line " << current->old_linenum_ << ' '
+				<< current->old_location_ << '\n';
 	}
 
 	if(!current->old_textdomain_.empty() && textdomain_ != current->old_textdomain_) {
@@ -584,7 +584,6 @@ void preprocessor_streambuf::warning(const std::string& warning_type, int l)
 	WRN_PREPROC << warning;
 }
 
-
 // ==================================================================================
 // PREPROCESSOR FILE
 // ==================================================================================
@@ -632,7 +631,6 @@ private:
 
 	bool is_directory_;
 };
-
 
 // ==================================================================================
 // PREPROCESSOR DATA
@@ -728,14 +726,14 @@ class preprocessor_data : public preprocessor
 
 public:
 	preprocessor_data(preprocessor_streambuf&,
-			filesystem::scoped_istream,
-			const std::string& history,
-			const std::string& name,
-			int line,
-			const std::string& dir,
-			const std::string& domain,
-			std::unique_ptr<std::map<std::string, std::string>> defines,
-			bool is_define = false);
+		filesystem::scoped_istream,
+		const std::string& history,
+		const std::string& name,
+		int line,
+		const std::string& dir,
+		const std::string& domain,
+		std::unique_ptr<std::map<std::string, std::string>> defines,
+		bool is_define = false);
 
 	virtual bool get_chunk() override;
 
@@ -780,11 +778,8 @@ preprocessor_file::preprocessor_file(preprocessor_streambuf& t, const std::strin
 	, is_directory_(filesystem::is_directory(name))
 {
 	if(is_directory_) {
-		filesystem::get_files_in_dir(name, &files_, nullptr,
-			filesystem::name_mode::ENTIRE_FILE_PATH,
-			filesystem::filter_mode::SKIP_MEDIA_DIR,
-			filesystem::reorder_mode::DO_REORDER
-		);
+		filesystem::get_files_in_dir(name, &files_, nullptr, filesystem::name_mode::ENTIRE_FILE_PATH,
+			filesystem::filter_mode::SKIP_MEDIA_DIR, filesystem::reorder_mode::DO_REORDER);
 
 		for(const std::string& fname : files_) {
 			std::size_t cpos = fname.rfind(" ");
@@ -792,8 +787,8 @@ preprocessor_file::preprocessor_file(preprocessor_streambuf& t, const std::strin
 			if(cpos != std::string::npos && cpos >= symbol_index) {
 				std::stringstream ss;
 				ss << "Found filename containing whitespace: '" << filesystem::base_name(fname)
-				<< "' in included directory '" << name << "'.\nThe included symbol probably looks similar to '"
-				<< filesystem::directory_name(fname.substr(symbol_index)) << "'";
+				   << "' in included directory '" << name << "'.\nThe included symbol probably looks similar to '"
+				   << filesystem::directory_name(fname.substr(symbol_index)) << "'";
 
 				// TODO: find a real linenumber
 				parent_.error(ss.str(), -1);
@@ -818,22 +813,20 @@ void preprocessor_file::init()
 	if(!file_stream->good()) {
 		ERR_PREPROC << "Could not open file " << name_;
 	} else {
-		parent_.add_preprocessor<preprocessor_data>(std::move(file_stream), "",
-			filesystem::get_short_wml_path(name_), 1,
-			filesystem::directory_name(name_), parent_.textdomain_, nullptr
-		);
+		parent_.add_preprocessor<preprocessor_data>(std::move(file_stream), "", filesystem::get_short_wml_path(name_),
+			1, filesystem::directory_name(name_), parent_.textdomain_, nullptr);
 	}
 }
 
 preprocessor_data::preprocessor_data(preprocessor_streambuf& t,
-		filesystem::scoped_istream i,
-		const std::string& history,
-		const std::string& name,
-		int linenum,
-		const std::string& directory,
-		const std::string& domain,
-		std::unique_ptr<std::map<std::string, std::string>> defines,
-		bool is_define)
+	filesystem::scoped_istream i,
+	const std::string& history,
+	const std::string& name,
+	int linenum,
+	const std::string& directory,
+	const std::string& domain,
+	std::unique_ptr<std::map<std::string, std::string>> defines,
+	bool is_define)
 	: preprocessor(t)
 	, in_scope_(std::move(i))
 	, in_(*in_scope_)
@@ -1048,7 +1041,8 @@ void preprocessor_data::put(char c)
 		if(diff <= parent_.location_.size() + 11) {
 			parent_.buffer_ << std::string(diff, '\n');
 		} else {
-			parent_.buffer_ << INLINED_PREPROCESS_DIRECTIVE_CHAR << "line " << parent_.linenum_ << ' ' << parent_.location_ << '\n';
+			parent_.buffer_ << INLINED_PREPROCESS_DIRECTIVE_CHAR << "line " << parent_.linenum_ << ' '
+							<< parent_.location_ << '\n';
 		}
 	}
 
@@ -1262,12 +1256,13 @@ bool preprocessor_data::get_chunk()
 								deprecation_level = DEP_LEVEL::PREEMPTIVE;
 							}
 							deprecation_version = game_config::wesnoth_version;
-							if(deprecation_level == DEP_LEVEL::PREEMPTIVE || deprecation_level == DEP_LEVEL::FOR_REMOVAL) {
+							if(deprecation_level == DEP_LEVEL::PREEMPTIVE
+								|| deprecation_level == DEP_LEVEL::FOR_REMOVAL) {
 								skip_spaces();
 								deprecation_version = std::max(deprecation_version, version_info(read_word()));
 							}
 							skip_spaces();
-							if(!deprecation_detail.empty()){
+							if(!deprecation_detail.empty()) {
 								deprecation_detail += '\n';
 							}
 							deprecation_detail += read_rest_of_line();
@@ -1284,8 +1279,8 @@ bool preprocessor_data::get_chunk()
 																					   // this? This would fill feature
 																					   // request #21343
 								parent_.error(
-										"Preprocessor error: #define is not allowed inside a #define/#enddef pair",
-										linenum);
+									"Preprocessor error: #define is not allowed inside a #define/#enddef pair",
+									linenum);
 							}
 						}
 					}
@@ -1311,9 +1306,8 @@ bool preprocessor_data::get_chunk()
 				}
 
 				buffer.erase(buffer.end() - 7, buffer.end());
-				(*parent_.defines_)[symbol]
-						= preproc_define(buffer, items, optargs, parent_.textdomain_, linenum, parent_.location_,
-						deprecation_detail, deprecation_level, deprecation_version);
+				(*parent_.defines_)[symbol] = preproc_define(buffer, items, optargs, parent_.textdomain_, linenum,
+					parent_.location_, deprecation_detail, deprecation_level, deprecation_version);
 
 				LOG_PREPROC << "defining macro " << symbol << " (location " << get_location(parent_.location_) << ")";
 			}
@@ -1519,7 +1513,8 @@ bool preprocessor_data::get_chunk()
 				}
 
 				std::ostringstream v;
-				v << arg->second << INLINED_PREPROCESS_DIRECTIVE_CHAR << "line " << linenum_ << ' ' << parent_.location_ << "\n"
+				v << arg->second << INLINED_PREPROCESS_DIRECTIVE_CHAR << "line " << linenum_ << ' ' << parent_.location_
+				  << "\n"
 				  << INLINED_PREPROCESS_DIRECTIVE_CHAR << "textdomain " << parent_.textdomain_ << '\n';
 
 				pop_token();
@@ -1533,7 +1528,8 @@ bool preprocessor_data::get_chunk()
 				const std::string& dir = filesystem::directory_name(val.location.substr(0, val.location.find(' ')));
 
 				if(val.is_deprecated()) {
-					deprecated_message(symbol, *val.deprecation_level, val.deprecation_version, val.deprecation_message);
+					deprecated_message(
+						symbol, *val.deprecation_level, val.deprecation_version, val.deprecation_message);
 				}
 
 				for(std::size_t i = 0; i < nb_arg; ++i) {
@@ -1584,8 +1580,8 @@ bool preprocessor_data::get_chunk()
 							auto temp_defines = std::make_unique<std::map<std::string, std::string>>();
 							temp_defines->insert(defines->begin(), defines->end());
 
-							buf->add_preprocessor<preprocessor_data>(
-								std::move(buffer), val.location, "", val.linenum, dir, val.textdomain, std::move(temp_defines), false);
+							buf->add_preprocessor<preprocessor_data>(std::move(buffer), val.location, "", val.linenum,
+								dir, val.textdomain, std::move(temp_defines), false);
 
 							std::ostringstream res;
 							res << in.rdbuf();
@@ -1602,9 +1598,9 @@ bool preprocessor_data::get_chunk()
 					const std::vector<std::string>& locations = utils::quoted_split(val.location, ' ');
 					const std::string filename = locations.empty() ? "<command-line>" : get_filename(locations[0]);
 					std::ostringstream error;
-					error << "Preprocessor symbol '" << symbol << "' defined at " << filename << ":"
-						  << val.linenum << " expects " << val.arguments.size() << " arguments, but has "
-						  << nb_arg - optional_arg_num << " arguments";
+					error << "Preprocessor symbol '" << symbol << "' defined at " << filename << ":" << val.linenum
+						  << " expects " << val.arguments.size() << " arguments, but has " << nb_arg - optional_arg_num
+						  << " arguments";
 					parent_.error(error.str(), linenum_);
 				}
 
@@ -1615,8 +1611,8 @@ bool preprocessor_data::get_chunk()
 				if(!slowpath_) {
 					DBG_PREPROC << "substituting macro " << symbol;
 
-					parent_.add_preprocessor<preprocessor_data>(
-						std::move(buffer), val.location, "", val.linenum, dir, val.textdomain, std::move(defines), true);
+					parent_.add_preprocessor<preprocessor_data>(std::move(buffer), val.location, "", val.linenum, dir,
+						val.textdomain, std::move(defines), true);
 				} else {
 					DBG_PREPROC << "substituting (slow) macro " << symbol;
 
@@ -1629,8 +1625,8 @@ bool preprocessor_data::get_chunk()
 					std::ostringstream res;
 					{
 						std::istream in(buf.get());
-						buf->add_preprocessor<preprocessor_data>(
-							std::move(buffer), val.location, "", val.linenum, dir, val.textdomain, std::move(defines), true);
+						buf->add_preprocessor<preprocessor_data>(std::move(buffer), val.location, "", val.linenum, dir,
+							val.textdomain, std::move(defines), true);
 
 						res << in.rdbuf();
 					}
@@ -1685,7 +1681,6 @@ bool preprocessor_data::get_chunk()
 	return true;
 }
 
-
 // ==================================================================================
 // PREPROCESSOR SCOPE HELPER
 // ==================================================================================
@@ -1734,7 +1729,6 @@ struct preprocessor_scope_helper : std::basic_istream<char>
 	std::unique_ptr<preproc_map> local_defines_;
 };
 
-
 // ==================================================================================
 // FREE-STANDING FUNCTIONS
 // ==================================================================================
@@ -1767,22 +1761,22 @@ std::string preprocess_string(const std::string& contents, preproc_map* defines,
 	buf.reset(new preprocessor_streambuf(defines));
 
 	// Begin processing.
-	buf->add_preprocessor<preprocessor_data>(
-		std::unique_ptr<std::istream>(new std::istringstream(contents)), "<string>", "", 1, game_config::path, textdomain, nullptr);
+	buf->add_preprocessor<preprocessor_data>(std::unique_ptr<std::istream>(new std::istringstream(contents)),
+		"<string>", "", 1, game_config::path, textdomain, nullptr);
 	return formatter() << buf.get();
 }
 
 void preprocess_resource(const std::string& res_name,
-		preproc_map* defines_map,
-		bool write_cfg,
-		bool write_plain_cfg,
-		const std::string& parent_directory)
+	preproc_map* defines_map,
+	bool write_cfg,
+	bool write_plain_cfg,
+	const std::string& parent_directory)
 {
 	if(filesystem::is_directory(res_name)) {
 		std::vector<std::string> dirs, files;
 
-		filesystem::get_files_in_dir(res_name, &files, &dirs, filesystem::name_mode::ENTIRE_FILE_PATH, filesystem::filter_mode::SKIP_MEDIA_DIR,
-				filesystem::reorder_mode::DO_REORDER);
+		filesystem::get_files_in_dir(res_name, &files, &dirs, filesystem::name_mode::ENTIRE_FILE_PATH,
+			filesystem::filter_mode::SKIP_MEDIA_DIR, filesystem::reorder_mode::DO_REORDER);
 
 		// Subdirectories
 		for(const std::string& dir : dirs) {

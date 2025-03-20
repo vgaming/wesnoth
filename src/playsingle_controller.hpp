@@ -30,16 +30,22 @@ class saved_game;
 
 struct reset_gamestate_exception final : public lua_jailbreak_exception, public std::exception
 {
-	reset_gamestate_exception(std::shared_ptr<config> l, std::shared_ptr<config> stats, bool s = true) : level(l), stats_(stats), start_replay(s)
+	reset_gamestate_exception(std::shared_ptr<config> l, std::shared_ptr<config> stats, bool s = true)
+		: level(l)
+		, stats_(stats)
+		, start_replay(s)
 	{
 		this->store();
 	}
 	std::shared_ptr<config> level;
 	std::shared_ptr<config> stats_;
 	bool start_replay;
-	const char * what() const noexcept { return "reset_gamestate_exception"; }
-private:
+	const char* what() const noexcept
+	{
+		return "reset_gamestate_exception";
+	}
 
+private:
 	IMPLEMENT_LUA_JAILBREAK_EXCEPTION(reset_gamestate_exception)
 };
 
@@ -52,7 +58,11 @@ public:
 	level_result::type play_scenario(const config& level);
 	void play_scenario_init(const config& level);
 
-	struct ses_result { int side_num; bool wrapped; };
+	struct ses_result
+	{
+		int side_num;
+		bool wrapped;
+	};
 	/// Calculates the current side, starting at @a side_num that is non-empty
 	/// @return side_num: the new side that is non-empty,
 	///                   @a side_num, if no such side was found.
@@ -68,8 +78,13 @@ public:
 	virtual void handle_generic_event(const std::string& name) override;
 
 	virtual void check_objectives() override;
-	virtual void on_not_observer() override {}
-	virtual bool is_host() const { return true; }
+	virtual void on_not_observer() override
+	{
+	}
+	virtual bool is_host() const
+	{
+		return true;
+	}
 	virtual void maybe_linger();
 
 	void end_turn();
@@ -79,12 +94,22 @@ public:
 	class hotkey_handler;
 	std::string describe_result() const;
 
-	bool get_player_type_changed() const { return player_type_changed_; }
-	void set_player_type_changed() { player_type_changed_ = true; }
+	bool get_player_type_changed() const
+	{
+		return player_type_changed_;
+	}
+	void set_player_type_changed()
+	{
+		player_type_changed_ = true;
+	}
 	virtual bool should_return_to_play_side() const override;
-	replay_controller * get_replay_controller() const override { return replay_controller_.get(); }
+	replay_controller* get_replay_controller() const override
+	{
+		return replay_controller_.get();
+	}
 	void enable_replay(bool is_unit_test = false);
 	void on_replay_end(bool is_unit_test);
+
 protected:
 	void play_side_impl();
 	void before_human_turn();
@@ -104,8 +129,8 @@ protected:
 	/// true iff the user has pressed the end turn button this turn.
 	/// (or wants to end linger mode, which is implemented via the same button)
 	bool end_turn_requested_;
-	/// true when the current side is actually an ai side but was taken over by a human (usually for debugging purposes),
-	/// we need this variable to remember to give the ai control back next turn.
+	/// true when the current side is actually an ai side but was taken over by a human (usually for debugging
+	/// purposes), we need this variable to remember to give the ai control back next turn.
 	bool ai_fallback_;
 	/// non-null when replay mode in active, is used in singleplayer and for the "back to turn" feature in multiplayer.
 	std::unique_ptr<replay_controller> replay_controller_;

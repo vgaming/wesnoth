@@ -13,24 +13,25 @@
 	See the COPYING file for more details.
 */
 
+#include "soundsource.hpp"
 #include "display.hpp"
 #include "random.hpp"
 #include "serialization/chrono.hpp"
 #include "sound.hpp"
-#include "soundsource.hpp"
 
-namespace soundsource {
+namespace soundsource
+{
 
 using namespace std::chrono_literals;
-const unsigned DEFAULT_CHANCE           = 100;
-const auto DEFAULT_DELAY                = 1000ms;
+const unsigned DEFAULT_CHANCE = 100;
+const auto DEFAULT_DELAY = 1000ms;
 
 unsigned int positional_source::last_id = 0;
 
-manager::manager(const display &disp) :
-	observer(),
-	sources_(),
-	disp_(disp)
+manager::manager(const display& disp)
+	: observer()
+	, sources_()
+	, disp_(disp)
 {
 	disp_.scroll_event().attach_handler(this);
 	update_positions();
@@ -41,18 +42,18 @@ manager::~manager()
 	sources_.clear();
 }
 
-void manager::handle_generic_event(const std::string &event_name)
+void manager::handle_generic_event(const std::string& event_name)
 {
 	if(event_name == "scrolled")
 		update_positions();
 }
 
-void manager::add(const sourcespec &spec)
+void manager::add(const sourcespec& spec)
 {
 	sources_[spec.id()].reset(new positional_source(spec));
 }
 
-sourcespec manager::get(const std::string &id)
+sourcespec manager::get(const std::string& id)
 {
 	config cfg;
 	positional_source_iterator it = sources_.find(id);
@@ -62,7 +63,7 @@ sourcespec manager::get(const std::string &id)
 	return cfg;
 }
 
-void manager::remove(const std::string &id)
+void manager::remove(const std::string& id)
 {
 	positional_source_iterator it;
 
@@ -107,18 +108,18 @@ void manager::write_sourcespecs(config& cfg) const
 	}
 }
 
-positional_source::positional_source(const sourcespec &spec) :
-	last_played_(),
-	min_delay_(spec.minimum_delay()),
-	chance_(spec.chance()),
-	loops_(spec.loops()),
-	id_(last_id++),
-	range_(spec.full_range()),
-	faderange_(spec.fade_range()),
-	check_fogged_(spec.check_fogged()),
-	check_shrouded_(spec.check_shrouded()),
-	files_(spec.files()),
-	locations_(spec.get_locations())
+positional_source::positional_source(const sourcespec& spec)
+	: last_played_()
+	, min_delay_(spec.minimum_delay())
+	, chance_(spec.chance())
+	, loops_(spec.loops())
+	, id_(last_id++)
+	, range_(spec.full_range())
+	, faderange_(spec.fade_range())
+	, check_fogged_(spec.check_fogged())
+	, check_shrouded_(spec.check_shrouded())
+	, files_(spec.files())
+	, locations_(spec.get_locations())
 {
 	assert(range_ >= 0);
 	assert(faderange_ >= 0);
@@ -134,9 +135,9 @@ bool positional_source::is_global() const
 	return locations_.empty();
 }
 
-void positional_source::update(const std::chrono::steady_clock::time_point& time, const display &disp)
+void positional_source::update(const std::chrono::steady_clock::time_point& time, const display& disp)
 {
-	if (time - last_played_ < min_delay_ || sound::is_sound_playing(id_))
+	if(time - last_played_ < min_delay_ || sound::is_sound_playing(id_))
 		return;
 
 	int i = randomness::rng::default_instance().get_random_int(1, 100);
@@ -147,7 +148,7 @@ void positional_source::update(const std::chrono::steady_clock::time_point& time
 		// If no locations have been specified, treat the source as if
 		// it was present everywhere on the map
 		if(locations_.empty()) {
-			sound::play_sound_positioned(files_, id_, loops_, 0);	// max volume
+			sound::play_sound_positioned(files_, id_, loops_, 0); // max volume
 			return;
 		}
 
@@ -166,7 +167,7 @@ void positional_source::update(const std::chrono::steady_clock::time_point& time
 	}
 }
 
-void positional_source::update_positions(const std::chrono::steady_clock::time_point& time, const display &disp)
+void positional_source::update_positions(const std::chrono::steady_clock::time_point& time, const display& disp)
 {
 	if(is_global()) {
 		return;
@@ -187,7 +188,7 @@ void positional_source::update_positions(const std::chrono::steady_clock::time_p
 	}
 }
 
-int positional_source::calculate_volume(const map_location &loc, const display &disp)
+int positional_source::calculate_volume(const map_location& loc, const display& disp)
 {
 	assert(range_ >= 0);
 	assert(faderange_ >= 0);
@@ -207,8 +208,7 @@ int positional_source::calculate_volume(const map_location &loc, const display &
 		return DISTANCE_SILENT;
 	}
 
-	return static_cast<int>((((distance - range_)
-			/ static_cast<double>(faderange_)) * DISTANCE_SILENT));
+	return static_cast<int>((((distance - range_) / static_cast<double>(faderange_)) * DISTANCE_SILENT));
 }
 
 void positional_source::write_config(config& cfg) const

@@ -17,8 +17,8 @@
 
 int main(int, char**)
 {
-    SDL_Init(0);
-    SDL_Quit();
+	SDL_Init(0);
+	SDL_Quit();
 
-    return 0;
+	return 0;
 }

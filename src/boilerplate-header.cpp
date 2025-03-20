@@ -17,4 +17,3 @@
  * @file
  * Template for new cpp-files.
  */
-

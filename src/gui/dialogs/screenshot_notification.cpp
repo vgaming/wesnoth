@@ -56,26 +56,21 @@ void screenshot_notification::pre_show()
 	path_box.set_value(filesystem::base_name(path_));
 	path_box.set_selection(0, path_box.text().find_last_of('.')); // TODO: do this cleaner!
 	keyboard_capture(&path_box);
-	connect_signal_pre_key_press(path_box, std::bind(&screenshot_notification::keypress_callback, this,
-		std::placeholders::_3, std::placeholders::_5));
+	connect_signal_pre_key_press(path_box,
+		std::bind(&screenshot_notification::keypress_callback, this, std::placeholders::_3, std::placeholders::_5));
 
 	find_widget<label>("filesize").set_label(font::unicode_em_dash);
 
 	button& copy_b = find_widget<button>("copy");
-	connect_signal_mouse_left_click(
-		copy_b, std::bind(&desktop::clipboard::copy_to_clipboard, std::ref(path_)));
+	connect_signal_mouse_left_click(copy_b, std::bind(&desktop::clipboard::copy_to_clipboard, std::ref(path_)));
 	copy_b.set_active(false);
 
 	button& open_b = find_widget<button>("open");
-	connect_signal_mouse_left_click(
-		open_b, std::bind(&desktop::open_object, std::ref(path_)));
+	connect_signal_mouse_left_click(open_b, std::bind(&desktop::open_object, std::ref(path_)));
 	open_b.set_active(false);
 
 	button& bdir_b = find_widget<button>("browse_dir");
-	connect_signal_mouse_left_click(
-		bdir_b,
-		std::bind(&desktop::open_object,
-			std::ref(screenshots_dir_path_)));
+	connect_signal_mouse_left_click(bdir_b, std::bind(&desktop::open_object, std::ref(screenshots_dir_path_)));
 
 	button& save_b = find_widget<button>("save");
 	connect_signal_mouse_left_click(save_b, std::bind(&screenshot_notification::save_screenshot, this));
@@ -93,11 +88,12 @@ void screenshot_notification::save_screenshot()
 	image::save_result res = image::save_image(screenshot_, path.string());
 	if(res == image::save_result::unsupported_format) {
 		gui2::show_error_message(_("Unsupported image format.\n\n"
-			"Try to save the screenshot as PNG instead."));
+								   "Try to save the screenshot as PNG instead."));
 	} else if(res == image::save_result::save_failed) {
-		gui2::show_error_message(
-			translation::dsgettext("wesnoth", "Screenshot creation failed.\n\n"
-			"Make sure there is enough space on the drive holding Wesnoth’s player resource files and that file permissions are set up correctly."));
+		gui2::show_error_message(translation::dsgettext("wesnoth",
+			"Screenshot creation failed.\n\n"
+			"Make sure there is enough space on the drive holding Wesnoth’s player resource files and that file "
+			"permissions are set up correctly."));
 	} else if(res != image::save_result::success) {
 		throw std::logic_error("Unexpected error while trying to save a screenshot");
 	} else {
@@ -120,4 +116,4 @@ void screenshot_notification::keypress_callback(bool& handled, SDL_Keycode key)
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

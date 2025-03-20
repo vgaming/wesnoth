@@ -17,7 +17,6 @@
 #include "gui/dialogs/multiplayer/mp_join_game.hpp"
 
 #include "chat_log.hpp"
-#include "serialization/markup.hpp"
 #include "formatter.hpp"
 #include "formula/string_utils.hpp"
 #include "game_config.hpp"
@@ -40,6 +39,7 @@
 #include "mp_ui_alerts.hpp"
 #include "preferences/preferences.hpp"
 #include "saved_game.hpp"
+#include "serialization/markup.hpp"
 #include "side_controller.hpp"
 #include "units/types.hpp"
 #include "utils/guard_value.hpp"
@@ -56,7 +56,8 @@ namespace gui2::dialogs
 
 REGISTER_DIALOG(mp_join_game)
 
-mp_join_game::mp_join_game(saved_game& state, wesnothd_connection& connection, const bool first_scenario, const bool observe_game)
+mp_join_game::mp_join_game(
+	saved_game& state, wesnothd_connection& connection, const bool first_scenario, const bool observe_game)
 	: modal_dialog(window_id())
 	, level_()
 	, state_(state)
@@ -179,7 +180,7 @@ bool mp_join_game::fetch_game_config()
 			if(side["current_player"] == prefs::get().login()) {
 				side_choice = &side;
 				side_num_choice = side_num_counter;
-				break;  // Found the preferred one
+				break; // Found the preferred one
 			}
 		}
 
@@ -243,7 +244,9 @@ void mp_join_game::pre_show()
 	//
 	label& title = find_widget<label>("title");
 	// FIXME: very hacky way to get the game name...
-	title.set_label((formatter() << level_.mandatory_child("multiplayer")["scenario"] << " " << font::unicode_em_dash << " " << get_scenario()["name"].t_str()).str());
+	title.set_label((formatter() << level_.mandatory_child("multiplayer")["scenario"] << " " << font::unicode_em_dash
+								 << " " << get_scenario()["name"].t_str())
+			.str());
 
 	//
 	// Set up sides list
@@ -275,8 +278,9 @@ void mp_join_game::pre_show()
 	plugins_context_.reset(new plugins_context("Multiplayer Join"));
 
 	plugins_context_->set_callback("launch", [this](const config&) { set_retval(retval::OK); }, false);
-	plugins_context_->set_callback("quit",   [this](const config&) { set_retval(retval::CANCEL); }, false);
-	plugins_context_->set_callback("chat",   [&chat](const config& cfg) { chat.send_chat_message(cfg["message"], false); }, true);
+	plugins_context_->set_callback("quit", [this](const config&) { set_retval(retval::CANCEL); }, false);
+	plugins_context_->set_callback(
+		"chat", [&chat](const config& cfg) { chat.send_chat_message(cfg["message"], false); }, true);
 }
 
 bool mp_join_game::show_flg_select(int side_num, bool first_time)
@@ -301,7 +305,7 @@ bool mp_join_game::show_flg_select(int side_num, bool first_time)
 		const std::string color = side_choice["color"].str();
 
 		std::vector<const config*> era_factions;
-		//make this safe against changes to level_ that might make possible_sides invalid pointers.
+		// make this safe against changes to level_ that might make possible_sides invalid pointers.
 		config era_copy;
 		for(const config& side : possible_sides) {
 			config& side_new = era_copy.add_child("multiplayer_side", side);
@@ -311,9 +315,12 @@ bool mp_join_game::show_flg_select(int side_num, bool first_time)
 		const bool is_mp = state_.classification().is_normal_mp_game();
 		const bool lock_settings = get_scenario()["force_lock_settings"].to_bool(!is_mp);
 		const bool use_map_settings = level_.mandatory_child("multiplayer")["mp_use_map_settings"].to_bool();
-		const saved_game_mode::type saved_game = saved_game_mode::get_enum(level_.mandatory_child("multiplayer")["savegame"].str()).value_or(saved_game_mode::type::no);
+		const saved_game_mode::type saved_game
+			= saved_game_mode::get_enum(level_.mandatory_child("multiplayer")["savegame"].str())
+				  .value_or(saved_game_mode::type::no);
 
-		ng::flg_manager flg(era_factions, *side_choice, lock_settings, use_map_settings, saved_game == saved_game_mode::type::midgame);
+		ng::flg_manager flg(
+			era_factions, *side_choice, lock_settings, use_map_settings, saved_game == saved_game_mode::type::midgame);
 
 		{
 			gui2::dialogs::faction_select flg_dialog(flg, color, side_num);
@@ -379,7 +386,7 @@ void mp_join_game::generate_side_list()
 		const std::string color_str = !side["color"].empty() ? side["color"] : side["side"].str();
 		const auto team_color_it = game_config::team_rgb_colors.find(color_str);
 
-		if (team_color_it != game_config::team_rgb_colors.end()) {
+		if(team_color_it != game_config::team_rgb_colors.end()) {
 			item["label"] = markup::span_color(team_color_it->second[0], side["side"]);
 		} else {
 			item["label"] = side["side"];
@@ -444,7 +451,8 @@ void mp_join_game::generate_side_list()
 
 		const int income_amt = side["income"].to_int();
 		if(income_amt != 0) {
-			const std::string income_string = formatter() << (income_amt > 0 ? "+" : "") << income_amt << " " << _("Income");
+			const std::string income_string = formatter()
+				<< (income_amt > 0 ? "+" : "") << income_amt << " " << _("Income");
 
 			item["label"] = income_string;
 			data.emplace("side_income", item);
@@ -474,7 +482,8 @@ void mp_join_game::generate_side_list()
 					handled = halt = true;
 				};
 
-				connect_signal_mouse_left_click(*select_leader_button, std::bind(handler, std::placeholders::_3, std::placeholders::_4));
+				connect_signal_mouse_left_click(
+					*select_leader_button, std::bind(handler, std::placeholders::_3, std::placeholders::_4));
 			} else {
 				select_leader_button->set_visible(widget::visibility::hidden);
 			}
@@ -511,7 +520,7 @@ void mp_join_game::network_handler()
 	find_widget<chatbox>("chat").process_network_data(data);
 
 	if(!data["message"].empty()) {
-		gui2::show_transient_message(_("Response") , data["message"]);
+		gui2::show_transient_message(_("Response"), data["message"]);
 	}
 
 	if(data["failed"].to_bool()) {
@@ -579,15 +588,14 @@ void mp_join_game::post_show()
 	}
 
 	if(get_retval() == retval::OK) {
-
 		mp::level_to_gamestate(level_, state_);
 
 		mp::ui_alerts::game_has_begun();
 	} else if(observe_game_) {
-		mp::send_to_server(config("observer_quit", config { "name", prefs::get().login() }));
+		mp::send_to_server(config("observer_quit", config{"name", prefs::get().login()}));
 	} else {
 		mp::send_to_server(config("leave_game"));
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

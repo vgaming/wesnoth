@@ -33,9 +33,9 @@ addon_auth::addon_auth(config& cfg)
 	: modal_dialog(window_id())
 	, cfg_(cfg)
 {
-	register_bool("remember_password", false,
-		[]() {return prefs::get().remember_password();},
-		[](bool v) {prefs::get().set_remember_password(v);});
+	register_bool(
+		"remember_password", false, []() { return prefs::get().remember_password(); },
+		[](bool v) { prefs::get().set_remember_password(v); });
 }
 
 void addon_auth::pre_show()
@@ -59,11 +59,10 @@ void addon_auth::pre_show()
 
 void addon_auth::post_show()
 {
-	if(get_retval() == gui2::retval::OK)
-	{
+	if(get_retval() == gui2::retval::OK) {
 		cfg_["passphrase"] = find_widget<password_box>("password").get_real_value();
 		cfg_["uploader"] = find_widget<menu_button>("choose_uploader").get_value_string();
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

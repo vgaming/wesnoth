@@ -26,37 +26,37 @@ static lg::log_domain log_random("random");
 
 namespace randomness
 {
-	synced_rng::synced_rng(std::function<std::string()> seed_generator)
-		: has_valid_seed_(false), seed_generator_(std::move(seed_generator)), gen_()
-	{
-	}
-	uint32_t synced_rng::next_random_impl()
-	{
-		if(!has_valid_seed_)
-		{
-			initialize();
-		}
-		//getting here means random was called form inside a synced context.
-		uint32_t retv = gen_.get_next_random();
-
-		LOG_RND << "randomness::rng::next_random_impl returned " << retv;
-		return retv;
-	}
-
-	void synced_rng::initialize()
-	{
-		std::string new_seed = seed_generator_();
-		gen_.seed_random(new_seed, 0);
-		has_valid_seed_ = true;
-	}
-
-	synced_rng::~synced_rng()
-	{
-
-	}
-
-	bool synced_rng::is_networked() const
-	{
-		return true;
-	}
+synced_rng::synced_rng(std::function<std::string()> seed_generator)
+	: has_valid_seed_(false)
+	, seed_generator_(std::move(seed_generator))
+	, gen_()
+{
 }
+uint32_t synced_rng::next_random_impl()
+{
+	if(!has_valid_seed_) {
+		initialize();
+	}
+	// getting here means random was called form inside a synced context.
+	uint32_t retv = gen_.get_next_random();
+
+	LOG_RND << "randomness::rng::next_random_impl returned " << retv;
+	return retv;
+}
+
+void synced_rng::initialize()
+{
+	std::string new_seed = seed_generator_();
+	gen_.seed_random(new_seed, 0);
+	has_valid_seed_ = true;
+}
+
+synced_rng::~synced_rng()
+{
+}
+
+bool synced_rng::is_networked() const
+{
+	return true;
+}
+} // namespace randomness

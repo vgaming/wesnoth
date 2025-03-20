@@ -58,12 +58,29 @@ bool modal_dialog::show(const unsigned auto_close_time)
 		bool skipped = false;
 
 		plugins_manager* pm = plugins_manager::get();
-		if (pm && pm->any_running())
-		{
+		if(pm && pm->any_running()) {
 			plugins_context pc("Dialog");
-			pc.set_callback("skip_dialog", [this, &skipped](const config&) { set_retval(retval::OK); skipped = true; }, false);
-			pc.set_callback("quit", [this, &skipped](const config&) { set_retval(retval::CANCEL); skipped = true; }, false);
-			pc.set_callback("select", [this, &skipped](const config& c) { set_retval(c["retval"].to_int()); skipped = true; }, false);
+			pc.set_callback(
+				"skip_dialog",
+				[this, &skipped](const config&) {
+					set_retval(retval::OK);
+					skipped = true;
+				},
+				false);
+			pc.set_callback(
+				"quit",
+				[this, &skipped](const config&) {
+					set_retval(retval::CANCEL);
+					skipped = true;
+				},
+				false);
+			pc.set_callback(
+				"select",
+				[this, &skipped](const config& c) {
+					set_retval(c["retval"].to_int());
+					skipped = true;
+				},
+				false);
 			pc.set_accessor_string("id", [this](const config&) { return window_id(); });
 			pc.play_slice();
 		}
@@ -114,55 +131,44 @@ T* modal_dialog::register_field(Args&&... args)
 	return res;
 }
 
-field_bool* modal_dialog::register_bool(
-		const std::string& id,
-		const bool mandatory,
-		const std::function<bool()>& callback_load_value,
-		const std::function<void(bool)>& callback_save_value,
-		const std::function<void(widget&)>& callback_change,
-		const bool initial_fire)
-{
-	field_bool* field = new field_bool(id,
-										 mandatory,
-										 callback_load_value,
-										 callback_save_value,
-										 callback_change,
-										 initial_fire);
-
-	fields_.emplace_back(field);
-	return field;
-}
-
-field_bool*
-modal_dialog::register_bool(const std::string& id,
-					   const bool mandatory,
-					   bool& linked_variable,
-					   const std::function<void(widget&)>& callback_change,
-					   const bool initial_fire)
+field_bool* modal_dialog::register_bool(const std::string& id,
+	const bool mandatory,
+	const std::function<bool()>& callback_load_value,
+	const std::function<void(bool)>& callback_save_value,
+	const std::function<void(widget&)>& callback_change,
+	const bool initial_fire)
 {
 	field_bool* field
-			= new field_bool(id, mandatory, linked_variable, callback_change, initial_fire);
+		= new field_bool(id, mandatory, callback_load_value, callback_save_value, callback_change, initial_fire);
 
 	fields_.emplace_back(field);
 	return field;
 }
 
-field_integer* modal_dialog::register_integer(
-		const std::string& id,
-		const bool mandatory,
-		const std::function<int()>& callback_load_value,
-		const std::function<void(int)>& callback_save_value)
+field_bool* modal_dialog::register_bool(const std::string& id,
+	const bool mandatory,
+	bool& linked_variable,
+	const std::function<void(widget&)>& callback_change,
+	const bool initial_fire)
 {
-	field_integer* field = new field_integer(
-			id, mandatory, callback_load_value, callback_save_value);
+	field_bool* field = new field_bool(id, mandatory, linked_variable, callback_change, initial_fire);
 
 	fields_.emplace_back(field);
 	return field;
 }
 
 field_integer* modal_dialog::register_integer(const std::string& id,
-										  const bool mandatory,
-										  int& linked_variable)
+	const bool mandatory,
+	const std::function<int()>& callback_load_value,
+	const std::function<void(int)>& callback_save_value)
+{
+	field_integer* field = new field_integer(id, mandatory, callback_load_value, callback_save_value);
+
+	fields_.emplace_back(field);
+	return field;
+}
+
+field_integer* modal_dialog::register_integer(const std::string& id, const bool mandatory, int& linked_variable)
 {
 	field_integer* field = new field_integer(id, mandatory, linked_variable);
 
@@ -170,15 +176,13 @@ field_integer* modal_dialog::register_integer(const std::string& id,
 	return field;
 }
 
-field_text* modal_dialog::register_text(
-		const std::string& id,
-		const bool mandatory,
-		const std::function<std::string()>& callback_load_value,
-		const std::function<void(const std::string&)>& callback_save_value,
-		const bool capture_focus)
+field_text* modal_dialog::register_text(const std::string& id,
+	const bool mandatory,
+	const std::function<std::string()>& callback_load_value,
+	const std::function<void(const std::string&)>& callback_save_value,
+	const bool capture_focus)
 {
-	field_text* field = new field_text(
-			id, mandatory, callback_load_value, callback_save_value);
+	field_text* field = new field_text(id, mandatory, callback_load_value, callback_save_value);
 
 	if(capture_focus) {
 		focus_ = id;
@@ -188,10 +192,8 @@ field_text* modal_dialog::register_text(
 	return field;
 }
 
-field_text* modal_dialog::register_text(const std::string& id,
-									const bool mandatory,
-									std::string& linked_variable,
-									const bool capture_focus)
+field_text* modal_dialog::register_text(
+	const std::string& id, const bool mandatory, std::string& linked_variable, const bool capture_focus)
 {
 	field_text* field = new field_text(id, mandatory, linked_variable);
 
@@ -203,10 +205,8 @@ field_text* modal_dialog::register_text(const std::string& id,
 	return field;
 }
 
-field_label* modal_dialog::register_label(const std::string& id,
-									  const bool mandatory,
-									  const std::string& text,
-									  const bool use_markup)
+field_label* modal_dialog::register_label(
+	const std::string& id, const bool mandatory, const std::string& text, const bool use_markup)
 {
 	field_label* field = new field_label(id, mandatory, text, use_markup);
 
@@ -226,8 +226,7 @@ void modal_dialog::post_show()
 
 void modal_dialog::init_fields()
 {
-	for(auto& field : fields_)
-	{
+	for(auto& field : fields_) {
 		field->attach_to_window(*this);
 		field->widget_init();
 	}
@@ -241,8 +240,7 @@ void modal_dialog::init_fields()
 
 void modal_dialog::finalize_fields(const bool save_fields)
 {
-	for(auto& field : fields_)
-	{
+	for(auto& field : fields_) {
 		if(save_fields) {
 			field->widget_finalize();
 		}
@@ -250,4 +248,4 @@ void modal_dialog::finalize_fields(const bool save_fields)
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

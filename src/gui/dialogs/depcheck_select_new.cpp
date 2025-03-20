@@ -17,18 +17,16 @@
 
 #include "gui/dialogs/depcheck_select_new.hpp"
 
-#include "gui/widgets/window.hpp"
-#include "gui/widgets/listbox.hpp"
 #include "gettext.hpp"
+#include "gui/widgets/listbox.hpp"
+#include "gui/widgets/window.hpp"
 
 namespace gui2::dialogs
 {
 
 REGISTER_DIALOG(depcheck_select_new)
 
-depcheck_select_new::depcheck_select_new(
-		ng::depcheck::component_type name,
-		const std::vector<std::string>& items)
+depcheck_select_new::depcheck_select_new(ng::depcheck::component_type name, const std::vector<std::string>& items)
 	: modal_dialog(window_id())
 	, items_(items)
 	, result_(-1)
@@ -36,21 +34,21 @@ depcheck_select_new::depcheck_select_new(
 	std::string message;
 
 	switch(name) {
-		case ng::depcheck::SCENARIO:
-			message = _("The currently chosen scenario "
-						"is not compatible with your setup."
-						"\nPlease select a compatible one.");
-			break;
-		case ng::depcheck::ERA:
-			message = _("The currently chosen era "
-						"is not compatible with your setup."
-						"\nPlease select a compatible one.");
-			break;
-		case ng::depcheck::MODIFICATION:
-			// currently this can't happen, but be prepared for anything...
-			message = _("The currently chosen modification "
-						"is not compatible with your setup."
-						"\nPlease select a compatible one.");
+	case ng::depcheck::SCENARIO:
+		message = _("The currently chosen scenario "
+					"is not compatible with your setup."
+					"\nPlease select a compatible one.");
+		break;
+	case ng::depcheck::ERA:
+		message = _("The currently chosen era "
+					"is not compatible with your setup."
+					"\nPlease select a compatible one.");
+		break;
+	case ng::depcheck::MODIFICATION:
+		// currently this can't happen, but be prepared for anything...
+		message = _("The currently chosen modification "
+					"is not compatible with your setup."
+					"\nPlease select a compatible one.");
 	}
 
 	register_label("message", false, message);
@@ -60,8 +58,7 @@ void depcheck_select_new::pre_show()
 {
 	listbox& items = find_widget<listbox>("itemlist");
 
-	for(const auto & item : items_)
-	{
+	for(const auto& item : items_) {
 		widget_data data;
 		data["option"]["label"] = item;
 
@@ -78,4 +75,4 @@ void depcheck_select_new::post_show()
 		result_ = items.get_selected_row();
 	}
 }
-} // namespace dialogs
+} // namespace gui2::dialogs

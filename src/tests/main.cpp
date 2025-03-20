@@ -15,34 +15,33 @@
 
 #define GETTEXT_DOMAIN "wesnoth-test"
 
-
 #define BOOST_TEST_MODULE wesnoth unit tests master suite
 
 #ifndef BOOST_TEST_DYN_LINK
 #error Compiler misconfiguration - must define BOOST_TEST_DYN_LINK
 #endif
 
+#include <boost/filesystem/path.hpp>
+#include <boost/test/results_reporter.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_monitor.hpp>
 #include <boost/test/unit_test_parameters.hpp>
-#include <boost/test/results_reporter.hpp>
-#include <boost/filesystem/path.hpp>
 
 #include <fstream>
 
 #include <SDL2/SDL.h>
 
+#include "config.hpp"
 #include "events.hpp"
 #include "filesystem.hpp"
 #include "game_config.hpp"
 #include "game_errors.hpp"
 #include "gui/core/event/handler.hpp"
 #include "gui/gui.hpp"
-#include "config.hpp"
 #include "log.hpp"
 
-#include "tests/utils/fake_display.hpp"
 #include "game_display.hpp"
+#include "tests/utils/fake_display.hpp"
 /**
  * @todo add all others exception handlers too
  **/
@@ -59,7 +58,8 @@ static void exception_translator_game(const game::error& e)
 
 std::ofstream reporter;
 
-struct wesnoth_global_fixture {
+struct wesnoth_global_fixture
+{
 	wesnoth_global_fixture()
 	{
 		using namespace boost::unit_test;
@@ -74,10 +74,10 @@ struct wesnoth_global_fixture {
 		}
 
 		reporter.open(file.string());
-		assert( reporter.is_open() );
+		assert(reporter.is_open());
 
 		results_reporter::set_stream(reporter);
-//		lg::set_log_domain_severity("all",lg::debug());
+		//		lg::set_log_domain_severity("all",lg::debug());
 		game_config::path = filesystem::get_cwd();
 		filesystem::set_user_data_dir(std::string());
 

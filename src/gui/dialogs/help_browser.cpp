@@ -69,12 +69,12 @@ void help_browser::pre_show()
 
 	toggle_button& contents = find_widget<toggle_button>("contents");
 
-	if (video::window_size().x <= 800) {
+	if(video::window_size().x <= 800) {
 		contents.set_value(false);
 		connect_signal_mouse_left_click(contents, [&](auto&&...) {
 			topic_tree.set_visible(topic_tree.get_visible() == widget::visibility::visible
-				? widget::visibility::invisible
-				: widget::visibility::visible);
+					? widget::visibility::invisible
+					: widget::visibility::visible);
 			invalidate_layout();
 		});
 		topic_tree.set_visible(widget::visibility::invisible);
@@ -101,13 +101,15 @@ void help_browser::pre_show()
 	on_topic_select();
 }
 
-void help_browser::update_list(const std::string& filter_text) {
+void help_browser::update_list(const std::string& filter_text)
+{
 	tree_view& topic_tree = find_widget<tree_view>("topic_tree");
 	topic_tree.clear();
 	add_topics_for_section(toplevel_, topic_tree.get_root_node(), filter_text);
 }
 
-bool help_browser::add_topics_for_section(const help::section& parent_section, tree_view_node& parent_node, const std::string& filter_text)
+bool help_browser::add_topics_for_section(
+	const help::section& parent_section, tree_view_node& parent_node, const std::string& filter_text)
 {
 	bool topics_added = false;
 	const auto match = translation::make_ci_matcher(filter_text);
@@ -116,8 +118,8 @@ bool help_browser::add_topics_for_section(const help::section& parent_section, t
 		tree_view_node& section_node = add_topic(section.id, section.title, true, parent_node);
 		bool subtopics_added = add_topics_for_section(section, section_node, filter_text);
 
-		if (subtopics_added || match(section.id)) {
-			if (!filter_text.empty()) {
+		if(subtopics_added || match(section.id)) {
+			if(!filter_text.empty()) {
 				section_node.unfold();
 			}
 			topics_added = true;
@@ -127,7 +129,7 @@ bool help_browser::add_topics_for_section(const help::section& parent_section, t
 	}
 
 	for(const help::topic& topic : parent_section.topics) {
-		if ((match(topic.id) || match(topic.title)) && (topic.id.compare(0, 2, "..") != 0)) {
+		if((match(topic.id) || match(topic.title)) && (topic.id.compare(0, 2, "..") != 0)) {
 			add_topic(topic.id, topic.title, false, parent_node);
 			topics_added = true;
 		}
@@ -136,8 +138,8 @@ bool help_browser::add_topics_for_section(const help::section& parent_section, t
 	return topics_added;
 }
 
-tree_view_node& help_browser::add_topic(const std::string& topic_id, const std::string& topic_title,
-		bool expands, tree_view_node& parent)
+tree_view_node& help_browser::add_topic(
+	const std::string& topic_id, const std::string& topic_title, bool expands, tree_view_node& parent)
 {
 	widget_data data;
 	widget_item item;
@@ -170,7 +172,7 @@ void help_browser::show_topic(std::string topic_id, bool add_to_history)
 		const help::topic* topic = help::find_topic(toplevel_, topic_id);
 		if(!topic) {
 			ERR_GUI_P << "Help browser tried to show topic with id '" << topic_id
-				  << "' but that topic could not be found." << std::endl;
+					  << "' but that topic could not be found." << std::endl;
 			return;
 		}
 
@@ -188,16 +190,15 @@ void help_browser::show_topic(std::string topic_id, bool add_to_history)
 		scroll.scroll_vertical_scrollbar(scrollbar_base::BEGIN);
 	}
 
-	if (add_to_history) {
+	if(add_to_history) {
 		// history pos is 0 initially, so it's already at first entry
 		// no need increment first time
-		if (!history_.empty()) {
+		if(!history_.empty()) {
 			history_pos_++;
 		}
 		history_.push_back(topic_id);
 
 		find_widget<button>("back").set_active(history_pos_ != 0);
-
 	}
 }
 
@@ -212,7 +213,7 @@ void help_browser::on_topic_select()
 	tree_view_node* selected = topic_tree.selected_item();
 	assert(selected);
 
-	if (selected->id()[0] != '+' && video::window_size().x <= 800) {
+	if(selected->id()[0] != '+' && video::window_size().x <= 800) {
 		find_widget<toggle_button>("contents").set_value(false);
 		topic_tree.set_visible(widget::visibility::invisible);
 	}
@@ -228,10 +229,10 @@ void help_browser::on_history_navigate(bool backwards)
 		history_pos_++;
 	}
 	find_widget<button>("back").set_active(!history_.empty() && history_pos_ != 0);
-	find_widget<button>("next").set_active(!history_.empty() && history_pos_ != (history_.size()-1));
+	find_widget<button>("next").set_active(!history_.empty() && history_pos_ != (history_.size() - 1));
 
 	const std::string topic_id = history_.at(history_pos_);
 	show_topic(topic_id, false);
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

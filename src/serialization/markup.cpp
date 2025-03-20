@@ -18,9 +18,10 @@
 #include "game_config.hpp"
 #include "gettext.hpp"
 #include "serialization/string_utils.hpp"
-#include "serialization/unicode_cast.hpp"  // for unicode_cast
+#include "serialization/unicode_cast.hpp" // for unicode_cast
 
-namespace markup {
+namespace markup
+{
 
 std::string make_link(const std::string& text, const std::string& dst)
 {
@@ -30,11 +31,10 @@ std::string make_link(const std::string& text, const std::string& dst)
 
 std::string img(const std::string& src, const std::string& align, bool floating)
 {
-	return formatter()
-		<< "<img src='" << src << "' "
-		<< "float='" << std::boolalpha << floating << "' "
-		<< "align='" << align << "' "
-		<< "/>";
+	return formatter() << "<img src='" << src << "' "
+					   << "float='" << std::boolalpha << floating << "' "
+					   << "align='" << align << "' "
+					   << "/>";
 }
 
 //
@@ -63,10 +63,12 @@ NAME ::= [_0-9a-zA-Z]+
 Notes:
 * Entities and the first two tag formats are Pango-style. The tags can be nested inside each other.
 * Escapes and the third tag format are for compatibility with the old help markup. Tags cannot be nested.
-* This mostly doesn't attempt to define the meaning of specific tags or entity names. It does however substitute numeric entities, as well as some very basic named entities: lt, gt, amp, quot, apos.
+* This mostly doesn't attempt to define the meaning of specific tags or entity names. It does however substitute numeric
+entities, as well as some very basic named entities: lt, gt, amp, quot, apos.
 * The definition of TEXT is left a bit nebulous, but just think of it as "non-greedy"
 * Attributes without a value are only supported in Pango-style tags
-* Some restrictions may apply beyond what the grammar specifies. For example, arbitrary named entities are not supported in attribute values (numeric ones and the 5 special ones work though).
+* Some restrictions may apply beyond what the grammar specifies. For example, arbitrary named entities are not supported
+in attribute values (numeric ones and the 5 special ones work though).
 
 ------
 
@@ -227,23 +229,27 @@ static std::string parse_name(std::string::const_iterator& beg, std::string::con
 	return s.str();
 }
 
-static std::pair<std::string, std::string> parse_attribute(std::string::const_iterator& beg, std::string::const_iterator end, bool allow_empty)
+static std::pair<std::string, std::string> parse_attribute(
+	std::string::const_iterator& beg, std::string::const_iterator end, bool allow_empty)
 {
 	std::string attr = parse_name(beg, end), value;
 	if(attr.empty()) {
 		throw parse_error("missing attribute name");
 	}
-	while(isspace(*beg)) ++beg;
+	while(isspace(*beg))
+		++beg;
 	if(*beg != '=') {
 		if(allow_empty) {
 			// The caller expects beg to point to the last character of the attribute upon return.
 			// But in this path, we're now pointing to the character AFTER that.
 			--beg;
 			return {attr, value};
-		} else throw parse_error("attribute missing value in old-style tag");
+		} else
+			throw parse_error("attribute missing value in old-style tag");
 	}
 	++beg;
-	while(isspace(*beg)) ++beg;
+	while(isspace(*beg))
+		++beg;
 	if(*beg == '\'' || *beg == '"') {
 		config res = parse_text_until(beg, end, *beg++);
 		if(res.has_child("character_entity")) {
@@ -284,7 +290,8 @@ static std::pair<std::string, std::string> parse_attribute(std::string::const_it
 		// The caller expects beg to point to the last character of the attribute upon return.
 		// But in this path, we're now pointing to the character AFTER that.
 		--beg;
-		if(found_slash) --beg;
+		if(found_slash)
+			--beg;
 	}
 	return {attr, value};
 }
@@ -308,21 +315,26 @@ static void check_closing_tag(std::string::const_iterator& beg, std::string::con
 }
 
 static std::pair<std::string, config> parse_tag(std::string::const_iterator& beg, std::string::const_iterator end);
-static config parse_tag_contents(std::string::const_iterator& beg, std::string::const_iterator end, std::string_view match, bool check_for_attributes)
+static config parse_tag_contents(std::string::const_iterator& beg,
+	std::string::const_iterator end,
+	std::string_view match,
+	bool check_for_attributes)
 {
 	assert(*beg == '>');
 	++beg;
 	// This also parses the matching closing tag!
 	config res;
 	for(; check_for_attributes && beg != end && *beg != '<'; ++beg) {
-		if(isspace(*beg)) continue;
+		if(isspace(*beg))
+			continue;
 		auto save_beg = beg;
 		try {
 			auto [key, val] = parse_attribute(beg, end, false);
 			res[key] = val;
 		} catch(parse_error&) {
 			beg = save_beg;
-			while(beg != end && isspace(*beg)) ++beg;
+			while(beg != end && isspace(*beg))
+				++beg;
 			break;
 		}
 	}
@@ -375,7 +387,8 @@ static std::pair<std::string, config> parse_tag(std::string::const_iterator& beg
 	bool auto_closed = false;
 	config elem;
 	for(; beg != end && *beg != '>'; ++beg) {
-		if(isspace(*beg)) continue;
+		if(isspace(*beg))
+			continue;
 		if(*beg == '/' && (beg + 1) != end && *(beg + 1) == '>') {
 			auto_closed = true;
 		} else if(isalnum(*beg) || *beg == '_') {
@@ -400,7 +413,7 @@ static std::pair<std::string, config> parse_tag(std::string::const_iterator& beg
 	return {tag_name, elem};
 }
 
-config parse_text(const std::string &text)
+config parse_text(const std::string& text)
 {
 	config res;
 	auto beg = text.begin(), end = text.end();
@@ -416,4 +429,4 @@ config parse_text(const std::string &text)
 	return res;
 }
 
-}
+} // namespace markup

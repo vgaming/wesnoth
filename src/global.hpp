@@ -76,5 +76,5 @@
 #ifdef __cpp_aggregate_paren_init
 #define AGGREGATE_EMPLACE(...) emplace_back(__VA_ARGS__)
 #else
-#define AGGREGATE_EMPLACE(...) push_back({ __VA_ARGS__ })
+#define AGGREGATE_EMPLACE(...) push_back({__VA_ARGS__})
 #endif

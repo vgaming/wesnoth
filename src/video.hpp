@@ -68,7 +68,6 @@ void deinit();
  */
 void update_buffers(bool autoupdate = true);
 
-
 /**********************************/
 /* Unit-test and headless support */
 /**********************************/
@@ -77,9 +76,8 @@ void update_buffers(bool autoupdate = true);
 bool headless();
 
 /** The game is running unit tests. There is a window and offscreen
-  * render buffer, but performing actual rendering is unnecessary. */
+ * render buffer, but performing actual rendering is unnecessary. */
 bool testing();
-
 
 /***********************/
 /* Windowing functions */
@@ -158,7 +156,6 @@ void set_window_title(const std::string& title);
 
 /** Sets the icon of the main window. */
 void set_window_icon(surface& icon);
-
 
 /**********************/
 /* Coordinate Systems */
@@ -243,7 +240,6 @@ int get_pixel_scale();
  */
 rect to_output(const rect& draw_space_rect);
 
-
 /******************/
 /* Screen capture */
 /******************/
@@ -275,7 +271,6 @@ surface read_pixels(SDL_Rect* r = nullptr);
  */
 surface read_pixels_low_res(SDL_Rect* r = nullptr);
 
-
 /****************************/
 /* Render target management */
 /****************************/
@@ -306,7 +301,6 @@ void reset_render_target();
  */
 texture get_render_target();
 
-
 /*******************/
 /* Exception types */
 /*******************/
@@ -314,8 +308,14 @@ texture get_render_target();
 /** An error specifically indicating video subsystem problems. */
 struct error : public game::error
 {
-	error() : game::error("unspecified video subsystem error") {}
-	error(const std::string& msg) : game::error(msg) {}
+	error()
+		: game::error("unspecified video subsystem error")
+	{
+	}
+	error(const std::string& msg)
+		: game::error(msg)
+	{
+	}
 };
 
 /** Type that can be thrown as an exception to quit to desktop. */
@@ -332,7 +332,6 @@ private:
 	IMPLEMENT_LUA_JAILBREAK_EXCEPTION(quit)
 };
 
-
 /***************/
 /* Diagnostics */
 /***************/
@@ -346,7 +345,6 @@ std::vector<std::pair<std::string, std::string>> renderer_report();
  * Retrieves the current game screen DPI for the @a build_info API.
  */
 std::pair<float, float> get_dpi();
-
 
 /**************************/
 /* Implementation details */

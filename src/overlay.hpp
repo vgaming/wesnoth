@@ -19,14 +19,13 @@
 
 struct overlay
 {
-
 	overlay(const std::string& img,
-			const std::string& halo_img,
-			const std::string& overlay_team_name,
-			const std::string& item_id,
-			const bool fogged,
-			float submerge,
-			float item_z_order = 0)
+		const std::string& halo_img,
+		const std::string& overlay_team_name,
+		const std::string& item_id,
+		const bool fogged,
+		float submerge,
+		float item_z_order = 0)
 		: image(img)
 		, halo(halo_img)
 		, team_name(overlay_team_name)
@@ -36,8 +35,8 @@ struct overlay
 		, visible_in_fog(fogged)
 		, submerge(submerge)
 		, z_order(item_z_order)
-	{}
-
+	{
+	}
 
 	overlay(const config& cfg)
 		: image(cfg["image"])
@@ -62,5 +61,4 @@ struct overlay
 	bool visible_in_fog;
 	float submerge;
 	float z_order;
-
 };

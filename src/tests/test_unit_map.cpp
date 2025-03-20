@@ -27,21 +27,21 @@
 
 #include <functional>
 
-
 /*
 ./test --report_level=detailed --log_level=all --run_test=interpolate_suite
 
  */
 
-BOOST_AUTO_TEST_SUITE( unit_map_suite )
+BOOST_AUTO_TEST_SUITE(unit_map_suite)
 
-BOOST_AUTO_TEST_CASE( test_1 ) {
+BOOST_AUTO_TEST_CASE(test_1)
+{
 	config game_config(test_utils::get_test_config());
 
 	config orc_config;
-	orc_config["id"]="Orcish Grunt";
-	orc_config["random_traits"]=false;
-	orc_config["animate"]=false;
+	orc_config["id"] = "Orcish Grunt";
+	orc_config["random_traits"] = false;
+	orc_config["animate"] = false;
 	unit_type orc_type(orc_config);
 
 	unit_types.build_unit_type(orc_type, unit_type::FULL);
@@ -52,25 +52,25 @@ BOOST_AUTO_TEST_CASE( test_1 ) {
 	unit_map unit_map;
 
 	typedef std::pair<unit_map::unit_iterator, bool> t_uresult;
-	t_uresult uresult1 = unit_map.add(map_location(1,1), *orc1_side0_real);
+	t_uresult uresult1 = unit_map.add(map_location(1, 1), *orc1_side0_real);
 
 	BOOST_CHECK_MESSAGE(uresult1.second == true, "Good Add");
 	BOOST_CHECK_EQUAL(unit_map.size(), 1);
 
-	unit_map::unit_iterator ui = unit_map.find(map_location(1,1));
+	unit_map::unit_iterator ui = unit_map.find(map_location(1, 1));
 	BOOST_CHECK_MESSAGE(uresult1.first == ui, "Good Add");
 	BOOST_CHECK_MESSAGE(ui->underlying_id() == orc1_side0_real->underlying_id(), "Found Orc1");
 
-	unit_map::unit_iterator ui2 = unit_map.find(map_location(1,2));
+	unit_map::unit_iterator ui2 = unit_map.find(map_location(1, 2));
 	BOOST_CHECK_MESSAGE(ui2 == unit_map.end(), "Not Found Orc1");
-	ui2 = unit_map.find(orc1_side0_real->underlying_id()+1);
+	ui2 = unit_map.find(orc1_side0_real->underlying_id() + 1);
 	BOOST_CHECK_MESSAGE(ui2 == unit_map.end(), "Not Found Orc1");
 
 	//	unit * orc1p = new unit(orc1_side0_real);
 
 	lg::set_log_domain_severity("engine", lg::severity::LG_NONE); // Don't log anything
 	lg::set_log_domain_severity("unit", lg::err());
-	uresult1 = unit_map.add(map_location(1,1), *orc1_side0_real);
+	uresult1 = unit_map.add(map_location(1, 1), *orc1_side0_real);
 	lg::set_log_domain_severity("unit", lg::warn());
 	lg::set_log_domain_severity("engine", lg::info());
 	BOOST_CHECK_EQUAL(unit_map.size(), 1);
@@ -79,19 +79,18 @@ BOOST_AUTO_TEST_CASE( test_1 ) {
 
 	lg::set_log_domain_severity("engine", lg::severity::LG_NONE); // Don't log anything
 	// If the location is invalid, the unit never needs to be cloned, so no warning is emitted in the unit domain
-	uresult1 = unit_map.add(map_location(-1,1), *orc1_side0_real);
+	uresult1 = unit_map.add(map_location(-1, 1), *orc1_side0_real);
 	lg::set_log_domain_severity("engine", lg::info());
 	BOOST_CHECK_EQUAL(unit_map.size(), 1);
 	BOOST_CHECK_MESSAGE(uresult1.second == false, "Didn't Add at invalid location.");
 	BOOST_CHECK_MESSAGE(uresult1.first == unit_map.end(), "Didn't Add at invalid location.");
-
 
 	// PLAIN_LOG<<"ID real ="<<orc1_side0_real.underlying_id();
 	// PLAIN_LOG<<"ID fake ="<<orc2_side0_fake.underlying_id();
 
 	lg::set_log_domain_severity("engine", lg::severity::LG_NONE); // Don't log anything
 	lg::set_log_domain_severity("unit", lg::err());
-	uresult1 = unit_map.add(map_location(1,2), *orc1_side0_real);
+	uresult1 = unit_map.add(map_location(1, 2), *orc1_side0_real);
 	lg::set_log_domain_severity("unit", lg::warn());
 	lg::set_log_domain_severity("engine", lg::info());
 	BOOST_CHECK_EQUAL(unit_map.size(), 2);
@@ -104,13 +103,14 @@ BOOST_AUTO_TEST_CASE( test_1 ) {
 	lg::set_log_domain_severity("all", lg::warn());
 }
 
-BOOST_AUTO_TEST_CASE( track_real_unit_by_underlying_id ) {
+BOOST_AUTO_TEST_CASE(track_real_unit_by_underlying_id)
+{
 	config game_config(test_utils::get_test_config());
 
 	config orc_config;
-	orc_config["id"]="Orcish Grunt";
+	orc_config["id"] = "Orcish Grunt";
 	orc_config["random_traits"] = false;
-	orc_config["animate"]=false;
+	orc_config["animate"] = false;
 	unit_type orc_type(orc_config);
 
 	unit_types.build_unit_type(orc_type, unit_type::FULL);
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE( track_real_unit_by_underlying_id ) {
 	unit_ptr orc1_side0_real = unit::create(orc_type, 0, true);
 
 	std::size_t underlying_id = orc1_side0_real->underlying_id();
-	map_location hex = map_location(1,1);
+	map_location hex = map_location(1, 1);
 
 	unit_map unit_map;
 
@@ -150,13 +150,14 @@ BOOST_AUTO_TEST_CASE( track_real_unit_by_underlying_id ) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE( track_fake_unit_by_underlying_id ) {
+BOOST_AUTO_TEST_CASE(track_fake_unit_by_underlying_id)
+{
 	config game_config(test_utils::get_test_config());
 
 	config orc_config;
-	orc_config["id"]="Orcish Grunt";
+	orc_config["id"] = "Orcish Grunt";
 	orc_config["random_traits"] = false;
-	orc_config["animate"]=false;
+	orc_config["animate"] = false;
 	unit_type orc_type(orc_config);
 
 	unit_types.build_unit_type(orc_type, unit_type::FULL);
@@ -164,7 +165,7 @@ BOOST_AUTO_TEST_CASE( track_fake_unit_by_underlying_id ) {
 	unit_ptr orc1_side0_fake = unit::create(orc_type, 0, false);
 
 	std::size_t underlying_id = orc1_side0_fake->underlying_id();
-	map_location hex = map_location(1,1);
+	map_location hex = map_location(1, 1);
 
 	unit_map unit_map;
 
@@ -196,20 +197,21 @@ BOOST_AUTO_TEST_CASE( track_fake_unit_by_underlying_id ) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE( track_real_unit_by_iterator ) {
+BOOST_AUTO_TEST_CASE(track_real_unit_by_iterator)
+{
 	config game_config(test_utils::get_test_config());
 
 	config orc_config;
-	orc_config["id"]="Orcish Grunt";
+	orc_config["id"] = "Orcish Grunt";
 	orc_config["random_traits"] = false;
-	orc_config["animate"]=false;
+	orc_config["animate"] = false;
 	unit_type orc_type(orc_config);
 
 	unit_types.build_unit_type(orc_type, unit_type::FULL);
 
 	unit_ptr orc1_side0_real = unit::create(orc_type, 0, true);
 
-	map_location hex = map_location(1,1);
+	map_location hex = map_location(1, 1);
 
 	unit_map unit_map;
 
@@ -233,20 +235,21 @@ BOOST_AUTO_TEST_CASE( track_real_unit_by_iterator ) {
 	BOOST_CHECK(unit_iterator == unit_iterator2);
 }
 
-BOOST_AUTO_TEST_CASE( track_fake_unit_by_iterator ) {
+BOOST_AUTO_TEST_CASE(track_fake_unit_by_iterator)
+{
 	config game_config(test_utils::get_test_config());
 
 	config orc_config;
-	orc_config["id"]="Orcish Grunt";
+	orc_config["id"] = "Orcish Grunt";
 	orc_config["random_traits"] = false;
-	orc_config["animate"]=false;
+	orc_config["animate"] = false;
 	unit_type orc_type(orc_config);
 
 	unit_types.build_unit_type(orc_type, unit_type::FULL);
 
 	unit_ptr orc1_side0_fake = unit::create(orc_type, 0, false);
 
-	map_location hex = map_location(1,1);
+	map_location hex = map_location(1, 1);
 
 	unit_map unit_map;
 

@@ -27,8 +27,10 @@
 #include "desktop/dbus_features.hpp"
 #endif
 
-namespace desktop {
-namespace battery_info {
+namespace desktop
+{
+namespace battery_info
+{
 
 bool does_device_have_battery()
 {

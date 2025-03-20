@@ -19,7 +19,6 @@
 
 #include "gui/core/register_widget.hpp"
 
-
 namespace gui2
 {
 
@@ -122,7 +121,9 @@ namespace implementation
 {
 
 builder_spacer::builder_spacer(const config& cfg)
-	: builder_styled_widget(cfg), width_(cfg["width"]), height_(cfg["height"])
+	: builder_styled_widget(cfg)
+	, width_(cfg["width"])
+	, height_(cfg["height"])
 {
 }
 
@@ -130,8 +131,7 @@ std::unique_ptr<widget> builder_spacer::build() const
 {
 	auto widget = std::make_unique<spacer>(*this, width_, height_);
 
-	DBG_GUI_G << "Window builder: placed spacer '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed spacer '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

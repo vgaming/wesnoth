@@ -77,7 +77,7 @@ unit_map::umap_retval_pair_t unit_map::add(const map_location& l, const unit& u)
 {
 	self_check();
 
-	 // TODO: should this take a shared pointer to a unit rather than make a copy?
+	// TODO: should this take a shared pointer to a unit rather than make a copy?
 	unit_ptr p = u.clone();
 	p->set_location(l);
 
@@ -165,12 +165,9 @@ unit_map::umap_retval_pair_t unit_map::insert(const unit_ptr& p)
 			assert(opod.ref_count != 0);
 		} else {
 			unit_ptr q = uinsert.first->second.unit;
-			ERR_NG << "Trying to add " << p->name()
-				   << " - " << p->id() << " - " << p->underlying_id()
-				   << " ("  << loc << ") over " << q->name()
-				   << " - " << q->id() << " - " << q->underlying_id()
-				   << " ("  << q->get_location()
-				   << ").";
+			ERR_NG << "Trying to add " << p->name() << " - " << p->id() << " - " << p->underlying_id() << " (" << loc
+				   << ") over " << q->name() << " - " << q->id() << " - " << q->underlying_id() << " ("
+				   << q->get_location() << ").";
 
 			p->mark_clone(false);
 			ERR_NG << "The new unit was assigned underlying_id=" << p->underlying_id()

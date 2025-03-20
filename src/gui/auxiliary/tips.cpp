@@ -37,7 +37,7 @@ namespace tip_of_the_day
 std::vector<game_tip> load(const config& cfg)
 {
 	const auto range = cfg.child_range("tip");
-	return { range.begin(), range.end() };
+	return {range.begin(), range.end()};
 }
 
 std::vector<game_tip> shuffle(const std::vector<game_tip>& tips)

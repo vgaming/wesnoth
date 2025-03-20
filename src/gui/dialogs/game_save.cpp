@@ -33,9 +33,7 @@ game_save::game_save(std::string& filename, const std::string& title)
 
 REGISTER_DIALOG(game_save_message)
 
-game_save_message::game_save_message(std::string& filename,
-									   const std::string& title,
-									   const std::string& message)
+game_save_message::game_save_message(std::string& filename, const std::string& title, const std::string& message)
 	: modal_dialog(window_id())
 {
 	register_label("lblTitle", true, title);
@@ -45,10 +43,8 @@ game_save_message::game_save_message(std::string& filename,
 
 REGISTER_DIALOG(game_save_oos)
 
-game_save_oos::game_save_oos(bool& ignore_all,
-							   std::string& filename,
-							   const std::string& title,
-							   const std::string& message)
+game_save_oos::game_save_oos(
+	bool& ignore_all, std::string& filename, const std::string& title, const std::string& message)
 	: modal_dialog(window_id())
 {
 	register_label("lblTitle", true, title);
@@ -60,4 +56,4 @@ game_save_oos::game_save_oos(bool& ignore_all,
 	set_always_save_fields(true);
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

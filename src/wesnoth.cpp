@@ -22,17 +22,19 @@
 #include "events.hpp"
 #include "filesystem.hpp" // for filesystem::file_exists, filesystem::io_exception, etc
 #include "floating_label.hpp"
-#include "font/error.hpp"          // for error
-#include "font/font_config.hpp"    // for load_font_config, etc
-#include "formula/formula.hpp"     // for formula_error
-#include "game_config.hpp"         // for path, debug, debug_lua, etc
-#include "game_config_manager.hpp" // for game_config_manager, etc
+#include "font/error.hpp"           // for error
+#include "font/font_config.hpp"     // for load_font_config, etc
+#include "formula/formula.hpp"      // for formula_error
+#include "formula/string_utils.hpp" // VGETTEXT
+#include "game_config.hpp"          // for path, debug, debug_lua, etc
+#include "game_config_manager.hpp"  // for game_config_manager, etc
 #include "game_end_exceptions.hpp"
 #include "game_launcher.hpp" // for game_launcher, etc
+#include "game_version.hpp"  // for version_info
 #include "gettext.hpp"
 #include "gui/core/event/handler.hpp" // for tmanager
 #include "gui/dialogs/loading_screen.hpp"
-#include "gui/dialogs/message.hpp"      // for show_error_message
+#include "gui/dialogs/message.hpp" // for show_error_message
 #include "gui/dialogs/migrate_version_selection.hpp"
 #include "gui/dialogs/title_screen.hpp" // for title_screen, etc
 #include "gui/gui.hpp"                  // for init
@@ -41,20 +43,18 @@
 #include "scripting/application_lua_kernel.hpp"
 #include "scripting/plugins/context.hpp"
 #include "scripting/plugins/manager.hpp"
-#include "sdl/exception.hpp" // for exception
-#include "serialization/binary_or_text.hpp" // for config_writer
-#include "serialization/parser.hpp"         // for read
-#include "serialization/preprocessor.hpp"   // for preproc_define, etc
+#include "sdl/exception.hpp"                  // for exception
+#include "serialization/binary_or_text.hpp"   // for config_writer
+#include "serialization/parser.hpp"           // for read
+#include "serialization/preprocessor.hpp"     // for preproc_define, etc
 #include "serialization/schema_validator.hpp" // for strict_validation_enabled and schema_validator
-#include "sound.hpp"                   // for commit_music_changes, etc
+#include "sound.hpp"                          // for commit_music_changes, etc
 #include "utils/optimer.hpp"
-#include "formula/string_utils.hpp" // VGETTEXT
-#include <functional>
-#include "game_version.hpp"        // for version_info
 #include "video.hpp"          // for video::error and video::quit
 #include "wesconfig.h"        // for PACKAGE
 #include "widgets/button.hpp" // for button
 #include "wml_exception.hpp"  // for wml_exception
+#include <functional>
 
 #include "utils/spritesheet_generator.hpp"
 #ifdef _WIN32
@@ -69,9 +69,9 @@
 
 #include <SDL2/SDL.h> // for SDL_Init, SDL_INIT_TIMER
 
-#include <boost/program_options/errors.hpp>     // for error
-#include <boost/algorithm/string/predicate.hpp> // for checking cmdline options
 #include "utils/optional_fwd.hpp"
+#include <boost/algorithm/string/predicate.hpp> // for checking cmdline options
+#include <boost/program_options/errors.hpp>     // for error
 
 #include <cerrno>    // for ENOMEM
 #include <clocale>   // for setlocale, LC_ALL, etc
@@ -79,10 +79,10 @@
 #include <cstdlib>   // for srand, exit
 #include <ctime>     // for time, ctime, std::time_t
 #include <exception> // for exception
-#include <vector>
 #include <iostream>
+#include <vector>
 
-//#define NO_CATCH_AT_GAME_END
+// #define NO_CATCH_AT_GAME_END
 
 #ifdef _WIN32
 
@@ -303,7 +303,9 @@ static void handle_preprocess_command(const commandline_options& cmdline_opts)
 	}
 }
 
-static int handle_validate_command(const std::string& file, abstract_validator& validator, const std::vector<std::string>& defines) {
+static int handle_validate_command(
+	const std::string& file, abstract_validator& validator, const std::vector<std::string>& defines)
+{
 	preproc_map defines_map;
 	// add the WESNOTH_VERSION define
 	defines_map["WESNOTH_VERSION"] = preproc_define(game_config::wesnoth_version.str());
@@ -382,22 +384,10 @@ static int process_command_args(commandline_options& cmdline_opts)
 		|| (!cmdline_opts.no_log_to_file
 			&& !getenv("WESNOTH_NO_LOG_FILE")
 			// command line options that imply not redirecting output to a log file
-			&& !cmdline_opts.data_path
-			&& !cmdline_opts.userdata_path
-			&& !cmdline_opts.usercache_path
-			&& !cmdline_opts.report
-			&& !cmdline_opts.do_diff
-			&& !cmdline_opts.do_patch
-			&& !cmdline_opts.preprocess
-			&& !cmdline_opts.render_image
-			&& !cmdline_opts.screenshot
-			&& !cmdline_opts.nogui
-			&& !cmdline_opts.headless_unit_test
-			&& !cmdline_opts.validate_schema
-			&& !cmdline_opts.validate_wml
-			)
-		)
-	{
+			&& !cmdline_opts.data_path && !cmdline_opts.userdata_path && !cmdline_opts.usercache_path
+			&& !cmdline_opts.report && !cmdline_opts.do_diff && !cmdline_opts.do_patch && !cmdline_opts.preprocess
+			&& !cmdline_opts.render_image && !cmdline_opts.screenshot && !cmdline_opts.nogui
+			&& !cmdline_opts.headless_unit_test && !cmdline_opts.validate_schema && !cmdline_opts.validate_wml)) {
 		lg::set_log_to_file();
 	}
 #ifdef _WIN32
@@ -421,7 +411,7 @@ static int process_command_args(commandline_options& cmdline_opts)
 	}
 
 	if(!cmdline_opts.nobanner) {
-		PLAIN_LOG << "Battle for Wesnoth v" << game_config::revision  << " " << game_config::build_arch();
+		PLAIN_LOG << "Battle for Wesnoth v" << game_config::revision << " " << game_config::build_arch();
 		const std::time_t t = std::time(nullptr);
 		PLAIN_LOG << "Started on " << ctime(&t);
 	}
@@ -524,7 +514,8 @@ static int process_command_args(commandline_options& cmdline_opts)
 		}
 		config_writer out(*os, compression::format::none);
 		out.write(right.get_diff(left));
-		if(os != &std::cout) delete os;
+		if(os != &std::cout)
+			delete os;
 		return 0;
 	}
 
@@ -541,7 +532,8 @@ static int process_command_args(commandline_options& cmdline_opts)
 		}
 		config_writer out(*os, compression::format::none);
 		out.write(base);
-		if(os != &std::cout) delete os;
+		if(os != &std::cout)
+			delete os;
 		return 0;
 	}
 
@@ -666,14 +658,12 @@ static void check_fpu()
 
 		if(rounding_mode != _RC_NEAR) {
 			PLAIN_LOG << "Floating point rounding mode is currently '"
-				<< ((rounding_mode == _RC_CHOP)
-					? "chop"
-					: (rounding_mode == _RC_UP)
-						? "up"
-						: (rounding_mode == _RC_DOWN)
-							? "down"
-							: (rounding_mode == _RC_NEAR) ? "near" : "unknown")
-				<< "' setting to 'near'";
+					  << ((rounding_mode == _RC_CHOP)          ? "chop"
+								 : (rounding_mode == _RC_UP)   ? "up"
+								 : (rounding_mode == _RC_DOWN) ? "down"
+								 : (rounding_mode == _RC_NEAR) ? "near"
+															   : "unknown")
+					  << "' setting to 'near'";
 
 			if(_controlfp_s(&unused, _RC_NEAR, _MCW_RC)) {
 				PLAIN_LOG << "failed to set floating point rounding type to 'near'";
@@ -684,12 +674,11 @@ static void check_fpu()
 		uint32_t precision_mode = f_control & _MCW_PC;
 		if(precision_mode != _PC_53) {
 			PLAIN_LOG << "Floating point precision mode is currently '"
-				<< ((precision_mode == _PC_53)
-					? "double"
-					: (precision_mode == _PC_24)
-						? "single"
-						: (precision_mode == _PC_64) ? "double extended" : "unknown")
-				<< "' setting to 'double'";
+					  << ((precision_mode == _PC_53)          ? "double"
+								 : (precision_mode == _PC_24) ? "single"
+								 : (precision_mode == _PC_64) ? "double extended"
+															  : "unknown")
+					  << "' setting to 'double'";
 
 			if(_controlfp_s(&unused, _PC_53, _MCW_PC)) {
 				PLAIN_LOG << "failed to set floating point precision type to 'double'";
@@ -768,7 +757,7 @@ static int do_gameloop(commandline_options& cmdline_opts)
 	const cursor::manager cursor_manager;
 	cursor::set(cursor::WAIT);
 
-#if(defined(_X11) && !defined(__APPLE__)) || defined(_WIN32)
+#if (defined(_X11) && !defined(__APPLE__)) || defined(_WIN32)
 	SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
 #endif
 
@@ -782,7 +771,10 @@ static int do_gameloop(commandline_options& cmdline_opts)
 	if(!lg::log_dir_writable().value_or(true)) {
 		utils::string_map symbols;
 		symbols["logdir"] = filesystem::get_logs_dir();
-		std::string msg = VGETTEXT("Unable to create log files in directory $logdir. This is often caused by incorrect folder permissions, anti-virus software restricting folder access, or using OneDrive to manage your My Documents folder.", symbols);
+		std::string msg = VGETTEXT(
+			"Unable to create log files in directory $logdir. This is often caused by incorrect folder permissions, "
+			"anti-virus software restricting folder access, or using OneDrive to manage your My Documents folder.",
+			symbols);
 		gui2::show_message(_("Logging Failure"), msg, message::ok_button);
 	}
 
@@ -810,7 +802,7 @@ static int do_gameloop(commandline_options& cmdline_opts)
 			return;
 		}
 
-		if(!game_config::no_addons && !cmdline_opts.noaddons)  {
+		if(!game_config::no_addons && !cmdline_opts.noaddons) {
 			loading_screen::progress(loading_stage::refresh_addons);
 
 			refresh_addon_version_info_cache();
@@ -823,13 +815,13 @@ static int do_gameloop(commandline_options& cmdline_opts)
 
 	plugins_manager plugins_man(new application_lua_kernel);
 
-	const plugins_context::reg_vec callbacks {
+	const plugins_context::reg_vec callbacks{
 		{"play_multiplayer", std::bind(&game_launcher::play_multiplayer, game.get(), game_launcher::mp_mode::CONNECT)},
 		{"play_local", std::bind(&game_launcher::play_multiplayer, game.get(), game_launcher::mp_mode::LOCAL)},
 		{"play_campaign", std::bind(&game_launcher::play_campaign, game.get())},
 	};
 
-	const plugins_context::areg_vec accessors {
+	const plugins_context::areg_vec accessors{
 		{"command_line", std::bind(&commandline_options::to_config, &cmdline_opts)},
 	};
 

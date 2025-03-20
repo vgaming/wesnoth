@@ -81,8 +81,8 @@ struct mp_game_settings
 		bool required;
 		std::vector<addon_content> content;
 
-		explicit addon_version_info(const config &);
-		void write(config &) const;
+		explicit addon_version_info(const config&);
+		void write(config&) const;
 	};
 
 	/** the key is the addon_id */

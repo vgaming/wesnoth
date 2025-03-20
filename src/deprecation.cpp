@@ -15,9 +15,9 @@
 #include "deprecation.hpp"
 
 #include "formula/string_utils.hpp"
+#include "game_version.hpp"
 #include "log.hpp"
 #include "preferences/preferences.hpp"
-#include "game_version.hpp"
 
 // Set the default severity with the second parameter.
 // -1 means the default is to never log on this domain.
@@ -27,9 +27,9 @@
 static lg::log_domain log_deprecate("deprecation", lg::severity::LG_ERROR);
 
 std::string deprecated_message(
-		const std::string& elem_name, DEP_LEVEL level, const version_info& version, const std::string& detail)
+	const std::string& elem_name, DEP_LEVEL level, const version_info& version, const std::string& detail)
 {
-	utils::string_map msg_params {{"elem", elem_name}};
+	utils::string_map msg_params{{"elem", elem_name}};
 	lg::logger* log_ptr = nullptr;
 	std::string message;
 
@@ -61,7 +61,7 @@ std::string deprecated_message(
 		break;
 
 	default: // Not impossible, in case level was given an invalid value from a cast.
-		utils::string_map err_params {{"level", std::to_string(static_cast<int>(level))}};
+		utils::string_map err_params{{"level", std::to_string(static_cast<int>(level))}};
 
 		// Note: This message is duplicated in data/lua/core.lua
 		// Any changes should be mirrorred there.

@@ -29,14 +29,13 @@
 #include "gui/widgets/listbox.hpp"
 #include "gui/widgets/menu_button.hpp"
 #include "gui/widgets/multimenu_button.hpp"
-#include "gui/widgets/text_box.hpp"
 #include "gui/widgets/scroll_text.hpp"
+#include "gui/widgets/text_box.hpp"
 #include "gui/widgets/toggle_button.hpp"
 #include "serialization/binary_or_text.hpp"
 #include "serialization/parser.hpp"
 #include "serialization/preprocessor.hpp"
 #include "serialization/schema_validator.hpp"
-
 
 namespace gui2::dialogs
 {
@@ -77,18 +76,17 @@ editor_edit_pbl::editor_edit_pbl(const std::string& pbl, const std::string& curr
 {
 	connect_signal_mouse_left_click(
 		find_widget<toggle_button>("forum_auth"), std::bind(&editor_edit_pbl::toggle_auth, this));
-	connect_signal_mouse_left_click(find_widget<button>("translations_add"),
-		std::bind(&editor_edit_pbl::add_translation, this));
-	connect_signal_mouse_left_click(find_widget<button>("translations_delete"),
-		std::bind(&editor_edit_pbl::delete_translation, this));
 	connect_signal_mouse_left_click(
-		find_widget<button>("validate"), std::bind(&editor_edit_pbl::validate, this));
+		find_widget<button>("translations_add"), std::bind(&editor_edit_pbl::add_translation, this));
+	connect_signal_mouse_left_click(
+		find_widget<button>("translations_delete"), std::bind(&editor_edit_pbl::delete_translation, this));
+	connect_signal_mouse_left_click(find_widget<button>("validate"), std::bind(&editor_edit_pbl::validate, this));
 	connect_signal_mouse_left_click(
 		find_widget<button>("select_icon"), std::bind(&editor_edit_pbl::select_icon_file, this));
 	connect_signal_notify_modified(
 		find_widget<text_box>("icon"), std::bind(&editor_edit_pbl::update_icon_preview, this));
-	connect_signal_notify_modified(find_widget<text_box>("forum_thread"),
-		std::bind(&editor_edit_pbl::update_url_preview, this));
+	connect_signal_notify_modified(
+		find_widget<text_box>("forum_thread"), std::bind(&editor_edit_pbl::update_url_preview, this));
 	label& url = find_widget<label>("forum_url");
 	url.set_link_aware(true);
 	url.set_use_markup(true);
@@ -134,7 +132,8 @@ void editor_edit_pbl::pre_show()
 
 	std::vector<std::string> existing_dependencies = utils::split(pbl["dependencies"].str(), ',');
 	for(unsigned i = 0; i < dirs_.size(); i++) {
-		if(std::find(existing_dependencies.begin(), existing_dependencies.end(), dirs_[i]) != existing_dependencies.end()) {
+		if(std::find(existing_dependencies.begin(), existing_dependencies.end(), dirs_[i])
+			!= existing_dependencies.end()) {
 			dependencies.select_option(i);
 		}
 	}
@@ -272,11 +271,13 @@ config editor_edit_pbl::create_cfg()
 	if(find_widget<toggle_button>("forum_auth").get_value_bool()) {
 		cfg["forum_auth"] = true;
 
-		if(const std::string& primary_authors = find_widget<text_box>("primary_authors").get_value(); !primary_authors.empty()) {
+		if(const std::string& primary_authors = find_widget<text_box>("primary_authors").get_value();
+			!primary_authors.empty()) {
 			cfg["primary_authors"] = primary_authors;
 		}
 
-		if(const std::string& secondary_authors = find_widget<text_box>("secondary_authors").get_value(); !secondary_authors.empty()) {
+		if(const std::string& secondary_authors = find_widget<text_box>("secondary_authors").get_value();
+			!secondary_authors.empty()) {
 			cfg["secondary_authors"] = secondary_authors;
 		}
 	} else {
@@ -398,7 +399,8 @@ void editor_edit_pbl::validate()
 void editor_edit_pbl::update_icon_preview()
 {
 	std::string icon = find_widget<text_box>("icon").get_value();
-	if(icon.find(".png") != std::string::npos || icon.find(".jpg") != std::string::npos || icon.find(".webp") != std::string::npos) {
+	if(icon.find(".png") != std::string::npos || icon.find(".jpg") != std::string::npos
+		|| icon.find(".webp") != std::string::npos) {
 		std::string path = filesystem::get_core_images_dir() + icon;
 		drawing& img = find_widget<drawing>("preview");
 

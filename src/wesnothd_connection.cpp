@@ -69,7 +69,7 @@ wesnothd_connection::wesnothd_connection(const std::string& host, const std::str
 	, host_(host)
 	, service_(service)
 	, use_tls_(true)
-	, socket_(raw_socket{ new raw_socket::element_type{io_context_} })
+	, socket_(raw_socket{new raw_socket::element_type{io_context_}})
 	, last_error_()
 	, last_error_mutex_()
 	, handshake_finished_()
@@ -90,7 +90,7 @@ wesnothd_connection::wesnothd_connection(const std::string& host, const std::str
 	auto result = resolver_.resolve(host, service, boost::asio::ip::resolver_query_base::numeric_host, ec);
 	if(!ec) { // if numeric resolve succeeds then we got raw ip address so TLS host name validation would never pass
 		use_tls_ = false;
-		boost::asio::post(io_context_, [this, ec, result](){ handle_resolve(ec, { result } ); } );
+		boost::asio::post(io_context_, [this, ec, result]() { handle_resolve(ec, {result}); });
 	} else {
 		resolver_.async_resolve(host, service,
 			std::bind(&wesnothd_connection::handle_resolve, this, std::placeholders::_1, std::placeholders::_2));
@@ -108,7 +108,8 @@ wesnothd_connection::wesnothd_connection(const std::string& host, const std::str
 				// Handshake already complete. Do nothing.
 			}
 		} catch(...) {
-			DBG_NW << "wesnothd_connection worker thread threw general exception: " << utils::get_unknown_exception_type();
+			DBG_NW << "wesnothd_connection worker thread threw general exception: "
+				   << utils::get_unknown_exception_type();
 		}
 
 		LOG_NW << "wesnothd_connection::io_service::run() returned";
@@ -124,7 +125,7 @@ wesnothd_connection::~wesnothd_connection()
 	if(auto socket = utils::get_if<tls_socket>(&socket_)) {
 		error_code ec;
 		// this sends close_notify for secure connection shutdown
-		(*socket)->async_shutdown([](const error_code&) {} );
+		(*socket)->async_shutdown([](const error_code&) {});
 		const char buffer[] = "";
 		// this write is needed to trigger immediate close instead of waiting for other side's close_notify
 		boost::asio::write(**socket, boost::asio::buffer(buffer, 0), ec);
@@ -175,26 +176,32 @@ void wesnothd_connection::handshake()
 	static const uint32_t handshake = 0;
 	static const uint32_t tls_handshake = htonl(uint32_t(1));
 
-	boost::asio::async_write(*utils::get<raw_socket>(socket_), boost::asio::buffer(use_tls_ ? reinterpret_cast<const char*>(&tls_handshake) : reinterpret_cast<const char*>(&handshake), 4),
-		[](const error_code& ec, std::size_t) { if(ec) { throw system_error(ec); } });
-	boost::asio::async_read(*utils::get<raw_socket>(socket_), boost::asio::buffer(reinterpret_cast<std::byte*>(&handshake_response_), 4),
+	boost::asio::async_write(*utils::get<raw_socket>(socket_),
+		boost::asio::buffer(
+			use_tls_ ? reinterpret_cast<const char*>(&tls_handshake) : reinterpret_cast<const char*>(&handshake), 4),
+		[](const error_code& ec, std::size_t) {
+			if(ec) {
+				throw system_error(ec);
+			}
+		});
+	boost::asio::async_read(*utils::get<raw_socket>(socket_),
+		boost::asio::buffer(reinterpret_cast<std::byte*>(&handshake_response_), 4),
 		std::bind(&wesnothd_connection::handle_handshake, this, std::placeholders::_1));
 }
 
-template<typename Verifier> auto verbose_verify(Verifier&& verifier)
+template<typename Verifier>
+auto verbose_verify(Verifier&& verifier)
 {
 	return [verifier](bool preverified, boost::asio::ssl::verify_context& ctx) {
 		char subject_name[256];
 		X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
 		X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
 		bool verified = verifier(preverified, ctx);
-		DBG_NW << "Verifying TLS certificate: " << subject_name << ": " <<
-			(verified ? "verified" : "failed");
+		DBG_NW << "Verifying TLS certificate: " << subject_name << ": " << (verified ? "verified" : "failed");
 		BIO* bio = BIO_new(BIO_s_mem());
 		char buffer[1024];
 		X509_print(bio, cert);
-		while(BIO_read(bio, buffer, 1024) > 0)
-		{
+		while(BIO_read(bio, buffer, 1024) > 0) {
 			DBG_NW << buffer;
 		}
 		BIO_free(bio);
@@ -225,16 +232,13 @@ void wesnothd_connection::handle_handshake(const error_code& ec)
 
 		if(handshake_response_ == 0x00000000) {
 			network_asio::load_tls_root_certs(tls_context_);
-			raw_socket s { std::move(utils::get<raw_socket>(socket_)) };
-			tls_socket ts { new tls_socket::element_type{std::move(*s), tls_context_} };
+			raw_socket s{std::move(utils::get<raw_socket>(socket_))};
+			tls_socket ts{new tls_socket::element_type{std::move(*s), tls_context_}};
 			socket_ = std::move(ts);
 
-			auto& socket { *utils::get<tls_socket>(socket_) };
+			auto& socket{*utils::get<tls_socket>(socket_)};
 
-			socket.set_verify_mode(
-				boost::asio::ssl::verify_peer |
-				boost::asio::ssl::verify_fail_if_no_peer_cert
-			);
+			socket.set_verify_mode(boost::asio::ssl::verify_peer | boost::asio::ssl::verify_fail_if_no_peer_cert);
 
 #if BOOST_VERSION >= 107300
 			socket.set_verify_callback(verbose_verify(boost::asio::ssl::host_name_verification(host_)));
@@ -267,11 +271,11 @@ void wesnothd_connection::fallback_to_unencrypted()
 	assert(use_tls_ == true);
 	use_tls_ = false;
 
-	boost::asio::ip::tcp::endpoint endpoint { utils::get<raw_socket>(socket_)->remote_endpoint() };
+	boost::asio::ip::tcp::endpoint endpoint{utils::get<raw_socket>(socket_)->remote_endpoint()};
 	utils::get<raw_socket>(socket_)->close();
 
-	utils::get<raw_socket>(socket_)->async_connect(endpoint,
-		std::bind(&wesnothd_connection::handle_connect, this, std::placeholders::_1, endpoint));
+	utils::get<raw_socket>(socket_)->async_connect(
+		endpoint, std::bind(&wesnothd_connection::handle_connect, this, std::placeholders::_1, endpoint));
 }
 
 // main thread
@@ -285,11 +289,7 @@ void wesnothd_connection::wait_for_handshake()
 		auto timeout = 60s;
 
 		auto future = handshake_finished_.get_future();
-		for(auto time = 0ms;
-			future.wait_for(10ms) == std::future_status::timeout
-				&& time < timeout;
-			time += 10ms)
-		{
+		for(auto time = 0ms; future.wait_for(10ms) == std::future_status::timeout && time < timeout; time += 10ms) {
 			gui2::dialogs::loading_screen::spin();
 		}
 
@@ -329,7 +329,6 @@ void wesnothd_connection::send_data(const configr_of& request)
 	write_gz(os, request);
 
 	boost::asio::post(io_context_, [this, buf_ptr = std::move(buf_ptr)]() mutable {
-
 		DBG_NW << "In wesnothd_connection::send_data::lambda";
 		send_queue_.push(std::move(buf_ptr));
 
@@ -343,26 +342,28 @@ void wesnothd_connection::send_data(const configr_of& request)
 void wesnothd_connection::cancel()
 {
 	MPTEST_LOG;
-	utils::visit([](auto&& socket) {
-		if(socket->lowest_layer().is_open()) {
-			boost::system::error_code ec;
+	utils::visit(
+		[](auto&& socket) {
+			if(socket->lowest_layer().is_open()) {
+				boost::system::error_code ec;
 
 #ifdef _MSC_VER
 // Silence warning about boost::asio::basic_socket<Protocol>::cancel always
 // returning an error on XP, which we don't support anymore.
 #pragma warning(push)
-#pragma warning(disable:4996)
+#pragma warning(disable : 4996)
 #endif
-		socket->lowest_layer().cancel(ec);
+				socket->lowest_layer().cancel(ec);
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 
-			if(ec) {
-				WRN_NW << "Failed to cancel network operations: " << ec.message();
+				if(ec) {
+					WRN_NW << "Failed to cancel network operations: " << ec.message();
+				}
 			}
-		}
-	}, socket_);
+		},
+		socket_);
 }
 
 // main thread
@@ -479,7 +480,9 @@ void wesnothd_connection::handle_read(const boost::system::error_code& ec, std::
 	std::istream is(&read_buf_);
 	config data;
 	read_gz(data, is);
-	if(!data.empty()) { DBG_NW << "Received:\n" << data; }
+	if(!data.empty()) {
+		DBG_NW << "Received:\n" << data;
+	}
 
 	{
 		std::scoped_lock lock(recv_queue_mutex_);
@@ -501,16 +504,16 @@ void wesnothd_connection::send()
 	bytes_written_ = 0;
 	payload_size_ = htonl(buf_size);
 
-	std::deque<boost::asio::const_buffer> bufs {
-		boost::asio::buffer(reinterpret_cast<const char*>(&payload_size_), 4),
-		buf.data()
-	};
+	std::deque<boost::asio::const_buffer> bufs{
+		boost::asio::buffer(reinterpret_cast<const char*>(&payload_size_), 4), buf.data()};
 
-	utils::visit([this, &bufs](auto&& socket) {
-		boost::asio::async_write(*socket, bufs,
-			std::bind(&wesnothd_connection::is_write_complete, this, std::placeholders::_1, std::placeholders::_2),
-			std::bind(&wesnothd_connection::handle_write, this, std::placeholders::_1, std::placeholders::_2));
-	}, socket_);
+	utils::visit(
+		[this, &bufs](auto&& socket) {
+			boost::asio::async_write(*socket, bufs,
+				std::bind(&wesnothd_connection::is_write_complete, this, std::placeholders::_1, std::placeholders::_2),
+				std::bind(&wesnothd_connection::handle_write, this, std::placeholders::_1, std::placeholders::_2));
+		},
+		socket_);
 }
 
 // worker thread
@@ -518,11 +521,13 @@ void wesnothd_connection::recv()
 {
 	MPTEST_LOG;
 
-	utils::visit([this](auto&& socket) {
-		boost::asio::async_read(*socket, read_buf_,
-			std::bind(&wesnothd_connection::is_read_complete, this, std::placeholders::_1, std::placeholders::_2),
-			std::bind(&wesnothd_connection::handle_read, this, std::placeholders::_1, std::placeholders::_2));
-	}, socket_);
+	utils::visit(
+		[this](auto&& socket) {
+			boost::asio::async_read(*socket, read_buf_,
+				std::bind(&wesnothd_connection::is_read_complete, this, std::placeholders::_1, std::placeholders::_2),
+				std::bind(&wesnothd_connection::handle_read, this, std::placeholders::_1, std::placeholders::_2));
+		},
+		socket_);
 }
 
 // main thread
@@ -559,9 +564,7 @@ bool wesnothd_connection::wait_and_receive_data(config& data)
 {
 	{
 		std::unique_lock<std::mutex> lock(recv_queue_mutex_);
-		while(!recv_queue_lock_.wait_for(
-		      lock, 10ms, [this]() { return has_data_received(); }))
-		{
+		while(!recv_queue_lock_.wait_for(lock, 10ms, [this]() { return has_data_received(); })) {
 			gui2::dialogs::loading_screen::spin();
 		}
 	}
@@ -586,7 +589,9 @@ void wesnothd_connection::set_keepalive(int seconds)
 #elif defined(_WIN32)
 	// these are in milliseconds for windows
 	DWORD timeout_ms = seconds * 1000;
-	setsockopt(utils::get<raw_socket>(socket_)->native_handle(), SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&timeout_ms), sizeof(timeout_ms));
-	setsockopt(utils::get<raw_socket>(socket_)->native_handle(), SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&timeout_ms), sizeof(timeout_ms));
+	setsockopt(utils::get<raw_socket>(socket_)->native_handle(), SOL_SOCKET, SO_RCVTIMEO,
+		reinterpret_cast<const char*>(&timeout_ms), sizeof(timeout_ms));
+	setsockopt(utils::get<raw_socket>(socket_)->native_handle(), SOL_SOCKET, SO_SNDTIMEO,
+		reinterpret_cast<const char*>(&timeout_ms), sizeof(timeout_ms));
 #endif
 }

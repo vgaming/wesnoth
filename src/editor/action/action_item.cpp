@@ -23,7 +23,6 @@
 
 #include "editor/action/action_item.hpp"
 
-
 namespace editor
 {
 IMPLEMENT_ACTION(item)

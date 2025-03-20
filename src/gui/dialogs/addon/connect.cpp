@@ -18,8 +18,8 @@
 #include "gui/dialogs/addon/connect.hpp"
 
 #include "gui/widgets/button.hpp"
-#include "gui/widgets/window.hpp"
 #include "gui/widgets/text_box.hpp"
+#include "gui/widgets/window.hpp"
 #include "help/help.hpp"
 
 #include <functional>
@@ -43,22 +43,19 @@ void addon_connect::help_button_callback()
 
 void addon_connect::pre_show()
 {
-	find_widget<button>("remove_addons")
-			.set_active(allow_remove_);
+	find_widget<button>("remove_addons").set_active(allow_remove_);
 
 	connect_signal_mouse_left_click(
-			find_widget<button>("show_help"),
-			std::bind(&addon_connect::help_button_callback, this));
+		find_widget<button>("show_help"), std::bind(&addon_connect::help_button_callback, this));
 }
 
 void addon_connect::post_show()
 {
 	if(get_retval() == retval::OK) {
-		text_box& host_widget
-				= find_widget<text_box>("host_name");
+		text_box& host_widget = find_widget<text_box>("host_name");
 
 		host_widget.save_to_history();
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

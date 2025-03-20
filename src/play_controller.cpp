@@ -35,7 +35,7 @@
 #include "game_state.hpp"
 #include "gettext.hpp"
 #include "gui/dialogs/loading_screen.hpp"
-#include "gui/dialogs/message.hpp"      // for show_error_message
+#include "gui/dialogs/message.hpp" // for show_error_message
 #include "gui/dialogs/transient_message.hpp"
 #include "hotkey/command_executor.hpp"
 #include "hotkey/hotkey_handler.hpp"
@@ -87,20 +87,10 @@ static lg::log_domain log_engine_enemies("engine/enemies");
  */
 static void copy_persistent(const config& src, config& dst)
 {
-	static const std::set<std::string> attrs {
-		"description",
-		"name",
-		"disallow_recall",
-		"experience_modifier",
-		"require_scenario",
-		"loaded_resources"
-	};
+	static const std::set<std::string> attrs{
+		"description", "name", "disallow_recall", "experience_modifier", "require_scenario", "loaded_resources"};
 
-	static const std::set<std::string> tags {
-		"terrain_graphics",
-		"modify_unit_type",
-		"lua"
-	};
+	static const std::set<std::string> tags{"terrain_graphics", "modify_unit_type", "lua"};
 
 	for(const std::string& attr : attrs) {
 		dst[attr] = src[attr];
@@ -243,7 +233,7 @@ void play_controller::init(const config& level)
 		gui_.reset(new game_display(gamestate().board_, whiteboard_manager_, *gamestate().reports_, theme(), level));
 		map_start_ = map_location(level.child_or_empty("display").child_or_empty("location"));
 		if(start_faded_) {
-			gui_->set_fade({0,0,0,255});
+			gui_->set_fade({0, 0, 0, 255});
 			gui_->set_prevent_draw(true);
 		}
 
@@ -278,57 +268,65 @@ void play_controller::init(const config& level)
 		gamestate().lua_kernel_->load_game(level);
 
 		plugins_context_.reset(new plugins_context("Game"));
-		plugins_context_->set_callback("save_game", [this](const config& cfg) { save_game_auto(cfg["filename"]); }, true);
-		plugins_context_->set_callback("save_replay", [this](const config& cfg) { save_replay_auto(cfg["filename"]); }, true);
+		plugins_context_->set_callback(
+			"save_game", [this](const config& cfg) { save_game_auto(cfg["filename"]); }, true);
+		plugins_context_->set_callback(
+			"save_replay", [this](const config& cfg) { save_replay_auto(cfg["filename"]); }, true);
 		plugins_context_->set_callback("quit", [](const config&) { throw_quit_game_exception(); }, false);
 		plugins_context_->set_callback_execute(*resources::lua_kernel);
 		plugins_context_->set_accessor_string("scenario_name", [this](const config&) { return get_scenario_name(); });
 		plugins_context_->set_accessor_int("current_side", [this](const config&) { return current_side(); });
 		plugins_context_->set_accessor_int("current_turn", [this](const config&) { return turn(); });
-		plugins_context_->set_accessor_bool("can_move", [this](const config&) { return !events::commands_disabled && gamestate().gamedata_.phase() == game_data::TURN_PLAYING; });
+		plugins_context_->set_accessor_bool("can_move", [this](const config&) {
+			return !events::commands_disabled && gamestate().gamedata_.phase() == game_data::TURN_PLAYING;
+		});
 		plugins_context_->set_callback("end_turn", [this](const config&) { require_end_turn(); }, false);
-		plugins_context_->set_callback("synced_command", [this](const config& cmd) {
-			auto& pm = *plugins_manager::get();
-			if(resources::whiteboard->has_planned_unit_map())
-			{
-				ERR_NG << "plugin called synced command while whiteboard is applied, ignoring";
-				pm.notify_event("synced_command_error", config{"error", "whiteboard"});
-				return;
-			}
+		plugins_context_->set_callback(
+			"synced_command",
+			[this](const config& cmd) {
+				auto& pm = *plugins_manager::get();
+				if(resources::whiteboard->has_planned_unit_map()) {
+					ERR_NG << "plugin called synced command while whiteboard is applied, ignoring";
+					pm.notify_event("synced_command_error", config{"error", "whiteboard"});
+					return;
+				}
 
-			auto& gamedata = gamestate().gamedata_;
-			const bool is_too_early = gamedata.phase() == game_data::INITIAL || resources::gamedata->phase() == game_data::PRELOAD;
-			const bool is_during_turn = gamedata.phase() == game_data::TURN_PLAYING;
-			const bool is_unsynced = synced_context::get_synced_state() == synced_context::UNSYNCED;
-			if(is_too_early) {
-				ERR_NG << "synced command called too early, only allowed at START or later";
-				pm.notify_event("synced_command_error", config{"error", "too-early"});
-				return;
-			}
-			if(is_unsynced && !is_during_turn) {
-				ERR_NG << "synced command can only be used during a turn when a user would also be able to invoke commands";
-				pm.notify_event("synced_command_error", config{"error", "not-your-turn"});
-				return;
-			}
-			if(is_unsynced && events::commands_disabled) {
-				ERR_NG << "synced command cannot be invoked while commands are blocked";
-				pm.notify_event("synced_command_error", config{"error", "disabled"});
-				return;
-			}
-			if(is_unsynced && !resources::controller->current_team().is_local()) {
-				ERR_NG << "synced command can only be used from clients that control the currently playing side";
-				pm.notify_event("synced_command_error", config{"error", "not-your-turn"});
-				return;
-			}
-			action_spectator spectator([&pm](const std::string& message) {
-				ERR_NG << "synced command from plugin raised an error: " << message;
-				pm.notify_event("synced_command_error", config{"error", "error", "message", message});
-			});
-			for(const auto [key, child] : cmd.all_children_range()) {
-				synced_context::run_in_synced_context_if_not_already(key, child, spectator);
-				ai::manager::get_singleton().raise_gamestate_changed();
-			}
-		}, false);
+				auto& gamedata = gamestate().gamedata_;
+				const bool is_too_early
+					= gamedata.phase() == game_data::INITIAL || resources::gamedata->phase() == game_data::PRELOAD;
+				const bool is_during_turn = gamedata.phase() == game_data::TURN_PLAYING;
+				const bool is_unsynced = synced_context::get_synced_state() == synced_context::UNSYNCED;
+				if(is_too_early) {
+					ERR_NG << "synced command called too early, only allowed at START or later";
+					pm.notify_event("synced_command_error", config{"error", "too-early"});
+					return;
+				}
+				if(is_unsynced && !is_during_turn) {
+					ERR_NG << "synced command can only be used during a turn when a user would also be able to invoke "
+							  "commands";
+					pm.notify_event("synced_command_error", config{"error", "not-your-turn"});
+					return;
+				}
+				if(is_unsynced && events::commands_disabled) {
+					ERR_NG << "synced command cannot be invoked while commands are blocked";
+					pm.notify_event("synced_command_error", config{"error", "disabled"});
+					return;
+				}
+				if(is_unsynced && !resources::controller->current_team().is_local()) {
+					ERR_NG << "synced command can only be used from clients that control the currently playing side";
+					pm.notify_event("synced_command_error", config{"error", "not-your-turn"});
+					return;
+				}
+				action_spectator spectator([&pm](const std::string& message) {
+					ERR_NG << "synced command from plugin raised an error: " << message;
+					pm.notify_event("synced_command_error", config{"error", "error", "message", message});
+				});
+				for(const auto [key, child] : cmd.all_children_range()) {
+					synced_context::run_in_synced_context_if_not_already(key, child, spectator);
+					ai::manager::get_singleton().raise_gamestate_changed();
+				}
+			},
+			false);
 	});
 }
 
@@ -581,7 +579,7 @@ void play_controller::do_init_side()
 
 void play_controller::init_side_end()
 {
-	if(	did_tod_sound_this_turn_) {
+	if(did_tod_sound_this_turn_) {
 		did_tod_sound_this_turn_ = true;
 		const time_of_day& tod = gamestate().tod_manager_.get_time_of_day();
 		sound::play_sound(tod.sounds, sound::SOUND_SOURCES);
@@ -613,7 +611,6 @@ config play_controller::to_config() const
 
 void play_controller::finish_side_turn_events()
 {
-
 	{ // Block for set_scontext_synced
 		set_scontext_synced sync(1);
 		// Also clears the undo stack.
@@ -717,8 +714,7 @@ void play_controller::textbox_move_vertically(bool up)
 
 	auto prev = std::find(command_history.begin(), command_history.end(), str);
 
-	if (prev != command_history.end())
-	{
+	if(prev != command_history.end()) {
 		if(up) {
 			if(prev != command_history.begin()) {
 				menu_handler_.get_textbox().box()->set_text(*--prev);
@@ -730,7 +726,7 @@ void play_controller::textbox_move_vertically(bool up)
 				menu_handler_.get_textbox().box()->set_text("");
 			}
 		}
-	} else if (up) {
+	} else if(up) {
 		if(command_history.size() > 0) {
 			menu_handler_.get_textbox().box()->set_text(*--prev);
 		}
@@ -816,7 +812,6 @@ const team& play_controller::current_team() const
 	return gamestate().board_.get_team(current_side());
 }
 
-
 events::mouse_handler& play_controller::get_mouse_handler_base()
 {
 	return mouse_handler_;
@@ -885,8 +880,8 @@ void play_controller::process_keyup_event(const SDL_Event& event)
 				// if it's not the unit's turn, we reset its moves
 				unit_movement_resetter move_reset(*u, u->side() != current_side());
 
-				mouse_handler_.set_current_paths(pathfind::paths(
-					*u, false, true, gui_->viewing_team(), mouse_handler_.get_path_turns()));
+				mouse_handler_.set_current_paths(
+					pathfind::paths(*u, false, true, gui_->viewing_team(), mouse_handler_.get_path_turns()));
 
 				gui_->highlight_reach(mouse_handler_.current_paths());
 			} else {
@@ -973,12 +968,10 @@ bool play_controller::can_redo() const
 const std::string& play_controller::select_music(bool victory) const
 {
 	const std::vector<std::string>& music_list = victory
-		? (gamestate_->get_game_data()->get_victory_music().empty()
-			? game_config::default_victory_music
-			: gamestate_->get_game_data()->get_victory_music())
-		: (gamestate_->get_game_data()->get_defeat_music().empty()
-			? game_config::default_defeat_music
-			: gamestate_->get_game_data()->get_defeat_music());
+		? (gamestate_->get_game_data()->get_victory_music().empty() ? game_config::default_victory_music
+																	: gamestate_->get_game_data()->get_victory_music())
+		: (gamestate_->get_game_data()->get_defeat_music().empty() ? game_config::default_defeat_music
+																   : gamestate_->get_game_data()->get_defeat_music());
 
 	if(music_list.empty()) {
 		// Since this function returns a reference, we can't return a temporary empty string.
@@ -1002,14 +995,8 @@ void play_controller::check_victory()
 	bool continue_level, found_player, found_network_player, invalidate_all;
 	std::set<unsigned> not_defeated;
 
-	gamestate().board_.check_victory(
-		continue_level,
-		found_player,
-		found_network_player,
-		invalidate_all,
-		not_defeated,
-		gamestate().remove_from_carryover_on_defeat_
-	);
+	gamestate().board_.check_victory(continue_level, found_player, found_network_player, invalidate_all, not_defeated,
+		gamestate().remove_from_carryover_on_defeat_);
 
 	if(invalidate_all) {
 		gui_->invalidate_all();
@@ -1200,7 +1187,8 @@ void play_controller::start_game()
 /**
  * Find all [endlevel]next_scenario= attributes, and add them to @a result.
  */
-static void find_next_scenarios(const config& parent, std::set<std::string>& result) {
+static void find_next_scenarios(const config& parent, std::set<std::string>& result)
+{
 	for(const auto& endlevel : parent.child_range("endlevel")) {
 		if(endlevel.has_attribute("next_scenario")) {
 			result.insert(endlevel["next_scenario"]);
@@ -1211,7 +1199,8 @@ static void find_next_scenarios(const config& parent, std::set<std::string>& res
 	}
 };
 
-void play_controller::check_next_scenario_is_known() {
+void play_controller::check_next_scenario_is_known()
+{
 	// Which scenarios are reachable from the current one?
 	std::set<std::string> possible_next_scenarios;
 	possible_next_scenarios.insert(gamestate().gamedata_.next_scenario());
@@ -1262,10 +1251,8 @@ void play_controller::check_next_scenario_is_known() {
 		"Some of the possible next scenarios are missing, you might not be able to finish this campaign.",
 		unknown.size() + known.size() + (possible_this_is_the_last_scenario ? 1 : 0));
 	message << "\n\n";
-	message << _n(
-		"Please report the following missing scenario to the campaign’s author:\n$unknown_list|",
-		"Please report the following missing scenarios to the campaign’s author:\n$unknown_list|",
-		unknown.size());
+	message << _n("Please report the following missing scenario to the campaign’s author:\n$unknown_list|",
+		"Please report the following missing scenarios to the campaign’s author:\n$unknown_list|", unknown.size());
 	message << "\n";
 	message << _("Once this is fixed, you will need to restart this scenario.");
 

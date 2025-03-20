@@ -15,14 +15,13 @@
 
 #include "scripting/lua_race.hpp"
 
-#include "units/race.hpp"
 #include "scripting/lua_common.hpp"
 #include "scripting/push_check.hpp"
+#include "units/race.hpp"
 #include "units/types.hpp"
 
-#include <string>
 #include <cstring>
-
+#include <string>
 
 /**
  * Implementation for a lua reference to a race,
@@ -30,8 +29,8 @@
  */
 
 // Registry key
-static const char * Race = "race";
-static const char * Gen = "name generator";
+static const char* Race = "race";
+static const char* Gen = "name generator";
 
 /**
  * Gets some data on a race (__index metamethod).
@@ -53,17 +52,17 @@ static int impl_race_get(lua_State* L)
 	return_bool_attrib("ignore_global_traits", !race.uses_global_traits());
 	return_string_attrib("undead_variation", race.undead_variation());
 	return_cfgref_attrib("__cfg", race.get_cfg());
-	if (strcmp(m, "traits") == 0) {
+	if(strcmp(m, "traits") == 0) {
 		lua_newtable(L);
-		if (race.uses_global_traits()) {
-			for (const config& trait : unit_types.traits()) {
+		if(race.uses_global_traits()) {
+			for(const config& trait : unit_types.traits()) {
 				const std::string& id = trait["id"];
 				lua_pushlstring(L, id.c_str(), id.length());
 				luaW_pushconfig(L, trait);
 				lua_rawset(L, -3);
 			}
 		}
-		for (const config& trait : race.additional_traits()) {
+		for(const config& trait : race.additional_traits()) {
 			const std::string& id = trait["id"];
 			lua_pushlstring(L, id.c_str(), id.length());
 			luaW_pushconfig(L, trait);
@@ -71,13 +70,13 @@ static int impl_race_get(lua_State* L)
 		}
 		return 1;
 	}
-	if (strcmp(m, "male_name_gen") == 0) {
+	if(strcmp(m, "male_name_gen") == 0) {
 		new(L) proxy_name_generator(race.generator(unit_race::MALE));
 		luaL_getmetatable(L, Gen);
 		lua_setmetatable(L, -2);
 		return 1;
 	}
-	if (strcmp(m, "female_name_gen") == 0) {
+	if(strcmp(m, "female_name_gen") == 0) {
 		new(L) proxy_name_generator(race.generator(unit_race::FEMALE));
 		luaL_getmetatable(L, Gen);
 		lua_setmetatable(L, -2);
@@ -99,27 +98,25 @@ static int impl_race_tostring(lua_State* L)
 	return 1;
 }
 
-namespace lua_race {
+namespace lua_race
+{
 
-	std::string register_metatable(lua_State * L)
-	{
-		luaL_newmetatable(L, Race);
+std::string register_metatable(lua_State* L)
+{
+	luaL_newmetatable(L, Race);
 
-		static luaL_Reg const callbacks[] {
-			{ "__index", 	    &impl_race_get},
-			{ "__tostring",     &impl_race_tostring},
-			{ nullptr, nullptr }
-		};
-		luaL_setfuncs(L, callbacks, 0);
+	static luaL_Reg const callbacks[]{
+		{"__index", &impl_race_get}, {"__tostring", &impl_race_tostring}, {nullptr, nullptr}};
+	luaL_setfuncs(L, callbacks, 0);
 
-		lua_pushstring(L, "race");
-		lua_setfield(L, -2, "__metatable");
+	lua_pushstring(L, "race");
+	lua_setfield(L, -2, "__metatable");
 
-		return "Adding getrace metatable...\n";
-	}
+	return "Adding getrace metatable...\n";
 }
+} // namespace lua_race
 
-void luaW_pushrace(lua_State *L, const unit_race & race)
+void luaW_pushrace(lua_State* L, const unit_race& race)
 {
 	lua_createtable(L, 0, 1);
 	lua_pushstring(L, race.id().c_str());
@@ -127,13 +124,12 @@ void luaW_pushrace(lua_State *L, const unit_race & race)
 	luaL_setmetatable(L, Race);
 }
 
-void luaW_pushracetable(lua_State *L)
+void luaW_pushracetable(lua_State* L)
 {
 	const race_map& races = unit_types.races();
 	lua_createtable(L, 0, races.size());
 
-	for (const race_map::value_type &race : races)
-	{
+	for(const race_map::value_type& race : races) {
 		assert(race.first == race.second.id());
 		luaW_pushrace(L, race.second);
 		lua_setfield(L, -2, race.first.c_str());

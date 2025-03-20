@@ -15,9 +15,9 @@
 
 #include "game_version.hpp"
 
-#include "utils/math.hpp"
 #include "lexical_cast.hpp"
 #include "serialization/string_utils.hpp"
+#include "utils/math.hpp"
 #include "wesconfig.h"
 
 #ifdef LOAD_REVISION
@@ -39,7 +39,8 @@ const version_info test_version("test");
 #ifdef REVISION
 const std::string revision = VERSION " (" REVISION ")";
 #elif defined(VCS_SHORT_HASH) && defined(VCS_WC_MODIFIED)
-const std::string revision = std::string(VERSION) + " (" + VCS_SHORT_HASH + (VCS_WC_MODIFIED ? "-Modified" : "-Clean") + ")";
+const std::string revision
+	= std::string(VERSION) + " (" + VCS_SHORT_HASH + (VCS_WC_MODIFIED ? "-Modified" : "-Clean") + ")";
 #else
 const std::string revision = VERSION;
 #endif
@@ -47,7 +48,9 @@ const std::string revision = VERSION;
 } // namespace game_config
 
 version_info::version_info()
-	: nums_(3,0), special_(""), special_separator_('\0')
+	: nums_(3, 0)
+	, special_("")
+	, special_separator_('\0')
 {
 }
 
@@ -56,9 +59,14 @@ version_info::version_info(const char* str)
 {
 }
 
-version_info::version_info(unsigned int major, unsigned int minor, unsigned int revision_level,
-                           char special_separator, const std::string& special)
-	: nums_(3,0), special_(special), special_separator_(special_separator)
+version_info::version_info(unsigned int major,
+	unsigned int minor,
+	unsigned int revision_level,
+	char special_separator,
+	const std::string& special)
+	: nums_(3, 0)
+	, special_(special)
+	, special_separator_(special_separator)
 {
 	nums_[0] = major;
 	nums_[1] = minor;
@@ -66,7 +74,7 @@ version_info::version_info(unsigned int major, unsigned int minor, unsigned int 
 }
 
 version_info::version_info(const std::string& str)
-	: nums_(3,0)
+	: nums_(3, 0)
 	, special_("")
 	, special_separator_('\0')
 {
@@ -91,8 +99,7 @@ version_info::version_info(const std::string& str)
 		if(std::isalpha(right_side[0], std::locale::classic())) {
 			special_separator_ = '\0';
 			special_ = right_side;
-		}
-		else {
+		} else {
 			special_separator_ = right_side[0];
 			if(right_side.size() > 1) {
 				special_ = right_side.substr(1);
@@ -100,8 +107,7 @@ version_info::version_info(const std::string& str)
 		}
 
 		left_side = v.substr(0, breakpoint_pos);
-	}
-	else {
+	} else {
 		left_side = v;
 	}
 
@@ -109,8 +115,7 @@ version_info::version_info(const std::string& str)
 	const std::size_t s = components.size();
 	if(s == 0) {
 		return;
-	}
-	else if(s > 3) {
+	} else if(s > 3) {
 		nums_.resize(s, 0);
 	}
 
@@ -127,12 +132,12 @@ std::string version_info::str() const
 	for(std::size_t k = 0; k < s; ++k) {
 		o << nums_[k];
 
-		if(s != 1+k) {
+		if(s != 1 + k) {
 			o << '.';
 		}
 	}
 
-	if(! special_.empty()) {
+	if(!special_.empty()) {
 		if(special_separator_ != '\0') {
 			o << special_separator_;
 		}
@@ -143,61 +148,72 @@ std::string version_info::str() const
 	return o.str();
 }
 
-void version_info::set_major_version(unsigned int v) {
+void version_info::set_major_version(unsigned int v)
+{
 	nums_[0] = v;
 }
 
-void version_info::set_minor_version(unsigned int v) {
+void version_info::set_minor_version(unsigned int v)
+{
 	nums_[1] = v;
 }
 
-void version_info::set_revision_level(unsigned int v) {
+void version_info::set_revision_level(unsigned int v)
+{
 	nums_[2] = v;
 }
 
-unsigned int version_info::major_version() const {
+unsigned int version_info::major_version() const
+{
 	return nums_[0];
 }
 
-unsigned int version_info::minor_version() const {
+unsigned int version_info::minor_version() const
+{
 	return nums_[1];
 }
 
-unsigned int version_info::revision_level() const {
+unsigned int version_info::revision_level() const
+{
 	return nums_[2];
 }
 
-bool version_info::is_canonical() const {
+bool version_info::is_canonical() const
+{
 	return nums_.size() <= 3;
 }
 
-bool version_info::is_dev_version() const {
+bool version_info::is_dev_version() const
+{
 	return is_odd(minor_version());
 }
 
-namespace {
-	template<template<typename> class Fcn>
-	bool version_comparison_internal(const version_info& l, const version_info& r)
-	{
-		std::vector<unsigned int> lc = l.components();
-		std::vector<unsigned int> rc = r.components();
+namespace
+{
+template<template<typename> class Fcn>
+bool version_comparison_internal(const version_info& l, const version_info& r)
+{
+	std::vector<unsigned int> lc = l.components();
+	std::vector<unsigned int> rc = r.components();
 
-		const std::size_t lsize = lc.size();
-		const std::size_t rsize = rc.size();
-		const std::size_t csize = std::max(lsize, rsize);
+	const std::size_t lsize = lc.size();
+	const std::size_t rsize = rc.size();
+	const std::size_t csize = std::max(lsize, rsize);
 
-		// make compatible, missing items default to zero
-		if(lsize < csize) lc.resize(csize, 0);
-		if(rsize < csize) rc.resize(csize, 0);
+	// make compatible, missing items default to zero
+	if(lsize < csize)
+		lc.resize(csize, 0);
+	if(rsize < csize)
+		rc.resize(csize, 0);
 
-		using comp_list = std::vector<unsigned int>;
-		using comp_pair = std::tuple<const comp_list&, const std::string&>;
-		Fcn<comp_pair> comp;
+	using comp_list = std::vector<unsigned int>;
+	using comp_pair = std::tuple<const comp_list&, const std::string&>;
+	Fcn<comp_pair> comp;
 
-		const comp_pair& lp = std::tie(lc, l.special_version());
-		const comp_pair& rp = std::tie(rc, r.special_version());
-		return comp(lp, rp);
-	}
+	const comp_pair& lp = std::tie(lc, l.special_version());
+	const comp_pair& rp = std::tie(rc, r.special_version());
+	return comp(lp, rp);
+}
 } // end unnamed namespace
 
 bool operator==(const version_info& l, const version_info& r)
@@ -264,8 +280,7 @@ bool do_version_check(const version_info& a, VERSION_COMP_OP op, const version_i
 		return a > b;
 	case OP_GREATER_OR_EQUAL:
 		return a >= b;
-	default:
-		;
+	default:;
 	}
 
 	return false;

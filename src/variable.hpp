@@ -24,11 +24,16 @@
 
 class unit_map;
 
-class config_variable_set : public variable_set {
+class config_variable_set : public variable_set
+{
 	const config& cfg_;
+
 public:
-	config_variable_set(const config& cfg) : cfg_(cfg) {}
-	virtual config::attribute_value get_variable_const(const std::string &id) const;
+	config_variable_set(const config& cfg)
+		: cfg_(cfg)
+	{
+	}
+	virtual config::attribute_value get_variable_const(const std::string& id) const;
 	virtual variable_access_const get_variable_access_read(const std::string& varname) const;
 };
 
@@ -44,35 +49,45 @@ public:
 class vconfig
 {
 private:
-
 	vconfig();
-	vconfig(const config & cfg, const std::shared_ptr<const config> & cache);
-	vconfig(const config& cfg, const std::shared_ptr<const config> & cache, const variable_set& variables);
+	vconfig(const config& cfg, const std::shared_ptr<const config>& cache);
+	vconfig(const config& cfg, const std::shared_ptr<const config>& cache, const variable_set& variables);
+
 public:
 	/**
 	 * Constructor from a config.
 	 * Equivalent to vconfig(cfg, false).
 	 * Do not use if the vconfig will persist after @a cfg is destroyed!
 	 */
-	explicit vconfig(const config &cfg);
-	explicit vconfig(config &&cfg);
+	explicit vconfig(const config& cfg);
+	explicit vconfig(config&& cfg);
 	// Construct a vconfig referencing a non-default set of variables.
 	// Note that the vconfig does NOT take ownership of these variables,
 	// so you need to make sure that their scope encloses the vconfig's scope!
 	vconfig(const config& cfg, const variable_set& variables);
-	vconfig(const config &cfg, bool manage_memory, const variable_set* variables = nullptr);
+	vconfig(const config& cfg, bool manage_memory, const variable_set* variables = nullptr);
 	~vconfig();
 
-	static vconfig empty_vconfig(); // Valid to dereference. Contains nothing
+	static vconfig empty_vconfig();         // Valid to dereference. Contains nothing
 	static vconfig unconstructed_vconfig(); // Must not be dereferenced
 
 	/** A vconfig evaluates to true iff it can be dereferenced. */
-	explicit operator bool() const	{ return !null(); }
+	explicit operator bool() const
+	{
+		return !null();
+	}
 
-	bool null() const { assert(cfg_); return cfg_ == &default_empty_config; }
+	bool null() const
+	{
+		assert(cfg_);
+		return cfg_ == &default_empty_config;
+	}
 	/** instruct the vconfig to make a private copy of its underlying data. */
 	const vconfig& make_safe() const;
-	const config& get_config() const { return *cfg_; }
+	const config& get_config() const
+	{
+		return *cfg_;
+	}
 	config get_parsed_config() const;
 
 	typedef std::vector<vconfig> child_list;
@@ -93,11 +108,19 @@ public:
 	 * lifetime ends which causes UB. Instead use:
 	 * const std::string temp = vcfg["foo"];
 	 */
-	const config::attribute_value operator[](const std::string &key) const
-	{ return expand(key); }
+	const config::attribute_value operator[](const std::string& key) const
+	{
+		return expand(key);
+	}
 	config::attribute_value expand(const std::string&) const; /** < Synonym for operator[] */
-	bool has_attribute(const std::string& key) const { return cfg_->has_attribute(key); }
-	bool empty() const { return (null() || cfg_->empty()); }
+	bool has_attribute(const std::string& key) const
+	{
+		return cfg_->has_attribute(key);
+	}
+	bool empty() const
+	{
+		return (null() || cfg_->empty());
+	}
 
 	struct attribute_iterator
 	{
@@ -109,28 +132,54 @@ public:
 		typedef const pointer_proxy pointer;
 		typedef const config::attribute reference;
 		typedef config::const_attribute_iterator Itor;
-		explicit attribute_iterator(const Itor &i, const variable_set& vars): i_(i), variables_(&vars) {}
+		explicit attribute_iterator(const Itor& i, const variable_set& vars)
+			: i_(i)
+			, variables_(&vars)
+		{
+		}
 
-		attribute_iterator &operator++() { ++i_; return *this; }
-		attribute_iterator operator++(int) { return attribute_iterator(i_++, *variables_); }
+		attribute_iterator& operator++()
+		{
+			++i_;
+			return *this;
+		}
+		attribute_iterator operator++(int)
+		{
+			return attribute_iterator(i_++, *variables_);
+		}
 
-		attribute_iterator &operator--() { --i_; return *this; }
-		attribute_iterator operator--(int) { return attribute_iterator(i_--, *variables_); }
+		attribute_iterator& operator--()
+		{
+			--i_;
+			return *this;
+		}
+		attribute_iterator operator--(int)
+		{
+			return attribute_iterator(i_--, *variables_);
+		}
 
 		reference operator*() const;
 		pointer operator->() const;
 
-		bool operator==(const attribute_iterator &i) const { return i_ == i.i_; }
-		bool operator!=(const attribute_iterator &i) const { return i_ != i.i_; }
+		bool operator==(const attribute_iterator& i) const
+		{
+			return i_ == i.i_;
+		}
+		bool operator!=(const attribute_iterator& i) const
+		{
+			return i_ != i.i_;
+		}
 
 	private:
 		Itor i_;
 		const variable_set* variables_;
 	};
 
-	boost::iterator_range<attribute_iterator> attribute_range() {
+	boost::iterator_range<attribute_iterator> attribute_range()
+	{
 		config::const_attr_itors range = cfg_->attribute_range();
-		return boost::make_iterator_range(attribute_iterator(range.begin(), *variables_), attribute_iterator(range.end(), *variables_));
+		return boost::make_iterator_range(
+			attribute_iterator(range.begin(), *variables_), attribute_iterator(range.end(), *variables_));
 	}
 
 	struct all_children_iterator
@@ -143,24 +192,29 @@ public:
 		typedef const pointer_proxy pointer;
 		typedef const value_type reference;
 		typedef config::const_all_children_iterator Itor;
-		explicit all_children_iterator(const Itor &i, const variable_set& vars);
-		all_children_iterator(const Itor &i, const variable_set& vars, const std::shared_ptr<const config> & cache);
+		explicit all_children_iterator(const Itor& i, const variable_set& vars);
+		all_children_iterator(const Itor& i, const variable_set& vars, const std::shared_ptr<const config>& cache);
 
 		all_children_iterator& operator++();
-		all_children_iterator  operator++(int);
+		all_children_iterator operator++(int);
 		all_children_iterator& operator--();
-		all_children_iterator  operator--(int);
+		all_children_iterator operator--(int);
 
 		reference operator*() const;
 		pointer operator->() const;
 
 		std::string get_key() const;
 		vconfig get_child() const;
-		void disable_insertion() { inner_index_ = -1; }
+		void disable_insertion()
+		{
+			inner_index_ = -1;
+		}
 
-		bool operator==(const all_children_iterator &i) const;
-		bool operator!=(const all_children_iterator &i) const
-		{ return !operator==(i); }
+		bool operator==(const all_children_iterator& i) const;
+		bool operator!=(const all_children_iterator& i) const
+		{
+			return !operator==(i);
+		}
 
 	private:
 		Itor i_;
@@ -180,20 +234,28 @@ public:
 		const variable_set* variables_;
 	};
 
-	struct recursion_error : public config::error {
-		recursion_error(const std::string& msg) : error(msg) {}
+	struct recursion_error : public config::error
+	{
+		recursion_error(const std::string& msg)
+			: error(msg)
+		{
+		}
 	};
 
 	/** In-order iteration over all children. */
 	all_children_iterator ordered_begin() const;
 	all_children_iterator ordered_end() const;
-	boost::iterator_range<all_children_iterator> all_ordered() const {
+	boost::iterator_range<all_children_iterator> all_ordered() const
+	{
 		return boost::make_iterator_range(ordered_begin(), ordered_end());
 	}
 
 private:
 	/** Returns true if *this has made a copy of its config. */
-	bool memory_managed() const { return static_cast<bool>(cache_); }
+	bool memory_managed() const
+	{
+		return static_cast<bool>(cache_);
+	}
 
 	/**
 	 * Keeps a copy of our config alive when we manage our own memory.
@@ -209,27 +271,45 @@ private:
 struct vconfig::attribute_iterator::pointer_proxy
 {
 	value_type p;
-	pointer_proxy(value_type p) : p(p) {}
-	value_type *operator->() const { return &p; }
+	pointer_proxy(value_type p)
+		: p(p)
+	{
+	}
+	value_type* operator->() const
+	{
+		return &p;
+	}
 };
 
 struct vconfig::all_children_iterator::pointer_proxy
 {
 	value_type p;
-	pointer_proxy(value_type p) : p(p) {}
-	value_type *operator->() const { return &p; }
+	pointer_proxy(value_type p)
+		: p(p)
+	{
+	}
+	value_type* operator->() const
+	{
+		return &p;
+	}
 };
-
 
 class scoped_wml_variable
 {
 public:
 	scoped_wml_variable(const std::string& var_name);
 	virtual ~scoped_wml_variable();
-	const std::string& name() const { return var_name_; }
+	const std::string& name() const
+	{
+		return var_name_;
+	}
 	virtual void activate() = 0;
-	config &store(const config &var_value = config());
-	bool activated() const { return activated_; }
+	config& store(const config& var_value = config());
+	bool activated() const
+	{
+		return activated_;
+	}
+
 private:
 	config previous_val_;
 	const std::string var_name_;
@@ -240,8 +320,12 @@ class scoped_weapon_info : public scoped_wml_variable
 {
 public:
 	scoped_weapon_info(const std::string& var_name, optional_const_config data)
-		: scoped_wml_variable(var_name), data_(data) {}
+		: scoped_wml_variable(var_name)
+		, data_(data)
+	{
+	}
 	void activate();
+
 private:
 	optional_const_config data_;
 };
@@ -250,8 +334,13 @@ class scoped_xy_unit : public scoped_wml_variable
 {
 public:
 	scoped_xy_unit(const std::string& var_name, map_location loc, const unit_map& umap)
-		: scoped_wml_variable(var_name), loc_(loc), umap_(umap) {}
+		: scoped_wml_variable(var_name)
+		, loc_(loc)
+		, umap_(umap)
+	{
+	}
 	void activate();
+
 private:
 	const map_location loc_;
 	const unit_map& umap_;
@@ -260,10 +349,14 @@ private:
 class scoped_recall_unit : public scoped_wml_variable
 {
 public:
-	scoped_recall_unit(const std::string& var_name, const std::string& player,
-		unsigned int recall_index) : scoped_wml_variable(var_name), player_(player),
-		recall_index_(recall_index) {}
+	scoped_recall_unit(const std::string& var_name, const std::string& player, unsigned int recall_index)
+		: scoped_wml_variable(var_name)
+		, player_(player)
+		, recall_index_(recall_index)
+	{
+	}
 	void activate();
+
 private:
 	const std::string player_;
 	unsigned int recall_index_;

@@ -19,18 +19,19 @@
  */
 
 #include "ai/composite/ai.hpp"
+#include "actions/attack.hpp"
 #include "ai/composite/aspect.hpp"
 #include "ai/composite/engine.hpp"
 #include "ai/composite/goal.hpp"
 #include "ai/composite/property_handler.hpp"
 #include "ai/composite/stage.hpp"
 #include "ai/configuration.hpp"
-#include "actions/attack.hpp"
 #include "log.hpp"
 
 #include <functional>
 
-namespace ai {
+namespace ai
+{
 
 static lg::log_domain log_ai_composite("ai/composite");
 #define DBG_AI_COMPOSITE LOG_STREAM(debug, log_ai_composite)
@@ -45,67 +46,67 @@ std::string ai_composite::describe_self() const
 	return "[composite_ai]";
 }
 
-ai_composite::ai_composite( default_ai_context &context, const config &cfg)
-	: cfg_(cfg),stages_(),recursion_counter_(context.get_recursion_count())
+ai_composite::ai_composite(default_ai_context& context, const config& cfg)
+	: cfg_(cfg)
+	, stages_()
+	, recursion_counter_(context.get_recursion_count())
 {
 	init_default_ai_context_proxy(context);
 }
 
 void ai_composite::on_create()
 {
-	LOG_AI_COMPOSITE << "side "<< get_side() << " : "<<" created AI with id=["<<
-		cfg_["id"]<<"]";
+	LOG_AI_COMPOSITE << "side " << get_side() << " : " << " created AI with id=[" << cfg_["id"] << "]";
 
 	// init the composite ai stages
-	for (const config &cfg_element : cfg_.child_range("stage")) {
+	for(const config& cfg_element : cfg_.child_range("stage")) {
 		add_stage(cfg_element);
 	}
 
 	config cfg;
 	cfg["engine"] = "fai";
 	engine_ptr e_ptr = get_engine_by_cfg(cfg);
-	if (e_ptr) {
+	if(e_ptr) {
 		e_ptr->set_ai_context(this);
 	}
 
-	std::function<void(std::vector<engine_ptr>&, const config&)> factory_engines =
-		std::bind(&ai::ai_composite::create_engine, *this, std::placeholders::_1, std::placeholders::_2);
+	std::function<void(std::vector<engine_ptr>&, const config&)> factory_engines
+		= std::bind(&ai::ai_composite::create_engine, *this, std::placeholders::_1, std::placeholders::_2);
 
-	std::function<void(std::vector<goal_ptr>&, const config&)> factory_goals =
-		std::bind(&ai::ai_composite::create_goal, *this, std::placeholders::_1, std::placeholders::_2);
+	std::function<void(std::vector<goal_ptr>&, const config&)> factory_goals
+		= std::bind(&ai::ai_composite::create_goal, *this, std::placeholders::_1, std::placeholders::_2);
 
-	std::function<void(std::vector<stage_ptr>&, const config&)> factory_stages =
-		std::bind(&ai::ai_composite::create_stage, *this, std::placeholders::_1, std::placeholders::_2);
+	std::function<void(std::vector<stage_ptr>&, const config&)> factory_stages
+		= std::bind(&ai::ai_composite::create_stage, *this, std::placeholders::_1, std::placeholders::_2);
 
-	std::function<void(std::map<std::string,aspect_ptr>&, const config&, std::string)> factory_aspects =
-		std::bind(&ai::ai_composite::replace_aspect,*this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+	std::function<void(std::map<std::string, aspect_ptr>&, const config&, std::string)> factory_aspects = std::bind(
+		&ai::ai_composite::replace_aspect, *this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-	register_vector_property(property_handlers(),"engine",get_engines(), factory_engines);
-	register_vector_property(property_handlers(),"goal",get_goals(), factory_goals);
-	register_vector_property(property_handlers(),"stage",stages_, factory_stages);
-	register_aspect_property(property_handlers(),"aspect",get_aspects(), factory_aspects);
-
+	register_vector_property(property_handlers(), "engine", get_engines(), factory_engines);
+	register_vector_property(property_handlers(), "goal", get_goals(), factory_goals);
+	register_vector_property(property_handlers(), "stage", stages_, factory_stages);
+	register_aspect_property(property_handlers(), "aspect", get_aspects(), factory_aspects);
 }
 
-void ai_composite::create_stage(std::vector<stage_ptr> &stages, const config &cfg)
+void ai_composite::create_stage(std::vector<stage_ptr>& stages, const config& cfg)
 {
-	engine::parse_stage_from_config(*this,cfg,std::back_inserter(stages));
+	engine::parse_stage_from_config(*this, cfg, std::back_inserter(stages));
 }
 
-void ai_composite::create_goal(std::vector<goal_ptr> &goals, const config &cfg)
+void ai_composite::create_goal(std::vector<goal_ptr>& goals, const config& cfg)
 {
-	engine::parse_goal_from_config(*this,cfg,std::back_inserter(goals));
+	engine::parse_goal_from_config(*this, cfg, std::back_inserter(goals));
 }
 
-void ai_composite::create_engine(std::vector<engine_ptr> &engines, const config &cfg)
+void ai_composite::create_engine(std::vector<engine_ptr>& engines, const config& cfg)
 {
-	engine::parse_engine_from_config(*this,cfg,std::back_inserter(engines));
+	engine::parse_engine_from_config(*this, cfg, std::back_inserter(engines));
 }
 
-void ai_composite::replace_aspect(std::map<std::string,aspect_ptr> &aspects, const config &cfg, const std::string& id)
+void ai_composite::replace_aspect(std::map<std::string, aspect_ptr>& aspects, const config& cfg, const std::string& id)
 {
 	std::vector<aspect_ptr> temp_aspects;
-	engine::parse_aspect_from_config(*this,cfg,id,std::back_inserter(temp_aspects));
+	engine::parse_aspect_from_config(*this, cfg, id, std::back_inserter(temp_aspects));
 	aspects[id] = temp_aspects.back();
 }
 
@@ -113,32 +114,33 @@ ai_composite::~ai_composite()
 {
 }
 
-bool ai_composite::add_stage(const config &cfg)
+bool ai_composite::add_stage(const config& cfg)
 {
-	std::vector< stage_ptr > stages;
-	create_stage(stages,cfg);
-	int j=0;
-	for (stage_ptr b : stages) {
+	std::vector<stage_ptr> stages;
+	create_stage(stages, cfg);
+	int j = 0;
+	for(stage_ptr b : stages) {
 		stages_.push_back(b);
 		j++;
 	}
-	return (j>0);
+	return (j > 0);
 }
 
-bool ai_composite::add_goal(const config &cfg)
+bool ai_composite::add_goal(const config& cfg)
 {
-	std::vector< goal_ptr > goals;
-	create_goal(goals,cfg);
-	int j=0;
-	for (goal_ptr b : goals) {
+	std::vector<goal_ptr> goals;
+	create_goal(goals, cfg);
+	int j = 0;
+	for(goal_ptr b : goals) {
 		get_goals().push_back(b);
 		j++;
 	}
-	return (j>0);
+	return (j > 0);
 }
 
-void ai_composite::play_turn(){
-	for (stage_ptr &s : stages_) {
+void ai_composite::play_turn()
+{
+	for(stage_ptr& s : stages_) {
 		s->play_stage();
 	}
 }
@@ -147,7 +149,6 @@ std::string ai_composite::get_id() const
 {
 	return cfg_["id"];
 }
-
 
 std::string ai_composite::get_name() const
 {
@@ -164,7 +165,7 @@ std::string ai_composite::evaluate(const std::string& str)
 	config cfg;
 	cfg["engine"] = "fai";
 	engine_ptr e_ptr = get_engine_by_cfg(cfg);
-	if (!e_ptr) {
+	if(!e_ptr) {
 		// This should be unreachable, but not entirely sure...
 		return "engine not found for evaluate command";
 	}
@@ -199,9 +200,9 @@ config ai_composite::to_config() const
 {
 	config cfg;
 
-	//serialize the composite ai stages
-	for (const stage_ptr &s : stages_) {
-		cfg.add_child("stage",s->to_config());
+	// serialize the composite ai stages
+	for(const stage_ptr& s : stages_) {
+		cfg.add_child("stage", s->to_config());
 	}
 
 	return cfg;
@@ -215,4 +216,4 @@ config ai_composite::preparse_cfg(ai_context& ctx, const config& cfg)
 	return parsed_cfg;
 }
 
-} //end of namespace ai
+} // end of namespace ai

@@ -17,10 +17,12 @@
 
 class config;
 /**
-	A class to check whether the results that were calculated in the replay match the results calculated during the original game.
-	note, that you shouldn't add new checkups to existent user actions or you might break replay compatibility by bringing the [checkups] tag of older saves in unorder.
+	A class to check whether the results that were calculated in the replay match the results calculated during the
+   original game. note, that you shouldn't add new checkups to existent user actions or you might break replay
+   compatibility by bringing the [checkups] tag of older saves in unorder.
 
-	so if you really want to add new checkups, you should wrap your checkup_instance->... call in a if(resources::state_of_game->classification.version ....) or similar.
+	so if you really want to add new checkups, you should wrap your checkup_instance->... call in a
+   if(resources::state_of_game->classification.version ....) or similar.
 */
 class checkup
 {
@@ -36,9 +38,9 @@ public:
 };
 
 /**
-	This checkup compares whether the results calculated during the original game match the ones calculated during replay.
-	Whether this checkup also compares the calculated results of different clients in a a mp game depends on whether
-	there was already data sent about the current synced command.
+	This checkup compares whether the results calculated during the original game match the ones calculated during
+   replay. Whether this checkup also compares the calculated results of different clients in a a mp game depends on
+   whether there was already data sent about the current synced command.
 */
 class synced_checkup : public checkup
 {
@@ -46,9 +48,10 @@ public:
 	synced_checkup(config& buffer);
 	virtual ~synced_checkup();
 	virtual bool local_checkup(const config& expected_data, config& real_data);
+
 private:
 	config& buffer_;
-	unsigned int  pos_;
+	unsigned int pos_;
 };
 
 class ignored_checkup : public checkup
@@ -62,7 +65,8 @@ public:
 	virtual bool local_checkup(const config& expected_data, config& real_data);
 };
 /**
-	This checkup always compares the results in from different clients in a mp game but it also causes more network overhead.
+	This checkup always compares the results in from different clients in a mp game but it also causes more network
+   overhead.
 */
 class mp_debug_checkup : public checkup
 {

@@ -26,7 +26,8 @@
 
 namespace po = boost::program_options;
 
-namespace campaignd {
+namespace campaignd
+{
 
 command_line::command_line(int argc, char** argv)
 	: command_line(read_argv(argc, argv))
@@ -48,29 +49,29 @@ command_line::command_line(const std::vector<std::string>& args)
 	, help_text_()
 {
 	po::options_description opts_general{"General options"};
-	opts_general.add_options()
-		("help,h", "prints this message and exits.")
-		("version,v", "displays the server version and exits.")
-		;
+	opts_general.add_options()("help,h", "prints this message and exits.")(
+		"version,v", "displays the server version and exits.");
 
 	po::options_description opts_server{"Server configuration"};
-	opts_server.add_options()
-		("config,c", po::value<std::string>(), "specifies the path to the server configuration file. By default this is server.cfg in the server directory.")
-		("server-dir,s",  po::value<std::string>(), "specifies the path to the server directory. By default this is the process working directory.")
-		("port,p", po::value<unsigned short>(), "specifies the port number on which the server will listen for client connections.")
-		;
+	opts_server.add_options()("config,c", po::value<std::string>(),
+		"specifies the path to the server configuration file. By default this is server.cfg in the server directory.")(
+		"server-dir,s", po::value<std::string>(),
+		"specifies the path to the server directory. By default this is the process working directory.")("port,p",
+		po::value<unsigned short>(),
+		"specifies the port number on which the server will listen for client connections.");
 
 	po::options_description opts_log{"Logging options"};
-	opts_log.add_options()
-		("logdomains", "lists defined log domains and exits")
-		("log-error", po::value<std::string>(), "sets the severity level of the specified log domain(s) to 'error'. <arg> should be given as a comma-separated list of domains.")
-		("log-warning", po::value<std::string>(), "sets the severity level of the specified log domain(s) to 'warning'. This is the default for all log domains other than 'campaignd' and 'server'.")
-		("log-info", po::value<std::string>(), "sets the severity level of the specified log domain(s) to 'info'. This is the default for the 'campaignd' and 'server' log domains.")
-		("log-debug", po::value<std::string>(), "sets the severity level of the specified log domain(s) to 'debug'.")
-		("log-none", po::value<std::string>(), "disables logging for the specified log domain(s).")
-		("log-precise", "shows the timestamps in log output with more precision.")
-		("timings", "outputs timings for serviced requests to stderr.")
-		;
+	opts_log.add_options()("logdomains", "lists defined log domains and exits")("log-error", po::value<std::string>(),
+		"sets the severity level of the specified log domain(s) to 'error'. <arg> should be given as a comma-separated "
+		"list of domains.")("log-warning", po::value<std::string>(),
+		"sets the severity level of the specified log domain(s) to 'warning'. This is the default for all log domains "
+		"other than 'campaignd' and 'server'.")("log-info", po::value<std::string>(),
+		"sets the severity level of the specified log domain(s) to 'info'. This is the default for the 'campaignd' and "
+		"'server' log domains.")(
+		"log-debug", po::value<std::string>(), "sets the severity level of the specified log domain(s) to 'debug'.")(
+		"log-none", po::value<std::string>(), "disables logging for the specified log domain(s).")(
+		"log-precise", "shows the timestamps in log output with more precision.")(
+		"timings", "outputs timings for serviced requests to stderr.");
 
 	po::options_description opts;
 	opts.add(opts_general).add(opts_server).add(opts_log);
@@ -80,13 +81,9 @@ command_line::command_line(const std::vector<std::string>& args)
 	po::variables_map vm;
 	po::store(po::command_line_parser(args_).options(opts).style(style).run(), vm);
 
-	static const std::map<std::string, lg::severity> log_levels = {
-		{ "error",   lg::err().get_severity() },
-		{ "warning", lg::warn().get_severity() },
-		{ "info",    lg::info().get_severity() },
-		{ "debug",   lg::debug().get_severity() },
-		{ "none",    lg::severity::LG_NONE }
-	};
+	static const std::map<std::string, lg::severity> log_levels = {{"error", lg::err().get_severity()},
+		{"warning", lg::warn().get_severity()}, {"info", lg::info().get_severity()},
+		{"debug", lg::debug().get_severity()}, {"none", lg::severity::LG_NONE}};
 
 	if(vm.count("help")) {
 		if(!help) {

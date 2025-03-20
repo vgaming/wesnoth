@@ -17,9 +17,9 @@
 
 #include "gui/dialogs/game_cache_options.hpp"
 
-#include "desktop/clipboard.hpp"
 #include "config_cache.hpp"
 #include "cursor.hpp"
+#include "desktop/clipboard.hpp"
 #include "desktop/open.hpp"
 #include "filesystem.hpp"
 #include "gui/dialogs/message.hpp"
@@ -59,22 +59,14 @@ void game_cache_options::pre_show()
 	path_box.set_active(false);
 
 	button& copy = find_widget<button>("copy");
-	connect_signal_mouse_left_click(copy,
-									std::bind(&game_cache_options::copy_to_clipboard_callback,
-												this));
+	connect_signal_mouse_left_click(copy, std::bind(&game_cache_options::copy_to_clipboard_callback, this));
 
 	button& browse = find_widget<button>("browse");
-	connect_signal_mouse_left_click(browse,
-									std::bind(&game_cache_options::browse_cache_callback,
-												this));
+	connect_signal_mouse_left_click(browse, std::bind(&game_cache_options::browse_cache_callback, this));
 
-	connect_signal_mouse_left_click(*clean_button_,
-									std::bind(&game_cache_options::clean_cache_callback,
-												this));
+	connect_signal_mouse_left_click(*clean_button_, std::bind(&game_cache_options::clean_cache_callback, this));
 
-	connect_signal_mouse_left_click(*purge_button_,
-									std::bind(&game_cache_options::purge_cache_callback,
-												this));
+	connect_signal_mouse_left_click(*purge_button_, std::bind(&game_cache_options::purge_cache_callback, this));
 }
 
 void game_cache_options::post_show()
@@ -116,9 +108,7 @@ void game_cache_options::browse_cache_callback()
 void game_cache_options::clean_cache_callback()
 {
 	if(clean_cache()) {
-		show_message(
-					 _("Cache Cleaned"),
-					 _("The game data cache has been cleaned."));
+		show_message(_("Cache Cleaned"), _("The game data cache has been cleaned."));
 	} else {
 		show_error_message(_("The game data cache could not be completely cleaned."));
 	}
@@ -135,9 +125,7 @@ bool game_cache_options::clean_cache()
 void game_cache_options::purge_cache_callback()
 {
 	if(purge_cache()) {
-		show_message(
-					 _("Cache Purged"),
-					 _("The game data cache has been purged."));
+		show_message(_("Cache Purged"), _("The game data cache has been purged."));
 	} else {
 		show_error_message(_("The game data cache could not be purged."));
 	}
@@ -151,4 +139,4 @@ bool game_cache_options::purge_cache()
 	return game_config::config_cache::instance().purge_cache();
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

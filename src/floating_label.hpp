@@ -24,7 +24,8 @@
 #include <chrono>
 #include <string>
 
-namespace font {
+namespace font
+{
 
 /**
  * structure which will hide all current floating labels, and cause floating labels
@@ -47,32 +48,63 @@ class floating_label
 public:
 	floating_label(const std::string& text);
 
-	void set_font_size(int font_size) {font_size_ = font_size;}
+	void set_font_size(int font_size)
+	{
+		font_size_ = font_size;
+	}
 
 	// set the location on the screen to display the text.
-	void set_position(double xpos, double ypos){
+	void set_position(double xpos, double ypos)
+	{
 		xpos_ = xpos;
 		ypos_ = ypos;
 	}
 	// set the amount to move the text each frame
-	void set_move(double xmove, double ymove){
+	void set_move(double xmove, double ymove)
+	{
 		xmove_ = xmove;
 		ymove_ = ymove;
 	}
 	// set the number of frames to display the text for, or -1 to display until removed
-	void set_lifetime(const std::chrono::milliseconds& lifetime, const std::chrono::milliseconds& fadeout = std::chrono::milliseconds{100});
-	void set_color(const color_t& color) {color_ = color;}
-	void set_bg_color(const color_t& bg_color) {
+	void set_lifetime(const std::chrono::milliseconds& lifetime,
+		const std::chrono::milliseconds& fadeout = std::chrono::milliseconds{100});
+	void set_color(const color_t& color)
+	{
+		color_ = color;
+	}
+	void set_bg_color(const color_t& bg_color)
+	{
 		bgcolor_ = bg_color;
 	}
-	void set_border_size(int border) {border_ = border;}
+	void set_border_size(int border)
+	{
+		border_ = border;
+	}
 	// set width for word wrapping (use -1 to disable it)
-	void set_width(int w) {width_ = w;}
-	void set_height(int h) { height_ = h; }
-	void set_clip_rect(const SDL_Rect& r) {clip_rect_ = r;}
-	void set_alignment(ALIGN align) {align_ = align;}
-	void set_scroll_mode(LABEL_SCROLL_MODE scroll) {scroll_ = scroll;}
-	void use_markup(bool b) {use_markup_ = b;}
+	void set_width(int w)
+	{
+		width_ = w;
+	}
+	void set_height(int h)
+	{
+		height_ = h;
+	}
+	void set_clip_rect(const SDL_Rect& r)
+	{
+		clip_rect_ = r;
+	}
+	void set_alignment(ALIGN align)
+	{
+		align_ = align;
+	}
+	void set_scroll_mode(LABEL_SCROLL_MODE scroll)
+	{
+		scroll_ = scroll;
+	}
+	void use_markup(bool b)
+	{
+		use_markup_ = b;
+	}
 
 	/** Mark the last drawn location as requiring redraw. */
 	void undraw();
@@ -103,15 +135,23 @@ public:
 		return lifetime_ >= std::chrono::milliseconds{0} && get_time_alive(time) > lifetime_ + fadeout_;
 	}
 
-	void show(const bool value) { visible_ = value; }
+	void show(const bool value)
+	{
+		visible_ = value;
+	}
 
-	LABEL_SCROLL_MODE scroll() const { return scroll_; }
+	LABEL_SCROLL_MODE scroll() const
+	{
+		return scroll_;
+	}
 
 	// TODO: Might be good to have more getters, right?
-	auto get_fade_time() const { return fadeout_; }
+	auto get_fade_time() const
+	{
+		return fadeout_;
+	}
 
 private:
-
 	std::chrono::milliseconds get_time_alive(const clock::time_point& current_time) const;
 	int xpos(std::size_t width) const;
 	point get_pos(const clock::time_point& time);
@@ -136,13 +176,11 @@ private:
 	bool use_markup_;
 };
 
-
 /**
  * add a label floating on the screen above everything else.
  * @returns a handle to the label which can be used with other label functions
  */
 int add_floating_label(const floating_label& flabel);
-
 
 /** moves the floating label given by 'handle' by (xmove,ymove) */
 void move_floating_label(int handle, double xmove, double ymove);

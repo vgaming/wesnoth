@@ -18,12 +18,12 @@
 #include "gui/dialogs/multiplayer/mp_connect.hpp"
 
 #include "gettext.hpp"
-#include "preferences/preferences.hpp"
 #include "gui/auxiliary/field.hpp"
 #include "gui/dialogs/edit_text.hpp"
 #include "gui/dialogs/modal_dialog.hpp"
 #include "gui/widgets/button.hpp"
 #include "gui/widgets/listbox.hpp"
+#include "preferences/preferences.hpp"
 
 #include "log.hpp"
 
@@ -32,10 +32,10 @@
 #include <boost/algorithm/string/trim.hpp>
 
 static lg::log_domain log_mpconnect{"gui/dialogs/mp_connect"};
-#define ERR_DLG   LOG_STREAM(err,   log_mpconnect)
-#define WRN_DLG   LOG_STREAM(warn,  log_mpconnect)
-#define LOG_DLG   LOG_STREAM(info,  log_mpconnect)
-#define DBG_DLG   LOG_STREAM(debug, log_mpconnect)
+#define ERR_DLG LOG_STREAM(err, log_mpconnect)
+#define WRN_DLG LOG_STREAM(warn, log_mpconnect)
+#define LOG_DLG LOG_STREAM(info, log_mpconnect)
+#define DBG_DLG LOG_STREAM(debug, log_mpconnect)
 
 namespace gui2
 {
@@ -54,7 +54,7 @@ void clear_listbox_selection(listbox& listbox)
 }
 #endif
 
-}
+} // namespace
 
 namespace dialogs
 {
@@ -63,11 +63,12 @@ REGISTER_DIALOG(mp_connect)
 
 mp_connect::mp_connect()
 	: modal_dialog(window_id())
-	, host_name_(register_text("host_name",
-							   true,
-							   []() {return prefs::get().network_host();},
-							   [](const std::string& v) {prefs::get().set_network_host(v);},
-							   true))
+	, host_name_(register_text(
+		  "host_name",
+		  true,
+		  []() { return prefs::get().network_host(); },
+		  [](const std::string& v) { prefs::get().set_network_host(v); },
+		  true))
 	, builtin_servers_(prefs::get().builtin_servers_list())
 	, user_servers_(prefs::get().user_servers_list())
 {
@@ -75,7 +76,7 @@ mp_connect::mp_connect()
 
 std::array<mp_connect::server_list*, 2> mp_connect::server_lists()
 {
-	return {{ &builtin_servers_, &user_servers_ }};
+	return {{&builtin_servers_, &user_servers_}};
 }
 
 void mp_connect::pre_show()
@@ -102,8 +103,8 @@ void mp_connect::pre_show()
 void mp_connect::insert_into_server_listbox(listbox& listbox, const server_info& srv, int pos)
 {
 	const widget_data& entry{
-		{ "name",    widget_item{{"label", srv.name}} },
-		{ "address", widget_item{{"label", srv.address}} },
+		{"name", widget_item{{"label", srv.name}}},
+		{"address", widget_item{{"label", srv.address}}},
 	};
 
 	listbox.add_row(entry, pos);
@@ -121,7 +122,7 @@ void mp_connect::select_first_match()
 	std::size_t row = 0;
 
 	for(const auto* servers : server_lists()) {
-		for(const auto& server : *servers)  {
+		for(const auto& server : *servers) {
 			if(server.address == address) {
 				server_list.select_row(row);
 				// Can't Add what's already there or Delete built-in servers
@@ -172,8 +173,7 @@ void mp_connect::on_server_add()
 	// user-defined list is empty, we insert at the start of the user-defined
 	// list instead.
 
-	const std::size_t mem_pos = selection.user_defined() && !user_servers_.empty()
-			? 1 + selection.relative_index() : 0;
+	const std::size_t mem_pos = selection.user_defined() && !user_servers_.empty() ? 1 + selection.relative_index() : 0;
 	const unsigned int ui_pos = selection.user_defined() ? 1 + selection.row() : builtin_servers_.size();
 
 	std::string name;
@@ -238,7 +238,7 @@ void mp_connect::on_server_select()
 mp_connect::selection mp_connect::current_selection()
 {
 	listbox& server_list = find_widget<listbox>("server_list");
-	return { this, server_list.get_selected_row() };
+	return {this, server_list.get_selected_row()};
 }
 
 mp_connect::server_info& mp_connect::selection::get()

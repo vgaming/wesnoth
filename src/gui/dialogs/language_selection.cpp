@@ -17,11 +17,11 @@
 
 #include "gui/dialogs/language_selection.hpp"
 
+#include "game_config.hpp"
+#include "gettext.hpp"
 #include "gui/widgets/listbox.hpp"
 #include "gui/widgets/toggle_button.hpp"
 #include "gui/widgets/window.hpp"
-#include "game_config.hpp"
-#include "gettext.hpp"
 #include "language.hpp"
 #include "preferences/preferences.hpp"
 #include "serialization/markup.hpp"
@@ -36,7 +36,7 @@ const std::string translations_wiki_url = "https://wiki.wesnoth.org/WesnothTrans
 
 const std::string translations_stats_url = "https://gettext.wesnoth.org/";
 
-}
+} // namespace
 
 REGISTER_DIALOG(language_selection)
 
@@ -88,8 +88,7 @@ void language_selection::pre_show()
 	keyboard_capture(&list);
 
 	toggle_button& show_all_toggle = find_widget<toggle_button>("show_all");
-	connect_signal_mouse_left_click(show_all_toggle, std::bind(
-			&language_selection::shown_filter_callback, this));
+	connect_signal_mouse_left_click(show_all_toggle, std::bind(&language_selection::shown_filter_callback, this));
 
 	const language_def& current_language = get_language();
 
@@ -98,7 +97,8 @@ void language_selection::pre_show()
 
 		data["language"]["label"] = lang.language;
 		data["language"]["use_markup"] = "true";
-		data["translated_total"]["label"] = markup::span_color(game_config::red_to_green(lang.percent), lang.percent, "%");
+		data["translated_total"]["label"]
+			= markup::span_color(game_config::red_to_green(lang.percent), lang.percent, "%");
 		data["translated_total"]["use_markup"] = "true";
 
 		if(game_config::debug && !lang.localename.empty()) {
@@ -120,8 +120,7 @@ void language_selection::pre_show()
 void language_selection::post_show()
 {
 	if(get_retval() == retval::OK) {
-		const int res = find_widget<listbox>("language_list")
-								.get_selected_row();
+		const int res = find_widget<listbox>("language_list").get_selected_row();
 
 		assert(res != -1);
 
@@ -130,4 +129,4 @@ void language_selection::post_show()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

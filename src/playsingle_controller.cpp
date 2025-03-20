@@ -73,14 +73,12 @@ playsingle_controller::playsingle_controller(const config& level, saved_game& st
 	// upgrade hotkey handler to the sp (whiteboard enabled) version
 	hotkey_handler_ = std::make_unique<hotkey_handler>(*this, saved_game_);
 
-
 	plugins_context_->set_accessor_string("level_result", std::bind(&playsingle_controller::describe_result, this));
 	plugins_context_->set_accessor_int("turn", std::bind(&play_controller::turn, this));
 }
 
-///Defined here to reduce file includes.
+/// Defined here to reduce file includes.
 playsingle_controller::~playsingle_controller() = default;
-
 
 std::string playsingle_controller::describe_result() const
 {
@@ -112,7 +110,6 @@ void playsingle_controller::init_gui()
 		gui_->scroll_to_tile(map_start_, game_display::WARP, false);
 		LOG_NG << "Found good stored ui location " << map_start_;
 	} else {
-
 		int scroll_team = find_viewing_side();
 		if(scroll_team == 0) {
 			scroll_team = 1;
@@ -131,9 +128,9 @@ void playsingle_controller::init_gui()
 	gui_->set_prevent_draw(false);
 	gui_->queue_repaint();
 	if(!video::headless() && !video::testing()) {
-		gui_->fade_to({0,0,0,0}, std::chrono::milliseconds{500});
+		gui_->fade_to({0, 0, 0, 0}, std::chrono::milliseconds{500});
 	} else {
-		gui_->set_fade({0,0,0,0});
+		gui_->set_fade({0, 0, 0, 0});
 	}
 
 	get_hotkey_command_executor()->set_button_state();
@@ -190,41 +187,43 @@ playsingle_controller::ses_result playsingle_controller::skip_empty_sides(int si
 	const int sides = static_cast<int>(get_teams().size());
 	const int max = side_num + sides;
 
-	for (; side_num != max; ++side_num) {
+	for(; side_num != max; ++side_num) {
 		int side_num_mod = modulo(side_num, sides, 1);
 		if(!gamestate().board_.get_team(side_num_mod).is_empty()) {
-			return { side_num_mod, side_num_mod != side_num };
+			return {side_num_mod, side_num_mod != side_num};
 		}
 	}
-	return { side_num, true };
+	return {side_num, true};
 }
 
 void playsingle_controller::play_some()
 {
-	//TODO: Its still unclear to me when end_turn_requested_ should be reset, i guess the idea is
-	//      in particular that in rare cases when the player looses control at the same time
-	//      as he presses "end turn" and then regains control back, the "end turn" should be discarded?
-	//One of the main reasonsy why this is here is probably also that play_controller has no access to it.
+	// TODO: Its still unclear to me when end_turn_requested_ should be reset, i guess the idea is
+	//       in particular that in rare cases when the player looses control at the same time
+	//       as he presses "end turn" and then regains control back, the "end turn" should be discarded?
+	// One of the main reasonsy why this is here is probably also that play_controller has no access to it.
 	end_turn_requested_ = gamestate().gamedata_.end_turn_forced();
 
-	assert(is_regular_game_end() || gamestate().in_phase(game_data::TURN_STARTING_WAITING, game_data::TURN_PLAYING, game_data::TURN_ENDED, game_data::GAME_ENDED));
+	assert(is_regular_game_end()
+		|| gamestate().in_phase(
+			game_data::TURN_STARTING_WAITING, game_data::TURN_PLAYING, game_data::TURN_ENDED, game_data::GAME_ENDED));
 
-	if (!is_regular_game_end() && gamestate().in_phase(game_data::TURN_STARTING_WAITING, game_data::TURN_PLAYING)) {
+	if(!is_regular_game_end() && gamestate().in_phase(game_data::TURN_STARTING_WAITING, game_data::TURN_PLAYING)) {
 		play_side();
 		assert(is_regular_game_end() || gamestate().in_phase(game_data::TURN_ENDED));
 	}
 
-	if (!is_regular_game_end() && gamestate().in_phase(game_data::TURN_ENDED)) {
+	if(!is_regular_game_end() && gamestate().in_phase(game_data::TURN_ENDED)) {
 		finish_side_turn();
 	}
 
-	if (is_regular_game_end() && !gamestate().in_phase(game_data::GAME_ENDED)) {
+	if(is_regular_game_end() && !gamestate().in_phase(game_data::GAME_ENDED)) {
 		gamestate().gamedata_.set_phase(game_data::GAME_ENDING);
 		do_end_level();
 		gamestate().gamedata_.set_phase(game_data::GAME_ENDED);
 	}
 
-	if (gamestate().in_phase(game_data::GAME_ENDED)) {
+	if(gamestate().in_phase(game_data::GAME_ENDED)) {
 		end_turn_requested_ = !get_end_level_data().transient.linger_mode || get_teams().empty() || video::headless();
 		maybe_linger();
 	}
@@ -233,7 +232,8 @@ void playsingle_controller::play_some()
 void playsingle_controller::play_side()
 {
 	do {
-		if(std::find_if(get_teams().begin(), get_teams().end(), [](const team& t) { return !t.is_empty(); }) == get_teams().end()){
+		if(std::find_if(get_teams().begin(), get_teams().end(), [](const team& t) { return !t.is_empty(); })
+			== get_teams().end()) {
 			throw game::game_error("The scenario has no (non-empty) sides defined");
 		}
 		update_viewing_player();
@@ -244,7 +244,6 @@ void playsingle_controller::play_side()
 		}
 		// This flag can be set by derived classes (in overridden functions).
 		player_type_changed_ = false;
-
 
 		play_side_impl();
 
@@ -273,7 +272,7 @@ void playsingle_controller::finish_side_turn()
 		return;
 	}
 
-	auto [next_player_number, new_turn]  = skip_empty_sides(next_player_number_temp);
+	auto [next_player_number, new_turn] = skip_empty_sides(next_player_number_temp);
 
 	if(new_turn) {
 		finish_turn();
@@ -290,7 +289,8 @@ void playsingle_controller::finish_side_turn()
 
 	gamestate_->player_number_ = next_player_number;
 	if(current_team().is_empty()) {
-		// We don't support this case (turn end events emptying the next sides controller) since the server cannot handle it.
+		// We don't support this case (turn end events emptying the next sides controller) since the server cannot
+		// handle it.
 		throw game::game_error("Empty side after new turn events");
 	}
 
@@ -311,7 +311,7 @@ void playsingle_controller::play_scenario_main_loop()
 	LOG_NG << "starting main loop\n" << timer();
 
 	ai_testing::log_game_start();
-	while(!(gamestate().in_phase(game_data::GAME_ENDED) && end_turn_requested_ )) {
+	while(!(gamestate().in_phase(game_data::GAME_ENDED) && end_turn_requested_)) {
 		try {
 			play_some();
 		} catch(const reset_gamestate_exception& ex) {
@@ -341,7 +341,8 @@ void playsingle_controller::play_scenario_main_loop()
 			play_scenario_init(*ex.level);
 
 			if(replay_controller_ == nullptr) {
-				replay_controller_ = std::make_unique<replay_controller>(*this, false, ex.level, [this]() { on_replay_end(false); });
+				replay_controller_
+					= std::make_unique<replay_controller>(*this, false, ex.level, [this]() { on_replay_end(false); });
 			}
 
 			if(ex.start_replay) {
@@ -367,7 +368,6 @@ void playsingle_controller::do_end_level()
 		return;
 	}
 
-
 	pump().fire(is_victory ? "local_victory" : "local_defeat");
 
 	{ // Block for set_scontext_synced_base
@@ -386,11 +386,15 @@ void playsingle_controller::do_end_level()
 
 	// If we're a player, and the result is victory/defeat, then send
 	// a message to notify the server of the reason for the game ending.
-	send_to_wesnothd(config {
-		"info", config {
-			"type", "termination",
-			"condition", "game over",
-			"result", is_victory ? level_result::victory : level_result::defeat,
+	send_to_wesnothd(config{
+		"info",
+		config{
+			"type",
+			"termination",
+			"condition",
+			"game over",
+			"result",
+			is_victory ? level_result::victory : level_result::defeat,
 		},
 	});
 
@@ -435,7 +439,6 @@ level_result::type playsingle_controller::play_scenario(const config& level)
 		}
 	}
 
-
 	try {
 		play_scenario_init(level);
 		// clears level config (the intention was probably just to save some ram),
@@ -448,7 +451,8 @@ level_result::type playsingle_controller::play_scenario(const config& level)
 		if(is_networked_mp() && is_observer()) {
 			return level_result::type::observer_end;
 		}
-		return level_result::get_enum(get_end_level_data().test_result).value_or(get_end_level_data().is_victory ? level_result::type::victory : level_result::type::defeat);
+		return level_result::get_enum(get_end_level_data().test_result)
+			.value_or(get_end_level_data().is_victory ? level_result::type::victory : level_result::type::defeat);
 	} catch(const savegame::load_game_exception&) {
 		// Loading a new game is effectively a quit.
 		saved_game_.clear();
@@ -499,7 +503,6 @@ void playsingle_controller::play_side_impl()
 			require_end_turn();
 		}
 
-
 		if(!end_turn_requested_) {
 			before_human_turn();
 			play_human_turn();
@@ -519,13 +522,14 @@ void playsingle_controller::play_side_impl()
 		do_idle_notification();
 		before_human_turn();
 
-		if( gamestate().in_phase(game_data::TURN_PLAYING, game_data::TURN_STARTING_WAITING)) {
+		if(gamestate().in_phase(game_data::TURN_PLAYING, game_data::TURN_STARTING_WAITING)) {
 			play_idle_loop();
 		}
 	} else {
 		// we should have skipped over empty controllers before so this shouldn't be possible
 		ERR_NG << "Found invalid side controller " << side_controller::get_string(current_team().controller()) << " ("
-			   << side_proxy_controller::get_string(current_team().proxy_controller()) << ") for side " << current_team().side();
+			   << side_proxy_controller::get_string(current_team().proxy_controller()) << ") for side "
+			   << current_team().side();
 	}
 }
 
@@ -768,9 +772,7 @@ void playsingle_controller::sync_end_turn()
 		// TODO: we should also send this immediately.
 		resources::recorder->end_turn(gamestate_->next_player_number_);
 		gamestate().gamedata_.set_phase(game_data::TURN_ENDED);
-
 	}
-
 
 	assert(gamestate().in_phase(game_data::TURN_ENDED));
 
@@ -828,12 +830,9 @@ void playsingle_controller::reset_replay()
 
 void playsingle_controller::enable_replay(bool is_unit_test)
 {
-	replay_controller_ = std::make_unique<replay_controller>(
-		*this,
-		true,
+	replay_controller_ = std::make_unique<replay_controller>(*this, true,
 		std::make_shared<config>(saved_game_.get_replay_starting_point()),
-		std::bind(&playsingle_controller::on_replay_end, this, is_unit_test)
-	);
+		std::bind(&playsingle_controller::on_replay_end, this, is_unit_test));
 
 	if(is_unit_test) {
 		replay_controller_->play_replay();
@@ -846,7 +845,8 @@ bool playsingle_controller::should_return_to_play_side() const
 		return true;
 	} else if(gamestate().in_phase(game_data::TURN_ENDED)) {
 		return true;
-	} else if((gamestate().in_phase(game_data::TURN_STARTING_WAITING) || end_turn_requested_) && replay_controller_.get() == nullptr && current_team().is_local() && !current_team().is_idle()) {
+	} else if((gamestate().in_phase(game_data::TURN_STARTING_WAITING) || end_turn_requested_)
+		&& replay_controller_.get() == nullptr && current_team().is_local() && !current_team().is_idle()) {
 		// When we are a locally controlled side and havent done init_side yet also return to play_side
 		return true;
 	} else {

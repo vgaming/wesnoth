@@ -19,8 +19,8 @@
  */
 
 #include "serialization/schema/tag.hpp"
-#include "serialization/string_utils.hpp"
 #include "formatter.hpp"
+#include "serialization/string_utils.hpp"
 
 namespace schema_validation
 {
@@ -122,7 +122,8 @@ const wml_key* wml_tag::find_key(const std::string& name, const config& match, b
 	return find_key(name, match, ignore_super, visited);
 }
 
-const wml_key* wml_tag::find_key(const std::string& name, const config& match, bool ignore_super, std::vector<const wml_tag*>& visited) const
+const wml_key* wml_tag::find_key(
+	const std::string& name, const config& match, bool ignore_super, std::vector<const wml_tag*>& visited) const
 {
 	// Returns nullptr if a super cycle is detected.
 	if(std::find(visited.begin(), visited.end(), this) != visited.end()) {
@@ -147,12 +148,13 @@ const wml_key* wml_tag::find_key(const std::string& name, const config& match, b
 		return &(it_keys->second);
 	}
 
-	key_map::const_iterator it_fuzzy = std::find_if(keys_.begin(), keys_.end(), [&name](const key_map::value_type& key){
-		if(!key.second.is_fuzzy()) {
-			return false;
-		}
-		return utils::wildcard_string_match(name, key.second.get_name());
-	});
+	key_map::const_iterator it_fuzzy
+		= std::find_if(keys_.begin(), keys_.end(), [&name](const key_map::value_type& key) {
+			  if(!key.second.is_fuzzy()) {
+				  return false;
+			  }
+			  return utils::wildcard_string_match(name, key.second.get_name());
+		  });
 	if(it_fuzzy != keys_.end()) {
 		return &(it_fuzzy->second);
 	}
@@ -186,13 +188,18 @@ const std::string* wml_tag::find_link(const std::string& name) const
 	return nullptr;
 }
 
-const wml_tag* wml_tag::find_tag(const std::string& fullpath, const wml_tag& root, const config& match, bool ignore_super) const
+const wml_tag* wml_tag::find_tag(
+	const std::string& fullpath, const wml_tag& root, const config& match, bool ignore_super) const
 {
 	auto visited = std::vector<const wml_tag*>();
 	return find_tag(fullpath, root, match, ignore_super, visited);
 }
 
-const wml_tag* wml_tag::find_tag(const std::string& fullpath, const wml_tag& root, const config& match, bool ignore_super, std::vector<const wml_tag*>& visited) const
+const wml_tag* wml_tag::find_tag(const std::string& fullpath,
+	const wml_tag& root,
+	const config& match,
+	bool ignore_super,
+	std::vector<const wml_tag*>& visited) const
 {
 	// Returns nullptr if a super cycle is detected.
 	if(std::find(visited.begin(), visited.end(), this) != visited.end()) {
@@ -277,7 +284,7 @@ const wml_tag* wml_tag::find_tag(const std::string& fullpath, const wml_tag& roo
 	}
 
 	return nullptr;
- }
+}
 
 void wml_tag::expand_all(wml_tag& root)
 {
@@ -498,14 +505,15 @@ void wml_tag::tag_iterator::init(const wml_tag& base_tag)
 }
 
 template<>
-void wml_tag::tag_iterator::ensure_valid_or_end() {
+void wml_tag::tag_iterator::ensure_valid_or_end()
+{
 	while(current == condition_queue.front()->tags_.end()) {
 		condition_queue.pop();
 		if(condition_queue.empty()) {
 			return;
 		}
 		const wml_tag& new_base = *condition_queue.front();
-		current= new_base.tags_.begin();
+		current = new_base.tags_.begin();
 		push_new_tag_conditions(new_base);
 	}
 }
@@ -518,7 +526,8 @@ void wml_tag::key_iterator::init(const wml_tag& base_tag)
 }
 
 template<>
-void wml_tag::key_iterator::ensure_valid_or_end() {
+void wml_tag::key_iterator::ensure_valid_or_end()
+{
 	while(current == condition_queue.front()->keys_.end()) {
 		condition_queue.pop();
 		if(condition_queue.empty()) {

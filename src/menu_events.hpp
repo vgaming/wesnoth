@@ -37,7 +37,8 @@ class mouse_handler;
 
 struct fallback_ai_to_human_exception final : public lua_jailbreak_exception
 {
-	fallback_ai_to_human_exception() : lua_jailbreak_exception()
+	fallback_ai_to_human_exception()
+		: lua_jailbreak_exception()
 	{
 		this->store();
 	}
@@ -108,10 +109,10 @@ public:
 	}
 
 	void move_unit_to_loc(const unit_map::iterator& ui,
-			const map_location& target,
-			bool continue_move,
-			int side_num,
-			mouse_handler& mousehandler);
+		const map_location& target,
+		bool continue_move,
+		int side_num,
+		mouse_handler& mousehandler);
 
 	/** @return Whether or not the recruit was successful */
 	bool do_recruit(const std::string& name, int side_num, map_location& target_hex);
@@ -127,10 +128,10 @@ public:
 
 protected:
 	void add_chat_message(const std::time_t& time,
-			const std::string& speaker,
-			int side,
-			const std::string& message,
-			events::chat_handler::MESSAGE_TYPE type = events::chat_handler::MESSAGE_PRIVATE) override;
+		const std::string& speaker,
+		int side,
+		const std::string& message,
+		events::chat_handler::MESSAGE_TYPE type = events::chat_handler::MESSAGE_PRIVATE) override;
 	void send_chat_message(const std::string& message, bool allies_only = false) override;
 
 private:
@@ -150,4 +151,4 @@ private:
 	std::string last_search_;
 	map_location last_search_hit_;
 };
-}
+} // namespace events

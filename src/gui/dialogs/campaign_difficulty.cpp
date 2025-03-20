@@ -19,12 +19,12 @@
 
 #include "config.hpp"
 #include "deprecation.hpp"
-#include "serialization/markup.hpp"
 #include "game_version.hpp"
 #include "gui/widgets/listbox.hpp"
 #include "gui/widgets/window.hpp"
 #include "log.hpp"
 #include "preferences/preferences.hpp"
+#include "serialization/markup.hpp"
 
 static lg::log_domain log_wml("wml");
 #define WRN_WML LOG_STREAM(warn, log_wml)
@@ -45,7 +45,8 @@ config generate_difficulty_config(const config& source)
 	if(result.empty() && source.has_attribute("difficulties")) {
 		deprecated_message("[campaign]difficulties", DEP_LEVEL::REMOVED, {1, 15, 0}, "Use [difficulty] instead.");
 		if(source.has_attribute("difficulty_descriptions")) {
-			deprecated_message("[campaign]difficulty_descriptions", DEP_LEVEL::REMOVED, {1, 15, 0}, "Use [difficulty] instead.");
+			deprecated_message(
+				"[campaign]difficulty_descriptions", DEP_LEVEL::REMOVED, {1, 15, 0}, "Use [difficulty] instead.");
 		}
 	}
 
@@ -80,9 +81,9 @@ void campaign_difficulty::pre_show()
 		ss << d["label"];
 
 		if(!d["description"].empty()) {
-			if (d["auto_markup"].to_bool(true) == false) {
+			if(d["auto_markup"].to_bool(true) == false) {
 				ss << "\n" << d["description"].str();
-			} else if (!d["old_markup"].to_bool()) {
+			} else if(!d["old_markup"].to_bool()) {
 				ss << "\n" << markup::tag("small", markup::span_color(font::GRAY_COLOR, "(", d["description"], ")"));
 			} else {
 				ss << "\n" << markup::tag("small", markup::span_color(font::GRAY_COLOR, d["description"]));
@@ -126,4 +127,4 @@ void campaign_difficulty::post_show()
 		selected_difficulty_ = difficulties_.mandatory_child("difficulty", list.get_selected_row())["define"].str();
 	}
 }
-} // namespace dialogs
+} // namespace gui2::dialogs

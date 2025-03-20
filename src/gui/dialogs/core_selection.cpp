@@ -30,12 +30,9 @@ REGISTER_DIALOG(core_selection)
 
 void core_selection::core_selected()
 {
-	const int selected_row
-			= find_widget<listbox>("core_list")
-					  .get_selected_row();
+	const int selected_row = find_widget<listbox>("core_list").get_selected_row();
 
-	multi_page& pages
-			= find_widget<multi_page>("core_details");
+	multi_page& pages = find_widget<multi_page>("core_details");
 
 	pages.select_page(selected_row);
 }
@@ -50,11 +47,9 @@ void core_selection::pre_show()
 	keyboard_capture(&list);
 
 	/***** Setup core details. *****/
-	multi_page& pages
-			= find_widget<multi_page>("core_details");
+	multi_page& pages = find_widget<multi_page>("core_details");
 
-	for(const auto & core : cores_)
-	{
+	for(const auto& core : cores_) {
 		/*** Add list item ***/
 		widget_item list_item;
 		widget_data list_item_item;
@@ -85,8 +80,7 @@ void core_selection::pre_show()
 
 void core_selection::post_show()
 {
-	choice_ = find_widget<listbox>("core_list")
-					  .get_selected_row();
+	choice_ = find_widget<listbox>("core_list").get_selected_row();
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

@@ -15,14 +15,16 @@
 
 #include "desktop/clipboard.hpp"
 
-#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_clipboard.h>
+#include <SDL2/SDL_events.h>
 
 #define CLIPBOARD_FUNCS_DEFINED
 
-namespace desktop {
+namespace desktop
+{
 
-namespace clipboard {
+namespace clipboard
+{
 
 void copy_to_clipboard(const std::string& text)
 {

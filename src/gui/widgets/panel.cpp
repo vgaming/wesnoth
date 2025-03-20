@@ -17,12 +17,11 @@
 
 #include "gui/widgets/panel.hpp"
 
+#include "gettext.hpp"
 #include "gui/core/log.hpp"
 #include "gui/core/register_widget.hpp"
-#include "gettext.hpp"
 #include "sdl/rect.hpp"
 #include "wml_exception.hpp"
-
 
 #define LOG_SCOPE_HEADER get_control_type() + " [" + id() + "] " + __func__
 #define LOG_HEADER LOG_SCOPE_HEADER + ':'
@@ -114,8 +113,10 @@ panel_definition::resolution::resolution(const config& cfg)
 	, right_border(cfg["right_border"].to_unsigned())
 {
 	// The panel needs to know the order.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "background", missing_mandatory_wml_tag("panel_definition][resolution", "background")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "foreground", missing_mandatory_wml_tag("panel_definition][resolution", "foreground")));
+	state.emplace_back(
+		VALIDATE_WML_CHILD(cfg, "background", missing_mandatory_wml_tag("panel_definition][resolution", "background")));
+	state.emplace_back(
+		VALIDATE_WML_CHILD(cfg, "foreground", missing_mandatory_wml_tag("panel_definition][resolution", "foreground")));
 }
 
 // }---------- BUILDER -----------{
@@ -124,7 +125,8 @@ namespace implementation
 {
 
 builder_panel::builder_panel(const config& cfg)
-	: builder_styled_widget(cfg), grid(nullptr)
+	: builder_styled_widget(cfg)
+	, grid(nullptr)
 {
 	auto c = cfg.optional_child("grid");
 
@@ -137,8 +139,7 @@ std::unique_ptr<widget> builder_panel::build() const
 {
 	auto widget = std::make_unique<panel>(*this);
 
-	DBG_GUI_G << "Window builder: placed panel '" << id << "' with definition '"
-			  << definition << "'.";
+	DBG_GUI_G << "Window builder: placed panel '" << id << "' with definition '" << definition << "'.";
 
 	widget->init_grid(*grid);
 	return widget;

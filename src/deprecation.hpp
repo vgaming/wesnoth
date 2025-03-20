@@ -40,7 +40,5 @@ enum class DEP_LEVEL : uint8_t { INDEFINITE = 1, PREEMPTIVE, FOR_REMOVAL, REMOVE
  *                     and REMOVED deprecation, but I don't think we can do that without
  *                     including version_info.hpp in this header.
  */
-std::string deprecated_message(const std::string& elem_name,
-		DEP_LEVEL level,
-		const class version_info& version,
-		const std::string& detail = "");
+std::string deprecated_message(
+	const std::string& elem_name, DEP_LEVEL level, const class version_info& version, const std::string& detail = "");

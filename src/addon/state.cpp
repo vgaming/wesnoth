@@ -20,7 +20,7 @@
 #include "log.hpp"
 
 static lg::log_domain log_addons_client("addons-client");
-#define LOG_AC  LOG_STREAM(info, log_addons_client)
+#define LOG_AC LOG_STREAM(info, log_addons_client)
 
 addon_tracking_info get_addon_tracking_info(const addon_info& addon)
 {

@@ -15,10 +15,16 @@
 
 #include "server/wesnothd/player.hpp"
 
-wesnothd::player::player(const std::string& n, simple_wml::node& cfg, long id,
-                         bool registered, const std::string& version, const std::string& source, unsigned long long login_id, const std::size_t max_messages,
-                         const std::chrono::seconds& time_period,
-                         const bool moderator)
+wesnothd::player::player(const std::string& n,
+	simple_wml::node& cfg,
+	long id,
+	bool registered,
+	const std::string& version,
+	const std::string& source,
+	unsigned long long login_id,
+	const std::size_t max_messages,
+	const std::chrono::seconds& time_period,
+	const bool moderator)
 	: name_(n)
 	, version_(version)
 	, source_(source)
@@ -42,27 +48,25 @@ wesnothd::player::player(const std::string& n, simple_wml::node& cfg, long id,
 void wesnothd::player::set_status(wesnothd::player::STATUS status)
 {
 	status_ = status;
-	switch (status)
-	{
-		case wesnothd::player::LOBBY:
-			cfg_.set_attr("status", "lobby");
-			break;
-		case wesnothd::player::PLAYING:
-			cfg_.set_attr("status", "playing");
-			break;
-		case wesnothd::player::OBSERVING:
-			cfg_.set_attr("status", "observing");
-			break;
-		default:
-			cfg_.set_attr("status", "unknown");
+	switch(status) {
+	case wesnothd::player::LOBBY:
+		cfg_.set_attr("status", "lobby");
+		break;
+	case wesnothd::player::PLAYING:
+		cfg_.set_attr("status", "playing");
+		break;
+	case wesnothd::player::OBSERVING:
+		cfg_.set_attr("status", "observing");
+		break;
+	default:
+		cfg_.set_attr("status", "unknown");
 	}
 }
 
 // keep 'available' and game name ('location') for backward compatibility
-void wesnothd::player::mark_available(const int game_id,
-                                      const std::string& location)
+void wesnothd::player::mark_available(const int game_id, const std::string& location)
 {
-	if (game_id == 0) {
+	if(game_id == 0) {
 		cfg_.set_attr("available", "yes");
 		set_status(LOBBY);
 	} else {
@@ -81,17 +85,17 @@ void wesnothd::player::mark_registered(bool registered)
 bool wesnothd::player::is_message_flooding()
 {
 	const auto now = std::chrono::steady_clock::now();
-	if (flood_start_ == std::chrono::steady_clock::time_point{}) {
+	if(flood_start_ == std::chrono::steady_clock::time_point{}) {
 		flood_start_ = now;
 		return false;
 	}
 
 	++messages_since_flood_start_;
 
-	if (now - flood_start_ > TimePeriod) {
+	if(now - flood_start_ > TimePeriod) {
 		messages_since_flood_start_ = 0;
 		flood_start_ = now;
-	} else if (messages_since_flood_start_ >= MaxMessages) {
+	} else if(messages_since_flood_start_ >= MaxMessages) {
 		return true;
 	}
 	return false;

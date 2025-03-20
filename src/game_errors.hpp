@@ -19,41 +19,69 @@
 #include "exceptions.hpp"
 #include "lua_jailbreak_exception.hpp"
 
-namespace game {
+namespace game
+{
 
-struct mp_server_error : public error {
-	mp_server_error(const std::string& msg) : error("MP server error: " + msg) {}
+struct mp_server_error : public error
+{
+	mp_server_error(const std::string& msg)
+		: error("MP server error: " + msg)
+	{
+	}
 };
 
 /**
  * Error used when game loading fails.
  */
-struct load_game_failed : public error {
-	load_game_failed() {}
-	load_game_failed(const std::string& msg) : error("load_game_failed: " + msg) {}
+struct load_game_failed : public error
+{
+	load_game_failed()
+	{
+	}
+	load_game_failed(const std::string& msg)
+		: error("load_game_failed: " + msg)
+	{
+	}
 };
 
 /**
  * Error used when game saving fails.
  */
-struct save_game_failed : public error {
-	save_game_failed() {}
-	save_game_failed(const std::string& msg) : error("save_game_failed: " + msg) {}
+struct save_game_failed : public error
+{
+	save_game_failed()
+	{
+	}
+	save_game_failed(const std::string& msg)
+		: error("save_game_failed: " + msg)
+	{
+	}
 };
 
 /**
  * Error used for any general game error, e.g. data files are corrupt.
  */
-struct game_error : public error {
-	game_error(const std::string& msg) : error("game_error: " + msg) {}
+struct game_error : public error
+{
+	game_error(const std::string& msg)
+		: error("game_error: " + msg)
+	{
+	}
 };
 
 /**
  * Error used to report an error in a lua script or in the lua interpreter.
  */
-struct lua_error : public error {
-	lua_error(const std::string& msg) : error("lua_error: " + msg) {}
-	lua_error(const std::string& msg, const std::string& context) : error(context + ":\n  " + msg) {}
+struct lua_error : public error
+{
+	lua_error(const std::string& msg)
+		: error("lua_error: " + msg)
+	{
+	}
+	lua_error(const std::string& msg, const std::string& context)
+		: error(context + ":\n  " + msg)
+	{
+	}
 };
 
-}
+} // namespace game

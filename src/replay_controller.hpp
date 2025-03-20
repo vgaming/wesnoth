@@ -14,9 +14,8 @@
 
 #pragma once
 
-#include "play_controller.hpp"
 #include "mouse_handler_base.hpp" //events::command_disabler
-
+#include "play_controller.hpp"
 
 class replay_controller : public events::observer
 {
@@ -24,13 +23,27 @@ public:
 	class replay_stop_condition
 	{
 	public:
-		virtual void move_done() {}
-		virtual void new_side_turn(int , int ) {}
-		virtual bool should_stop() { return true; }
-		virtual ~replay_stop_condition(){}
+		virtual void move_done()
+		{
+		}
+		virtual void new_side_turn(int, int)
+		{
+		}
+		virtual bool should_stop()
+		{
+			return true;
+		}
+		virtual ~replay_stop_condition()
+		{
+		}
 	};
-	static void nop() {}
-	replay_controller(play_controller& controller, bool control_view, const std::shared_ptr<config>& reset_state, const std::function<void()>& on_end_replay = nop);
+	static void nop()
+	{
+	}
+	replay_controller(play_controller& controller,
+		bool control_view,
+		const std::shared_ptr<config>& reset_state,
+		const std::function<void()>& on_end_replay = nop);
 	~replay_controller();
 
 	// void reset_replay();
@@ -42,20 +55,34 @@ public:
 	void play_side_impl();
 
 	bool recorder_at_end() const;
-	bool should_stop() const { return stop_condition_->should_stop(); }
+	bool should_stop() const
+	{
+		return stop_condition_->should_stop();
+	}
 	bool can_execute_command(const hotkey::ui_command& cmd) const;
-	bool is_controlling_view() const {
+	bool is_controlling_view() const
+	{
 		return vision_.has_value();
 	}
-	bool allow_reset_replay() const { return reset_state_.get() != nullptr; }
-	const std::shared_ptr<config>& get_reset_state() const { return reset_state_; }
-	void return_to_play_side(bool r = true) { return_to_play_side_ = r; }
+	bool allow_reset_replay() const
+	{
+		return reset_state_.get() != nullptr;
+	}
+	const std::shared_ptr<config>& get_reset_state() const
+	{
+		return reset_state_;
+	}
+	void return_to_play_side(bool r = true)
+	{
+		return_to_play_side_ = r;
+	}
 	void replay_show_everything();
 	void replay_show_each();
 	void replay_show_team1();
 	void update_teams();
 	void update_viewing_player();
 	bool see_all();
+
 private:
 	void add_replay_theme();
 	void init();
@@ -77,8 +104,7 @@ private:
 	std::unique_ptr<replay_stop_condition> stop_condition_;
 	events::command_disabler disabler_;
 
-	enum REPLAY_VISION
-	{
+	enum REPLAY_VISION {
 		HUMAN_TEAM,
 		CURRENT_TEAM,
 		SHOW_ALL,

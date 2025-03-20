@@ -17,13 +17,13 @@
 
 #include "config_cache.hpp"
 #include "filesystem.hpp"
+#include "game_version.hpp"
 #include "gettext.hpp"
-#include "log.hpp"
 #include "hash.hpp"
+#include "log.hpp"
 #include "serialization/binary_or_text.hpp"
 #include "serialization/parser.hpp"
 #include "serialization/string_utils.hpp"
-#include "game_version.hpp"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -52,7 +52,7 @@ void add_builtin_defines(preproc_map& target)
 	target["WESNOTH_VERSION"] = preproc_define(game_config::wesnoth_version.str());
 }
 
-}
+} // namespace
 
 config_cache& config_cache::instance()
 {
@@ -139,9 +139,10 @@ void config_cache::add_defines_map_diff(preproc_map& defines_map)
 	return config_cache_transaction::instance().add_defines_map_diff(defines_map);
 }
 
-void config_cache::read_configs(const std::string& file_path, config& cfg, preproc_map& defines_map, abstract_validator* validator)
+void config_cache::read_configs(
+	const std::string& file_path, config& cfg, preproc_map& defines_map, abstract_validator* validator)
 {
-	//read the file and then write to the cache
+	// read the file and then write to the cache
 	filesystem::scoped_istream stream = preprocess_file(file_path, &defines_map);
 	read(cfg, *stream, validator);
 }
@@ -159,9 +160,7 @@ void config_cache::read_cache(const std::string& file_path, config& cfg, abstrac
 		//
 		// Only WESNOTH_VERSION is allowed to be non-empty.
 		//
-		if((!d.second.value.empty() || !d.second.arguments.empty()) &&
-		   d.first != "WESNOTH_VERSION")
-		{
+		if((!d.second.value.empty() || !d.second.arguments.empty()) && d.first != "WESNOTH_VERSION") {
 			is_valid = false;
 			ERR_CACHE << "Invalid preprocessor define: " << d.first;
 			break;
@@ -176,9 +175,7 @@ void config_cache::read_cache(const std::string& file_path, config& cfg, abstrac
 
 	if(is_valid && !cache_path.empty()) {
 		// Use a hash for a shorter display of the defines.
-		const std::string fname = cache_path + "/" +
-								  cache_file_prefix_ +
-								  utils::md5(defines_string.str()).hex_digest();
+		const std::string fname = cache_path + "/" + cache_file_prefix_ + utils::md5(defines_string.str()).hex_digest();
 		const std::string fname_checksum = fname + ".checksum" + extension;
 
 		filesystem::file_tree_checksum dir_checksum;
@@ -206,12 +203,14 @@ void config_cache::read_cache(const std::string& file_path, config& cfg, abstrac
 			LOG_CACHE << "skipping cache validation (forced)";
 		}
 
-		if(filesystem::file_exists(fname + extension) && (force_valid_cache_ || (dir_checksum == filesystem::data_tree_checksum()))) {
-			LOG_CACHE << "found valid cache at '" << fname << extension << "' with defines_map " << defines_string.str();
+		if(filesystem::file_exists(fname + extension)
+			&& (force_valid_cache_ || (dir_checksum == filesystem::data_tree_checksum()))) {
+			LOG_CACHE << "found valid cache at '" << fname << extension << "' with defines_map "
+					  << defines_string.str();
 			log_scope("read cache");
 
 			try {
-				read_file(fname + extension,cfg);
+				read_file(fname + extension, cfg);
 				const std::string define_file = fname + ".define" + extension;
 
 				if(filesystem::file_exists(define_file)) {
@@ -220,16 +219,17 @@ void config_cache::read_cache(const std::string& file_path, config& cfg, abstrac
 
 				return;
 			} catch(const config::error& e) {
-				ERR_CACHE << "cache " << fname << extension << " is corrupt. Loading from files: "<< e.message;
+				ERR_CACHE << "cache " << fname << extension << " is corrupt. Loading from files: " << e.message;
 			} catch(const filesystem::io_exception&) {
 				ERR_CACHE << "error reading cache " << fname << extension << ". Loading from files";
-			} catch (const boost::iostreams::gzip_error& e) {
-				//read_file -> ... -> read_gz can throw this exception.
+			} catch(const boost::iostreams::gzip_error& e) {
+				// read_file -> ... -> read_gz can throw this exception.
 				ERR_CACHE << "cache " << fname << extension << " is corrupt. Error code: " << e.error();
 			}
 		}
 
-		LOG_CACHE << "no valid cache found. Writing cache to '" << fname << extension << " with defines_map "<< defines_string.str() << "'";
+		LOG_CACHE << "no valid cache found. Writing cache to '" << fname << extension << " with defines_map "
+				  << defines_string.str() << "'";
 
 		// Now we need queued defines so read them to memory
 		read_defines_queue();
@@ -279,7 +279,7 @@ void config_cache::read_defines_queue()
 {
 	const std::vector<std::string>& files = config_cache_transaction::instance().get_define_files();
 
-	for(const std::string &p : files) {
+	for(const std::string& p : files) {
 		read_defines_file(p);
 	}
 }
@@ -289,7 +289,7 @@ void config_cache::load_configs(const std::string& config_path, config& cfg, abs
 	// Make sure that we have fake transaction if no real one is going on
 	fake_transaction fake;
 
-	if (use_cache_) {
+	if(use_cache_) {
 		read_cache(config_path, cfg, validator);
 	} else {
 		preproc_map copy_map(make_copy_map());
@@ -327,7 +327,6 @@ void config_cache::add_define(const std::string& define)
 		// we have to add this to active map too
 		config_cache_transaction::instance().get_active_map(defines_map_).emplace(define, preproc_define());
 	}
-
 }
 
 void config_cache::remove_define(const std::string& define)
@@ -346,8 +345,7 @@ bool config_cache::clean_cache()
 	std::vector<std::string> files, dirs;
 	filesystem::get_files_in_dir(filesystem::get_cache_dir(), &files, &dirs, filesystem::name_mode::ENTIRE_FILE_PATH);
 
-	LOG_CACHE << "clean_cache(): " << files.size() << " files, "
-			  << dirs.size() << " dirs to check";
+	LOG_CACHE << "clean_cache(): " << files.size() << " files, " << dirs.size() << " dirs to check";
 
 	const std::string& exclude_current = cache_file_prefix_ + "*";
 
@@ -366,8 +364,7 @@ bool config_cache::purge_cache()
 	std::vector<std::string> files, dirs;
 	filesystem::get_files_in_dir(filesystem::get_cache_dir(), &files, &dirs, filesystem::name_mode::ENTIRE_FILE_PATH);
 
-	LOG_CACHE << "purge_cache(): deleting " << files.size() << " files, "
-			  << dirs.size() << " dirs";
+	LOG_CACHE << "purge_cache(): deleting " << files.size() << " files, " << dirs.size() << " dirs";
 
 	bool status = true;
 
@@ -378,28 +375,25 @@ bool config_cache::purge_cache()
 	return status;
 }
 
-bool config_cache::delete_cache_files(const std::vector<std::string>& paths,
-									  const std::string& exclude_pattern)
+bool config_cache::delete_cache_files(const std::vector<std::string>& paths, const std::string& exclude_pattern)
 {
 	const bool delete_everything = exclude_pattern.empty();
 	bool status = true;
 
-	for(const std::string& file_path : paths)
-	{
+	for(const std::string& file_path : paths) {
 		if(!delete_everything) {
 			const std::string& fn = filesystem::base_name(file_path);
 
 			if(utils::wildcard_string_match(fn, exclude_pattern)) {
-				LOG_CACHE << "delete_cache_files(): skipping " << file_path
-						  << " excluded by '" << exclude_pattern << "'";
+				LOG_CACHE << "delete_cache_files(): skipping " << file_path << " excluded by '" << exclude_pattern
+						  << "'";
 				continue;
 			}
 		}
 
 		LOG_CACHE << "delete_cache_files(): deleting " << file_path;
 		if(!filesystem::delete_directory(file_path)) {
-			ERR_CACHE << "delete_cache_files(): could not delete "
-					  << file_path;
+			ERR_CACHE << "delete_cache_files(): could not delete " << file_path;
 			status = false;
 		}
 	}
@@ -478,19 +472,15 @@ void config_cache_transaction::add_defines_map_diff(preproc_map& new_map)
 {
 	if(get_state() == ACTIVE) {
 		preproc_map temp;
-		std::set_difference(new_map.begin(),
-				new_map.end(),
-				active_map_.begin(),
-				active_map_.end(),
-				std::insert_iterator<preproc_map>(temp,temp.begin()),
-				&compare_define);
+		std::set_difference(new_map.begin(), new_map.end(), active_map_.begin(), active_map_.end(),
+			std::insert_iterator<preproc_map>(temp, temp.begin()), &compare_define);
 
-		for(const preproc_map::value_type &def : temp) {
+		for(const preproc_map::value_type& def : temp) {
 			insert_to_active(def);
 		}
 
 		temp.swap(new_map);
-	} else if (get_state() == LOCKED) {
+	} else if(get_state() == LOCKED) {
 		new_map.clear();
 	}
 }
@@ -500,4 +490,4 @@ void config_cache_transaction::insert_to_active(const preproc_map::value_type& d
 	active_map_[def.first] = def.second;
 }
 
-}
+} // namespace game_config

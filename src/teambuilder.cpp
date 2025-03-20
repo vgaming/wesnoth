@@ -58,7 +58,6 @@ void team_builder::build_team_stage_one()
 
 	// If the game state specifies additional units that can be recruited by the player, add them.
 	previous_recruits();
-
 }
 
 void team_builder::build_team_stage_two()
@@ -85,7 +84,8 @@ void team_builder::log_step(const char* s) const
 void team_builder::init()
 {
 	if(side_cfg_["side"].to_int(side_) != side_) {
-		ERR_NG_TC << "found invalid side=" << side_cfg_["side"].to_int(side_) << " in definition of side number " << side_;
+		ERR_NG_TC << "found invalid side=" << side_cfg_["side"].to_int(side_) << " in definition of side number "
+				  << side_;
 	}
 
 	log_step("init");
@@ -97,7 +97,6 @@ void team_builder::init()
 	unit_configs_.clear();
 	seen_ids_.clear();
 }
-
 
 void team_builder::new_team()
 {
@@ -130,20 +129,18 @@ void team_builder::previous_recruits()
 
 void team_builder::handle_unit(const config& u, const char* origin)
 {
-	DBG_NG_TC
-		<< "unit from " << origin << ": "
-		<< "type=[" << u["type"] << "] "
-		<< "id=[" << u["id"] << "] "
-		<< "placement=[" << u["placement"] << "] "
-		<< "x=[" << u["x"] << "] "
-		<< "y=[" << u["y"] << "]";
+	DBG_NG_TC << "unit from " << origin << ": "
+			  << "type=[" << u["type"] << "] "
+			  << "id=[" << u["id"] << "] "
+			  << "placement=[" << u["placement"] << "] "
+			  << "x=[" << u["x"] << "] "
+			  << "y=[" << u["y"] << "]";
 
 	if(u["type"].empty()) {
-		WRN_NG_TC
-			<< "when building level, skipping a unit (id=[" << u["id"] << "]) from " << origin
-			<< " with no type information,\n"
-			<< "for side:\n"
-			<< side_cfg_.debug();
+		WRN_NG_TC << "when building level, skipping a unit (id=[" << u["id"] << "]) from " << origin
+				  << " with no type information,\n"
+				  << "for side:\n"
+				  << side_cfg_.debug();
 
 		return;
 	}

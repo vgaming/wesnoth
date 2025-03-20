@@ -61,27 +61,23 @@ static lg::log_domain log_scripting_lua("scripting/lua");
 #define WRN_LUA LOG_STREAM(warn, log_scripting_lua)
 #define ERR_LUA LOG_STREAM(err, log_scripting_lua)
 
-static int intf_describe_plugins(lua_State * L)
+static int intf_describe_plugins(lua_State* L)
 {
 	PLAIN_LOG << "describe plugins (" << plugins_manager::get()->size() << "):";
 	lua_getglobal(L, "print");
-	for (std::size_t i = 0; i < plugins_manager::get()->size(); ++i) {
-		lua_pushvalue(L,-1); //duplicate the print
+	for(std::size_t i = 0; i < plugins_manager::get()->size(); ++i) {
+		lua_pushvalue(L, -1); // duplicate the print
 
 		std::stringstream line;
-		line << i
-		     << ":\t"
-		     << plugin_manager_status::get_string(plugins_manager::get()->get_status(i))
-		     << "\t\t"
-		     << plugins_manager::get()->get_name(i)
-		     << "\n";
+		line << i << ":\t" << plugin_manager_status::get_string(plugins_manager::get()->get_status(i)) << "\t\t"
+			 << plugins_manager::get()->get_name(i) << "\n";
 
 		DBG_LUA << line.str();
 
 		lua_pushstring(L, line.str().c_str());
 		lua_call(L, 1, 0);
 	}
-	if (!plugins_manager::get()->size()) {
+	if(!plugins_manager::get()->size()) {
 		lua_pushstring(L, "No plugins available.\n");
 		lua_call(L, 1, 0);
 	}
@@ -97,7 +93,7 @@ static int intf_delay(lua_State* L)
 static int intf_execute(lua_State* L);
 
 application_lua_kernel::application_lua_kernel()
- : lua_kernel_base()
+	: lua_kernel_base()
 {
 	lua_getglobal(mState, "wesnoth");
 	lua_pushcfunction(mState, intf_delay);
@@ -121,76 +117,83 @@ application_lua_kernel::application_lua_kernel()
 	lua_pop(mState, 1);
 }
 
-application_lua_kernel::thread::thread(application_lua_kernel& owner, lua_State * T) : owner_(owner), T_(T), started_(false) {}
+application_lua_kernel::thread::thread(application_lua_kernel& owner, lua_State* T)
+	: owner_(owner)
+	, T_(T)
+	, started_(false)
+{
+}
 
 std::string application_lua_kernel::thread::status()
 {
-	if (!started_) {
-		if (lua_status(T_) == LUA_OK) {
+	if(!started_) {
+		if(lua_status(T_) == LUA_OK) {
 			return "not started";
 		} else {
 			return "load error";
 		}
 	}
-	switch (lua_status(T_)) {
-		case LUA_OK:
-			return "dead";
-		case LUA_YIELD:
-			return "started";
-		default:
-			return "error";
+	switch(lua_status(T_)) {
+	case LUA_OK:
+		return "dead";
+	case LUA_YIELD:
+		return "started";
+	default:
+		return "error";
 	}
 }
 
-bool application_lua_kernel::thread::is_running() {
+bool application_lua_kernel::thread::is_running()
+{
 	return started_ ? (lua_status(T_) == LUA_YIELD) : (lua_status(T_) == LUA_OK);
 }
 
-static char * v_threadtableKey = nullptr;
-static void * const threadtableKey = static_cast<void *> (& v_threadtableKey);
+static char* v_threadtableKey = nullptr;
+static void* const threadtableKey = static_cast<void*>(&v_threadtableKey);
 
-static lua_State * get_new_thread(lua_State * L)
+static lua_State* get_new_thread(lua_State* L)
 {
-	lua_pushlightuserdata(L	, threadtableKey);
-	lua_pushvalue(L,1);				// duplicate script key, since we need to store later
-							// stack is now [script key] [script key]
+	lua_pushlightuserdata(L, threadtableKey);
+	lua_pushvalue(L, 1); // duplicate script key, since we need to store later
+						 // stack is now [script key] [script key]
 
-	lua_rawget(L, LUA_REGISTRYINDEX);		// get the script table from the registry, on the top of the stack
-	if (!lua_istable(L,-1)) {			// if it doesn't exist create it
-		lua_pop(L,1);
+	lua_rawget(L, LUA_REGISTRYINDEX); // get the script table from the registry, on the top of the stack
+	if(!lua_istable(L, -1)) {         // if it doesn't exist create it
+		lua_pop(L, 1);
 		lua_newtable(L);
-	}						// stack is now [script key] [table]
+	} // stack is now [script key] [table]
 
-	lua_pushinteger(L, lua_rawlen(L, -1) + 1);	// push #table + 1 onto the stack
+	lua_pushinteger(L, lua_rawlen(L, -1) + 1); // push #table + 1 onto the stack
 
-	lua_State * T = lua_newthread(L);		// create new thread T
-							// stack is now [script key] [table] [#table + 1] [thread]
-	lua_rawset(L, -3);				// store the new thread at #table +1 index of the table.
-							// stack is now [script key] [table]
+	lua_State* T = lua_newthread(L); // create new thread T
+									 // stack is now [script key] [table] [#table + 1] [thread]
+	lua_rawset(L, -3);               // store the new thread at #table +1 index of the table.
+									 // stack is now [script key] [table]
 	lua_rawset(L, LUA_REGISTRYINDEX);
-							// stack L is now empty
-	return T;					// now we can set up T's stack appropriately
+	// stack L is now empty
+	return T; // now we can set up T's stack appropriately
 }
 
-application_lua_kernel::thread * application_lua_kernel::load_script_from_string(const std::string & prog)
+application_lua_kernel::thread* application_lua_kernel::load_script_from_string(const std::string& prog)
 {
-	lua_State * T = get_new_thread(mState);
+	lua_State* T = get_new_thread(mState);
 	// now we are operating on T's stack, leaving a compiled C function on it.
 
 	DBG_LUA << "created thread: status = " << lua_status(T) << (lua_status(T) == LUA_OK ? " == OK" : " == ?");
 	DBG_LUA << "loading script from string:\n<<\n" << prog << "\n>>";
 
-	// note: this is unsafe for umc as it allows loading lua baytecode, but umc cannot add application lua kernel scipts.
+	// note: this is unsafe for umc as it allows loading lua baytecode, but umc cannot add application lua kernel
+	// scipts.
 	int errcode = luaL_loadstring(T, prog.c_str());
-	if (errcode != LUA_OK) {
-		const char * err_str = lua_tostring(T, -1);
+	if(errcode != LUA_OK) {
+		const char* err_str = lua_tostring(T, -1);
 		std::string msg = err_str ? err_str : "null string";
 
 		std::string context = "When parsing a string to a lua thread, ";
 
-		if (errcode == LUA_ERRSYNTAX) {
+		if(errcode == LUA_ERRSYNTAX) {
 			context += " a syntax error";
-		} else if(errcode == LUA_ERRMEM){
+		} else if(errcode == LUA_ERRMEM) {
 			context += " a memory error";
 		} else {
 			context += " an unknown error";
@@ -198,34 +201,41 @@ application_lua_kernel::thread * application_lua_kernel::load_script_from_string
 
 		throw game::lua_error(msg, context);
 	}
-	if (!lua_kernel_base::protected_call(T, 0, 1, std::bind(&lua_kernel_base::log_error, this, std::placeholders::_1, std::placeholders::_2))) {
+	if(!lua_kernel_base::protected_call(
+		   T, 0, 1, std::bind(&lua_kernel_base::log_error, this, std::placeholders::_1, std::placeholders::_2))) {
 		throw game::lua_error("Error when executing a script to make a lua thread.");
 	}
-	if (!lua_isfunction(T, -1)) {
-		throw game::lua_error(std::string("Error when executing a script to make a lua thread -- function was not produced, found a ") + lua_typename(T, lua_type(T, -1)) );
+	if(!lua_isfunction(T, -1)) {
+		throw game::lua_error(
+			std::string("Error when executing a script to make a lua thread -- function was not produced, found a ")
+			+ lua_typename(T, lua_type(T, -1)));
 	}
 
 	return new application_lua_kernel::thread(*this, T);
 }
 
-application_lua_kernel::thread * application_lua_kernel::load_script_from_file(const std::string & file)
+application_lua_kernel::thread* application_lua_kernel::load_script_from_file(const std::string& file)
 {
-	lua_State * T = get_new_thread(mState);
+	lua_State* T = get_new_thread(mState);
 	// now we are operating on T's stack, leaving a compiled C function on it.
 
 	lua_pushstring(T, file.c_str());
 	lua_fileops::load_file(T);
-	if (!lua_kernel_base::protected_call(T, 0, 1, std::bind(&lua_kernel_base::log_error, this, std::placeholders::_1, std::placeholders::_2))) {
+	if(!lua_kernel_base::protected_call(
+		   T, 0, 1, std::bind(&lua_kernel_base::log_error, this, std::placeholders::_1, std::placeholders::_2))) {
 		throw game::lua_error("Error when executing a file to make a lua thread.");
 	}
-	if (!lua_isfunction(T, -1)) {
-		throw game::lua_error(std::string("Error when executing a file to make a lua thread -- function was not produced, found a ") + lua_typename(T, lua_type(T, -1)) );
+	if(!lua_isfunction(T, -1)) {
+		throw game::lua_error(
+			std::string("Error when executing a file to make a lua thread -- function was not produced, found a ")
+			+ lua_typename(T, lua_type(T, -1)));
 	}
 
 	return new application_lua_kernel::thread(*this, T);
 }
 
-struct lua_context_backend {
+struct lua_context_backend
+{
 	std::vector<plugins_manager::event> requests;
 	lua_kernel_base* execute;
 	bool valid;
@@ -233,13 +243,14 @@ struct lua_context_backend {
 	lua_context_backend()
 		: requests()
 		, valid(true)
-	{}
+	{
+	}
 };
 
-static int impl_context_backend(lua_State * L, const std::shared_ptr<lua_context_backend>& backend, std::string req_name)
+static int impl_context_backend(lua_State* L, const std::shared_ptr<lua_context_backend>& backend, std::string req_name)
 {
-	if (!backend->valid) {
-		luaL_error(L , "Error, you tried to use an invalid context object in a lua thread");
+	if(!backend->valid) {
+		luaL_error(L, "Error, you tried to use an invalid context object in a lua thread");
 	}
 
 	plugins_manager::event evt;
@@ -250,10 +261,11 @@ static int impl_context_backend(lua_State * L, const std::shared_ptr<lua_context
 	return 0;
 }
 
-static int impl_context_accessor(lua_State * L, const std::shared_ptr<lua_context_backend>& backend, const plugins_context::accessor_function& func)
+static int impl_context_accessor(
+	lua_State* L, const std::shared_ptr<lua_context_backend>& backend, const plugins_context::accessor_function& func)
 {
-	if (!backend->valid) {
-		luaL_error(L , "Error, you tried to use an invalid context object in a lua thread");
+	if(!backend->valid) {
+		luaL_error(L, "Error, you tried to use an invalid context object in a lua thread");
 	}
 
 	if(lua_gettop(L)) {
@@ -272,7 +284,8 @@ static int impl_context_accessor(lua_State * L, const std::shared_ptr<lua_contex
 extern luaW_Registry& gameConfigReg();
 static auto& dummy = gameConfigReg(); // just to ensure it's constructed.
 
-GAME_CONFIG_SETTER("debug", bool, application_lua_kernel) {
+GAME_CONFIG_SETTER("debug", bool, application_lua_kernel)
+{
 	(void)k;
 	game_config::set_debug(value);
 }
@@ -280,7 +293,8 @@ GAME_CONFIG_SETTER("debug", bool, application_lua_kernel) {
 static int intf_execute(lua_State* L)
 {
 	static const int CTX = 1, FUNC = 2, EVT = 3, EXEC = 4;
-	if(lua_gettop(L) == 2) lua_pushnil(L);
+	if(lua_gettop(L) == 2)
+		lua_pushnil(L);
 	if(!luaW_table_get_def(L, CTX, "valid", false)) {
 		lua_pushboolean(L, false);
 		lua_pushstring(L, "context not valid");
@@ -303,10 +317,12 @@ static int intf_execute(lua_State* L)
 			lua_pushstring(L, "cannot execute function with parameters");
 			return 2;
 		}
-		if(!lua_isnil(L, EVT)) data["name"] = luaL_checkstring(L, EVT);
+		if(!lua_isnil(L, EVT))
+			data["name"] = luaL_checkstring(L, EVT);
 		lua_pushvalue(L, FUNC);
 		data["ref"] = luaL_ref(L, LUA_REGISTRYINDEX);
-		std::shared_ptr<lua_context_backend>* context = static_cast<std::shared_ptr<lua_context_backend>*>(lua_touserdata(L, EXEC));
+		std::shared_ptr<lua_context_backend>* context
+			= static_cast<std::shared_ptr<lua_context_backend>*>(lua_touserdata(L, EXEC));
 		luaW_pushconfig(L, data);
 		impl_context_backend(L, *context, "execute");
 	} catch(luafunc_serialize_error& e) {
@@ -318,7 +334,8 @@ static int intf_execute(lua_State* L)
 	return 1;
 }
 bool luaW_copy_upvalues(lua_State* L, const config& cfg);
-application_lua_kernel::request_list application_lua_kernel::thread::run_script(const plugins_context & ctxt, const std::vector<plugins_manager::event> & queue)
+application_lua_kernel::request_list application_lua_kernel::thread::run_script(
+	const plugins_context& ctxt, const std::vector<plugins_manager::event>& queue)
 {
 	// There are two possibilities: (1) this is the first execution, and the C function is the only thing on the stack
 	// (2) this is a subsequent execution, and there is nothing on the stack.
@@ -329,7 +346,7 @@ application_lua_kernel::request_list application_lua_kernel::thread::run_script(
 	for(const auto& event : queue) {
 		events.add_child(event.name, event.data);
 	}
-	luaW_pushconfig(T_, events); //this will be the event table
+	luaW_pushconfig(T_, events); // this will be the event table
 
 	// Now we have to create the context object. It is arranged as a table of boost functions.
 	auto this_context_backend = std::make_shared<lua_context_backend>();
@@ -337,7 +354,7 @@ application_lua_kernel::request_list application_lua_kernel::thread::run_script(
 	lua_pushstring(T_, "valid");
 	lua_pushboolean(T_, true);
 	lua_settable(T_, -3);
-	for (const std::string & key : ctxt.callbacks_ | utils::views::keys ) {
+	for(const std::string& key : ctxt.callbacks_ | utils::views::keys) {
 		lua_pushstring(T_, key.c_str());
 		lua_cpp::push_function(T_, std::bind(&impl_context_backend, std::placeholders::_1, this_context_backend, key));
 		lua_settable(T_, -3);
@@ -356,11 +373,12 @@ application_lua_kernel::request_list application_lua_kernel::thread::run_script(
 	lua_pushstring(T_, "valid");
 	lua_pushboolean(T_, true);
 	lua_settable(T_, -3);
-	for (const plugins_context::accessor_list::value_type & v : ctxt.accessors_) {
-		const std::string & key = v.first;
-		const plugins_context::accessor_function & func = v.second;
+	for(const plugins_context::accessor_list::value_type& v : ctxt.accessors_) {
+		const std::string& key = v.first;
+		const plugins_context::accessor_function& func = v.second;
 		lua_pushstring(T_, key.c_str());
-		lua_cpp::push_function(T_, std::bind(&impl_context_accessor, std::placeholders::_1, this_context_backend, func));
+		lua_cpp::push_function(
+			T_, std::bind(&impl_context_accessor, std::placeholders::_1, this_context_backend, func));
 		lua_settable(T_, -3);
 	}
 
@@ -377,26 +395,26 @@ application_lua_kernel::request_list application_lua_kernel::thread::run_script(
 
 	started_ = true;
 
-	this_context_backend->valid = false; //invalidate the context object for lua
+	this_context_backend->valid = false; // invalidate the context object for lua
 
-	if (lua_status(T_) != LUA_YIELD) {
+	if(lua_status(T_) != LUA_YIELD) {
 		LOG_LUA << "Thread status = '" << lua_status(T_) << "'";
-		if (lua_status(T_) != LUA_OK) {
+		if(lua_status(T_) != LUA_OK) {
 			std::stringstream ss;
 			ss << "encountered a";
 			switch(lua_status(T_)) {
-				case LUA_ERRSYNTAX:
-					ss << " syntax ";
-					break;
-				case LUA_ERRRUN:
-					ss << " runtime ";
-					break;
-				case LUA_ERRERR:
-					ss << " error-handler ";
-					break;
-				default:
-					ss << " ";
-					break;
+			case LUA_ERRSYNTAX:
+				ss << " syntax ";
+				break;
+			case LUA_ERRRUN:
+				ss << " runtime ";
+				break;
+			case LUA_ERRERR:
+				ss << " error-handler ";
+				break;
+			default:
+				ss << " ";
+				break;
 			}
 			ss << "error:\n" << lua_tostring(T_, -1) << "\n";
 			ERR_LUA << ss.str();
@@ -416,7 +434,7 @@ application_lua_kernel::request_list application_lua_kernel::thread::run_script(
 
 	application_lua_kernel::request_list results;
 
-	for (const plugins_manager::event & req : this_context_backend->requests) {
+	for(const plugins_manager::event& req : this_context_backend->requests) {
 		if(ctxt.execute_kernel_ && req.name == "execute") {
 			results.push_back([this, lk = ctxt.execute_kernel_, data = req.data]() {
 				auto result = lk->run_binary_lua_tag(data);
@@ -435,7 +453,7 @@ application_lua_kernel::request_list application_lua_kernel::thread::run_script(
 			continue;
 		}
 		results.push_back(std::bind(ctxt.callbacks_.find(req.name)->second, req.data));
-		//results.emplace_back(ctxt.callbacks_.find(req.name)->second, req.data);
+		// results.emplace_back(ctxt.callbacks_.find(req.name)->second, req.data);
 	}
 	return results;
 }
@@ -479,7 +497,8 @@ bool luaW_copy_upvalues(lua_State* L, const config& cfg)
 					luaW_copy_upvalues(L, child);
 					lua_pushvalue(L, -1);
 				}
-			} else continue;
+			} else
+				continue;
 			lua_setupvalue(L, funcindex, i);
 		}
 	}

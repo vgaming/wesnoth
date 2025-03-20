@@ -28,6 +28,8 @@
 #include "gui/dialogs/achievements_dialog.hpp"
 #include "gui/dialogs/core_selection.hpp"
 #include "gui/dialogs/debug_clock.hpp"
+#include "gui/dialogs/game_version_dialog.hpp"
+#include "gui/dialogs/gui_test_dialog.hpp"
 #include "gui/dialogs/help_browser.hpp"
 #include "gui/dialogs/lua_interpreter.hpp"
 #include "gui/dialogs/message.hpp"
@@ -36,12 +38,10 @@
 #include "gui/dialogs/preferences_dialog.hpp"
 #include "gui/dialogs/screenshot_notification.hpp"
 #include "gui/dialogs/simple_item_selector.hpp"
-#include "gui/dialogs/game_version_dialog.hpp"
-#include "gui/dialogs/gui_test_dialog.hpp"
 #include "language.hpp"
 #include "log.hpp"
 #include "preferences/preferences.hpp"
-//#define DEBUG_TOOLTIP
+// #define DEBUG_TOOLTIP
 #ifdef DEBUG_TOOLTIP
 #include "gui/dialogs/tooltip.hpp"
 #endif
@@ -86,7 +86,8 @@ title_screen::~title_screen()
 {
 }
 
-void title_screen::register_button(const std::string& id, hotkey::HOTKEY_COMMAND hk, const std::function<void()>& callback)
+void title_screen::register_button(
+	const std::string& id, hotkey::HOTKEY_COMMAND hk, const std::function<void()>& callback)
 {
 	if(hk != hotkey::HOTKEY_NULL) {
 		register_hotkey(hk, std::bind(callback));
@@ -153,8 +154,8 @@ void title_screen::init_callbacks()
 
 #ifdef DEBUG_TOOLTIP
 	connect_signal<event::SDL_MOUSE_MOTION>(
-			std::bind(debug_tooltip, std::ref(*this), std::placeholders::_3, std::placeholders::_5),
-			event::dispatcher::front_child);
+		std::bind(debug_tooltip, std::ref(*this), std::placeholders::_3, std::placeholders::_5),
+		event::dispatcher::front_child);
 #endif
 
 	connect_signal<event::SDL_VIDEO_RESIZE>(std::bind(&title_screen::on_resize, this));
@@ -165,11 +166,9 @@ void title_screen::init_callbacks()
 	register_hotkey(hotkey::TITLE_SCREEN__RELOAD_WML,
 		std::bind(&gui2::window::set_retval, std::ref(*this), RELOAD_GAME_DATA, true));
 
-	register_hotkey(hotkey::HOTKEY_ACHIEVEMENTS,
-		std::bind(&title_screen::show_achievements, this));
+	register_hotkey(hotkey::HOTKEY_ACHIEVEMENTS, std::bind(&title_screen::show_achievements, this));
 
-	register_hotkey(hotkey::TITLE_SCREEN__TEST,
-		std::bind(&title_screen::hotkey_callback_select_tests, this));
+	register_hotkey(hotkey::TITLE_SCREEN__TEST, std::bind(&title_screen::hotkey_callback_select_tests, this));
 
 	// A wrapper is needed here since the relevant display function is overloaded, and
 	// since the wrapper's signature doesn't exactly match what register_hotkey expects.
@@ -195,42 +194,29 @@ void title_screen::init_callbacks()
 	// Tip-of-the-day browser
 	//
 	if(auto tip_pages = find_widget<multi_page>("tips", false, false)) {
-		for(const game_tip& tip : tip_of_the_day::shuffle(settings::tips))	{
-			tip_pages->add_page({
-				{ "tip", {
-					{ "use_markup", "true" },
-					{ "label", tip.text }
-				}},
-				{ "source", {
-					{ "use_markup", "true" },
-					{ "label", tip.source }
-				}}
-			});
+		for(const game_tip& tip : tip_of_the_day::shuffle(settings::tips)) {
+			tip_pages->add_page({{"tip", {{"use_markup", "true"}, {"label", tip.text}}},
+				{"source", {{"use_markup", "true"}, {"label", tip.source}}}});
 		}
 
 		update_tip(true);
 	}
 
-	register_button("next_tip", hotkey::TITLE_SCREEN__NEXT_TIP,
-		std::bind(&title_screen::update_tip, this, true));
+	register_button("next_tip", hotkey::TITLE_SCREEN__NEXT_TIP, std::bind(&title_screen::update_tip, this, true));
 
-	register_button("previous_tip", hotkey::TITLE_SCREEN__PREVIOUS_TIP,
-		std::bind(&title_screen::update_tip, this, false));
+	register_button(
+		"previous_tip", hotkey::TITLE_SCREEN__PREVIOUS_TIP, std::bind(&title_screen::update_tip, this, false));
 
 	// Tip panel visiblity and close button
 	panel& tip_panel = find_widget<panel>("tip_panel");
 
-	tip_panel.set_visible(prefs::get().show_tips()
-		? widget::visibility::visible
-		: widget::visibility::hidden);
+	tip_panel.set_visible(prefs::get().show_tips() ? widget::visibility::visible : widget::visibility::hidden);
 
 	if(auto toggle_tips = find_widget<button>("toggle_tip_panel", false, false)) {
 		connect_signal_mouse_left_click(*toggle_tips, [&tip_panel](auto&&...) {
 			const bool currently_hidden = tip_panel.get_visible() == widget::visibility::hidden;
 
-			tip_panel.set_visible(currently_hidden
-				? widget::visibility::visible
-				: widget::visibility::hidden);
+			tip_panel.set_visible(currently_hidden ? widget::visibility::visible : widget::visibility::hidden);
 
 			// If previously hidden, will now be visible, so we can reuse the same value
 			prefs::get().set_show_tips(currently_hidden);
@@ -254,14 +240,14 @@ void title_screen::init_callbacks()
 	// Campaign
 	//
 	register_button("campaign", hotkey::TITLE_SCREEN__CAMPAIGN, [this]() {
-		try{
+		try {
 			if(game_.new_campaign()) {
 				// Suspend drawing of the title screen,
 				// so it doesn't flicker in between loading screens.
 				hide();
 				set_retval(LAUNCH_GAME);
 			}
-		} catch (const config::error& e) {
+		} catch(const config::error& e) {
 			gui2::show_error_message(e.what());
 		}
 	});
@@ -269,8 +255,8 @@ void title_screen::init_callbacks()
 	//
 	// Multiplayer
 	//
-	register_button("multiplayer", hotkey::TITLE_SCREEN__MULTIPLAYER,
-		std::bind(&title_screen::button_callback_multiplayer, this));
+	register_button(
+		"multiplayer", hotkey::TITLE_SCREEN__MULTIPLAYER, std::bind(&title_screen::button_callback_multiplayer, this));
 
 	//
 	// Load game
@@ -301,8 +287,7 @@ void title_screen::init_callbacks()
 	//
 	// Cores
 	//
-	register_hotkey(hotkey::TITLE_SCREEN__CORES,
-		std::bind(&title_screen::button_callback_cores, this));
+	register_hotkey(hotkey::TITLE_SCREEN__CORES, std::bind(&title_screen::button_callback_cores, this));
 
 	//
 	// Language
@@ -321,20 +306,17 @@ void title_screen::init_callbacks()
 	//
 	// Preferences
 	//
-	register_button("preferences", hotkey::HOTKEY_PREFERENCES,
-		std::bind(&title_screen::show_preferences, this));
+	register_button("preferences", hotkey::HOTKEY_PREFERENCES, std::bind(&title_screen::show_preferences, this));
 
 	//
 	// Achievements
 	//
-	register_button("achievements", hotkey::HOTKEY_ACHIEVEMENTS,
-		std::bind(&title_screen::show_achievements, this));
+	register_button("achievements", hotkey::HOTKEY_ACHIEVEMENTS, std::bind(&title_screen::show_achievements, this));
 
 	//
 	// Community
 	//
-	register_button("community", hotkey::HOTKEY_NULL,
-		std::bind(&title_screen::show_community, this));
+	register_button("community", hotkey::HOTKEY_NULL, std::bind(&title_screen::show_community, this));
 
 	//
 	// Quit
@@ -346,8 +328,7 @@ void title_screen::init_callbacks()
 	//
 	// Debug clock
 	//
-	register_button("clock", hotkey::HOTKEY_NULL,
-		std::bind(&title_screen::show_debug_clock_window, this));
+	register_button("clock", hotkey::HOTKEY_NULL, std::bind(&title_screen::show_debug_clock_window, this));
 
 	auto clock = find_widget<button>("clock", false, false);
 	if(clock) {
@@ -357,8 +338,7 @@ void title_screen::init_callbacks()
 	//
 	// GUI Test and Debug Window
 	//
-	register_button("test_dialog", hotkey::HOTKEY_NULL,
-		std::bind(&title_screen::show_gui_test_dialog, this));
+	register_button("test_dialog", hotkey::HOTKEY_NULL, std::bind(&title_screen::show_gui_test_dialog, this));
 
 	auto test_dialog = find_widget<button>("test_dialog", false, false);
 	if(test_dialog) {
@@ -376,7 +356,7 @@ void title_screen::update_static_labels()
 	//
 	// Version menu label
 	//
-	const std::string& version_string = VGETTEXT("Version $version", {{ "version", game_config::revision }});
+	const std::string& version_string = VGETTEXT("Version $version", {{"version", game_config::revision}});
 
 	if(label* version_label = find_widget<label>("revision_number", false, false)) {
 		version_label->set_label(version_string);
@@ -394,9 +374,8 @@ void title_screen::update_static_labels()
 		const auto& boost_name = boost::algorithm::erase_first_copy(locale.name(), ".UTF-8");
 		const auto& langs = get_languages(true);
 
-		auto lang_def = std::find_if(langs.begin(), langs.end(), [&](language_def const& lang) {
-			return lang.localename == boost_name;
-		});
+		auto lang_def = std::find_if(
+			langs.begin(), langs.end(), [&](language_def const& lang) { return lang.localename == boost_name; });
 
 		if(lang_def != langs.end()) {
 			lang_button->set_label(lang_def->language.str());
@@ -461,7 +440,7 @@ void title_screen::hotkey_callback_select_tests()
 	game_config_manager::get()->load_game_config_for_create(false, true);
 
 	std::vector<std::string> options;
-	for(const config &sc : game_config_manager::get()->game_config().child_range("test")) {
+	for(const config& sc : game_config_manager::get()->game_config().child_range("test")) {
 		if(!sc["is_unit_test"].to_bool(false)) {
 			options.emplace_back(sc["id"]);
 		}
@@ -501,7 +480,7 @@ void title_screen::show_preferences()
 {
 	gui2::dialogs::preferences_dialog pref_dlg;
 	pref_dlg.show();
-	if (pref_dlg.get_retval() == RELOAD_UI) {
+	if(pref_dlg.get_retval() == RELOAD_UI) {
 		set_retval(RELOAD_UI);
 	}
 
@@ -584,4 +563,4 @@ void title_screen::button_callback_cores()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

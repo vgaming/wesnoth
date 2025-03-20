@@ -34,7 +34,8 @@ static lg::log_domain log_audio("audio");
 #define LOG_AUDIO LOG_STREAM(info, log_audio)
 #define ERR_AUDIO LOG_STREAM(err, log_audio)
 
-#if (MIX_MAJOR_VERSION < 1) || (MIX_MAJOR_VERSION == 1) && ((MIX_MINOR_VERSION < 2) || (MIX_MINOR_VERSION == 2) && (MIX_PATCHLEVEL <= 11))
+#if (MIX_MAJOR_VERSION < 1)                                                                                            \
+	|| (MIX_MAJOR_VERSION == 1) && ((MIX_MINOR_VERSION < 2) || (MIX_MINOR_VERSION == 2) && (MIX_PATCHLEVEL <= 11))
 #error "Please upgrade to SDL mixer version >= 1.2.12, we don't support older versions anymore."
 #endif
 
@@ -46,7 +47,7 @@ static std::vector<Mix_Chunk*> channel_chunks;
 // Channel-id mapping for use with sound sources (to check if given source
 // is playing on a channel for fading/panning)
 static std::vector<int> channel_ids;
-}
+} // namespace sound
 
 using namespace std::chrono_literals;
 
@@ -81,7 +82,7 @@ const std::size_t n_reserved_channels = UI_sound_channel_last + 1; // sources, b
 unsigned max_cached_chunks = 256;
 
 std::map<Mix_Chunk*, int> chunk_usage;
-} // end anon namespace
+} // namespace
 
 static void increment_chunk_usage(Mix_Chunk* mcp)
 {
@@ -185,11 +186,10 @@ std::shared_ptr<sound::music_track> previous_track;
 std::vector<std::shared_ptr<sound::music_track>>::const_iterator find_track(const sound::music_track& track)
 {
 	return std::find_if(current_track_list.begin(), current_track_list.end(),
-		[&track](const std::shared_ptr<const sound::music_track>& ptr) { return *ptr == track; }
-	);
+		[&track](const std::shared_ptr<const sound::music_track>& ptr) { return *ptr == track; });
 }
 
-} // end anon namespace
+} // namespace
 
 namespace sound
 {
@@ -201,7 +201,7 @@ void flush_cache()
 
 utils::optional<unsigned int> get_current_track_index()
 {
-	if(current_track_index >= current_track_list.size()){
+	if(current_track_index >= current_track_list.size()) {
 		return {};
 	}
 	return current_track_index;
@@ -252,7 +252,7 @@ void remove_track(unsigned int i)
 
 	if(i == current_track_index) {
 		// Let the track finish playing
-		if(current_track){
+		if(current_track) {
 			current_track->set_play_once(true);
 		}
 		// Set current index to the new size of the list
@@ -341,7 +341,7 @@ static std::shared_ptr<sound::music_track> choose_track()
 
 		if(current_track_list.size() > 1) {
 			do {
-				track = randomness::rng::default_instance().get_random_int(0, current_track_list.size()-1);
+				track = randomness::rng::default_instance().get_random_int(0, current_track_list.size() - 1);
 			} while(!track_ok(current_track_list[track]->file_path()));
 		}
 
@@ -370,14 +370,14 @@ static std::string pick_one(const std::string& files)
 	unsigned int choice;
 
 	if(prev_choices.find(files) != prev_choices.end()) {
-		choice = randomness::rng::default_instance().get_random_int(0, ids.size()-1 - 1);
+		choice = randomness::rng::default_instance().get_random_int(0, ids.size() - 1 - 1);
 		if(choice >= prev_choices[files]) {
 			++choice;
 		}
 
 		prev_choices[files] = choice;
 	} else {
-		choice = randomness::rng::default_instance().get_random_int(0, ids.size()-1);
+		choice = randomness::rng::default_instance().get_random_int(0, ids.size() - 1);
 		prev_choices.emplace(files, choice);
 	}
 
@@ -481,11 +481,11 @@ bool init_sound()
 		LOG_AUDIO << "Audio initialized.";
 
 		DBG_AUDIO << "Channel layout: " << n_of_channels << " channels (" << n_reserved_channels << " reserved)\n"
-		          << "    " << bell_channel << " - bell\n"
-		          << "    " << timer_channel << " - timer\n"
-		          << "    " << source_channel_start << ".." << source_channel_last << " - sound sources\n"
-		          << "    " << UI_sound_channel_start << ".." << UI_sound_channel_last << " - UI\n"
-		          << "    " << UI_sound_channel_last + 1 << ".." << n_of_channels - 1 << " - sound effects";
+				  << "    " << bell_channel << " - bell\n"
+				  << "    " << timer_channel << " - timer\n"
+				  << "    " << source_channel_start << ".." << source_channel_last << " - sound sources\n"
+				  << "    " << UI_sound_channel_start << ".." << UI_sound_channel_last << " - UI\n"
+				  << "    " << UI_sound_channel_last + 1 << ".." << n_of_channels - 1 << " - sound effects";
 
 		play_music();
 	}
@@ -569,9 +569,8 @@ void stop_sound()
 		Mix_HaltGroup(SOUND_SOURCES);
 		Mix_HaltGroup(SOUND_FX);
 
-		sound_cache.remove_if([](const sound_cache_chunk& c) {
-			return c.group == SOUND_SOURCES || c.group == SOUND_FX;
-		});
+		sound_cache.remove_if(
+			[](const sound_cache_chunk& c) { return c.group == SOUND_SOURCES || c.group == SOUND_FX; });
 	}
 }
 
@@ -584,9 +583,8 @@ void stop_bell()
 		Mix_HaltGroup(SOUND_BELL);
 		Mix_HaltGroup(SOUND_TIMER);
 
-		sound_cache.remove_if([](const sound_cache_chunk& c) {
-			return c.group == SOUND_BELL || c.group == SOUND_TIMER;
-		});
+		sound_cache.remove_if(
+			[](const sound_cache_chunk& c) { return c.group == SOUND_BELL || c.group == SOUND_TIMER; });
 	}
 }
 
@@ -595,9 +593,7 @@ void stop_UI_sound()
 	if(mix_ok) {
 		Mix_HaltGroup(SOUND_UI);
 
-		sound_cache.remove_if([](const sound_cache_chunk& c) {
-			return c.group == SOUND_UI;
-		});
+		sound_cache.remove_if([](const sound_cache_chunk& c) { return c.group == SOUND_UI; });
 	}
 }
 
@@ -973,12 +969,12 @@ Mix_Chunk* load_chunk(const std::string& file, channel_group group)
 using namespace std::chrono_literals;
 
 void play_sound_internal(const std::string& files,
-		channel_group group,
-		unsigned int repeats = 0,
-		unsigned int distance = 0,
-		int id = -1,
-		const std::chrono::milliseconds& loop_ticks = 0ms,
-		const std::chrono::milliseconds& fadein_ticks = 0ms)
+	channel_group group,
+	unsigned int repeats = 0,
+	unsigned int distance = 0,
+	int id = -1,
+	const std::chrono::milliseconds& loop_ticks = 0ms,
+	const std::chrono::milliseconds& fadein_ticks = 0ms)
 {
 	if(files.empty() || distance >= DISTANCE_SILENT || !mix_ok) {
 		return;
@@ -1042,7 +1038,7 @@ void play_sound_internal(const std::string& files,
 	channel_chunks[res] = chunk;
 }
 
-} // end anon namespace
+} // namespace
 
 void play_sound(const std::string& files, channel_group group, unsigned int repeats)
 {
@@ -1067,7 +1063,9 @@ void play_bell(const std::string& files)
 }
 
 // Play timer with separate volume setting
-void play_timer(const std::string& files, const std::chrono::milliseconds& loop_ticks, const std::chrono::milliseconds& fadein_ticks)
+void play_timer(const std::string& files,
+	const std::chrono::milliseconds& loop_ticks,
+	const std::chrono::milliseconds& fadein_ticks)
 {
 	if(prefs::get().sound()) {
 		play_sound_internal(files, SOUND_TIMER, 0, 0, -1, loop_ticks, fadein_ticks);
@@ -1121,7 +1119,7 @@ void set_sound_volume(int vol)
 		// Bell, timer and UI have separate channels which we can't set up from this
 		for(unsigned i = 0; i < n_of_channels; ++i) {
 			if(!(i >= UI_sound_channel_start && i <= UI_sound_channel_last) && i != bell_channel
-					&& i != timer_channel) {
+				&& i != timer_channel) {
 				Mix_Volume(i, vol);
 			}
 		}

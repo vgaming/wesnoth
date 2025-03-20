@@ -16,7 +16,6 @@
 #include "scripting/lua_gui2.hpp"
 
 #include "game_display.hpp"
-#include "gui/gui.hpp"
 #include "gui/core/gui_definition.hpp"
 #include "gui/dialogs/drop_down_menu.hpp"
 #include "gui/dialogs/gamestate_inspector.hpp"
@@ -26,6 +25,7 @@
 #include "gui/dialogs/transient_message.hpp"
 #include "gui/dialogs/units_dialog.hpp"
 #include "gui/dialogs/wml_message.hpp"
+#include "gui/gui.hpp"
 #include "gui/widgets/retval.hpp"
 #include "scripting/lua_unit.hpp"
 #include "scripting/lua_unit_type.hpp"
@@ -34,14 +34,14 @@
 #include "config.hpp"
 #include "game_data.hpp"
 #include "game_state.hpp"
+#include "help/help.hpp"
 #include "log.hpp"
 #include "scripting/lua_common.hpp"
 #include "scripting/lua_cpp_function.hpp"
 #include "scripting/lua_kernel_base.hpp"
 #include "scripting/push_check.hpp"
-#include "help/help.hpp"
-#include "tstring.hpp"
 #include "sdl/input.hpp" // get_mouse_state
+#include "tstring.hpp"
 #include "units/ptr.hpp"
 #include "units/unit.hpp"
 #include "utils/optional_fwd.hpp"
@@ -49,12 +49,11 @@
 #include <functional>
 #include <vector>
 
-
 static lg::log_domain log_scripting_lua("scripting/lua");
 #define ERR_LUA LOG_STREAM(err, log_scripting_lua)
 
-namespace lua_gui2 {
-
+namespace lua_gui2
+{
 
 /**
  * Displays a message window
@@ -121,13 +120,13 @@ int show_message_dialog(lua_State* L)
 	const bool is_double = def_cfg.has_attribute("second_portrait");
 	const bool left_side = def_cfg["left_side"].to_bool(true);
 	if(is_double || left_side) {
-		left.reset(new portrait {def_cfg["portrait"], def_cfg["mirror"].to_bool(false)});
+		left.reset(new portrait{def_cfg["portrait"], def_cfg["mirror"].to_bool(false)});
 	} else {
 		// This means right side only.
-		right.reset(new portrait {def_cfg["portrait"], def_cfg["mirror"].to_bool(false)});
+		right.reset(new portrait{def_cfg["portrait"], def_cfg["mirror"].to_bool(false)});
 	}
 	if(is_double) {
-		right.reset(new portrait {def_cfg["second_portrait"], def_cfg["second_mirror"].to_bool(false)});
+		right.reset(new portrait{def_cfg["second_portrait"], def_cfg["second_mirror"].to_bool(false)});
 	}
 
 	int dlg_result = gui2::dialogs::show_wml_message(title, message, left.get(), right.get(), options, input);
@@ -153,7 +152,8 @@ int show_message_dialog(lua_State* L)
  * - Arg 2: Message (allows Pango markup)
  * - Arg 3: Image (optional)
  */
-int show_popup_dialog(lua_State *L) {
+int show_popup_dialog(lua_State* L)
+{
 	t_string title = luaW_checktstring(L, 1);
 	t_string msg = luaW_checktstring(L, 2);
 	std::string image = lua_isnoneornil(L, 3) ? "" : luaL_checkstring(L, 3);
@@ -167,7 +167,8 @@ int show_popup_dialog(lua_State *L) {
  * - Arg 1: The story config
  * - Arg 2: The default title
  */
-int show_story(lua_State* L) {
+int show_story(lua_State* L)
+{
 	config story = luaW_checkconfig(L, 1);
 	t_string title = luaW_checktstring(L, 2);
 	gui2::dialogs::story_viewer::display(title, story);
@@ -178,7 +179,8 @@ int show_story(lua_State* L) {
  * Changes the current ui(gui2) theme
  * - Arg 1: The id of the theme to switch to
  */
-int switch_theme(lua_State* L) {
+int switch_theme(lua_State* L)
+{
 	std::string theme_id = luaL_checkstring(L, 1);
 	gui2::switch_theme(theme_id);
 	return 0;
@@ -190,9 +192,10 @@ int switch_theme(lua_State* L) {
  * - Arg 1: Configs defining each item, with keys icon, image/label, second_label, tooltip
  * - Args 2, 3: Initial selection (integer); whether to parse markup (boolean)
  */
-int show_menu(lua_State* L) {
+int show_menu(lua_State* L)
+{
 	std::vector<config> items = lua_check<std::vector<config>>(L, 1);
-	rect pos{ sdl::get_mouse_location(), {1, 1} };
+	rect pos{sdl::get_mouse_location(), {1, 1}};
 
 	int initial = -1;
 	bool markup = false;
@@ -215,10 +218,12 @@ int show_menu(lua_State* L) {
 /**
  * Displays a simple message box.
  */
-int show_message_box(lua_State* L) {
+int show_message_box(lua_State* L)
+{
 	const t_string title = luaW_checktstring(L, 1), message = luaW_checktstring(L, 2);
 	std::string button = luaL_optstring(L, 3, "ok"), btn_style;
-	std::transform(button.begin(), button.end(), std::inserter(btn_style, btn_style.begin()), [](char c) { return std::tolower(c); });
+	std::transform(button.begin(), button.end(), std::inserter(btn_style, btn_style.begin()),
+		[](char c) { return std::tolower(c); });
 	bool markup = lua_isnoneornil(L, 3) ? luaW_toboolean(L, 3) : luaW_toboolean(L, 4);
 	using button_style = gui2::dialogs::message::button_style;
 	utils::optional<button_style> style;
@@ -263,42 +268,42 @@ int intf_show_recruit_dialog(lua_State* L)
 {
 	int idx = 1;
 	const size_t len = lua_rawlen(L, idx);
-	if (!lua_istable(L, idx)) {
+	if(!lua_istable(L, idx)) {
 		return luaL_error(L, "List of unit types not specified!");
 	}
 
 	std::vector<const unit_type*> types;
 	types.reserve(len);
-	for (size_t i = 1; i <= len; i++) {
+	for(size_t i = 1; i <= len; i++) {
 		lua_rawgeti(L, idx, i);
 		const unit_type* ut = luaW_tounittype(L, -1);
-		if (ut) {
+		if(ut) {
 			types.push_back(ut);
 		}
 		lua_pop(L, idx);
 	}
 
 	const display* disp = display::get_singleton();
-	if (!types.empty() && disp != nullptr) {
+	if(!types.empty() && disp != nullptr) {
 		std::map<const unit_type*, t_string> dummy; // TODO implement recruitability
 		auto dlg = gui2::dialogs::units_dialog::build_recruit_dialog(types, dummy, disp->playing_team());
 
 		idx++;
 		const config& cfg = luaW_checkconfig(L, idx);
-		if (!cfg.empty()) {
-			if (!cfg["title"].empty()) {
+		if(!cfg.empty()) {
+			if(!cfg["title"].empty()) {
 				dlg->set_title(cfg["title"]);
 			}
 
-			if (!cfg["ok_label"].empty()) {
+			if(!cfg["ok_label"].empty()) {
 				dlg->set_ok_label(cfg["ok_label"]);
 			}
 
-			if (!cfg["cancel_label"].empty()) {
+			if(!cfg["cancel_label"].empty()) {
 				dlg->set_cancel_label(cfg["cancel_label"]);
 			}
 
-			if (!cfg["help_topic"].empty()) {
+			if(!cfg["help_topic"].empty()) {
 				dlg->set_help_topic(cfg["help_topic"]);
 			}
 		}
@@ -314,46 +319,45 @@ int intf_show_recruit_dialog(lua_State* L)
 	return 0;
 }
 
-
 int intf_show_recall_dialog(lua_State* L)
 {
 	int idx = 1;
 	const size_t len = lua_rawlen(L, idx);
-	if (!lua_istable(L, idx)) {
+	if(!lua_istable(L, idx)) {
 		return luaL_error(L, "List of units not specified!");
 	}
 
 	std::vector<unit_const_ptr> units;
 	units.reserve(len);
-	for (size_t i = 1; i <= len; i++) {
+	for(size_t i = 1; i <= len; i++) {
 		lua_rawgeti(L, idx, i);
 		unit_const_ptr u(luaW_tounit_ptr(L, -1));
-		if (u) {
+		if(u) {
 			units.push_back(u);
 		}
 		lua_pop(L, idx);
 	}
 
 	const display* disp = display::get_singleton();
-	if (!units.empty() && disp != nullptr) {
+	if(!units.empty() && disp != nullptr) {
 		auto dlg = gui2::dialogs::units_dialog::build_recall_dialog(units, disp->playing_team());
 
 		idx++;
 		const config& cfg = luaW_checkconfig(L, idx);
-		if (!cfg.empty()) {
-			if (!cfg["title"].empty()) {
+		if(!cfg.empty()) {
+			if(!cfg["title"].empty()) {
 				dlg->set_title(cfg["title"]);
 			}
 
-			if (!cfg["ok_label"].empty()) {
+			if(!cfg["ok_label"].empty()) {
 				dlg->set_ok_label(cfg["ok_label"]);
 			}
 
-			if (!cfg["cancel_label"].empty()) {
+			if(!cfg["cancel_label"].empty()) {
 				dlg->set_cancel_label(cfg["cancel_label"]);
 			}
 
-			if (!cfg["help_topic"].empty()) {
+			if(!cfg["help_topic"].empty()) {
 				dlg->set_help_topic(cfg["help_topic"]);
 			}
 		}
@@ -369,7 +373,7 @@ int intf_show_recall_dialog(lua_State* L)
 	return 0;
 }
 
-static int show_help(lua_State *L)
+static int show_help(lua_State* L)
 {
 	help::show_help(luaL_checkstring(L, 1));
 	return 0;
@@ -400,21 +404,20 @@ int luaW_open(lua_State* L)
 	auto& lk = lua_kernel_base::get_lua_kernel<lua_kernel_base>(L);
 	lk.add_log("Adding gui module...\n");
 	static luaL_Reg const gui_callbacks[] = {
-		{ "show_menu",              &show_menu },
-		{ "show_narration",         &show_message_dialog },
-		{ "show_popup",             &show_popup_dialog },
-		{ "show_story",             &show_story },
-		{ "show_prompt",            &show_message_box },
-		{ "show_help",              &show_help   },
-		{ "switch_theme",           &switch_theme },
-		{ "add_widget_definition",  &intf_add_widget_definition },
-		{ "show_dialog",            &intf_show_dialog },
-		{ nullptr, nullptr },
+		{"show_menu", &show_menu},
+		{"show_narration", &show_message_dialog},
+		{"show_popup", &show_popup_dialog},
+		{"show_story", &show_story},
+		{"show_prompt", &show_message_box},
+		{"show_help", &show_help},
+		{"switch_theme", &switch_theme},
+		{"add_widget_definition", &intf_add_widget_definition},
+		{"show_dialog", &intf_show_dialog},
+		{nullptr, nullptr},
 	};
-	std::vector<lua_cpp::Reg> const cpp_gui_callbacks {
+	std::vector<lua_cpp::Reg> const cpp_gui_callbacks{
 		{"show_lua_console", std::bind(&lua_kernel_base::intf_show_lua_console, &lk, std::placeholders::_1)},
-		{nullptr, nullptr}
-	};
+		{nullptr, nullptr}};
 	lua_newtable(L);
 	luaL_setfuncs(L, gui_callbacks, 0);
 	lua_cpp::set_functions(L, cpp_gui_callbacks);

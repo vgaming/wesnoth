@@ -18,9 +18,9 @@
 #include "hash.hpp"
 #include "serialization/base64.hpp"
 
-#include <ctime>
-#include <boost/random.hpp>
 #include <boost/generator_iterator.hpp>
+#include <boost/random.hpp>
+#include <ctime>
 
 namespace campaignd
 {
@@ -36,7 +36,7 @@ std::string generate_salt(std::size_t len)
 	boost::mt19937 mt(std::time(nullptr));
 	auto salt = std::string(len, '0');
 	boost::uniform_int<> from_str(0, 63); // 64 possible values for base64
-	boost::variate_generator< boost::mt19937, boost::uniform_int<>> get_char(mt, from_str);
+	boost::variate_generator<boost::mt19937, boost::uniform_int<>> get_char(mt, from_str);
 
 	for(std::size_t i = 0; i < len; i++) {
 		salt[i] = crypt64::encode(get_char());
@@ -55,7 +55,7 @@ bool verify_passphrase(const std::string& passphrase, const std::string& salt, c
 std::pair<std::string, std::string> generate_hash(const std::string& passphrase)
 {
 	const auto& salt = generate_salt(16);
-	return { salt, utils::md5(passphrase, salt).base64_digest() };
+	return {salt, utils::md5(passphrase, salt).base64_digest()};
 }
 
 } // end namespace auth

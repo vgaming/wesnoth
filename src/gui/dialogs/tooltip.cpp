@@ -40,8 +40,7 @@ REGISTER_WINDOW(tooltip_large)
 class tooltip : public modeless_dialog
 {
 public:
-	tooltip(const std::string& window_id, const t_string& message,
-			const point& mouse, const SDL_Rect& source_rect)
+	tooltip(const std::string& window_id, const t_string& message, const point& mouse, const SDL_Rect& source_rect)
 		: modeless_dialog(window_id)
 	{
 		find_widget<styled_widget>("label").set_label(message);
@@ -61,31 +60,21 @@ namespace tip
 
 static std::unique_ptr<tooltip> tip;
 
-void show(const std::string& window_id,
-		  const t_string& message,
-		  const point& mouse,
-		  const SDL_Rect& source_rect)
+void show(const std::string& window_id, const t_string& message, const point& mouse, const SDL_Rect& source_rect)
 {
 	/*
 	 * For now allow invalid tip names, might turn them to invalid wml messages
 	 * later on.
 	 */
 	tip.reset(new tooltip(window_id, message, mouse, source_rect));
-	try
-	{
+	try {
 		tip->show();
-	}
-	catch(const window_builder_invalid_id&)
-	{
-		ERR_CFG << "Tip with the requested id '" << window_id
-				<< "' doesn't exist, fall back to the default.";
+	} catch(const window_builder_invalid_id&) {
+		ERR_CFG << "Tip with the requested id '" << window_id << "' doesn't exist, fall back to the default.";
 		tip.reset(new tooltip("tooltip_large", message, mouse, source_rect));
-		try
-		{
+		try {
 			tip->show();
-		}
-		catch(const window_builder_invalid_id&)
-		{
+		} catch(const window_builder_invalid_id&) {
 			ERR_CFG << "Default tooltip doesn't exist, no message shown.";
 		}
 	}
@@ -98,4 +87,4 @@ void remove()
 
 } // namespace tip
 
-} // namespace dialogs
+} // namespace gui2::dialogs

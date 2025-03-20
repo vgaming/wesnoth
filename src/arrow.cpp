@@ -73,13 +73,11 @@ void arrow::show()
 
 void arrow::set_path(const arrow_path_t& path)
 {
-	if (valid_path(path))
-	{
+	if(valid_path(path)) {
 		previous_path_ = path_;
 		path_ = path;
 		update_symbols();
-		if(!hidden_)
-		{
+		if(!hidden_) {
 			invalidate_arrow_path(previous_path_);
 			notify_arrow_changed();
 		}
@@ -99,8 +97,7 @@ void arrow::reset()
 void arrow::set_color(const std::string& color)
 {
 	color_ = color;
-	if (valid_path(path_))
-	{
+	if(valid_path(path_)) {
 		update_symbols();
 	}
 }
@@ -113,8 +110,7 @@ const std::string arrow::STYLE_FOCUS_INVALID = "focus_invalid";
 void arrow::set_style(const std::string& style)
 {
 	style_ = style;
-	if (valid_path(path_))
-	{
+	if(valid_path(path_)) {
 		update_symbols();
 	}
 }
@@ -151,8 +147,7 @@ bool arrow::valid_path(const arrow_path_t& path)
 
 void arrow::update_symbols()
 {
-	if (!valid_path(path_))
-	{
+	if(!valid_path(path_)) {
 		WRN_ARR << "arrow::update_symbols called with invalid path";
 		return;
 	}
@@ -160,7 +155,7 @@ void arrow::update_symbols()
 	symbols_map_.clear();
 	invalidate_arrow_path(path_);
 
-	const std::string mods = "~RC(FF00FF>"+ color_ + ")"; //magenta to current color
+	const std::string mods = "~RC(FF00FF>" + color_ + ")"; // magenta to current color
 
 	const std::string dirname = "arrows/";
 	std::string prefix = "";
@@ -172,8 +167,7 @@ void arrow::update_symbols()
 	bool teleport_out = false;
 
 	arrow_path_t::iterator hex;
-	for (hex = path_.begin(); hex != path_.end(); ++hex)
-	{
+	for(hex = path_.begin(); hex != path_.end(); ++hex) {
 		prefix = "";
 		suffix = "";
 		image_filename = "";
@@ -186,75 +180,58 @@ void arrow::update_symbols()
 		teleport_out = false;
 
 		// Determine some special cases
-		if (hex == arrow_start_hex)
+		if(hex == arrow_start_hex)
 			start = true;
-		if (hex == arrow_pre_end_hex)
+		if(hex == arrow_pre_end_hex)
 			pre_end = true;
-		else if (hex == arrow_end_hex)
+		else if(hex == arrow_end_hex)
 			end = true;
-		if (hex != arrow_end_hex && !tiles_adjacent(*hex, *(hex + 1)))
+		if(hex != arrow_end_hex && !tiles_adjacent(*hex, *(hex + 1)))
 			teleport_out = true;
 
 		// calculate enter and exit directions, if available
 		map_location::direction enter_dir = map_location::direction::indeterminate;
-		if (!start && !teleport_in)
-		{
-			enter_dir = hex->get_relative_dir(*(hex-1));
+		if(!start && !teleport_in) {
+			enter_dir = hex->get_relative_dir(*(hex - 1));
 		}
 		map_location::direction exit_dir = map_location::direction::indeterminate;
-		if (!end && !teleport_out)
-		{
-			exit_dir = hex->get_relative_dir(*(hex+1));
+		if(!end && !teleport_out) {
+			exit_dir = hex->get_relative_dir(*(hex + 1));
 		}
 
 		// Now figure out the actual images
-		if (teleport_out)
-		{
+		if(teleport_out) {
 			prefix = "teleport-out";
-			if (enter_dir != map_location::direction::indeterminate)
-			{
+			if(enter_dir != map_location::direction::indeterminate) {
 				suffix = map_location::write_direction(enter_dir);
 			}
-		}
-		else if (teleport_in)
-		{
+		} else if(teleport_in) {
 			prefix = "teleport-in";
-			if (exit_dir != map_location::direction::indeterminate)
-			{
+			if(exit_dir != map_location::direction::indeterminate) {
 				suffix = map_location::write_direction(exit_dir);
 			}
-		}
-		else if (start)
-		{
+		} else if(start) {
 			prefix = "start";
 			suffix = map_location::write_direction(exit_dir);
-			if (pre_end)
-			{
+			if(pre_end) {
 				suffix = suffix + "_ending";
 			}
-		}
-		else if (end)
-		{
+		} else if(end) {
 			prefix = "end";
 			suffix = map_location::write_direction(enter_dir);
-		}
-		else
-		{
+		} else {
 			std::string enter, exit;
 			enter = map_location::write_direction(enter_dir);
 			exit = map_location::write_direction(exit_dir);
-			if (pre_end)
-			{
+			if(pre_end) {
 				exit = exit + "_ending";
 			}
 
-			//assert(std::abs(enter_dir - exit_dir) > 1); //impossible turn?
-			if (enter_dir < exit_dir)
-			{
+			// assert(std::abs(enter_dir - exit_dir) > 1); //impossible turn?
+			if(enter_dir < exit_dir) {
 				prefix = enter;
 				suffix = exit;
-			}
-			else //(enter_dir > exit_dir)
+			} else //(enter_dir > exit_dir)
 			{
 				prefix = exit;
 				suffix = enter;
@@ -262,16 +239,14 @@ void arrow::update_symbols()
 		}
 
 		image_filename = dirname + style_ + "/" + prefix;
-		if (!suffix.empty())
-		{
+		if(!suffix.empty()) {
 			image_filename += ("-" + suffix);
 		}
 		image_filename += ".png";
 		assert(!image_filename.empty());
 
 		image::locator image = image::locator(image_filename, mods);
-		if (!image::exists(image))
-		{
+		if(!image::exists(image)) {
 			ERR_ARR << "Image " << image_filename << " not found.";
 			image = image::locator(game_config::images::missing);
 		}

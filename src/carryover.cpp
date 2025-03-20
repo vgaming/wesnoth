@@ -24,14 +24,15 @@ static lg::log_domain log_engine("engine");
 #define ERR_NG LOG_STREAM(err, log_engine)
 
 carryover::carryover(const config& side)
-		: add_(!side["carryover_add"].empty() ? side["carryover_add"].to_bool() : side["add"].to_bool())
-		, current_player_(side["current_player"])
-		, gold_(!side["carryover_gold"].empty() ? side["carryover_gold"].to_int() : side["gold"].to_int())
-		// if we load it from a snapshot we need to read the recruits from "recruits" and not from "previous_recruits".
-		, previous_recruits_(side.has_attribute("recruit") ? utils::split_set(side["recruit"].str()) :utils::split_set(side["previous_recruits"].str()))
-		, recall_list_()
-		, save_id_(side["save_id"])
-		, variables_(side.child_or_empty("variables"))
+	: add_(!side["carryover_add"].empty() ? side["carryover_add"].to_bool() : side["add"].to_bool())
+	, current_player_(side["current_player"])
+	, gold_(!side["carryover_gold"].empty() ? side["carryover_gold"].to_int() : side["gold"].to_int())
+	// if we load it from a snapshot we need to read the recruits from "recruits" and not from "previous_recruits".
+	, previous_recruits_(side.has_attribute("recruit") ? utils::split_set(side["recruit"].str())
+													   : utils::split_set(side["previous_recruits"].str()))
+	, recall_list_()
+	, save_id_(side["save_id"])
+	, variables_(side.child_or_empty("variables"))
 {
 	for(const config& u : side.child_range("unit")) {
 		recall_list_.push_back(u);
@@ -42,8 +43,8 @@ carryover::carryover(const config& side)
 
 static const int default_gold_qty = 100;
 
-void carryover::transfer_all_gold_to(config& side_cfg){
-
+void carryover::transfer_all_gold_to(config& side_cfg)
+{
 	int cfg_gold = side_cfg["gold"].to_int();
 
 	if(side_cfg["gold"].empty()) {
@@ -51,10 +52,9 @@ void carryover::transfer_all_gold_to(config& side_cfg){
 		side_cfg["gold"] = cfg_gold;
 	}
 
-	if(add_ && gold_ > 0){
+	if(add_ && gold_ > 0) {
 		side_cfg["gold"] = cfg_gold + gold_;
-	}
-	else if(gold_ > cfg_gold){
+	} else if(gold_ > cfg_gold) {
 		side_cfg["gold"] = gold_;
 	}
 	side_cfg.child_or_add("variables").swap(variables_);
@@ -62,39 +62,45 @@ void carryover::transfer_all_gold_to(config& side_cfg){
 	gold_ = 0;
 }
 
-void carryover::transfer_all_recruits_to(config& side_cfg){
+void carryover::transfer_all_recruits_to(config& side_cfg)
+{
 	std::string can_recruit_str = utils::join(previous_recruits_, ",");
 	previous_recruits_.clear();
 	side_cfg["previous_recruits"] = can_recruit_str;
 }
 
-void carryover::transfer_all_recalls_to(config& side_cfg){
-	for(const config & u_cfg : recall_list_) {
+void carryover::transfer_all_recalls_to(config& side_cfg)
+{
+	for(const config& u_cfg : recall_list_) {
 		side_cfg.add_child("unit", u_cfg);
 	}
 	recall_list_.clear();
 }
 
-std::string carryover::get_recruits(bool erase){
+std::string carryover::get_recruits(bool erase)
+{
 	// Join the previous recruits into a string.
 	std::string can_recruit_str = utils::join(previous_recruits_);
-	if ( erase )
+	if(erase)
 		// Clear the previous recruits.
 		previous_recruits_.clear();
 
 	return can_recruit_str;
 }
 
-const std::string carryover::to_string(){
+const std::string carryover::to_string()
+{
 	std::string side = "";
-	side.append("Side " + save_id_ + ": gold " + std::to_string(gold_) + " recruits " + get_recruits(false) + " units ");
-	for(const config & u_cfg : recall_list_) {
+	side.append(
+		"Side " + save_id_ + ": gold " + std::to_string(gold_) + " recruits " + get_recruits(false) + " units ");
+	for(const config& u_cfg : recall_list_) {
 		side.append(u_cfg["name"].str() + ", ");
 	}
 	return side;
 }
 
-void carryover::to_config(config& cfg){
+void carryover::to_config(config& cfg)
+{
 	config& side = cfg.add_child("side");
 	side["save_id"] = save_id_;
 	side["gold"] = gold_;
@@ -102,7 +108,7 @@ void carryover::to_config(config& cfg){
 	side["current_player"] = current_player_;
 	side["previous_recruits"] = get_recruits(false);
 	side.add_child("variables", variables_);
-	for(const config & u_cfg : recall_list_) {
+	for(const config& u_cfg : recall_list_) {
 		side.add_child("unit", u_cfg);
 	}
 }
@@ -115,39 +121,38 @@ carryover_info::carryover_info(const config& cfg, bool from_snpashot)
 	, next_scenario_(cfg["next_scenario"])
 	, next_underlying_unit_id_(cfg["next_underlying_unit_id"].to_int(0))
 {
-	for(const config& side : cfg.child_range("side"))
-	{
-		if(side["lost"].to_bool(false) || !side["persistent"].to_bool(true) || side["save_id"].empty())
-		{
-			//this shouldn't happen outside a snpshot.
+	for(const config& side : cfg.child_range("side")) {
+		if(side["lost"].to_bool(false) || !side["persistent"].to_bool(true) || side["save_id"].empty()) {
+			// this shouldn't happen outside a snpshot.
 			if(!from_snpashot) {
-				ERR_NG << "found invalid carryover data in saved game, lost='" << side["lost"] << "' persistent='" << side["persistent"] << "' save_id='" << side["save_id"] << "'";
+				ERR_NG << "found invalid carryover data in saved game, lost='" << side["lost"] << "' persistent='"
+					   << side["persistent"] << "' save_id='" << side["save_id"] << "'";
 			}
 			continue;
 		}
 		this->carryover_sides_.emplace_back(side);
 	}
-	for(const config& item : cfg.child_range("menu_item"))
-	{
+	for(const config& item : cfg.child_range("menu_item")) {
 		if(item["persistent"].to_bool(true)) {
 			wml_menu_items_.push_back(item);
 		}
 	}
 }
 
-std::vector<carryover>& carryover_info::get_all_sides() {
+std::vector<carryover>& carryover_info::get_all_sides()
+{
 	return carryover_sides_;
 }
 
-void carryover_info::add_side(const config& cfg) {
+void carryover_info::add_side(const config& cfg)
+{
 	carryover_sides_.emplace_back(cfg);
 }
 
-void carryover_info::remove_side(const std::string& id) {
-	for (std::vector<carryover>::iterator it = carryover_sides_.begin();
-		it != carryover_sides_.end(); ++it) {
-
-		if (it->get_save_id() == id) {
+void carryover_info::remove_side(const std::string& id)
+{
+	for(std::vector<carryover>::iterator it = carryover_sides_.begin(); it != carryover_sides_.end(); ++it) {
+		if(it->get_save_id() == id) {
 			carryover_sides_.erase(it);
 			break;
 		}
@@ -156,8 +161,11 @@ void carryover_info::remove_side(const std::string& id) {
 
 struct save_id_equals
 {
-	save_id_equals(const std::string& val) : value (val) {}
-	bool operator () (carryover& v2) const
+	save_id_equals(const std::string& val)
+		: value(val)
+	{
+	}
+	bool operator()(carryover& v2) const
 	{
 		return value == v2.get_save_id();
 	}
@@ -165,27 +173,22 @@ struct save_id_equals
 	std::string value;
 };
 
-void carryover_info::transfer_all_to(config& side_cfg){
-	if(side_cfg["save_id"].empty()){
+void carryover_info::transfer_all_to(config& side_cfg)
+{
+	if(side_cfg["save_id"].empty()) {
 		side_cfg["save_id"] = side_cfg["id"];
 	}
-	std::vector<carryover>::iterator iside = std::find_if(
-		carryover_sides_.begin(),
-		carryover_sides_.end(),
-		save_id_equals(side_cfg["save_id"])
-	);
-	if(iside != carryover_sides_.end())
-	{
+	std::vector<carryover>::iterator iside
+		= std::find_if(carryover_sides_.begin(), carryover_sides_.end(), save_id_equals(side_cfg["save_id"]));
+	if(iside != carryover_sides_.end()) {
 		iside->transfer_all_gold_to(side_cfg);
 		iside->transfer_all_recalls_to(side_cfg);
 		iside->transfer_all_recruits_to(side_cfg);
 		carryover_sides_.erase(iside);
 		return;
-	}
-	else
-	{
-		//if no carryover was found for this side, check if starting gold is defined
-		if(!side_cfg.has_attribute("gold") || side_cfg["gold"].empty()){
+	} else {
+		// if no carryover was found for this side, check if starting gold is defined
+		if(!side_cfg.has_attribute("gold") || side_cfg["gold"].empty()) {
 			side_cfg["gold"] = default_gold_qty;
 		}
 	}
@@ -193,23 +196,21 @@ void carryover_info::transfer_all_to(config& side_cfg){
 
 void carryover_info::transfer_to(config& level)
 {
-	if(!level.has_attribute("next_underlying_unit_id"))
-	{
+	if(!level.has_attribute("next_underlying_unit_id")) {
 		level["next_underlying_unit_id"] = next_underlying_unit_id_;
 	}
 
-	//if the game has been loaded from a snapshot, variables_ is empty since we cleared it below.
+	// if the game has been loaded from a snapshot, variables_ is empty since we cleared it below.
 	level.child_or_add("variables").append(std::move(variables_));
 
-	config::attribute_value & seed_value = level["random_seed"];
-	if ( seed_value.empty() ) {
+	config::attribute_value& seed_value = level["random_seed"];
+	if(seed_value.empty()) {
 		seed_value = rng_.get_random_seed_str();
 		level["random_calls"] = rng_.get_random_calls();
 	}
 
-	if(!level.has_child("menu_item")){
-		for(config& item : wml_menu_items_)
-		{
+	if(!level.has_child("menu_item")) {
+		for(config& item : wml_menu_items_) {
 			level.add_child("menu_item").swap(item);
 		}
 	}
@@ -217,7 +218,6 @@ void carryover_info::transfer_to(config& level)
 	next_scenario_ = "";
 	variables_.clear();
 	wml_menu_items_.clear();
-
 }
 
 const config carryover_info::to_config()
@@ -234,35 +234,29 @@ const config carryover_info::to_config()
 	cfg["random_calls"] = rng_.get_random_calls();
 
 	cfg.add_child("variables", variables_);
-	for(const config& item : wml_menu_items_)
-	{
+	for(const config& item : wml_menu_items_) {
 		cfg.add_child("menu_item", item);
 	}
 	return cfg;
 }
 
-carryover* carryover_info::get_side(const std::string& save_id){
+carryover* carryover_info::get_side(const std::string& save_id)
+{
 	for(carryover& side : carryover_sides_) {
-		if(side.get_save_id() == save_id){
+		if(side.get_save_id() == save_id) {
 			return &side;
 		}
 	}
 	return nullptr;
 }
 
-
 void carryover_info::merge_old_carryover(const carryover_info& old_carryover)
 {
-	for(const carryover & old_side : old_carryover.carryover_sides_)
-	{
-		std::vector<carryover>::iterator iside = std::find_if(
-			carryover_sides_.begin(),
-			carryover_sides_.end(),
-			save_id_equals(old_side.get_save_id())
-			);
-		//add the side if don't already have it.
-		if(iside == carryover_sides_.end())
-		{
+	for(const carryover& old_side : old_carryover.carryover_sides_) {
+		std::vector<carryover>::iterator iside
+			= std::find_if(carryover_sides_.begin(), carryover_sides_.end(), save_id_equals(old_side.get_save_id()));
+		// add the side if don't already have it.
+		if(iside == carryover_sides_.end()) {
 			this->carryover_sides_.push_back(old_side);
 		}
 	}

@@ -22,8 +22,8 @@
 #include "gui/core/register_widget.hpp"
 #include "gui/core/window_builder/helper.hpp"
 #include "gui/widgets/window.hpp"
-#include <functional>
 #include "wml_exception.hpp"
+#include <functional>
 
 #define LOG_SCOPE_HEADER get_control_type() + " [" + id() + "] " + __func__
 #define LOG_HEADER LOG_SCOPE_HEADER + ':'
@@ -43,7 +43,8 @@ tree_view::tree_view(const implementation::builder_tree_view& builder)
 	, selected_item_(nullptr)
 {
 	connect_signal<event::LEFT_BUTTON_DOWN>(
-		std::bind(&tree_view::signal_handler_left_button_down, this, std::placeholders::_2), event::dispatcher::back_pre_child);
+		std::bind(&tree_view::signal_handler_left_button_down, this, std::placeholders::_2),
+		event::dispatcher::back_pre_child);
 }
 
 tree_view::~tree_view()
@@ -53,8 +54,7 @@ tree_view::~tree_view()
 	}
 }
 
-tree_view_node& tree_view::add_node(
-	const std::string& id, const widget_data& data, const int index)
+tree_view_node& tree_view::add_node(const std::string& id, const widget_data& data, const int index)
 {
 	return get_root_node().add_child(id, data, index);
 }
@@ -107,19 +107,15 @@ void tree_view::layout_children()
 }
 
 void tree_view::resize_content(const int width_modification,
-		const int height_modification,
-		const int width_modification_pos,
-		const int height_modification_pos)
+	const int height_modification,
+	const int width_modification_pos,
+	const int height_modification_pos)
 {
 	DBG_GUI_L << LOG_HEADER << " current size " << content_grid()->get_size() << " width_modification "
 			  << width_modification << " height_modification " << height_modification << ".";
 
 	if(content_resize_request(
-		width_modification,
-		height_modification,
-		width_modification_pos,
-		height_modification_pos
-	)) {
+		   width_modification, height_modification, width_modification_pos, height_modification_pos)) {
 		// Calculate new size.
 		point size = content_grid()->get_size();
 		size.x += width_modification;
@@ -264,8 +260,10 @@ tree_view_definition::resolution::resolution(const config& cfg)
 	, grid(nullptr)
 {
 	// Note the order should be the same as the enum state_t is listbox.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("tree_view_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("tree_view_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("tree_view_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_disabled", missing_mandatory_wml_tag("tree_view_definition][resolution", "state_disabled")));
 
 	auto child = VALIDATE_WML_CHILD(cfg, "grid", missing_mandatory_wml_tag("tree_view_definition][resolution", "grid"));
 
@@ -317,7 +315,8 @@ tree_node::tree_node(const config& cfg)
 	// TODO: interpolate this value into the error message
 	VALIDATE(id != tree_view::root_node_id, _("[node]id ‘root’ is reserved for the implementation."));
 
-	auto node_definition = VALIDATE_WML_CHILD(cfg, "node_definition", missing_mandatory_wml_tag("node", "node_definition"));
+	auto node_definition
+		= VALIDATE_WML_CHILD(cfg, "node_definition", missing_mandatory_wml_tag("node", "node_definition"));
 	builder = std::make_shared<builder_grid>(node_definition);
 }
 

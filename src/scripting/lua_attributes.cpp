@@ -18,17 +18,21 @@
 #include "scripting/push_check.hpp"
 #include <sstream>
 
-luaW_Registry::luaW_Registry(const std::initializer_list<std::string>& mt) : public_metatable(mt) {
+luaW_Registry::luaW_Registry(const std::initializer_list<std::string>& mt)
+	: public_metatable(mt)
+{
 	private_metatable = public_metatable.back();
 	public_metatable.pop_back();
 	lookup.emplace(private_metatable, std::ref(*this));
 }
 
-luaW_Registry::~luaW_Registry() {
+luaW_Registry::~luaW_Registry()
+{
 	lookup.erase(private_metatable);
 }
 
-int luaW_Registry::get(lua_State* L) {
+int luaW_Registry::get(lua_State* L)
+{
 	std::string_view str = lua_check<std::string_view>(L, 2);
 
 	auto it = getters.find(std::string(str));
@@ -50,7 +54,8 @@ int luaW_Registry::get(lua_State* L) {
 	return luaL_argerror(L, 2, err.str().c_str());
 }
 
-int luaW_Registry::set(lua_State* L) {
+int luaW_Registry::set(lua_State* L)
+{
 	std::string_view str = lua_check<std::string_view>(L, 2);
 
 	auto it = setters.find(std::string(str));
@@ -65,7 +70,8 @@ int luaW_Registry::set(lua_State* L) {
 	return luaL_argerror(L, 2, err.str().c_str());
 }
 
-int luaW_Registry::dir(lua_State *L) {
+int luaW_Registry::dir(lua_State* L)
+{
 	std::vector<std::string> keys;
 	if(lua_istable(L, 2)) {
 		keys = lua_check<std::vector<std::string>>(L, 2);
@@ -79,15 +85,17 @@ int luaW_Registry::dir(lua_State *L) {
 	}
 	// Add any readable keys
 	for(const auto& [key, func] : getters) {
-		if(inactive.count(key) > 0) continue;
-		if(func(L, true)){
+		if(inactive.count(key) > 0)
+			continue;
+		if(func(L, true)) {
 			keys.push_back(key);
 		}
 	}
 	// Add any writable keys
 	for(const auto& [key, func] : setters) {
-		if(inactive.count(key) > 0) continue;
-		if(func(L, 0, true)){
+		if(inactive.count(key) > 0)
+			continue;
+		if(func(L, 0, true)) {
 			keys.push_back(key);
 		}
 	}

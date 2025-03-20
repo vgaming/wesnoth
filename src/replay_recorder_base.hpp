@@ -25,7 +25,10 @@ public:
 	~replay_recorder_base();
 
 	void swap(replay_recorder_base& other);
-	void swap(replay_recorder_base&& other) {swap(other);}
+	void swap(replay_recorder_base&& other)
+	{
+		swap(other);
+	}
 	int get_pos() const;
 
 	int size() const;
@@ -57,6 +60,7 @@ public:
 	/// checks whether the parameter is an earlier state in the
 	/// same "savegame gamestate branch"
 	bool is_ancestor(const config& other_replay) const;
+
 protected:
 	config upload_log_;
 	boost::ptr_vector<config> commands_;

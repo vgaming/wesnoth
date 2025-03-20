@@ -21,8 +21,7 @@
 namespace game_config
 {
 
-enum LIBRARY_ID
-{
+enum LIBRARY_ID {
 	LIB_BOOST,
 	LIB_LUA,
 
@@ -44,7 +43,11 @@ struct optional_feature
 	std::string name;
 	bool enabled;
 
-	optional_feature(const char* n) : name(n), enabled(false) {}
+	optional_feature(const char* n)
+		: name(n)
+		, enabled(false)
+	{
+	}
 };
 
 /**

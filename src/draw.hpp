@@ -216,11 +216,9 @@ void cairo_circle(int cx, int cy, int r, const color_t& c, int thickness);
 /** Draw filled circle using Cairo */
 void cairo_disc(int cx, int cy, int r, const color_t& c);
 
-
 /*******************/
 /* texture drawing */
 /*******************/
-
 
 /**
  * Draws a texture, or part of a texture, at the given location.
@@ -254,11 +252,7 @@ void blit(const texture& tex);
  * @param flip_h    Whether to flip/mirror the texture horizontally.
  * @param flip_v    Whether to flip/mirror the texture vertically.
  */
-void flipped(const texture& tex,
-	const SDL_Rect& dst,
-	bool flip_h = true,
-	bool flip_v = false
-);
+void flipped(const texture& tex, const SDL_Rect& dst, bool flip_h = true, bool flip_v = false);
 void flipped(const texture& tex, bool flip_h = true, bool flip_v = false);
 
 /**
@@ -278,22 +272,14 @@ void flipped(const texture& tex, bool flip_h = true, bool flip_v = false);
  *                  adjacent tiles always share a common edge. This can look
  *                  better for images that are not perfect tiles.
  */
-void tiled(const texture& tex,
-	const SDL_Rect& dst,
-	bool centered = false,
-	bool mirrored = false
-);
+void tiled(const texture& tex, const SDL_Rect& dst, bool centered = false, bool mirrored = false);
 
 /** Tile a texture to fill a region.
  *
  * This function tiles the texture in output space. It is otherwise
  * identical to draw::tiled().
  */
-void tiled_highres(const texture& tex,
-	const SDL_Rect& dst,
-	bool centered = false,
-	bool mirrored = false
-);
+void tiled_highres(const texture& tex, const SDL_Rect& dst, bool centered = false, bool mirrored = false);
 
 /**
  * Draw a texture with smoothly varying colour and alpha modification,
@@ -316,24 +302,27 @@ void tiled_highres(const texture& tex,
  * @param uvBL  The UV texture coordinate at the bottom-left corner
  * @param uvBR  The UV texture coordinate at the bottom-right corner
  */
-void smooth_shaded(const texture& tex, const SDL_Rect& dst,
-	const SDL_Color& cTL, const SDL_Color& cTR,
-	const SDL_Color& cBL, const SDL_Color& cBR,
-	const SDL_FPoint& uvTL, const SDL_FPoint& uvTR,
-	const SDL_FPoint& uvBL, const SDL_FPoint& uvBR
-);
-void smooth_shaded(const texture& tex, const SDL_Rect& dst,
-	const SDL_Color& cTL, const SDL_Color& cTR,
-	const SDL_Color& cBL, const SDL_Color& cBR
-);
 void smooth_shaded(const texture& tex,
-	const std::array<SDL_Vertex, 4>& verts
-);
+	const SDL_Rect& dst,
+	const SDL_Color& cTL,
+	const SDL_Color& cTR,
+	const SDL_Color& cBL,
+	const SDL_Color& cBR,
+	const SDL_FPoint& uvTL,
+	const SDL_FPoint& uvTR,
+	const SDL_FPoint& uvBL,
+	const SDL_FPoint& uvBR);
+void smooth_shaded(const texture& tex,
+	const SDL_Rect& dst,
+	const SDL_Color& cTL,
+	const SDL_Color& cTR,
+	const SDL_Color& cBL,
+	const SDL_Color& cBR);
+void smooth_shaded(const texture& tex, const std::array<SDL_Vertex, 4>& verts);
 
 /***************************/
 /* RAII state manipulation */
 /***************************/
-
 
 /** A class to manage automatic restoration of the clipping region.
  *
@@ -347,6 +336,7 @@ class clip_setter
 public:
 	explicit clip_setter(const SDL_Rect& clip);
 	~clip_setter();
+
 private:
 	SDL_Rect c_;
 	bool clip_enabled_;
@@ -405,7 +395,6 @@ void disable_clip();
  */
 bool null_clip();
 
-
 /** A class to manage automatic restoration of the viewport region.
  *
  * This will also translate the current clipping region into the space
@@ -419,6 +408,7 @@ class viewport_setter
 public:
 	explicit viewport_setter(const SDL_Rect& viewport);
 	~viewport_setter();
+
 private:
 	SDL_Rect v_;
 	SDL_Rect c_;
@@ -465,7 +455,6 @@ void force_viewport(const SDL_Rect& viewport);
  */
 SDL_Rect get_viewport();
 
-
 /**
  * A class to manage automatic restoration of the render target.
  *
@@ -508,6 +497,5 @@ private:
  *              whatever it was before this call.
  */
 [[nodiscard]] render_target_setter set_render_target(const texture& t);
-
 
 } // namespace draw

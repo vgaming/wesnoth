@@ -36,8 +36,7 @@ void theme_list::pre_show()
 	listbox& list = find_widget<listbox>("themes");
 	keyboard_capture(&list);
 
-	for(const auto & t : themes_)
-	{
+	for(const auto& t : themes_) {
 		widget_data data;
 		widget_item column;
 
@@ -70,4 +69,4 @@ void theme_list::post_show()
 	listbox& list = find_widget<listbox>("themes");
 	index_ = list.get_selected_row();
 }
-} // namespace dialogs
+} // namespace gui2::dialogs

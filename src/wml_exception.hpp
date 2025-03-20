@@ -32,49 +32,41 @@
  *  @param message      The translatable message to show at the user.
  */
 #ifndef __func__
- #ifdef __FUNCTION__
-  #define __func__ __FUNCTION__
- #endif
+#ifdef __FUNCTION__
+#define __func__ __FUNCTION__
+#endif
 #endif
 
-#define VALIDATE(cond, message)                                           \
-	do {                                                                  \
-		if(!(cond)) {                                                     \
-			throw_wml_exception(#cond, __FILE__, __LINE__, __func__, message);  \
-		}                                                                 \
+#define VALIDATE(cond, message)                                                                                        \
+	do {                                                                                                               \
+		if(!(cond)) {                                                                                                  \
+			throw_wml_exception(#cond, __FILE__, __LINE__, __func__, message);                                         \
+		}                                                                                                              \
 	} while(false)
 
-#define VALIDATE_WML_CHILD(cfg, key, message)                                             \
-    ([](auto c, auto k) {                                                             \
-        if(auto child = c.optional_child(k)) { return *child; }                       \
-        throw_wml_exception( "Missing [" key "]", __FILE__, __LINE__, __func__, message); \
-    })(cfg, key)                                                                          \
+#define VALIDATE_WML_CHILD(cfg, key, message)                                                                          \
+	([](auto c, auto k) {                                                                                              \
+		if(auto child = c.optional_child(k)) {                                                                         \
+			return *child;                                                                                             \
+		}                                                                                                              \
+		throw_wml_exception("Missing [" key "]", __FILE__, __LINE__, __func__, message);                               \
+	})(cfg, key)
 
-#define VALIDATE_WITH_DEV_MESSAGE(cond, message, dev_message)             \
-	do {                                                                  \
-		if(!(cond)) {                                                     \
-			throw_wml_exception(#cond                                           \
-					, __FILE__                                            \
-					, __LINE__                                            \
-					, __func__                                            \
-					, message                                             \
-					, dev_message);                                       \
-		}                                                                 \
+#define VALIDATE_WITH_DEV_MESSAGE(cond, message, dev_message)                                                          \
+	do {                                                                                                               \
+		if(!(cond)) {                                                                                                  \
+			throw_wml_exception(#cond, __FILE__, __LINE__, __func__, message, dev_message);                            \
+		}                                                                                                              \
 	} while(false)
 
-#define FAIL(message)                                                     \
-	do {                                                                  \
-		throw_wml_exception(nullptr, __FILE__, __LINE__, __func__, message);       \
+#define FAIL(message)                                                                                                  \
+	do {                                                                                                               \
+		throw_wml_exception(nullptr, __FILE__, __LINE__, __func__, message);                                           \
 	} while(false)
 
-#define FAIL_WITH_DEV_MESSAGE(message, dev_message)                       \
-	do {                                                                  \
-		throw_wml_exception(nullptr                                                \
-				, __FILE__                                                \
-				, __LINE__                                                \
-				, __func__                                                \
-				, message                                                 \
-				, dev_message);                                           \
+#define FAIL_WITH_DEV_MESSAGE(message, dev_message)                                                                    \
+	do {                                                                                                               \
+		throw_wml_exception(nullptr, __FILE__, __LINE__, __func__, message, dev_message);                              \
 	} while(false)
 
 /**
@@ -87,17 +79,15 @@
  *  @param message      The translated message to show the user.
  *  @param dev_message  Any additional information that might be useful to a developer.
  */
-[[noreturn]] void throw_wml_exception(
-		  const char* cond
-		, const char* file
-		, int line
-		, const char *function
-		, const std::string& message
-		, const std::string& dev_message = "");
+[[noreturn]] void throw_wml_exception(const char* cond,
+	const char* file,
+	int line,
+	const char* function,
+	const std::string& message,
+	const std::string& dev_message = "");
 
 /** Helper class, don't construct this directly. */
-struct wml_exception final
-	: public lua_jailbreak_exception
+struct wml_exception final : public lua_jailbreak_exception
 {
 	wml_exception(const std::string& user_msg, const std::string& dev_msg)
 		: user_message(user_msg)
@@ -106,7 +96,9 @@ struct wml_exception final
 		this->store();
 	}
 
-	~wml_exception() noexcept {}
+	~wml_exception() noexcept
+	{
+	}
 
 	/**
 	 *  The message for the user explaining what went wrong. This message can
@@ -125,6 +117,7 @@ struct wml_exception final
 	 * Shows the error in a dialog.
 	 */
 	void show() const;
+
 private:
 	IMPLEMENT_LUA_JAILBREAK_EXCEPTION(wml_exception)
 };
@@ -145,11 +138,10 @@ private:
  *
  * @returns                       The error message.
  */
-std::string missing_mandatory_wml_key(
-		  const std::string& section
-		, const std::string& key
-		, const std::string& primary_key = ""
-		, const std::string& primary_value = "");
+std::string missing_mandatory_wml_key(const std::string& section,
+	const std::string& key,
+	const std::string& primary_key = "",
+	const std::string& primary_value = "");
 
 /**
  * Returns a standard message for a missing wml child (tag).
@@ -160,6 +152,4 @@ std::string missing_mandatory_wml_key(
  *
  * @returns                       The error message.
  */
-std::string missing_mandatory_wml_tag(
-		  const std::string& section
-		, const std::string& tag);
+std::string missing_mandatory_wml_tag(const std::string& section, const std::string& tag);

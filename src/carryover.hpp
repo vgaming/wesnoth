@@ -15,9 +15,9 @@
 #pragma once
 
 class team;
-#include <vector>
-#include <string>
 #include <set>
+#include <string>
+#include <vector>
 
 #include "config.hpp"
 #include "mt_rng.hpp"
@@ -26,23 +26,30 @@ class carryover
 {
 public:
 	carryover()
-		: add_ ()
+		: add_()
 		, current_player_()
 		, gold_()
 		, previous_recruits_()
 		, recall_list_()
 		, save_id_()
-	{}
+	{
+	}
 	// Turns config from a loaded savegame into carryover_info
 	explicit carryover(const config& side);
-	~carryover(){}
+	~carryover()
+	{
+	}
 
-	const std::string& get_save_id() const{ return save_id_; }
+	const std::string& get_save_id() const
+	{
+		return save_id_;
+	}
 	void transfer_all_gold_to(config& side_cfg);
 	void transfer_all_recruits_to(config& side_cfg);
 	void transfer_all_recalls_to(config& side_cfg);
 	const std::string to_string();
 	void to_config(config& cfg);
+
 private:
 	bool add_;
 	std::string current_player_;
@@ -55,7 +62,7 @@ private:
 	std::string save_id_;
 	config variables_;
 
-	std::string get_recruits(bool erase=false);
+	std::string get_recruits(bool erase = false);
 };
 
 class carryover_info
@@ -68,7 +75,8 @@ public:
 		, wml_menu_items_()
 		, next_scenario_()
 		, next_underlying_unit_id_()
-	{}
+	{
+	}
 	/**
 	 * Turns config from a loaded savegame into carryover_info
 	 * @param cfg the config to use
@@ -86,22 +94,38 @@ public:
 
 	void transfer_to(config& level);
 
-	void set_variables(const config& vars) { variables_ = vars; }
-	const config& get_variables() const { return variables_; }
+	void set_variables(const config& vars)
+	{
+		variables_ = vars;
+	}
+	const config& get_variables() const
+	{
+		return variables_;
+	}
 
-	const randomness::mt_rng& rng() const { return rng_; }
-	randomness::mt_rng& rng() { return rng_; }
+	const randomness::mt_rng& rng() const
+	{
+		return rng_;
+	}
+	randomness::mt_rng& rng()
+	{
+		return rng_;
+	}
 
-	const std::string& next_scenario() const { return next_scenario_; }
+	const std::string& next_scenario() const
+	{
+		return next_scenario_;
+	}
 
 	const config to_config();
 
 	void merge_old_carryover(const carryover_info& old_carryover);
+
 private:
 	std::vector<carryover> carryover_sides_;
 	config variables_;
 	randomness::mt_rng rng_;
 	std::vector<config> wml_menu_items_;
-	std::string next_scenario_;    /**< the scenario coming next (for campaigns) */
+	std::string next_scenario_; /**< the scenario coming next (for campaigns) */
 	int next_underlying_unit_id_;
 };

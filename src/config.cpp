@@ -21,11 +21,11 @@
 
 #include "config.hpp"
 
+#include "deprecation.hpp"
 #include "formatter.hpp"
+#include "game_version.hpp"
 #include "lexical_cast.hpp"
 #include "log.hpp"
-#include "deprecation.hpp"
-#include "game_version.hpp"
 #include "serialization/string_utils.hpp"
 #include "utils/general.hpp"
 
@@ -67,7 +67,7 @@ int map_erase_key(Map& map, Key&& key)
 	return 0;
 }
 
-}
+} // namespace
 
 /* ** config implementation ** */
 
@@ -135,16 +135,14 @@ bool config::valid_tag(config_key_type name)
 		// A lone underscore isn't a valid tag name
 		return false;
 	} else {
-		return std::all_of(name.begin(), name.end(), [](const char& c)
-		{
+		return std::all_of(name.begin(), name.end(), [](const char& c) {
 			/* Only alphanumeric ASCII characters and underscores are allowed.
 
 			We're using a manual check mainly for performance. @gfgtdf measured
 			that a manual check can be up to 30 times faster than std::isalnum().
 
 			- Jyrki, 2019-01-19 */
-			return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
-				(c >= '0' && c <= '9') || (c == '_');
+			return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || (c == '_');
 		});
 	}
 }
@@ -196,12 +194,11 @@ void config::append(const config& cfg)
 void config::append(config&& cfg)
 {
 	if(children_.empty()) {
-		//optimisation
+		// optimisation
 		children_ = std::move(cfg.children_);
 		ordered_children = std::move(cfg.ordered_children);
 		cfg.clear_all_children();
-	}
-	else {
+	} else {
 		for(const auto [child_key, child_value] : cfg.all_children_view()) {
 			add_child(child_key, std::move(child_value));
 		}
@@ -209,12 +206,11 @@ void config::append(config&& cfg)
 	}
 
 	if(values_.empty()) {
-		//optimisation.
+		// optimisation.
 		values_ = std::move(cfg.values_);
-	}
-	else {
+	} else {
 		for(const auto& [key, value] : cfg.values_) {
-			//TODO: move the attributes as well?
+			// TODO: move the attributes as well?
 			values_[key] = value;
 		}
 	}
@@ -315,11 +311,12 @@ bool config::has_child(config_key_type key) const
 	return i != children_.end() && !i->second.empty();
 }
 
-namespace {
-template<class Tchildren>
-auto get_child_impl(Tchildren& children, config_key_type key, int n) -> optional_config_impl<std::remove_reference_t<decltype(**(*children.begin()).second.begin())>>
+namespace
 {
-
+template<class Tchildren>
+auto get_child_impl(Tchildren& children, config_key_type key, int n)
+	-> optional_config_impl<std::remove_reference_t<decltype(**(*children.begin()).second.begin())>>
+{
 	auto i = children.find(key);
 	if(i == children.end()) {
 		DBG_CF << "The config object has no child named ‘" << key << "’.";
@@ -339,14 +336,15 @@ auto get_child_impl(Tchildren& children, config_key_type key, int n) -> optional
 	}
 }
 
-}
+} // namespace
 
 config& config::mandatory_child(config_key_type key, const std::string& parent)
 {
 	if(auto res = get_child_impl(children_, key, 0)) {
 		return *res;
 	} else {
-		throw error("Mandatory WML child ‘[" + std::string(key) + "]’ missing in ‘" + parent + "’. Please report this bug.");
+		throw error(
+			"Mandatory WML child ‘[" + std::string(key) + "]’ missing in ‘" + parent + "’. Please report this bug.");
 	}
 }
 
@@ -355,7 +353,8 @@ const config& config::mandatory_child(config_key_type key, const std::string& pa
 	if(auto res = get_child_impl(children_, key, 0)) {
 		return *res;
 	} else {
-		throw error("Mandatory WML child ‘[" + std::string(key) + "]’ missing in ‘" + parent + "’. Please report this bug.");
+		throw error(
+			"Mandatory WML child ‘[" + std::string(key) + "]’ missing in ‘" + parent + "’. Please report this bug.");
 	}
 }
 
@@ -408,7 +407,8 @@ config& config::child_or_add(config_key_type key)
 	return add_child(key);
 }
 
-optional_config_impl<const config> config::get_deprecated_child(config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const
+optional_config_impl<const config> config::get_deprecated_child(
+	config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const
 {
 	if(auto res = optional_child(old_key)) {
 		const std::string what = formatter() << "[" << in_tag << "][" << old_key << "]";
@@ -419,7 +419,8 @@ optional_config_impl<const config> config::get_deprecated_child(config_key_type 
 	return utils::nullopt;
 }
 
-config::const_child_itors config::get_deprecated_child_range(config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const
+config::const_child_itors config::get_deprecated_child_range(
+	config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const
 {
 	static child_list dummy;
 	const child_list* p = &dummy;
@@ -500,7 +501,8 @@ size_t config::find_total_first_of(config_key_type key, size_t start)
 	assert(start <= ordered_children.size());
 	const size_t npos = static_cast<size_t>(-1);
 
-	auto pos = std::find_if(ordered_begin() + start, ordered_end(), [&](const config::any_child& can){ return can.key == key; });
+	auto pos = std::find_if(
+		ordered_begin() + start, ordered_end(), [&](const config::any_child& can) { return can.key == key; });
 
 	if(pos == ordered_end()) {
 		return npos;
@@ -509,21 +511,21 @@ size_t config::find_total_first_of(config_key_type key, size_t start)
 	return static_cast<size_t>(pos - ordered_begin());
 }
 
-config& config::add_child_at_total(config_key_type key, const config &val, std::size_t pos)
+config& config::add_child_at_total(config_key_type key, const config& val, std::size_t pos)
 {
 	assert(pos <= ordered_children.size());
 	if(pos == ordered_children.size()) {
-		//optimisation
+		// optimisation
 		return config::add_child(key, val);
 	}
 
 	auto end = ordered_children.end();
 	auto pos_it = ordered_children.begin() + pos;
-	auto next = std::find_if(pos_it, end,[&](const child_pos& p){ return p.pos->first == key; });
+	auto next = std::find_if(pos_it, end, [&](const child_pos& p) { return p.pos->first == key; });
 
 	if(next == end) {
 		config& res = config::add_child(key, val);
-		//rotate the just inserted element to position pos.
+		// rotate the just inserted element to position pos.
 		std::rotate(ordered_children.begin() + pos, ordered_children.end() - 1, ordered_children.end());
 		return res;
 	}
@@ -534,14 +536,14 @@ config& config::add_child_at_total(config_key_type key, const config &val, std::
 	config& res = **(l.emplace(l.begin() + index, new config(val)));
 
 	for(auto ord = next; ord != end; ++ord) {
-		//this changes next->index and all later refernces to that tag.
+		// this changes next->index and all later refernces to that tag.
 		if(ord->pos == pl) {
 			++ord->index;
 		}
 	}
 
-	//finally insert our new child in ordered_children.
-	ordered_children.insert(pos_it, { pl, index });
+	// finally insert our new child in ordered_children.
+	ordered_children.insert(pos_it, {pl, index});
 	return res;
 }
 
@@ -562,7 +564,7 @@ struct remove_ordered
 private:
 	config::child_map::iterator iter_;
 };
-} // end anon namespace
+} // namespace
 
 void config::clear_children_impl(config_key_type key)
 {
@@ -654,10 +656,7 @@ void config::remove_children(config_key_type key, const std::function<bool(const
 		return;
 	}
 
-	const auto predicate = [p](const std::unique_ptr<config>& child)
-	{
-		return !p || p(*child);
-	};
+	const auto predicate = [p](const std::unique_ptr<config>& child) { return !p || p(*child); };
 
 	auto child_it = std::find_if(pos->second.begin(), pos->second.end(), predicate);
 	while(child_it != pos->second.end()) {
@@ -686,8 +685,8 @@ const config::attribute_value* config::get(config_key_type key) const
 
 const config::attribute_value& config::get_or(const config_key_type key, const config_key_type default_key) const
 {
-    const config::attribute_value & value = operator[](key);
-    return !value.blank() ? value : operator[](default_key);
+	const config::attribute_value& value = operator[](key);
+	return !value.blank() ? value : operator[](default_key);
 }
 
 config::attribute_value& config::operator[](config_key_type key)
@@ -701,11 +700,12 @@ config::attribute_value& config::operator[](config_key_type key)
 	return res->second;
 }
 
-const config::attribute_value& config::get_old_attribute(config_key_type key, const std::string& old_key, const std::string& in_tag, const std::string& message) const
+const config::attribute_value& config::get_old_attribute(
+	config_key_type key, const std::string& old_key, const std::string& in_tag, const std::string& message) const
 {
 	if(has_attribute(old_key)) {
 		const std::string what = formatter() << "[" << in_tag << "]" << old_key << "=";
-		const std::string msg  = formatter() << "Use " << key << "= instead. " << message;
+		const std::string msg = formatter() << "Use " << key << "= instead. " << message;
 		deprecated_message(what, DEP_LEVEL::INDEFINITE, "", msg);
 	}
 
@@ -723,7 +723,8 @@ const config::attribute_value& config::get_old_attribute(config_key_type key, co
 	return empty_attribute;
 }
 
-const config::attribute_value& config::get_deprecated_attribute(config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const
+const config::attribute_value& config::get_deprecated_attribute(
+	config_key_type old_key, const std::string& in_tag, DEP_LEVEL level, const std::string& message) const
 {
 	if(auto i = values_.find(old_key); i != values_.end()) {
 		const std::string what = formatter() << "[" << in_tag << "]" << old_key << "=";
@@ -783,16 +784,14 @@ optional_config config::find_child(config_key_type key, const std::string& name,
 	if(i == children_.end()) {
 		DBG_CF << "Key ‘" << name << "’ value ‘" << value << "’ pair not found as child of key ‘" << key << "’.";
 
-
 		return utils::nullopt;
 	}
 
-	const child_list::iterator j = std::find_if(i->second.begin(), i->second.end(),
-		[&](const std::unique_ptr<config>& pcfg) {
-			const config& cfg = *pcfg;
-			return cfg[name] == value;
-		}
-	);
+	const child_list::iterator j
+		= std::find_if(i->second.begin(), i->second.end(), [&](const std::unique_ptr<config>& pcfg) {
+			  const config& cfg = *pcfg;
+			  return cfg[name] == value;
+		  });
 
 	if(j != i->second.end()) {
 		return **j;
@@ -803,7 +802,7 @@ optional_config config::find_child(config_key_type key, const std::string& name,
 	return utils::nullopt;
 }
 
-config& config::find_mandatory_child(config_key_type key, const std::string &name, const std::string &value)
+config& config::find_mandatory_child(config_key_type key, const std::string& name, const std::string& value)
 {
 	auto res = find_child(key, name, value);
 	if(res) {
@@ -812,7 +811,7 @@ config& config::find_mandatory_child(config_key_type key, const std::string &nam
 	throw error("Cannot find child [" + std::string(key) + "] with " + name + "=" + value);
 }
 
-const config& config::find_mandatory_child(config_key_type key, const std::string &name, const std::string &value) const
+const config& config::find_mandatory_child(config_key_type key, const std::string& name, const std::string& value) const
 {
 	auto res = find_child(key, name, value);
 	if(res) {
@@ -880,9 +879,7 @@ config::const_all_children_iterator config::ordered_cend() const
 config::const_all_children_itors config::all_children_range() const
 {
 	return const_all_children_itors(
-		const_all_children_iterator(ordered_children.cbegin()),
-		const_all_children_iterator(ordered_children.cend())
-	);
+		const_all_children_iterator(ordered_children.cbegin()), const_all_children_iterator(ordered_children.cend()));
 }
 
 config::all_children_iterator config::ordered_begin()
@@ -898,9 +895,7 @@ config::all_children_iterator config::ordered_end()
 config::all_children_itors config::all_children_range()
 {
 	return all_children_itors(
-		all_children_iterator(ordered_children.begin()),
-		all_children_iterator(ordered_children.end())
-	);
+		all_children_iterator(ordered_children.begin()), all_children_iterator(ordered_children.end()));
 }
 
 config config::get_diff(const config& c) const
@@ -1343,16 +1338,10 @@ void swap(config& lhs, config& rhs)
 
 bool config::validate_wml() const
 {
-	return std::all_of(children_.begin(), children_.end(), [](const auto& pair)
-	{
-		return valid_tag(pair.first) &&
-			std::all_of(pair.second.begin(), pair.second.end(),
-			[](const auto& c) { return c->validate_wml(); });
-	}) &&
-		std::all_of(values_.begin(), values_.end(), [](const auto& pair)
-	{
-		return valid_attribute(pair.first);
-	});
+	return std::all_of(children_.begin(), children_.end(), [](const auto& pair) {
+		return valid_tag(pair.first)
+			&& std::all_of(pair.second.begin(), pair.second.end(), [](const auto& c) { return c->validate_wml(); });
+	}) && std::all_of(values_.begin(), values_.end(), [](const auto& pair) { return valid_attribute(pair.first); });
 }
 
 bool operator==(const config& a, const config& b)

@@ -18,11 +18,11 @@
 
 namespace network
 {
-	/**
-	 * Initiates a standalone download of a single file from an HTTPS URL.
-	 *
-	 * @param url The URL of the file to download.
-	 * @param local_path The path on the local machine to store the file at.
-	 */
-    void download(const std::string& url, const std::string& local_path);
-}
+/**
+ * Initiates a standalone download of a single file from an HTTPS URL.
+ *
+ * @param url The URL of the file to download.
+ * @param local_path The path on the local machine to store the file at.
+ */
+void download(const std::string& url, const std::string& local_path);
+} // namespace network

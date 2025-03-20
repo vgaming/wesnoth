@@ -14,8 +14,8 @@
 */
 
 #include "scripting/lua_stringx.hpp"
-#include "scripting/lua_kernel_base.hpp"
 #include "scripting/lua_common.hpp"
+#include "scripting/lua_kernel_base.hpp"
 #include "scripting/push_check.hpp"
 
 #include "formula/string_utils.hpp"
@@ -23,14 +23,14 @@
 
 #include <boost/algorithm/string/trim.hpp>
 
-
-namespace lua_stringx {
+namespace lua_stringx
+{
 
 /**
-* Formats a message by interpolating WML variable syntax
-* Arg 1: (optional) Logger
-* Arg 2: Message
-*/
+ * Formats a message by interpolating WML variable syntax
+ * Arg 1: (optional) Logger
+ * Arg 2: Message
+ */
 static int intf_format(lua_State* L)
 {
 	config cfg = luaW_checkconfig(L, 2);
@@ -46,10 +46,10 @@ static int intf_format(lua_State* L)
 }
 
 /**
-* Formats a list into human-readable format
-* Arg 1: default value, used if the list is empty
-* Arg 2: list of strings
-*/
+ * Formats a list into human-readable format
+ * Arg 1: default value, used if the list is empty
+ * Arg 2: list of strings
+ */
 template<bool conjunct>
 static int intf_format_list(lua_State* L)
 {
@@ -60,8 +60,8 @@ static int intf_format_list(lua_State* L)
 }
 
 /**
-* Enables indexing a string by an integer, while also treating the stringx module as its metatable.__index
-*/
+ * Enables indexing a string by an integer, while also treating the stringx module as its metatable.__index
+ */
 static int impl_str_index(lua_State* L)
 {
 	if(lua_type(L, 2) == LUA_TSTRING) {
@@ -91,14 +91,14 @@ static int impl_str_index(lua_State* L)
 }
 
 /**
-* Splits a string into parts according to options
-* Arg 1: String to split
-* Arg 2: Separator
-* Arg 3: Options table
-*/
+ * Splits a string into parts according to options
+ * Arg 1: String to split
+ * Arg 2: Separator
+ * Arg 3: Options table
+ */
 static int intf_str_split(lua_State* L)
 {
-	enum {BASIC, ESCAPED, PAREN, ANIM} type = BASIC;
+	enum { BASIC, ESCAPED, PAREN, ANIM } type = BASIC;
 	const std::string& str = luaL_checkstring(L, 1);
 	const std::string& sep = luaL_optstring(L, 2, ",");
 	std::string left, right;
@@ -127,7 +127,8 @@ static int intf_str_split(lua_State* L)
 				type = ANIM;
 				left.push_back('[');
 				right.push_back(']');
-			} else type = PAREN;
+			} else
+				type = PAREN;
 		} else if(luaW_tableget(L, 3, "quote_left") && luaW_tableget(L, 3, "quote_right")) {
 			left = luaL_checkstring(L, -2);
 			right = luaL_checkstring(L, -1);
@@ -138,7 +139,8 @@ static int intf_str_split(lua_State* L)
 				type = ANIM;
 				left.push_back('[');
 				right.push_back(']');
-			} else type = PAREN;
+			} else
+				type = PAREN;
 		} else if(anim) {
 			type = ANIM;
 			left = "([";
@@ -149,28 +151,28 @@ static int intf_str_split(lua_State* L)
 		}
 	}
 	switch(type) {
-		case BASIC:
-			lua_push(L, utils::split(str, sep[0], flags));
-			break;
-		case ESCAPED:
-			lua_push(L, utils::quoted_split(str, sep[0], flags, left[0]));
-			break;
-		case PAREN:
-			lua_push(L, utils::parenthetical_split(str, sep[0], left, right, flags));
-			break;
-		case ANIM:
-			lua_push(L, utils::square_parenthetical_split(str, sep[0], left, right, flags));
-			break;
+	case BASIC:
+		lua_push(L, utils::split(str, sep[0], flags));
+		break;
+	case ESCAPED:
+		lua_push(L, utils::quoted_split(str, sep[0], flags, left[0]));
+		break;
+	case PAREN:
+		lua_push(L, utils::parenthetical_split(str, sep[0], left, right, flags));
+		break;
+	case ANIM:
+		lua_push(L, utils::square_parenthetical_split(str, sep[0], left, right, flags));
+		break;
 	}
 	return 1;
 }
 
 /**
-* Splits a string into parenthesized portions and portions between parenthesized portions
-* Arg 1: String to split
-* Arg 2: Possible left parentheses
-* Arg 3: Matching right parentheses
-*/
+ * Splits a string into parenthesized portions and portions between parenthesized portions
+ * Arg 1: String to split
+ * Arg 2: Possible left parentheses
+ * Arg 3: Matching right parentheses
+ */
 static int intf_str_paren_split(lua_State* L)
 {
 	const std::string& str = luaL_checkstring(L, 1);
@@ -185,11 +187,11 @@ static int intf_str_paren_split(lua_State* L)
 }
 
 /**
-* Splits a string into a map
-* Arg 1: string to split
-* Arg 2: Separator for items
-* Arg 3: Separator for key and value
-*/
+ * Splits a string into a map
+ * Arg 1: string to split
+ * Arg 2: Separator for items
+ * Arg 3: Separator for key and value
+ */
 static int intf_str_map_split(lua_State* L)
 {
 	const std::string& str = luaL_checkstring(L, 1);
@@ -220,12 +222,13 @@ static int intf_str_map_split(lua_State* L)
 }
 
 /**
-* Joins a list into a string; calls __tostring and __index metamethods
-* Arg 1: list to join
-* Arg 2: separator
-* (arguments can be swapped)
-*/
-static int intf_str_join(lua_State* L) {
+ * Joins a list into a string; calls __tostring and __index metamethods
+ * Arg 1: list to join
+ * Arg 2: separator
+ * (arguments can be swapped)
+ */
+static int intf_str_join(lua_State* L)
+{
 	// Support both join(list, [sep]) and join(sep, list)
 	// The latter form means sep:join(list) also works.
 	std::string sep;
@@ -236,7 +239,8 @@ static int intf_str_join(lua_State* L) {
 	} else if(lua_istable(L, 2)) {
 		sep = luaL_checkstring(L, 1);
 		list_idx = 2;
-	} else return luaL_error(L, "invalid arguments to join, should have map and separator");
+	} else
+		return luaL_error(L, "invalid arguments to join, should have map and separator");
 	std::vector<std::string> pieces;
 	for(int i = 1; i <= luaL_len(L, list_idx); i++) {
 		lua_getglobal(L, "tostring");
@@ -249,13 +253,14 @@ static int intf_str_join(lua_State* L) {
 }
 
 /**
-* Joins a map into a string; calls __tostring metamethods (on both key and value) but not __index
-* Arg 1: list to join
-* Arg 2: separator for items
-* Arg 3: separator for key and value
-* (list argument can be swapped to any position)
-*/
-static int intf_str_join_map(lua_State* L) {
+ * Joins a map into a string; calls __tostring metamethods (on both key and value) but not __index
+ * Arg 1: list to join
+ * Arg 2: separator for items
+ * Arg 3: separator for key and value
+ * (list argument can be swapped to any position)
+ */
+static int intf_str_join_map(lua_State* L)
+{
 	// Support join_map(map, [sep], [kv_sep]), join_map(sep, map, [kv_sep]), and join_map(sep, kv_sep, map)
 	// The latter forms mean sep:join_map(kv_sep, map) and sep:join_map(map) also work.
 	// If only one separator is given in the first form, it will be sep, not kv_sep
@@ -273,7 +278,8 @@ static int intf_str_join_map(lua_State* L) {
 		sep = luaL_checkstring(L, 1);
 		kv = luaL_checkstring(L, 2);
 		map_idx = 3;
-	} else return luaL_error(L, "invalid arguments to join_map, should have map, separator, and key_value_separator");
+	} else
+		return luaL_error(L, "invalid arguments to join_map, should have map, separator, and key_value_separator");
 	std::map<std::string, std::string> pieces;
 	for(lua_pushnil(L); lua_next(L, map_idx); /*pop in loop body*/) {
 		int key_idx = lua_absindex(L, -2), val_idx = lua_absindex(L, -1);
@@ -343,21 +349,22 @@ static int intf_parse_range(lua_State* L)
 	return 2;
 }
 
-int luaW_open(lua_State* L) {
+int luaW_open(lua_State* L)
+{
 	auto& lk = lua_kernel_base::get_lua_kernel<lua_kernel_base>(L);
 	lk.add_log("Adding stringx module...\n");
 	static luaL_Reg const str_callbacks[] = {
-		{ "split",               &intf_str_split },
-		{ "parenthetical_split", &intf_str_paren_split },
-		{ "map_split",           &intf_str_map_split },
-		{ "join",                &intf_str_join },
-		{ "join_map",            &intf_str_join_map },
-		{ "trim",                &intf_str_trim },
-		{ "parse_range",         &intf_parse_range },
-		{ "vformat",                  &intf_format                   },
-		{ "format_conjunct_list",     &intf_format_list<true>        },
-		{ "format_disjunct_list",     &intf_format_list<false>       },
-		{ nullptr, nullptr },
+		{"split", &intf_str_split},
+		{"parenthetical_split", &intf_str_paren_split},
+		{"map_split", &intf_str_map_split},
+		{"join", &intf_str_join},
+		{"join_map", &intf_str_join_map},
+		{"trim", &intf_str_trim},
+		{"parse_range", &intf_parse_range},
+		{"vformat", &intf_format},
+		{"format_conjunct_list", &intf_format_list<true>},
+		{"format_disjunct_list", &intf_format_list<false>},
+		{nullptr, nullptr},
 	};
 	lua_newtable(L);
 	luaL_setfuncs(L, str_callbacks, 0);
@@ -384,4 +391,4 @@ int luaW_open(lua_State* L) {
 	return 1;
 }
 
-}
+} // namespace lua_stringx

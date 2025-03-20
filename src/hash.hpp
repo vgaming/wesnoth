@@ -24,11 +24,15 @@
 // Not configurable. The size (64) is both hard-, and implicitly-coded in crypt_blowfish
 static const int BCRYPT_HASHSIZE = 64;
 
-namespace utils {
+namespace utils
+{
 
 struct hash_error : public game::error
 {
-	hash_error(const std::string& message) : game::error(message) {}
+	hash_error(const std::string& message)
+		: game::error(message)
+	{
+	}
 };
 
 class hash_base
@@ -36,7 +40,9 @@ class hash_base
 public:
 	virtual std::string base64_digest() const = 0;
 	virtual std::string hex_digest() const = 0;
-	virtual ~hash_base() {}
+	virtual ~hash_base()
+	{
+	}
 };
 
 template<std::size_t sz, typename T = uint8_t>
@@ -44,9 +50,13 @@ class hash_digest : public hash_base
 {
 protected:
 	std::array<T, sz> hash;
+
 public:
 	static const unsigned int DIGEST_SIZE = sz;
-	std::array<T, sz> raw_digest() const {return hash;}
+	std::array<T, sz> raw_digest() const
+	{
+		return hash;
+	}
 };
 
 class md5 : public hash_digest<16>
@@ -64,7 +74,9 @@ public:
 
 class bcrypt : public hash_digest<BCRYPT_HASHSIZE, char>
 {
-	bcrypt() {}
+	bcrypt()
+	{
+	}
 	bcrypt(const std::string& input);
 
 public:

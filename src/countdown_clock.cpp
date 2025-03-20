@@ -14,18 +14,19 @@
 
 #include "countdown_clock.hpp"
 
-#include "team.hpp"
 #include "preferences/preferences.hpp"
 #include "sound.hpp"
+#include "team.hpp"
 #include "utils/rate_counter.hpp"
 
 using namespace std::chrono_literals;
 
-namespace {
-	constexpr auto warn_threshold = 20s; // start beeping when 20 seconds are left
-	constexpr auto fade_end = warn_threshold / 2;
-	utils::rate_counter timer_refresh_rate{50};
-}
+namespace
+{
+constexpr auto warn_threshold = 20s; // start beeping when 20 seconds are left
+constexpr auto fade_end = warn_threshold / 2;
+utils::rate_counter timer_refresh_rate{50};
+} // namespace
 
 countdown_clock::countdown_clock(team& team)
 	: team_(team)
@@ -36,8 +37,7 @@ countdown_clock::countdown_clock(team& team)
 
 countdown_clock::~countdown_clock()
 {
-	if(playing_sound_)
-	{
+	if(playing_sound_) {
 		sound::stop_bell();
 	}
 }
@@ -55,7 +55,7 @@ void countdown_clock::update_team()
 	team_.set_countdown_time(std::max(0ms, team_.countdown_time() - time_passed));
 }
 
-//make sure we think about countdown even while dialogs are open
+// make sure we think about countdown even while dialogs are open
 void countdown_clock::process()
 {
 	if(timer_refresh_rate.poll()) {
@@ -72,10 +72,8 @@ bool countdown_clock::update()
 
 void countdown_clock::maybe_play_sound()
 {
-	if(!playing_sound_ && team_.countdown_time() < warn_threshold )
-	{
-		if(prefs::get().turn_bell() || prefs::get().sound() || prefs::get().ui_sound_on())
-		{
+	if(!playing_sound_ && team_.countdown_time() < warn_threshold) {
+		if(prefs::get().turn_bell() || prefs::get().sound() || prefs::get().ui_sound_on()) {
 			const auto loop_ticks = team_.countdown_time();
 			const auto fadein_ticks = std::max(loop_ticks - fade_end, 0ms);
 			sound::play_timer(game_config::sounds::timer_bell, loop_ticks, fadein_ticks);

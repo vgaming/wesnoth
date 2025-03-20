@@ -22,15 +22,15 @@
 #include "config_cache.hpp"
 #include "filesystem.hpp"
 #include "formula/string_utils.hpp"
-#include "preferences/preferences.hpp"
 #include "gettext.hpp"
+#include "gui/dialogs/addon/connect.hpp"
 #include "gui/dialogs/addon/manager.hpp"
 #include "gui/dialogs/addon/uninstall_list.hpp"
-#include "gui/dialogs/addon/connect.hpp"
 #include "gui/dialogs/message.hpp"
 #include "gui/dialogs/transient_message.hpp"
 #include "gui/widgets/retval.hpp"
 #include "log.hpp"
+#include "preferences/preferences.hpp"
 #include "wml_exception.hpp"
 
 static lg::log_domain log_config("config");
@@ -38,17 +38,17 @@ static lg::log_domain log_network("network");
 static lg::log_domain log_filesystem("filesystem");
 static lg::log_domain log_addons_client("addons-client");
 
-#define ERR_CFG LOG_STREAM(err,   log_config)
+#define ERR_CFG LOG_STREAM(err, log_config)
 #define INFO_CFG LOG_STREAM(info, log_config)
 
-#define ERR_NET LOG_STREAM(err,   log_network)
+#define ERR_NET LOG_STREAM(err, log_network)
 
-#define ERR_FS  LOG_STREAM(err,   log_filesystem)
+#define ERR_FS LOG_STREAM(err, log_filesystem)
 
-#define LOG_AC  LOG_STREAM(info,  log_addons_client)
+#define LOG_AC LOG_STREAM(info, log_addons_client)
 
-
-namespace {
+namespace
+{
 
 bool get_addons_list(addons_client& client, addons_list& list)
 {
@@ -77,14 +77,15 @@ bool addons_manager_ui(const std::string& remote_address)
 
 		need_wml_cache_refresh = dlg.get_need_wml_cache_refresh();
 	} catch(const config::error& e) {
-		ERR_CFG << "config::error thrown during transaction with add-on server; \""<< e.message << "\"";
+		ERR_CFG << "config::error thrown during transaction with add-on server; \"" << e.message << "\"";
 		gui2::show_error_message(_("Network communication error."));
 	} catch(const network_asio::error& e) {
-		ERR_NET << "network_asio::error thrown during transaction with add-on server; \""<< e.what() << "\"";
+		ERR_NET << "network_asio::error thrown during transaction with add-on server; \"" << e.what() << "\"";
 		gui2::show_error_message(_("Remote host disconnected."));
 	} catch(const filesystem::io_exception& e) {
 		ERR_FS << "filesystem::io_exception thrown while installing an addon; \"" << e.what() << "\"";
-		gui2::show_error_message(_("A problem occurred when trying to create the files necessary to install this add-on."));
+		gui2::show_error_message(
+			_("A problem occurred when trying to create the files necessary to install this add-on."));
 	} catch(const invalid_pbl_exception& e) {
 		ERR_CFG << "could not read .pbl file " << e.path << ": " << e.message;
 
@@ -92,8 +93,9 @@ bool addons_manager_ui(const std::string& remote_address)
 		symbols["path"] = e.path;
 		symbols["msg"] = e.message;
 
-		gui2::show_error_message(
-			VGETTEXT("A local file with add-on publishing information could not be read.\n\nFile: $path\nError message: $msg", symbols));
+		gui2::show_error_message(VGETTEXT(
+			"A local file with add-on publishing information could not be read.\n\nFile: $path\nError message: $msg",
+			symbols));
 	} catch(const wml_exception& e) {
 		e.show();
 	} catch(const addons_client::user_exit&) {
@@ -162,16 +164,13 @@ bool uninstall_local_addons()
 			remove_names.insert(addon_titles_map[id]);
 		}
 
-		const std::string confirm_message = _n(
-			"Are you sure you want to remove the following installed add-on?",
-			"Are you sure you want to remove the following installed add-ons?",
-			remove_ids.size()) + list_lead + utils::bullet_list(remove_names);
+		const std::string confirm_message
+			= _n("Are you sure you want to remove the following installed add-on?",
+				  "Are you sure you want to remove the following installed add-ons?", remove_ids.size())
+			+ list_lead + utils::bullet_list(remove_names);
 
-		res = gui2::show_message(
-				_("Confirm")
-				, confirm_message
-				, gui2::dialogs::message::yes_no_buttons);
-	} while (res != gui2::retval::OK);
+		res = gui2::show_message(_("Confirm"), confirm_message, gui2::dialogs::message::yes_no_buttons);
+	} while(res != gui2::retval::OK);
 
 	std::set<std::string> failed_names, skipped_names, succeeded_names;
 
@@ -188,34 +187,27 @@ bool uninstall_local_addons()
 	}
 
 	if(!skipped_names.empty()) {
-		const std::string dlg_msg = _n(
-			"The following add-on appears to have publishing or version control information stored locally, and will not be removed:",
-			"The following add-ons appear to have publishing or version control information stored locally, and will not be removed:",
+		const std::string dlg_msg = _n("The following add-on appears to have publishing or version control information "
+									   "stored locally, and will not be removed:",
+			"The following add-ons appear to have publishing or version control information stored locally, and will "
+			"not be removed:",
 			skipped_names.size());
 
-		gui2::show_error_message(
-			dlg_msg + list_lead + utils::bullet_list(skipped_names));
+		gui2::show_error_message(dlg_msg + list_lead + utils::bullet_list(skipped_names));
 	}
 
 	if(!failed_names.empty()) {
-		gui2::show_error_message(_n(
-			"The following add-on could not be deleted properly:",
-			"The following add-ons could not be deleted properly:",
-			failed_names.size()) + list_lead + utils::bullet_list(failed_names));
+		gui2::show_error_message(_n("The following add-on could not be deleted properly:",
+									 "The following add-ons could not be deleted properly:", failed_names.size())
+			+ list_lead + utils::bullet_list(failed_names));
 	}
 
 	if(!succeeded_names.empty()) {
-		const std::string dlg_title =
-			_n("Add-on Deleted", "Add-ons Deleted", succeeded_names.size());
-		const std::string dlg_msg = _n(
-			"The following add-on was successfully deleted:",
-			"The following add-ons were successfully deleted:",
-			succeeded_names.size());
+		const std::string dlg_title = _n("Add-on Deleted", "Add-ons Deleted", succeeded_names.size());
+		const std::string dlg_msg = _n("The following add-on was successfully deleted:",
+			"The following add-ons were successfully deleted:", succeeded_names.size());
 
-		gui2::show_transient_message(
-			dlg_title,
-			dlg_msg + list_lead + utils::bullet_list(succeeded_names)
-		);
+		gui2::show_transient_message(dlg_title, dlg_msg + list_lead + utils::bullet_list(succeeded_names));
 
 		return true;
 	}
@@ -227,7 +219,7 @@ bool uninstall_local_addons()
 
 bool manage_addons()
 {
-	static const int addon_download  = 0;
+	static const int addon_download = 0;
 	// NOTE: the following two values are also known by WML, so don't change them.
 	static const int addon_uninstall = 2;
 
@@ -243,12 +235,12 @@ bool manage_addons()
 	}
 
 	switch(res) {
-		case addon_download:
-			return addons_manager_ui(host_name);
-		case addon_uninstall:
-			return uninstall_local_addons();
-		default:
-			return false;
+	case addon_download:
+		return addons_manager_ui(host_name);
+	case addon_uninstall:
+		return uninstall_local_addons();
+	default:
+		return false;
 	}
 }
 
@@ -258,7 +250,6 @@ bool ad_hoc_addon_fetch_session(const std::vector<std::string>& addon_ids)
 
 	// These exception handlers copied from addon_manager_ui fcn above.
 	try {
-
 		addons_client client(remote_address);
 		client.connect();
 
@@ -275,16 +266,18 @@ bool ad_hoc_addon_fetch_session(const std::vector<std::string>& addon_ids)
 			addons_list::const_iterator it = addons.find(addon_id);
 			if(it != addons.end()) {
 				const addon_info& addon = it->second;
-				const std::string addon_dir = filesystem::get_addons_dir()+"/"+addon_id;
-				const std::string info_cfg = addon_dir+"/_info.cfg";
+				const std::string addon_dir = filesystem::get_addons_dir() + "/" + addon_id;
+				const std::string info_cfg = addon_dir + "/_info.cfg";
 
-				// no _info.cfg, so either there's a _server.pbl or there's no version information available at all, so this add-on can be skipped
+				// no _info.cfg, so either there's a _server.pbl or there's no version information available at all, so
+				// this add-on can be skipped
 				if(filesystem::file_exists(addon_dir) && !filesystem::file_exists(info_cfg)) {
 					INFO_CFG << "No _info.cfg exists for '" << addon_id << "', skipping update.\n";
 					continue;
 				}
 
-				// if _info.cfg exists, compare the local vs remote add-on versions to determine whether a download is needed
+				// if _info.cfg exists, compare the local vs remote add-on versions to determine whether a download is
+				// needed
 				if(filesystem::file_exists(info_cfg)) {
 					game_config::config_cache& cache = game_config::config_cache::instance();
 					config info;
@@ -312,20 +305,22 @@ bool ad_hoc_addon_fetch_session(const std::vector<std::string>& addon_ids)
 		if(!return_value) {
 			utils::string_map symbols;
 			symbols["addon_ids"] = os.str();
-			gui2::show_error_message(VGETTEXT("Could not find add-ons matching the ids $addon_ids on the add-on server.", symbols));
+			gui2::show_error_message(
+				VGETTEXT("Could not find add-ons matching the ids $addon_ids on the add-on server.", symbols));
 		}
 
 		return return_value;
 
 	} catch(const config::error& e) {
-		ERR_CFG << "config::error thrown during transaction with add-on server; \""<< e.message << "\"";
+		ERR_CFG << "config::error thrown during transaction with add-on server; \"" << e.message << "\"";
 		gui2::show_error_message(_("Network communication error."));
 	} catch(const network_asio::error& e) {
-		ERR_NET << "network_asio::error thrown during transaction with add-on server; \""<< e.what() << "\"";
+		ERR_NET << "network_asio::error thrown during transaction with add-on server; \"" << e.what() << "\"";
 		gui2::show_error_message(_("Remote host disconnected."));
 	} catch(const filesystem::io_exception& e) {
 		ERR_FS << "io_exception thrown while installing an addon; \"" << e.what() << "\"";
-		gui2::show_error_message(_("A problem occurred when trying to create the files necessary to install this add-on."));
+		gui2::show_error_message(
+			_("A problem occurred when trying to create the files necessary to install this add-on."));
 	} catch(const invalid_pbl_exception& e) {
 		ERR_CFG << "could not read .pbl file " << e.path << ": " << e.message;
 
@@ -333,8 +328,9 @@ bool ad_hoc_addon_fetch_session(const std::vector<std::string>& addon_ids)
 		symbols["path"] = e.path;
 		symbols["msg"] = e.message;
 
-		gui2::show_error_message(
-			VGETTEXT("A local file with add-on publishing information could not be read.\n\nFile: $path\nError message: $msg", symbols));
+		gui2::show_error_message(VGETTEXT(
+			"A local file with add-on publishing information could not be read.\n\nFile: $path\nError message: $msg",
+			symbols));
 	} catch(const wml_exception& e) {
 		e.show();
 	} catch(const addons_client::user_exit&) {

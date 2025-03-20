@@ -14,9 +14,9 @@
 
 #include "gui/dialogs/multiplayer/match_history.hpp"
 
+#include "filesystem.hpp"
 #include "formula/string_utils.hpp"
 #include "gettext.hpp"
-#include "filesystem.hpp"
 #include "gui/dialogs/message.hpp"
 #include "gui/widgets/button.hpp"
 #include "gui/widgets/label.hpp"
@@ -25,8 +25,8 @@
 #include "gui/widgets/text_box.hpp"
 #include "gui/widgets/window.hpp"
 #include "network_download_file.hpp"
-#include "serialization/string_utils.hpp"
 #include "serialization/markup.hpp"
+#include "serialization/string_utils.hpp"
 #include "wesnothd_connection.hpp"
 
 using namespace std::chrono_literals;
@@ -39,7 +39,8 @@ namespace gui2::dialogs
 {
 REGISTER_DIALOG(mp_match_history)
 
-mp_match_history::mp_match_history(const std::string& player_name, wesnothd_connection& connection, bool wait_for_response)
+mp_match_history::mp_match_history(
+	const std::string& player_name, wesnothd_connection& connection, bool wait_for_response)
 	: modal_dialog(window_id())
 	, player_name_(player_name)
 	, connection_(connection)
@@ -122,7 +123,7 @@ std::string key_with_fallback(const config::attribute_value& val)
 		return font::unicode_em_dash;
 	}
 }
-};
+}; // namespace
 
 bool mp_match_history::update_display()
 {
@@ -146,16 +147,19 @@ bool mp_match_history::update_display()
 		grid& history_grid = history_box->add_row(row);
 
 		dynamic_cast<label*>(history_grid.find("game_name", false))->set_label(key_with_fallback(game["game_name"]));
-		dynamic_cast<label*>(history_grid.find("scenario_name", false))->set_label(key_with_fallback(game["scenario_name"]));
-		dynamic_cast<label*>(history_grid.find("era_name", false))->set_label(markup::span_color("#baac7d", _("Era: ")) + key_with_fallback(game["era_name"]));
-		dynamic_cast<label*>(history_grid.find("game_start", false))->set_label(key_with_fallback(game["game_start"]) + _(" UTC+0"));
+		dynamic_cast<label*>(history_grid.find("scenario_name", false))
+			->set_label(key_with_fallback(game["scenario_name"]));
+		dynamic_cast<label*>(history_grid.find("era_name", false))
+			->set_label(markup::span_color("#baac7d", _("Era: ")) + key_with_fallback(game["era_name"]));
+		dynamic_cast<label*>(history_grid.find("game_start", false))
+			->set_label(key_with_fallback(game["game_start"]) + _(" UTC+0"));
 		dynamic_cast<label*>(history_grid.find("version", false))->set_label(key_with_fallback(game["version"]));
 
 		button* replay_download = dynamic_cast<button*>(history_grid.find("replay_download", false));
 		std::string replay_url = game["replay_url"].str();
 		if(!replay_url.empty()) {
 			std::string filename = utils::split(replay_url, '/').back();
-			std::string local_save = filesystem::get_saves_dir()+"/"+filename;
+			std::string local_save = filesystem::get_saves_dir() + "/" + filename;
 
 			connect_signal_mouse_left_click(*replay_download, std::bind(&network::download, replay_url, local_save));
 		} else {
@@ -235,17 +239,17 @@ const config mp_match_history::request_history()
 		config response;
 
 		// I'm not really sure why this works to be honest
-		// I would've expected that there would be a risk of regular lobby responses showing up here since it's a reference to the lobby's network connection
-		// however testing has resulted in showing that this is not the case
+		// I would've expected that there would be a risk of regular lobby responses showing up here since it's a
+		// reference to the lobby's network connection however testing has resulted in showing that this is not the case
 		// lobby responses are received in the lobby's network_handler() method when this method is not running
-		// lobby responses are not received while this method is running, and are handled in the lobby after it completes
-		// history results are never received in the lobby
+		// lobby responses are not received while this method is running, and are handled in the lobby after it
+		// completes history results are never received in the lobby
 		if(connection_.receive_data(response)) {
 			if(response.child_count("game_history_results") == 0) {
 				DBG_NW << "Received non-history data: " << response.debug();
 				if(!response["error"].str().empty()) {
 					ERR_NW << "Received error from server: " << response["error"].str();
-					gui2::show_error_message(_("The server responded with an error:")+" "+response["error"].str());
+					gui2::show_error_message(_("The server responded with an error:") + " " + response["error"].str());
 					return {};
 				}
 			} else if(response.mandatory_child("game_history_results").child_count("game_history_result") == 0) {
@@ -298,4 +302,4 @@ void mp_match_history::tab_switch_callback()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

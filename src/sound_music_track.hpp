@@ -16,12 +16,13 @@
 #pragma once
 
 #include <chrono>
-#include <string>
 #include <memory>
+#include <string>
 
 class config;
 
-namespace sound {
+namespace sound
+{
 
 /**
  * Internal representation of music tracks.
@@ -34,24 +35,69 @@ public:
 	explicit music_track(const std::string& v_name);
 	void write(config& parent_node, bool append) const;
 
-	bool valid() const { return file_path_.empty() != true; }
+	bool valid() const
+	{
+		return file_path_.empty() != true;
+	}
 
-	bool append() const { return append_; }
-	bool immediate() const { return immediate_; }
-	bool shuffle() const { return shuffle_; }
-	bool play_once() const { return once_; }
-	auto ms_before() const { return ms_before_; }
-	auto ms_after()  const { return ms_after_;  }
+	bool append() const
+	{
+		return append_;
+	}
+	bool immediate() const
+	{
+		return immediate_;
+	}
+	bool shuffle() const
+	{
+		return shuffle_;
+	}
+	bool play_once() const
+	{
+		return once_;
+	}
+	auto ms_before() const
+	{
+		return ms_before_;
+	}
+	auto ms_after() const
+	{
+		return ms_after_;
+	}
 
-	const std::string& file_path() const { return file_path_; }
-	const std::string& id() const { return id_; }
-	const std::string& title() const { return title_; }
+	const std::string& file_path() const
+	{
+		return file_path_;
+	}
+	const std::string& id() const
+	{
+		return id_;
+	}
+	const std::string& title() const
+	{
+		return title_;
+	}
 
-	void set_play_once(bool v) { once_ = v; }
-	void set_shuffle(bool v) { shuffle_ = v; }
-	void set_ms_before(const std::chrono::milliseconds& v) { ms_before_ = v; }
-	void set_ms_after(const std::chrono::milliseconds& v) { ms_after_ = v; }
-	void set_title(const std::string& v) { title_ = v; }
+	void set_play_once(bool v)
+	{
+		once_ = v;
+	}
+	void set_shuffle(bool v)
+	{
+		shuffle_ = v;
+	}
+	void set_ms_before(const std::chrono::milliseconds& v)
+	{
+		ms_before_ = v;
+	}
+	void set_ms_after(const std::chrono::milliseconds& v)
+	{
+		ms_after_ = v;
+	}
+	void set_title(const std::string& v)
+	{
+		title_ = v;
+	}
 
 private:
 	void resolve();
@@ -73,9 +119,11 @@ void set_track(unsigned int i, const std::shared_ptr<music_track>& to);
 
 } /* end namespace sound */
 
-inline bool operator==(const sound::music_track& a, const sound::music_track& b) {
+inline bool operator==(const sound::music_track& a, const sound::music_track& b)
+{
 	return a.file_path() == b.file_path();
 }
-inline bool operator!=(const sound::music_track& a, const sound::music_track& b) {
+inline bool operator!=(const sound::music_track& a, const sound::music_track& b)
+{
 	return a.file_path() != b.file_path();
 }

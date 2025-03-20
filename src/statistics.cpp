@@ -22,7 +22,7 @@
 #include "game_board.hpp"
 #include "log.hpp"
 #include "resources.hpp" // Needed for teams, to get team save_id for a unit
-#include "team.hpp" // Needed to get team save_id
+#include "team.hpp"      // Needed to get team save_id
 #include "units/types.hpp"
 #include "units/unit.hpp"
 
@@ -41,12 +41,11 @@ std::string get_team_save_id(const unit& u)
 	return resources::gameboard->get_team(u.side()).save_id_or_number();
 }
 
-}
+} // namespace
 
 statistics_t::statistics_t(statistics_record::campaign_stats_t& record)
 	: record_(record)
 {
-
 }
 
 statistics_attack_context::statistics_attack_context(
@@ -152,15 +151,15 @@ void statistics_attack_context::defend_result(hit_result res, int cth, int damag
 	++att_stats.turn_by_cth_taken[cth].strikes;
 
 	if(res != MISSES) {
-		//handle drain
-		def_stats.damage_taken          -= drain;
-		att_stats.damage_inflicted      -= drain;
-		def_stats.turn_damage_taken     -= drain;
+		// handle drain
+		def_stats.damage_taken -= drain;
+		att_stats.damage_inflicted -= drain;
+		def_stats.turn_damage_taken -= drain;
 		att_stats.turn_damage_inflicted -= drain;
 
-		att_stats.damage_taken          += damage;
-		def_stats.damage_inflicted      += damage;
-		att_stats.turn_damage_taken     += damage;
+		att_stats.damage_taken += damage;
+		def_stats.damage_inflicted += damage;
+		att_stats.turn_damage_taken += damage;
 		def_stats.turn_damage_inflicted += damage;
 	}
 
@@ -280,7 +279,7 @@ statistics_t::stats& statistics_t::get_stats(const std::string& save_id)
 int statistics_t::sum_str_int_map(const std::map<std::string, int>& m)
 {
 	int res = 0;
-	for(const auto& pair: m) {
+	for(const auto& pair : m) {
 		res += pair.second;
 	}
 

@@ -28,10 +28,7 @@ namespace gui2::dialogs
 
 REGISTER_DIALOG(edit_text)
 
-edit_text::edit_text(const std::string& title,
-					   const std::string& label,
-					   std::string& text,
-					   bool disallow_empty)
+edit_text::edit_text(const std::string& title, const std::string& label, std::string& text, bool disallow_empty)
 	: modal_dialog(window_id())
 	, disallow_empty_(disallow_empty)
 {
@@ -57,4 +54,4 @@ void edit_text::on_text_change()
 	ok_button.set_active(!boost::trim_copy(text.get_value()).empty());
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

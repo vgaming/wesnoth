@@ -20,9 +20,11 @@
 lg::log_domain log_config_pn("config");
 #define WRN_CONFIG LOG_STREAM(warn, log_config_pn)
 
-namespace wesnothd {
+namespace wesnothd
+{
 
-namespace chat_message {
+namespace chat_message
+{
 
 const std::size_t max_message_length = 256;
 
@@ -39,6 +41,6 @@ void truncate_message(const simple_wml::string_span& str, simple_wml::node& mess
 	}
 }
 
-} // end chat_message namespace
+} // namespace chat_message
 
-} //end namespace wesnothd
+} // end namespace wesnothd

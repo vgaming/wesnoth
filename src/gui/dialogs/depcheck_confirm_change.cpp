@@ -26,9 +26,7 @@ namespace gui2::dialogs
 REGISTER_DIALOG(depcheck_confirm_change)
 
 depcheck_confirm_change::depcheck_confirm_change(
-		bool action,
-		const std::vector<std::string>& mods,
-		const std::string& requester)
+	bool action, const std::vector<std::string>& mods, const std::string& requester)
 	: modal_dialog(window_id())
 {
 	utils::string_map symbols;
@@ -37,11 +35,11 @@ depcheck_confirm_change::depcheck_confirm_change(
 	if(action) {
 		message = VGETTEXT("$requester requires the following modifications to "
 						   "be enabled:",
-						   symbols);
+			symbols);
 	} else {
 		message = VGETTEXT("$requester requires the following modifications to "
 						   "be disabled:",
-						   symbols);
+			symbols);
 	}
 
 	std::string list = "\t";
@@ -51,4 +49,4 @@ depcheck_confirm_change::depcheck_confirm_change(
 
 	register_label("itemlist", false, list);
 }
-} // namespace dialogs
+} // namespace gui2::dialogs

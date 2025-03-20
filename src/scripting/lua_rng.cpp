@@ -17,8 +17,8 @@
 
 #include "log.hpp"
 #include "mt_rng.hpp"
-#include "scripting/lua_kernel_base.hpp"
 #include "scripting/lua_common.hpp" // for new(L)
+#include "scripting/lua_kernel_base.hpp"
 
 #include <string>
 
@@ -28,11 +28,12 @@ static lg::log_domain log_lua("scripting/lua");
 #define ERR_LUA LOG_STREAM(err, log_lua)
 
 // Begin lua rng bindings
-namespace lua_rng {
+namespace lua_rng
+{
 
 using randomness::mt_rng;
 
-static const char * Rng = "Rng";
+static const char* Rng = "Rng";
 
 int impl_rng_create(lua_State* L)
 {
@@ -45,9 +46,9 @@ int impl_rng_create(lua_State* L)
 
 int impl_rng_destroy(lua_State* L)
 {
-	mt_rng * d = static_cast< mt_rng *> (luaL_testudata(L, 1, Rng));
-	if (d == nullptr) {
-		ERR_LUA << "rng_destroy called on data of type: " << lua_typename( L, lua_type( L, 1 ) );
+	mt_rng* d = static_cast<mt_rng*>(luaL_testudata(L, 1, Rng));
+	if(d == nullptr) {
+		ERR_LUA << "rng_destroy called on data of type: " << lua_typename(L, lua_type(L, 1));
 		ERR_LUA << "This may indicate a memory leak, please report at bugs.wesnoth.org";
 		lua_pushstring(L, "Rng object garbage collection failure");
 		lua_error(L);
@@ -59,7 +60,7 @@ int impl_rng_destroy(lua_State* L)
 
 int impl_rng_seed(lua_State* L)
 {
-	mt_rng * rng = static_cast<mt_rng *>(luaL_checkudata(L, 1, Rng));
+	mt_rng* rng = static_cast<mt_rng*>(luaL_checkudata(L, 1, Rng));
 	std::string seed = luaL_checkstring(L, 2);
 
 	rng->seed_random(seed);
@@ -68,7 +69,7 @@ int impl_rng_seed(lua_State* L)
 
 int impl_rng_draw(lua_State* L)
 {
-	mt_rng * rng = static_cast<mt_rng *>(luaL_checkudata(L, 1, Rng));
+	mt_rng* rng = static_cast<mt_rng*>(luaL_checkudata(L, 1, Rng));
 
 	lua_pushnumber(L, rng->get_next_random());
 	return 1;
@@ -80,19 +81,14 @@ void load_tables(lua_State* L)
 {
 	luaL_newmetatable(L, Rng);
 
-	static luaL_Reg const callbacks[] {
-		{ "create",         &impl_rng_create},
-		{ "__gc",           &impl_rng_destroy},
-		{ "seed", 	    &impl_rng_seed},
-		{ "draw",	    &impl_rng_draw},
-		{ nullptr, nullptr }
-	};
+	static luaL_Reg const callbacks[]{{"create", &impl_rng_create}, {"__gc", &impl_rng_destroy},
+		{"seed", &impl_rng_seed}, {"draw", &impl_rng_draw}, {nullptr, nullptr}};
 	luaL_setfuncs(L, callbacks, 0);
 
-	lua_pushvalue(L, -1); //make a copy of this table, set it to be its own __index table
+	lua_pushvalue(L, -1); // make a copy of this table, set it to be its own __index table
 	lua_setfield(L, -2, "__index");
 
 	lua_setglobal(L, Rng);
 }
 
-} // end namespace lua_map_rng
+} // namespace lua_rng

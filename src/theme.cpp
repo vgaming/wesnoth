@@ -16,6 +16,7 @@
 #include "theme.hpp"
 
 #include "desktop/battery_info.hpp"
+#include "game_config_view.hpp"
 #include "gettext.hpp"
 #include "hotkey/hotkey_command.hpp"
 #include "hotkey/hotkey_item.hpp"
@@ -23,7 +24,6 @@
 #include "sdl/rect.hpp"
 #include "serialization/string_utils.hpp"
 #include "wml_exception.hpp"
-#include "game_config_view.hpp"
 #include <sstream>
 #include <utility>
 
@@ -36,10 +36,10 @@ namespace
 {
 
 const std::size_t DefaultFontSize = font::SIZE_NORMAL;
-const color_t DefaultFontRGB {200, 200, 200};
+const color_t DefaultFontRGB{200, 200, 200};
 
-_rect ref_rect {0, 0, 0, 0};
-}
+_rect ref_rect{0, 0, 0, 0};
+} // namespace
 
 static std::size_t compute(std::string expr, std::size_t ref1, std::size_t ref2 = 0)
 {
@@ -57,7 +57,7 @@ static std::size_t compute(std::string expr, std::size_t ref1, std::size_t ref2 
 // If x2 or y2 are not specified, use x1 and y1 values
 static _rect read_rect(const config& cfg)
 {
-	_rect rect {0, 0, 0, 0};
+	_rect rect{0, 0, 0, 0};
 	std::vector<std::string> items = utils::split(cfg["rect"].str());
 	if(items.size() >= 1)
 		rect.x1 = atoi(items[0].c_str());
@@ -92,7 +92,7 @@ static SDL_Rect read_sdl_rect(const config& cfg)
 
 static std::string resolve_rect(const std::string& rect_str)
 {
-	_rect rect {0, 0, 0, 0};
+	_rect rect{0, 0, 0, 0};
 	std::stringstream resolved;
 	const std::vector<std::string> items = utils::split(rect_str.c_str());
 	if(items.size() >= 1) {
@@ -322,45 +322,45 @@ rect& theme::object::location(const SDL_Rect& screen) const
 	last_screen_ = screen;
 
 	switch(xanchor_) {
-		case FIXED:
-			relative_loc_.x = loc_.x;
-			relative_loc_.w = loc_.w;
-			break;
-		case TOP_ANCHORED:
-			relative_loc_.x = loc_.x;
-			relative_loc_.w = loc_.w + screen.w - std::min<std::size_t>(spec_width_, loc_.w + screen.w);
-			break;
-		case BOTTOM_ANCHORED:
-			relative_loc_.x = loc_.x + screen.w - std::min<std::size_t>(spec_width_, loc_.x + screen.w);
-			relative_loc_.w = loc_.w;
-			break;
-		case PROPORTIONAL:
-			relative_loc_.x = (loc_.x * screen.w) / spec_width_;
-			relative_loc_.w = (loc_.w * screen.w) / spec_width_;
-			break;
-		default:
-			assert(false);
+	case FIXED:
+		relative_loc_.x = loc_.x;
+		relative_loc_.w = loc_.w;
+		break;
+	case TOP_ANCHORED:
+		relative_loc_.x = loc_.x;
+		relative_loc_.w = loc_.w + screen.w - std::min<std::size_t>(spec_width_, loc_.w + screen.w);
+		break;
+	case BOTTOM_ANCHORED:
+		relative_loc_.x = loc_.x + screen.w - std::min<std::size_t>(spec_width_, loc_.x + screen.w);
+		relative_loc_.w = loc_.w;
+		break;
+	case PROPORTIONAL:
+		relative_loc_.x = (loc_.x * screen.w) / spec_width_;
+		relative_loc_.w = (loc_.w * screen.w) / spec_width_;
+		break;
+	default:
+		assert(false);
 	}
 
 	switch(yanchor_) {
-		case FIXED:
-			relative_loc_.y = loc_.y;
-			relative_loc_.h = loc_.h;
-			break;
-		case TOP_ANCHORED:
-			relative_loc_.y = loc_.y;
-			relative_loc_.h = loc_.h + screen.h - std::min<std::size_t>(spec_height_, loc_.h + screen.h);
-			break;
-		case BOTTOM_ANCHORED:
-			relative_loc_.y = loc_.y + screen.h - std::min<std::size_t>(spec_height_, loc_.y + screen.h);
-			relative_loc_.h = loc_.h;
-			break;
-		case PROPORTIONAL:
-			relative_loc_.y = (loc_.y * screen.h) / spec_height_;
-			relative_loc_.h = (loc_.h * screen.h) / spec_height_;
-			break;
-		default:
-			assert(false);
+	case FIXED:
+		relative_loc_.y = loc_.y;
+		relative_loc_.h = loc_.h;
+		break;
+	case TOP_ANCHORED:
+		relative_loc_.y = loc_.y;
+		relative_loc_.h = loc_.h + screen.h - std::min<std::size_t>(spec_height_, loc_.h + screen.h);
+		break;
+	case BOTTOM_ANCHORED:
+		relative_loc_.y = loc_.y + screen.h - std::min<std::size_t>(spec_height_, loc_.y + screen.h);
+		relative_loc_.h = loc_.h;
+		break;
+	case PROPORTIONAL:
+		relative_loc_.y = (loc_.y * screen.h) / spec_height_;
+		relative_loc_.h = (loc_.h * screen.h) / spec_height_;
+		break;
+	default:
+		assert(false);
 	}
 
 	relative_loc_.w = std::min<int>(relative_loc_.w, screen.w);
@@ -403,7 +403,7 @@ void theme::object::modify_location(const _rect& rect)
 
 void theme::object::modify_location(const std::string& rect_str, SDL_Rect location_ref_rect)
 {
-	_rect rect {0, 0, 0, 0};
+	_rect rect{0, 0, 0, 0};
 	const std::vector<std::string> items = utils::split(rect_str.c_str());
 	if(items.size() >= 1) {
 		rect.x1 = compute(items[0], location_ref_rect.x, location_ref_rect.x + location_ref_rect.w);
@@ -431,7 +431,8 @@ theme::label::label()
 
 theme::label::label(std::size_t sw, std::size_t sh, const config& cfg)
 	: object(sw, sh, cfg)
-	, text_(cfg["prefix"].str() + cfg["prefix_literal"].str() + cfg["text"].str() + cfg["postfix_literal"].str() + cfg["postfix"].str())
+	, text_(cfg["prefix"].str() + cfg["prefix_literal"].str() + cfg["text"].str() + cfg["postfix_literal"].str()
+		  + cfg["postfix"].str())
 	, icon_(cfg["icon"])
 	, font_(cfg["font_size"].to_size_t())
 	, font_rgb_set_(false)
@@ -1007,9 +1008,9 @@ const config& theme::get_theme_config(const std::string& id)
 		return iter->second;
 	}
 
-	if (!id.empty()) { // (treat empty id as request for default theme)
+	if(!id.empty()) { // (treat empty id as request for default theme)
 		ERR_DP << "Theme '" << id << "' not found."
-		       << " Falling back to default theme.";
+			   << " Falling back to default theme.";
 	}
 
 	iter = known_themes.find("Default");

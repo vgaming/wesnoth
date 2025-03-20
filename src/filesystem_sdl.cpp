@@ -23,29 +23,31 @@
 static lg::log_domain log_filesystem("filesystem");
 #define ERR_FS LOG_STREAM(err, log_filesystem)
 
-namespace filesystem {
+namespace filesystem
+{
 
 // Arbitrary numbers larger than 5
 static const uint32_t read_type = 7;
 static const uint32_t write_type = 8;
 
-static int64_t ifs_size (struct SDL_RWops * context);
-static int64_t ofs_size (struct SDL_RWops * context);
-static int64_t SDLCALL ifs_seek(struct SDL_RWops *context, int64_t offset, int whence);
-static int64_t SDLCALL ofs_seek(struct SDL_RWops *context, int64_t offset, int whence);
-static std::size_t SDLCALL ifs_read(struct SDL_RWops *context, void *ptr, std::size_t size, std::size_t maxnum);
-static std::size_t SDLCALL ofs_read(struct SDL_RWops *context, void *ptr, std::size_t size, std::size_t maxnum);
-static std::size_t SDLCALL ifs_write(struct SDL_RWops *context, const void *ptr, std::size_t size, std::size_t num);
-static std::size_t SDLCALL ofs_write(struct SDL_RWops *context, const void *ptr, std::size_t size, std::size_t num);
-static int SDLCALL ifs_close(struct SDL_RWops *context);
-static int SDLCALL ofs_close(struct SDL_RWops *context);
+static int64_t ifs_size(struct SDL_RWops* context);
+static int64_t ofs_size(struct SDL_RWops* context);
+static int64_t SDLCALL ifs_seek(struct SDL_RWops* context, int64_t offset, int whence);
+static int64_t SDLCALL ofs_seek(struct SDL_RWops* context, int64_t offset, int whence);
+static std::size_t SDLCALL ifs_read(struct SDL_RWops* context, void* ptr, std::size_t size, std::size_t maxnum);
+static std::size_t SDLCALL ofs_read(struct SDL_RWops* context, void* ptr, std::size_t size, std::size_t maxnum);
+static std::size_t SDLCALL ifs_write(struct SDL_RWops* context, const void* ptr, std::size_t size, std::size_t num);
+static std::size_t SDLCALL ofs_write(struct SDL_RWops* context, const void* ptr, std::size_t size, std::size_t num);
+static int SDLCALL ifs_close(struct SDL_RWops* context);
+static int SDLCALL ofs_close(struct SDL_RWops* context);
 
 void sdl_rwops_deleter::operator()(SDL_RWops* p) const noexcept
 {
 	SDL_FreeRW(p);
 }
 
-rwops_ptr make_read_RWops(const std::string &path) {
+rwops_ptr make_read_RWops(const std::string& path)
+{
 	rwops_ptr rw(SDL_AllocRW());
 
 	rw->size = &ifs_size;
@@ -68,7 +70,8 @@ rwops_ptr make_read_RWops(const std::string &path) {
 	return rw;
 }
 
-rwops_ptr make_write_RWops(const std::string &path) {
+rwops_ptr make_write_RWops(const std::string& path)
+{
 	rwops_ptr rw(SDL_AllocRW());
 
 	rw->size = &ofs_size;
@@ -91,8 +94,9 @@ rwops_ptr make_write_RWops(const std::string &path) {
 	return rw;
 }
 
-static int64_t ifs_size (struct SDL_RWops * context) {
-	std::istream *ifs = static_cast<std::istream*>(context->hidden.unknown.data1);
+static int64_t ifs_size(struct SDL_RWops* context)
+{
+	std::istream* ifs = static_cast<std::istream*>(context->hidden.unknown.data1);
 	std::streampos orig = ifs->tellg();
 
 	ifs->seekg(0, std::ios::end);
@@ -103,8 +107,9 @@ static int64_t ifs_size (struct SDL_RWops * context) {
 
 	return len;
 }
-static int64_t ofs_size (struct SDL_RWops * context) {
-	std::ostream *ofs = static_cast<std::ostream*>(context->hidden.unknown.data1);
+static int64_t ofs_size(struct SDL_RWops* context)
+{
+	std::ostream* ofs = static_cast<std::ostream*>(context->hidden.unknown.data1);
 	std::streampos orig = ofs->tellp();
 
 	ofs->seekp(0, std::ios::end);
@@ -118,8 +123,9 @@ static int64_t ofs_size (struct SDL_RWops * context) {
 
 typedef std::pair<int64_t, std::ios_base::seekdir> offset_dir;
 
-static offset_dir translate_seekdir(int64_t offset, int whence) {
-	switch(whence){
+static offset_dir translate_seekdir(int64_t offset, int whence)
+{
+	switch(whence) {
 	case RW_SEEK_SET:
 		return std::pair(std::max<int64_t>(0, offset), std::ios_base::beg);
 	case RW_SEEK_CUR:
@@ -131,11 +137,12 @@ static offset_dir translate_seekdir(int64_t offset, int whence) {
 		throw "assertion ignored";
 	}
 }
-static int64_t SDLCALL ifs_seek(struct SDL_RWops *context, int64_t offset, int whence) {
+static int64_t SDLCALL ifs_seek(struct SDL_RWops* context, int64_t offset, int whence)
+{
 	std::ios_base::seekdir seekdir;
 	std::tie(offset, seekdir) = translate_seekdir(offset, whence);
 
-	std::istream *ifs = static_cast<std::istream*>(context->hidden.unknown.data1);
+	std::istream* ifs = static_cast<std::istream*>(context->hidden.unknown.data1);
 	const std::ios_base::iostate saved_state = ifs->rdstate();
 
 	ifs->seekg(offset, seekdir);
@@ -148,11 +155,12 @@ static int64_t SDLCALL ifs_seek(struct SDL_RWops *context, int64_t offset, int w
 	std::streamsize pos = ifs->tellg();
 	return static_cast<int>(pos);
 }
-static int64_t SDLCALL ofs_seek(struct SDL_RWops *context, int64_t offset, int whence) {
+static int64_t SDLCALL ofs_seek(struct SDL_RWops* context, int64_t offset, int whence)
+{
 	std::ios_base::seekdir seekdir;
 	std::tie(offset, seekdir) = translate_seekdir(offset, whence);
 
-	std::ostream *ofs = static_cast<std::ostream*>(context->hidden.unknown.data1);
+	std::ostream* ofs = static_cast<std::ostream*>(context->hidden.unknown.data1);
 	const std::ios_base::iostate saved_state = ofs->rdstate();
 
 	ofs->seekp(offset, seekdir);
@@ -166,8 +174,9 @@ static int64_t SDLCALL ofs_seek(struct SDL_RWops *context, int64_t offset, int w
 	return static_cast<int>(pos);
 }
 
-static std::size_t SDLCALL ifs_read(struct SDL_RWops *context, void *ptr, std::size_t size, std::size_t maxnum) {
-	std::istream *ifs = static_cast<std::istream*>(context->hidden.unknown.data1);
+static std::size_t SDLCALL ifs_read(struct SDL_RWops* context, void* ptr, std::size_t size, std::size_t maxnum)
+{
+	std::istream* ifs = static_cast<std::istream*>(context->hidden.unknown.data1);
 
 	// This seems overly simplistic, but it's the same as mem_read's implementation
 	ifs->read(static_cast<char*>(ptr), maxnum * size);
@@ -179,17 +188,22 @@ static std::size_t SDLCALL ifs_read(struct SDL_RWops *context, void *ptr, std::s
 
 	return static_cast<int>(num);
 }
-static std::size_t SDLCALL ofs_read(struct SDL_RWops * /*context*/, void * /*ptr*/, std::size_t /*size*/, std::size_t /*maxnum*/) {
+static std::size_t SDLCALL ofs_read(
+	struct SDL_RWops* /*context*/, void* /*ptr*/, std::size_t /*size*/, std::size_t /*maxnum*/)
+{
 	SDL_SetError("Reading not implemented");
 	return 0;
 }
 
-static std::size_t SDLCALL ifs_write(struct SDL_RWops * /*context*/, const void * /*ptr*/, std::size_t /*size*/, std::size_t /*num*/) {
+static std::size_t SDLCALL ifs_write(
+	struct SDL_RWops* /*context*/, const void* /*ptr*/, std::size_t /*size*/, std::size_t /*num*/)
+{
 	SDL_SetError("Writing not implemented");
 	return 0;
 }
-static std::size_t SDLCALL ofs_write(struct SDL_RWops *context, const void *ptr, std::size_t size, std::size_t num) {
-	std::ostream *ofs = static_cast<std::ostream*>(context->hidden.unknown.data1);
+static std::size_t SDLCALL ofs_write(struct SDL_RWops* context, const void* ptr, std::size_t size, std::size_t num)
+{
+	std::ostream* ofs = static_cast<std::ostream*>(context->hidden.unknown.data1);
 
 	const std::streampos before = ofs->tellp();
 	ofs->write(static_cast<const char*>(ptr), num * size);
@@ -200,21 +214,23 @@ static std::size_t SDLCALL ofs_write(struct SDL_RWops *context, const void *ptr,
 	return num_written;
 }
 
-static int SDLCALL ifs_close(struct SDL_RWops *context) {
-	if (context) {
-		std::istream *ifs = static_cast<std::istream*>(context->hidden.unknown.data1);
+static int SDLCALL ifs_close(struct SDL_RWops* context)
+{
+	if(context) {
+		std::istream* ifs = static_cast<std::istream*>(context->hidden.unknown.data1);
 		delete ifs;
 		SDL_FreeRW(context);
 	}
 	return 0;
 }
-static int SDLCALL ofs_close(struct SDL_RWops *context) {
-	if (context) {
-		std::ostream *ofs = static_cast<std::ostream*>(context->hidden.unknown.data1);
+static int SDLCALL ofs_close(struct SDL_RWops* context)
+{
+	if(context) {
+		std::ostream* ofs = static_cast<std::ostream*>(context->hidden.unknown.data1);
 		delete ofs;
 		SDL_FreeRW(context);
 	}
 	return 0;
 }
 
-}
+} // namespace filesystem

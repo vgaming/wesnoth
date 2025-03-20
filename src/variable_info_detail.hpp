@@ -119,7 +119,8 @@ struct maybe_const<config::child_itors, const vi_policy_const>
 enum variable_info_state_type {
 	state_start = 0, /**< Represents the initial variable state before processing. */
 	state_named,     /**< The result of .someval. This can either mean an attribute value or a child range. */
-	state_indexed,   /**< The result of .someval[index]. This is never an attribute value and is always a single config. */
+	state_indexed,   /**< The result of .someval[index]. This is never an attribute value and is always a single config.
+					  */
 	state_temporary, /**< The result of .length. This value can never be written, it can only be read. */
 };
 

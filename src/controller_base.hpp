@@ -56,7 +56,7 @@ namespace hotkey
 {
 class command_executor;
 struct ui_command;
-}
+} // namespace hotkey
 
 namespace soundsource
 {

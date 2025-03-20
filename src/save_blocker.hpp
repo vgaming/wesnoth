@@ -42,7 +42,8 @@ class play_controller;
  * handled normally. So you should avoid using this class and it may be removed.
  */
 
-class save_blocker {
+class save_blocker
+{
 public:
 	save_blocker();
 	~save_blocker();
@@ -58,14 +59,20 @@ protected:
 	/** An exception-safe means of making sure that unblock() gets called
 	 *  after try_block().
 	 */
-	class save_unblocker {
+	class save_unblocker
+	{
 	public:
-		save_unblocker() {}
-		~save_unblocker() { save_blocker::unblock(); }
+		save_unblocker()
+		{
+		}
+		~save_unblocker()
+		{
+			save_blocker::unblock();
+		}
 	};
 
 private:
-	static play_controller *controller_;
+	static play_controller* controller_;
 	static void (play_controller::*callback_)();
 	static SDL_sem* sem_;
 };

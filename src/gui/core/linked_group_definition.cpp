@@ -46,4 +46,4 @@ std::vector<linked_group_definition> parse_linked_group_definitions(const config
 	return definitions;
 }
 
-}
+} // namespace gui2

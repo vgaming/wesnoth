@@ -20,22 +20,23 @@
 #include "color.hpp"
 #include "config.hpp"
 #include "game_config.hpp"
-#include "picture.hpp"
 #include "lexical_cast.hpp"
 #include "log.hpp"
+#include "picture.hpp"
 #include "serialization/string_utils.hpp"
 #include "team.hpp"
 #include "utils/from_chars.hpp"
 
-#include "formula/formula.hpp"
 #include "formula/callable_objects.hpp"
+#include "formula/formula.hpp"
 
 #define GETTEXT_DOMAIN "wesnoth-lib"
 
 static lg::log_domain log_display("display");
 #define ERR_DP LOG_STREAM(err, log_display)
 
-namespace image {
+namespace image
+{
 
 /** Adds @a mod to the queue (unless mod is nullptr). */
 void modification_queue::push(std::unique_ptr<modification> mod)
@@ -69,13 +70,13 @@ std::size_t modification_queue::size() const
 }
 
 /** Returns the top element in the queue . */
-modification * modification_queue::top() const
+modification* modification_queue::top() const
 {
 	return priorities_.begin()->second.front().get();
 }
 
-
-namespace {
+namespace
+{
 
 /** A function used to parse modification arguments */
 using mod_parser = std::function<std::unique_ptr<modification>(std::string_view)>;
@@ -114,8 +115,7 @@ std::unique_ptr<modification> decode_modification(const std::string& encoded_mod
 	}
 }
 
-} // end anon namespace
-
+} // namespace
 
 modification::imod_exception::imod_exception(const std::stringstream& message_stream)
 	: message(message_stream.str())
@@ -158,7 +158,7 @@ void rc_modification::operator()(surface& src) const
 
 void fl_modification::operator()(surface& src) const
 {
-	if(horiz_  && vert_ ) {
+	if(horiz_ && vert_) {
 		// Slightly faster than doing both a flip and a flop.
 		src = rotate_180_surface(src);
 	} else if(horiz_) {
@@ -171,25 +171,24 @@ void fl_modification::operator()(surface& src) const
 void rotate_modification::operator()(surface& src) const
 {
 	// Convert the number of degrees to the interval [0,360].
-	const int normalized = degrees_ >= 0 ?
-		degrees_ - 360 * (degrees_ / 360) :
-		degrees_ + 360 * (1 + (-degrees_) / 360); // In case compilers disagree as to what -90/360 is.
+	const int normalized = degrees_ >= 0
+		? degrees_ - 360 * (degrees_ / 360)
+		: degrees_ + 360 * (1 + (-degrees_) / 360); // In case compilers disagree as to what -90/360 is.
 
-	switch ( normalized )
-	{
-		case 0:
-			return;
-		case 90:
-			src = rotate_90_surface(src, true);
-			return;
-		case 180:
-			src = rotate_180_surface(src);
-			return;
-		case 270:
-			src = rotate_90_surface(src, false);
-			return;
-		case 360:
-			return;
+	switch(normalized) {
+	case 0:
+		return;
+	case 90:
+		src = rotate_90_surface(src, true);
+		return;
+	case 180:
+		src = rotate_180_surface(src);
+		return;
+	case 270:
+		src = rotate_90_surface(src, false);
+		return;
+	case 360:
+		return;
 	}
 
 	src = rotate_any_surface(src, normalized, zoom_, offset_);
@@ -244,8 +243,12 @@ class pixel_callable : public wfl::color_callable
 {
 public:
 	pixel_callable(SDL_Point p, color_t clr, uint32_t w, uint32_t h)
-		: color_callable(clr), p(p), w(w), h(h)
-	{}
+		: color_callable(clr)
+		, p(p)
+		, w(w)
+		, h(h)
+	{
+	}
 
 	void get_inputs(wfl::formula_input_vector& inputs) const override
 	{
@@ -369,39 +372,35 @@ void blit_modification::operator()(surface& src) const
 {
 	if(x_ >= src->w) {
 		std::stringstream sstr;
-		sstr << "~BLIT(): x-coordinate '"
-			<< x_ << "' larger than destination image's width '"
-			<< src->w << "' no blitting performed.\n";
+		sstr << "~BLIT(): x-coordinate '" << x_ << "' larger than destination image's width '" << src->w
+			 << "' no blitting performed.\n";
 
 		throw imod_exception(sstr);
 	}
 
 	if(y_ >= src->h) {
 		std::stringstream sstr;
-		sstr << "~BLIT(): y-coordinate '"
-			<< y_ << "' larger than destination image's height '"
-			<< src->h << "' no blitting performed.\n";
+		sstr << "~BLIT(): y-coordinate '" << y_ << "' larger than destination image's height '" << src->h
+			 << "' no blitting performed.\n";
 
 		throw imod_exception(sstr);
 	}
 
 	if(surf_->w + x_ < 0) {
 		std::stringstream sstr;
-		sstr << "~BLIT(): offset and width '"
-			<< x_ + surf_->w << "' less than zero no blitting performed.\n";
+		sstr << "~BLIT(): offset and width '" << x_ + surf_->w << "' less than zero no blitting performed.\n";
 
 		throw imod_exception(sstr);
 	}
 
 	if(surf_->h + y_ < 0) {
 		std::stringstream sstr;
-		sstr << "~BLIT(): offset and height '"
-			<< y_ + surf_->h << "' less than zero no blitting performed.\n";
+		sstr << "~BLIT(): offset and height '" << y_ + surf_->h << "' less than zero no blitting performed.\n";
 
 		throw imod_exception(sstr);
 	}
 
-	SDL_Rect r {x_, y_, 0, 0};
+	SDL_Rect r{x_, y_, 0, 0};
 	sdl_blit(surf_, nullptr, src, &r);
 }
 
@@ -412,7 +411,7 @@ void mask_modification::operator()(surface& src) const
 		return;
 	}
 
-	SDL_Rect r {x_, y_, 0, 0};
+	SDL_Rect r{x_, y_, 0, 0};
 	surface new_mask(src->w, src->h);
 	sdl_blit(mask_, nullptr, new_mask, &r);
 	mask_surface(src, new_mask);
@@ -420,7 +419,9 @@ void mask_modification::operator()(surface& src) const
 
 void light_modification::operator()(surface& src) const
 {
-	if(src == nullptr) { return; }
+	if(src == nullptr) {
+		return;
+	}
 
 	// light_surface wants a neutral surface having same dimensions
 	if(surf_->w != src->w || surf_->h != src->h) {
@@ -447,15 +448,10 @@ void scale_modification::operator()(surface& src) const
 	}
 
 	if(flags_ & PRESERVE_ASPECT_RATIO) {
-		const auto ratio = std::min(
-			static_cast<long double>(size.x) / src->w,
-			static_cast<long double>(size.y) / src->h
-		);
+		const auto ratio
+			= std::min(static_cast<long double>(size.x) / src->w, static_cast<long double>(size.y) / src->h);
 
-		size = {
-			static_cast<int>(src->w * ratio),
-			static_cast<int>(src->h * ratio)
-		};
+		size = {static_cast<int>(src->w * ratio), static_cast<int>(src->h * ratio)};
 	}
 
 	if(flags_ & SCALE_SHARP) {
@@ -533,7 +529,8 @@ void swap_modification::operator()(surface& src) const
 	swap_channels_image(src, red_, green_, blue_, alpha_);
 }
 
-namespace {
+namespace
+{
 
 struct parse_mod_registration
 {
@@ -552,15 +549,15 @@ struct parse_mod_registration
  * @param type The modification type to be registered (unquoted)
  * @param args_var The name for the string argument provided
  */
-#define REGISTER_MOD_PARSER(type, args_var)                                                           \
-    static std::unique_ptr<modification> parse_##type##_mod(std::string_view);                        \
-    static parse_mod_registration parse_##type##_mod_registration_aux(#type, &parse_##type##_mod);    \
-    static std::unique_ptr<modification> parse_##type##_mod(std::string_view args_var)                \
+#define REGISTER_MOD_PARSER(type, args_var)                                                                            \
+	static std::unique_ptr<modification> parse_##type##_mod(std::string_view);                                         \
+	static parse_mod_registration parse_##type##_mod_registration_aux(#type, &parse_##type##_mod);                     \
+	static std::unique_ptr<modification> parse_##type##_mod(std::string_view args_var)
 
 // Color-range-based recoloring
 REGISTER_MOD_PARSER(TC, args)
 {
-	const auto params = utils::split_view(args,',');
+	const auto params = utils::split_view(args, ',');
 
 	if(params.size() < 2) {
 		ERR_DP << "too few arguments passed to the ~TC() function";
@@ -577,7 +574,7 @@ REGISTER_MOD_PARSER(TC, args)
 	//
 	// Pass argseters for RC functor
 	//
-	if(!game_config::tc_info(params[1]).size()){
+	if(!game_config::tc_info(params[1]).size()) {
 		ERR_DP << "could not load TC info for '" << params[1] << "' palette";
 		ERR_DP << "bailing out from TC";
 
@@ -589,7 +586,7 @@ REGISTER_MOD_PARSER(TC, args)
 		const color_range& new_color = team::get_side_color_range(side_n);
 		const std::vector<color_t>& old_color = game_config::tc_info(params[1]);
 
-		rc_map = recolor_range(new_color,old_color);
+		rc_map = recolor_range(new_color, old_color);
 	} catch(const config::error& e) {
 		ERR_DP << "caught config::error while processing TC: " << e.message;
 		ERR_DP << "bailing out from TC";
@@ -603,7 +600,7 @@ REGISTER_MOD_PARSER(TC, args)
 // Team-color-based color range selection and recoloring
 REGISTER_MOD_PARSER(RC, args)
 {
-	const auto recolor_params = utils::split_view(args,'>');
+	const auto recolor_params = utils::split_view(args, '>');
 
 	if(recolor_params.size() <= 1) {
 		return nullptr;
@@ -617,11 +614,9 @@ REGISTER_MOD_PARSER(RC, args)
 		const color_range& new_color = game_config::color_info(recolor_params[1]);
 		const std::vector<color_t>& old_color = game_config::tc_info(recolor_params[0]);
 
-		rc_map = recolor_range(new_color,old_color);
-	} catch (const config::error& e) {
-		ERR_DP
-			<< "caught config::error while processing color-range RC: "
-			<< e.message;
+		rc_map = recolor_range(new_color, old_color);
+	} catch(const config::error& e) {
+		ERR_DP << "caught config::error while processing color-range RC: " << e.message;
 		ERR_DP << "bailing out from RC";
 		rc_map.clear();
 	}
@@ -632,7 +627,7 @@ REGISTER_MOD_PARSER(RC, args)
 // Palette switch
 REGISTER_MOD_PARSER(PAL, args)
 {
-	const auto remap_params = utils::split_view(args,'>');
+	const auto remap_params = utils::split_view(args, '>');
 
 	if(remap_params.size() < 2) {
 		ERR_DP << "not enough arguments passed to the ~PAL() function: " << args;
@@ -643,7 +638,7 @@ REGISTER_MOD_PARSER(PAL, args)
 	try {
 		color_range_map rc_map;
 		const std::vector<color_t>& old_palette = game_config::tc_info(remap_params[0]);
-		const std::vector<color_t>& new_palette =game_config::tc_info(remap_params[1]);
+		const std::vector<color_t>& new_palette = game_config::tc_info(remap_params[1]);
 
 		for(std::size_t i = 0; i < old_palette.size() && i < new_palette.size(); ++i) {
 			rc_map[old_palette[i]] = new_palette[i];
@@ -651,11 +646,8 @@ REGISTER_MOD_PARSER(PAL, args)
 
 		return std::make_unique<rc_modification>(rc_map);
 	} catch(const config::error& e) {
-		ERR_DP
-			<< "caught config::error while processing PAL function: "
-			<< e.message;
-		ERR_DP
-			<< "bailing out from PAL";
+		ERR_DP << "caught config::error while processing PAL function: " << e.message;
+		ERR_DP << "bailing out from PAL";
 
 		return nullptr;
 	}
@@ -676,20 +668,16 @@ REGISTER_MOD_PARSER(ROTATE, args)
 	const auto slice_params = utils::split_view(args, ',', utils::STRIP_SPACES);
 
 	switch(slice_params.size()) {
-		case 0:
-			return std::make_unique<rotate_modification>();
-		case 1:
-			return std::make_unique<rotate_modification>(
-				utils::from_chars<int>(slice_params[0]).value_or(0));
-		case 2:
-			return std::make_unique<rotate_modification>(
-				utils::from_chars<int>(slice_params[0]).value_or(0),
-				utils::from_chars<int>(slice_params[1]).value_or(0));
-		case 3:
-			return std::make_unique<rotate_modification>(
-				utils::from_chars<int>(slice_params[0]).value_or(0),
-				utils::from_chars<int>(slice_params[1]).value_or(0),
-				utils::from_chars<int>(slice_params[2]).value_or(0));
+	case 0:
+		return std::make_unique<rotate_modification>();
+	case 1:
+		return std::make_unique<rotate_modification>(utils::from_chars<int>(slice_params[0]).value_or(0));
+	case 2:
+		return std::make_unique<rotate_modification>(
+			utils::from_chars<int>(slice_params[0]).value_or(0), utils::from_chars<int>(slice_params[1]).value_or(0));
+	case 3:
+		return std::make_unique<rotate_modification>(utils::from_chars<int>(slice_params[0]).value_or(0),
+			utils::from_chars<int>(slice_params[1]).value_or(0), utils::from_chars<int>(slice_params[2]).value_or(0));
 	}
 	return nullptr;
 }
@@ -799,8 +787,9 @@ REGISTER_MOD_PARSER(WIPE_ALPHA, )
 // Adjust Alpha
 REGISTER_MOD_PARSER(ADJUST_ALPHA, args)
 {
-	// Formulas may contain commas, so use parenthetical split to ensure that they're properly considered a single argument.
-	// (A comma in a formula is only valid in function parameters or list/map literals, so this should always work.)
+	// Formulas may contain commas, so use parenthetical split to ensure that they're properly considered a single
+	// argument. (A comma in a formula is only valid in function parameters or list/map literals, so this should always
+	// work.)
 	const std::vector<std::string>& params = utils::parenthetical_split(args, ',', "([", ")]");
 
 	if(params.size() != 1) {
@@ -814,8 +803,9 @@ REGISTER_MOD_PARSER(ADJUST_ALPHA, args)
 // Adjust Channels
 REGISTER_MOD_PARSER(CHAN, args)
 {
-	// Formulas may contain commas, so use parenthetical split to ensure that they're properly considered a single argument.
-	// (A comma in a formula is only valid in function parameters or list/map literals, so this should always work.)
+	// Formulas may contain commas, so use parenthetical split to ensure that they're properly considered a single
+	// argument. (A comma in a formula is only valid in function parameters or list/map literals, so this should always
+	// work.)
 	const std::vector<std::string>& params = utils::parenthetical_split(args, ',', "([", ")]");
 
 	if(params.size() < 1 || params.size() > 4) {
@@ -841,14 +831,14 @@ REGISTER_MOD_PARSER(CS, args)
 
 	r = utils::from_chars<int>(factors[0]).value_or(0);
 
-	if(s > 1 ) {
+	if(s > 1) {
 		g = utils::from_chars<int>(factors[1]).value_or(0);
 	}
-	if(s > 2 ) {
+	if(s > 2) {
 		b = utils::from_chars<int>(factors[2]).value_or(0);
 	}
 
-	return std::make_unique<cs_modification>(r, g , b);
+	return std::make_unique<cs_modification>(r, g, b);
 }
 
 // Color blending
@@ -874,11 +864,8 @@ REGISTER_MOD_PARSER(BLEND, args)
 		opacity /= 100.0f;
 	}
 
-	return std::make_unique<blend_modification>(
-		utils::from_chars<int>(params[0]).value_or(0),
-		utils::from_chars<int>(params[1]).value_or(0),
-		utils::from_chars<int>(params[2]).value_or(0),
-		opacity);
+	return std::make_unique<blend_modification>(utils::from_chars<int>(params[0]).value_or(0),
+		utils::from_chars<int>(params[1]).value_or(0), utils::from_chars<int>(params[2]).value_or(0), opacity);
 }
 
 // Crop/slice
@@ -892,7 +879,7 @@ REGISTER_MOD_PARSER(CROP, args)
 		return nullptr;
 	}
 
-	SDL_Rect slice_rect { 0, 0, 0, 0 };
+	SDL_Rect slice_rect{0, 0, 0, 0};
 
 	slice_rect.x = utils::from_chars<int16_t>(slice_params[0]).value_or(0);
 
@@ -909,9 +896,10 @@ REGISTER_MOD_PARSER(CROP, args)
 	return std::make_unique<crop_modification>(slice_rect);
 }
 
-static bool check_image(const image::locator& img, std::stringstream & message)
+static bool check_image(const image::locator& img, std::stringstream& message)
 {
-	if(image::exists(img)) return true;
+	if(image::exists(img))
+		return true;
 	message << " image not found: '" << img.get_filename() << "'\n";
 	ERR_DP << message.str();
 	return false;
@@ -923,12 +911,12 @@ REGISTER_MOD_PARSER(BLIT, args)
 	std::vector<std::string> param = utils::parenthetical_split(args, ',');
 	const std::size_t s = param.size();
 
-	if(s == 0 || (s == 1 && param[0].empty())){
+	if(s == 0 || (s == 1 && param[0].empty())) {
 		ERR_DP << "no arguments passed to the ~BLIT() function";
 		return nullptr;
 	}
 
-	if(s > 3){
+	if(s > 3) {
 		ERR_DP << "too many arguments passed to the ~BLIT() function";
 		return nullptr;
 	}
@@ -956,7 +944,7 @@ REGISTER_MOD_PARSER(MASK, args)
 	std::vector<std::string> param = utils::parenthetical_split(args, ',');
 	const std::size_t s = param.size();
 
-	if(s == 0 || (s == 1 && param[0].empty())){
+	if(s == 0 || (s == 1 && param[0].empty())) {
 		ERR_DP << "no arguments passed to the ~MASK() function";
 		return nullptr;
 	}
@@ -986,7 +974,7 @@ REGISTER_MOD_PARSER(MASK, args)
 // Light
 REGISTER_MOD_PARSER(L, args)
 {
-	if(args.empty()){
+	if(args.empty()) {
 		ERR_DP << "no arguments passed to the ~L() function";
 		return nullptr;
 	}
@@ -1000,9 +988,9 @@ namespace
 std::pair<int, bool> parse_scale_value(std::string_view arg)
 {
 	if(const std::size_t pos = arg.rfind('%'); pos != std::string_view::npos) {
-		return { utils::from_chars<int>(arg.substr(0, pos)).value_or(0), true };
+		return {utils::from_chars<int>(arg.substr(0, pos)).value_or(0), true};
 	} else {
-		return { utils::from_chars<int>(arg).value_or(0), false };
+		return {utils::from_chars<int>(arg).value_or(0), false};
 	}
 }
 
@@ -1017,7 +1005,7 @@ utils::optional<std::pair<point, uint8_t>> parse_scale_args(std::string_view arg
 	}
 
 	uint8_t flags = 0;
-	std::array<int, 2> parsed_sizes{0,0};
+	std::array<int, 2> parsed_sizes{0, 0};
 
 	for(unsigned i = 0; i < std::min<unsigned>(2, num_args); ++i) {
 		const auto& [size, relative] = parse_scale_value(scale_params[i]);
@@ -1161,7 +1149,7 @@ REGISTER_MOD_PARSER(RIGHT, )
 // Add a background color.
 REGISTER_MOD_PARSER(BG, args)
 {
-	int c[4] { 0, 0, 0, SDL_ALPHA_OPAQUE };
+	int c[4]{0, 0, 0, SDL_ALPHA_OPAQUE};
 	const auto factors = utils::split_view(args, ',');
 
 	for(int i = 0; i < std::min<int>(factors.size(), 4); ++i) {
@@ -1246,6 +1234,6 @@ REGISTER_MOD_PARSER(SWAP, args)
 	return std::make_unique<swap_modification>(redValue, greenValue, blueValue, alphaValue);
 }
 
-} // end anon namespace
+} // namespace
 
 } /* end namespace image */

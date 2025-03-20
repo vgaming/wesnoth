@@ -68,9 +68,7 @@ unsigned horizontal_scrollbar::offset_after() const
 
 bool horizontal_scrollbar::on_positioner(const point& coordinate) const
 {
-	rect positioner_rect(
-		get_positioner_offset(), 0, get_positioner_length(), get_height()
-	);
+	rect positioner_rect(get_positioner_offset(), 0, get_positioner_length(), get_height());
 
 	// Note we assume the positioner is over the entire height of the widget.
 	return positioner_rect.contains(coordinate);
@@ -79,17 +77,14 @@ bool horizontal_scrollbar::on_positioner(const point& coordinate) const
 int horizontal_scrollbar::on_bar(const point& coordinate) const
 {
 	// Not on the widget, leave.
-	if(static_cast<std::size_t>(coordinate.x) > get_width()
-	   || static_cast<std::size_t>(coordinate.y) > get_height()) {
+	if(static_cast<std::size_t>(coordinate.x) > get_width() || static_cast<std::size_t>(coordinate.y) > get_height()) {
 		return 0;
 	}
 
 	// we also assume the bar is over the entire width of the widget.
 	if(static_cast<std::size_t>(coordinate.x) < get_positioner_offset()) {
 		return -1;
-	} else if(static_cast<std::size_t>(coordinate.x) > get_positioner_offset()
-												  + get_positioner_length()) {
-
+	} else if(static_cast<std::size_t>(coordinate.x) > get_positioner_offset() + get_positioner_length()) {
 		return 1;
 	} else {
 		return 0;
@@ -103,8 +98,7 @@ bool horizontal_scrollbar::in_orthogonal_range(const point& coordinate) const
 
 // }---------- DEFINITION ---------{
 
-horizontal_scrollbar_definition::horizontal_scrollbar_definition(
-		const config& cfg)
+horizontal_scrollbar_definition::horizontal_scrollbar_definition(const config& cfg)
 	: styled_widget_definition(cfg)
 {
 	DBG_GUI_P << "Parsing horizontal scrollbar " << id;
@@ -119,15 +113,17 @@ horizontal_scrollbar_definition::resolution::resolution(const config& cfg)
 	, left_offset(cfg["left_offset"].to_unsigned())
 	, right_offset(cfg["right_offset"].to_unsigned())
 {
-	VALIDATE(minimum_positioner_length,
-			 missing_mandatory_wml_key("resolution",
-									   "minimum_positioner_length"));
+	VALIDATE(minimum_positioner_length, missing_mandatory_wml_key("resolution", "minimum_positioner_length"));
 
 	// Note the order should be the same as the enum state_t is scrollbar.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("horizontal_scrollbar_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("horizontal_scrollbar_definition][resolution", "state_disabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_pressed", missing_mandatory_wml_tag("horizontal_scrollbar_definition][resolution", "state_pressed")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_focused", missing_mandatory_wml_tag("horizontal_scrollbar_definition][resolution", "state_focused")));
+	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled",
+		missing_mandatory_wml_tag("horizontal_scrollbar_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled",
+		missing_mandatory_wml_tag("horizontal_scrollbar_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_pressed",
+		missing_mandatory_wml_tag("horizontal_scrollbar_definition][resolution", "state_pressed")));
+	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_focused",
+		missing_mandatory_wml_tag("horizontal_scrollbar_definition][resolution", "state_focused")));
 }
 
 // }---------- BUILDER -----------{
@@ -147,8 +143,7 @@ std::unique_ptr<widget> builder_horizontal_scrollbar::build() const
 	widget->finalize_setup();
 
 	DBG_GUI_G << "Window builder:"
-			  << " placed horizontal scrollbar '" << id << "' with definition '"
-			  << definition << "'.";
+			  << " placed horizontal scrollbar '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

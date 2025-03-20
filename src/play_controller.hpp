@@ -18,13 +18,13 @@
 
 #include "controller_base.hpp"
 #include "game_end_exceptions.hpp"
+#include "game_state.hpp"
 #include "help/help.hpp"
 #include "hotkey/command_executor.hpp"
 #include "menu_events.hpp"
 #include "mouse_events.hpp"
 #include "persist_manager.hpp"
 #include "tod_manager.hpp"
-#include "game_state.hpp"
 #include "utils/optimer.hpp"
 #include "utils/optional_fwd.hpp"
 
@@ -38,22 +38,26 @@ struct mp_game_settings;
 class game_classification;
 struct unit_experience_accelerator;
 
-namespace actions {
-	class undo_list;
+namespace actions
+{
+class undo_list;
 }
 
-namespace font {
-	struct floating_label_context;
+namespace font
+{
+struct floating_label_context;
 }
 
-namespace game_events {
-	class wml_event_pump;
+namespace game_events
+{
+class wml_event_pump;
 } // namespace game_events
 
 class statistics_t;
 
-namespace wb {
-	class manager; // whiteboard manager
+namespace wb
+{
+class manager; // whiteboard manager
 } // namespace wb
 
 // Holds gamestate related objects
@@ -61,13 +65,14 @@ namespace wb {
 class play_controller : public controller_base, public events::observer, public quit_confirmation
 {
 public:
-	play_controller(const config& level,
-			saved_game& state_of_game);
+	play_controller(const config& level, saved_game& state_of_game);
 	virtual ~play_controller();
 
-	//event handler, overridden from observer
-	//there is nothing to handle in this class actually but that might change in the future
-	virtual void handle_generic_event(const std::string& /*name*/) override {}
+	// event handler, overridden from observer
+	// there is nothing to handle in this class actually but that might change in the future
+	virtual void handle_generic_event(const std::string& /*name*/) override
+	{
+	}
 
 	bool can_undo() const;
 	bool can_redo() const;
@@ -195,37 +200,58 @@ public:
 	 */
 	void check_victory();
 
-	std::size_t turn() const {return gamestate().tod_manager_.turn();}
+	std::size_t turn() const
+	{
+		return gamestate().tod_manager_.turn();
+	}
 
 	/**
 	 * Returns the number of the side whose turn it is.
 	 *
 	 * Numbering starts at one.
 	 */
-	int current_side() const { return gamestate_->player_number_; }
+	int current_side() const
+	{
+		return gamestate_->player_number_;
+	}
 
 	/**
 	 * Builds the snapshot config from members and their respective configs.
 	 */
 	config to_config() const;
 
-	bool is_skipping_replay() const { return skip_replay_; }
+	bool is_skipping_replay() const
+	{
+		return skip_replay_;
+	}
 	bool is_skipping_actions() const;
 	void toggle_skipping_replay();
 	void do_autosave();
 
-	bool is_skipping_story() const { return skip_story_; }
+	bool is_skipping_story() const
+	{
+		return skip_story_;
+	}
 
 	void do_consolesave(const std::string& filename);
 
 	events::mouse_handler& get_mouse_handler_base() override;
-	events::menu_handler& get_menu_handler() { return menu_handler_; }
+	events::menu_handler& get_menu_handler()
+	{
+		return menu_handler_;
+	}
 
 	std::shared_ptr<wb::manager> get_whiteboard() const;
 	const mp_game_settings& get_mp_settings();
 	game_classification& get_classification();
-	int get_server_request_number() const { return gamestate().server_request_number_; }
-	void increase_server_request_number() { ++gamestate().server_request_number_; }
+	int get_server_request_number() const
+	{
+		return gamestate().server_request_number_;
+	}
+	void increase_server_request_number()
+	{
+		++gamestate().server_request_number_;
+	}
 
 	game_events::wml_event_pump& pump();
 
@@ -233,16 +259,28 @@ public:
 	virtual plugins_context* get_plugins_context() override;
 	hotkey::command_executor* get_hotkey_command_executor() override;
 
-	actions::undo_list& get_undo_stack() { return undo_stack(); }
+	actions::undo_list& get_undo_stack()
+	{
+		return undo_stack();
+	}
 
 	bool is_browsing() const override;
 
 	class hotkey_handler;
 
-	virtual replay_controller * get_replay_controller() const { return nullptr; }
-	bool is_replay() const { return get_replay_controller() != nullptr; }
+	virtual replay_controller* get_replay_controller() const
+	{
+		return nullptr;
+	}
+	bool is_replay() const
+	{
+		return get_replay_controller() != nullptr;
+	}
 
-	replay& recorder() const { return *replay_; }
+	replay& recorder() const
+	{
+		return *replay_;
+	}
 
 	t_string get_scenario_name() const
 	{
@@ -276,7 +314,10 @@ public:
 
 	bool can_use_synced_wml_menu() const;
 	std::set<std::string> all_players() const;
-	const auto& timer() const { return timer_; }
+	const auto& timer() const
+	{
+		return timer_;
+	}
 	game_display& get_display() override;
 
 	void update_savegame_snapshot() const;
@@ -286,13 +327,25 @@ public:
 	void update_gui_to_player(const int team_index, const bool observe = false);
 
 	/// Sends replay [command]s to the server
-	virtual void send_actions() { }
+	virtual void send_actions()
+	{
+	}
 	/// Reads and executes replay [command]s from the server
-	virtual void receive_actions() { }
+	virtual void receive_actions()
+	{
+	}
 
-	virtual bool is_networked_mp() const { return false; }
-	virtual void send_to_wesnothd(const config&, const std::string& = "unknown") const { }
-	virtual bool receive_from_wesnothd(config&) const { return false; }
+	virtual bool is_networked_mp() const
+	{
+		return false;
+	}
+	virtual void send_to_wesnothd(const config&, const std::string& = "unknown") const
+	{
+	}
+	virtual bool receive_from_wesnothd(config&) const
+	{
+		return false;
+	}
 	/** Reevaluate [show_if] conditions and build a new objectives string. */
 	void refresh_objectives() const;
 	void show_objectives() const;
@@ -304,9 +357,15 @@ public:
 		const play_controller& controller_;
 	};
 
-	saved_game& get_saved_game() { return saved_game_; }
+	saved_game& get_saved_game()
+	{
+		return saved_game_;
+	}
 
-	statistics_t& statistics() { return *statistics_context_; }
+	statistics_t& statistics()
+	{
+		return *statistics_context_;
+	}
 	bool is_during_turn() const;
 	bool is_linger_mode() const;
 
@@ -326,7 +385,7 @@ protected:
 	void start_game();
 	virtual void init_gui();
 	void finish_side_turn_events();
-	void finish_turn(); //this should not throw an end turn or end level exception
+	void finish_turn(); // this should not throw an end turn or end level exception
 	bool enemies_visible() const;
 
 	void enter_textbox();
@@ -336,25 +395,26 @@ protected:
 public:
 	/** returns 0 if no such team was found. */
 	virtual int find_viewing_side() const = 0;
+
 private:
 	utils::ms_optimer timer_;
 
 protected:
-	//gamestate
+	// gamestate
 	std::unique_ptr<game_state> gamestate_;
 	config level_;
 	saved_game& saved_game_;
 
-	//managers
+	// managers
 	tooltips::manager tooltips_manager_;
 
-	//whiteboard manager
+	// whiteboard manager
 	std::shared_ptr<wb::manager> whiteboard_manager_;
 
-	//plugins context
+	// plugins context
 	std::unique_ptr<plugins_context> plugins_context_;
 
-	//more managers
+	// more managers
 	std::unique_ptr<font::floating_label_context> labels_manager_;
 	help::help_manager help_manager_;
 	events::mouse_handler mouse_handler_;
@@ -363,12 +423,18 @@ protected:
 	std::unique_ptr<soundsource::manager> soundsources_manager_;
 	persist_manager persist_;
 
-	//other objects
+	// other objects
 	std::unique_ptr<game_display> gui_;
 	const std::unique_ptr<unit_experience_accelerator> xp_mod_;
 	const std::unique_ptr<statistics_t> statistics_context_;
-	actions::undo_list& undo_stack() { return *gamestate().undo_stack_; }
-	const actions::undo_list& undo_stack() const { return *gamestate().undo_stack_; }
+	actions::undo_list& undo_stack()
+	{
+		return *gamestate().undo_stack_;
+	}
+	const actions::undo_list& undo_stack() const
+	{
+		return *gamestate().undo_stack_;
+	}
 	std::unique_ptr<replay> replay_;
 
 	bool skip_replay_;
@@ -379,7 +445,7 @@ protected:
 	 */
 	bool did_autosave_this_turn_;
 	bool did_tod_sound_this_turn_;
-	//the displayed location when we load a game.
+	// the displayed location when we load a game.
 	map_location map_start_;
 	// Whether to start with the display faded to black
 	bool start_faded_;
@@ -389,11 +455,11 @@ protected:
 	void reset_gamestate(const config& level, int replay_pos);
 
 private:
-
 	void init(const config& level);
 
 	/**
-	 * This shows a warning dialog if either [scenario]next_scenario or any [endlevel]next_scenario would lead to an "Unknown Scenario" dialog.
+	 * This shows a warning dialog if either [scenario]next_scenario or any [endlevel]next_scenario would lead to an
+	 * "Unknown Scenario" dialog.
 	 */
 	void check_next_scenario_is_known();
 
@@ -411,7 +477,9 @@ protected:
 	/// - The currently active side was droided / undroided.
 	/// - A side was set to idle.
 	bool player_type_changed_;
-	virtual void sync_end_turn() {}
+	virtual void sync_end_turn()
+	{
+	}
 	virtual void check_time_over();
 	virtual void update_viewing_player() = 0;
 };

@@ -15,35 +15,32 @@
 
 #include "random_deterministic.hpp"
 
-
 namespace randomness
 {
 
-	rng_deterministic::rng_deterministic(mt_rng& gen)
-		: generator_(gen)
-	{
-
-	}
-
-	rng_deterministic::~rng_deterministic()
-	{
-
-	}
-
-	uint32_t rng_deterministic::next_random_impl()
-	{
-		return generator_.get_next_random();
-	}
-
-
-	set_random_determinstic::set_random_determinstic(mt_rng& rng)
-		: old_rng_(generator), new_rng_(rng)
-	{
-		generator = &new_rng_;
-	}
-
-	set_random_determinstic::~set_random_determinstic()
-	{
-		generator = old_rng_;
-	}
+rng_deterministic::rng_deterministic(mt_rng& gen)
+	: generator_(gen)
+{
 }
+
+rng_deterministic::~rng_deterministic()
+{
+}
+
+uint32_t rng_deterministic::next_random_impl()
+{
+	return generator_.get_next_random();
+}
+
+set_random_determinstic::set_random_determinstic(mt_rng& rng)
+	: old_rng_(generator)
+	, new_rng_(rng)
+{
+	generator = &new_rng_;
+}
+
+set_random_determinstic::~set_random_determinstic()
+{
+	generator = old_rng_;
+}
+} // namespace randomness

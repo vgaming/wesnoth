@@ -13,7 +13,6 @@
 	See the COPYING file for more details.
 */
 
-
 #include "savegame.hpp"
 
 #include "cursor.hpp"
@@ -434,7 +433,8 @@ bool savegame::check_filename(const std::string& filename)
 	} else if(!filesystem::is_legal_user_file_name(filename)) {
 		// This message is not all-inclusive. This is on purpose. Few people
 		// need to know about DOS device names or the 255 character limit.
-		gui2::show_error_message(_("Save names may not end with a dot, or contain two dots or any of the following characters:\n    \" * / : < > ? \\ | ~"));
+		gui2::show_error_message(_("Save names may not end with a dot, or contain two dots or any of the following "
+								   "characters:\n    \" * / : < > ? \\ | ~"));
 		return false;
 	}
 
@@ -453,9 +453,8 @@ void savegame::before_save()
 bool savegame::save_game(const std::string& filename)
 {
 	try {
-		utils::optional<const utils::ms_optimer> timer([this](const auto& timer) {
-			LOG_SAVE << "Milliseconds to save " << filename_ << ": " << timer;
-		});
+		utils::optional<const utils::ms_optimer> timer(
+			[this](const auto& timer) { LOG_SAVE << "Milliseconds to save " << filename_ << ": " << timer; });
 
 		if(filename_.empty()) {
 			filename_ = filename;

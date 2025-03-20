@@ -28,17 +28,27 @@ class play_controller;
 class game_lua_kernel;
 class reports;
 
-namespace game_events { class manager; class wmi_manager; }
+namespace game_events
+{
+class manager;
+class wmi_manager;
+} // namespace game_events
 
-namespace pathfind { class manager; }
+namespace pathfind
+{
+class manager;
+}
 
-
-namespace actions { class undo_list; }
+namespace actions
+{
+class undo_list;
+}
 
 class game_state : public filter_context
 {
 private:
 	friend class replay_controller;
+
 public:
 	game_data gamedata_;
 	game_board board_;
@@ -65,19 +75,18 @@ public:
 	// used to sync with the mpserver
 	int server_request_number_;
 
-
 	game_events::wmi_manager& get_wml_menu_items();
 	const game_events::wmi_manager& get_wml_menu_items() const;
 
-	game_state(const config & level, play_controller &);
+	game_state(const config& level, play_controller&);
 
 	~game_state();
 
 	void place_sides_in_preferred_locations(const config& level);
 
-	void init(const config& level, play_controller &);
+	void init(const config& level, play_controller&);
 
-	void set_game_display(game_display *);
+	void set_game_display(game_display*);
 
 	void write(config& cfg) const;
 
@@ -105,14 +114,13 @@ public:
 		return lua_kernel_.get();
 	}
 
-
 	bool in_phase(game_data::PHASE phase) const
 	{
 		return gamedata_.phase() == phase;
 	}
 
-	template< typename... Arguments >
-	bool in_phase(game_data::PHASE phase, Arguments ... args) const
+	template<typename... Arguments>
+	bool in_phase(game_data::PHASE phase, Arguments... args) const
 	{
 		return in_phase(phase) || in_phase(args...);
 	}

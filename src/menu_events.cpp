@@ -68,17 +68,17 @@
 #include "replay_helper.hpp"
 #include "resources.hpp"
 #include "savegame.hpp"
-#include "serialization/chrono.hpp"
-#include "serialization/markup.hpp"
 #include "scripting/game_lua_kernel.hpp"
 #include "scripting/plugins/manager.hpp"
+#include "serialization/chrono.hpp"
+#include "serialization/markup.hpp"
+#include "sound.hpp"
 #include "synced_context.hpp"
 #include "units/helper.hpp"
 #include "units/ptr.hpp"
-#include "units/unit.hpp"
 #include "units/types.hpp"
+#include "units/unit.hpp"
 #include "whiteboard/manager.hpp"
-#include "sound.hpp"
 
 static lg::log_domain log_engine("engine");
 #define ERR_NG LOG_STREAM(err, log_engine)
@@ -152,7 +152,7 @@ void menu_handler::unit_list()
 
 	const auto& unit_dlg = units_dialog::build_unit_list_dialog(unit_list);
 
-	if (unit_dlg->show() && unit_dlg->is_selected()) {
+	if(unit_dlg->show() && unit_dlg->is_selected()) {
 		const map_location& loc = unit_list[unit_dlg->get_selected_index()]->get_location();
 		gui_->scroll_to_tile(loc, display::WARP);
 		gui_->select_hex(loc);
@@ -174,10 +174,7 @@ void menu_handler::save_map()
 
 	file_dialog dlg;
 
-	dlg.set_title(_("Save Map As"))
-	   .set_save_mode(true)
-	   .set_path(input_name)
-	   .set_extension(filesystem::map_extension);
+	dlg.set_title(_("Save Map As")).set_save_mode(true).set_path(input_name).set_extension(filesystem::map_extension);
 
 	if(!dlg.show()) {
 		return;
@@ -216,11 +213,9 @@ void menu_handler::show_help()
 
 void menu_handler::speak()
 {
-	textbox_info_.show(gui::TEXTBOX_MESSAGE, _("Message:"), has_friends()
-		? board().is_observer()
-			? _("Send to observers only")
-			: _("Send to allies only")
-		: "", prefs::get().message_private(), *gui_);
+	textbox_info_.show(gui::TEXTBOX_MESSAGE, _("Message:"),
+		has_friends() ? board().is_observer() ? _("Send to observers only") : _("Send to allies only") : "",
+		prefs::get().message_private(), *gui_);
 }
 
 void menu_handler::whisper()
@@ -273,7 +268,7 @@ void menu_handler::recruit(int side_num, const map_location& last_hex)
 		map_location ignored;
 		map_location recruit_hex = last_hex;
 		t_string err_msg = unit_helper::recruit_message(type->id(), recruit_hex, ignored, current_team);
-		if (!err_msg.empty()) {
+		if(!err_msg.empty()) {
 			err_msgs_map[type] = err_msg;
 		}
 		recruit_list.push_back(type);
@@ -285,9 +280,8 @@ void menu_handler::recruit(int side_num, const map_location& last_hex)
 		// any units that the player can recruit then their standard recruitment dialog will be shown after this
 		// error message, otherwise they'll get the "You have no units available to recruit." error after this one.
 		const auto message = VNGETTEXT("Error: there’s an unknown unit type on your recruit list: $unknown_ids",
-			"Error: there are several unknown unit types on your recruit list: $unknown_ids",
-			unknown_units.size(),
-			utils::string_map { { "unknown_ids", unknown_ids }});
+			"Error: there are several unknown unit types on your recruit list: $unknown_ids", unknown_units.size(),
+			utils::string_map{{"unknown_ids", unknown_ids}});
 		gui2::show_transient_message("", message);
 	}
 
@@ -333,7 +327,6 @@ bool menu_handler::do_recruit(const std::string& name, int side_num, map_locatio
 		gui2::show_transient_message("", res);
 		return false;
 	}
-
 }
 
 void menu_handler::recall(int side_num, const map_location& last_hex)
@@ -392,7 +385,7 @@ void menu_handler::recall(int side_num, const map_location& last_hex)
 		utils::string_map i18n_symbols;
 		i18n_symbols["cost"] = std::to_string(unit_cost);
 		std::string msg = VNGETTEXT("You must have at least 1 gold piece to recall a unit.",
-				"You must have at least $cost gold pieces to recall this unit.", unit_cost, i18n_symbols);
+			"You must have at least $cost gold pieces to recall this unit.", unit_cost, i18n_symbols);
 		gui2::show_transient_message("", msg);
 		return;
 	}
@@ -405,7 +398,7 @@ void menu_handler::recall(int side_num, const map_location& last_hex)
 	std::string err;
 	{
 		wb::future_map_if_active
-				future; // future unit map removes invisible units from map, don't do this outside of planning mode
+			future; // future unit map removes invisible units from map, don't do this outside of planning mode
 		err = actions::find_recall_location(side_num, recall_location, recall_from, *sel_unit);
 	} // end planned unit map scope
 
@@ -414,10 +407,9 @@ void menu_handler::recall(int side_num, const map_location& last_hex)
 		return;
 	}
 
-	if(!pc_.get_whiteboard()
-		|| !pc_.get_whiteboard()->save_recall(*sel_unit, side_num, recall_location)) {
-		bool success = synced_context::run_and_throw("recall",
-				replay_helper::get_recall(sel_unit->id(), recall_location, recall_from));
+	if(!pc_.get_whiteboard() || !pc_.get_whiteboard()->save_recall(*sel_unit, side_num, recall_location)) {
+		bool success = synced_context::run_and_throw(
+			"recall", replay_helper::get_recall(sel_unit->id(), recall_location, recall_from));
 
 		if(!success) {
 			ERR_NG << "menu_handler::recall(): Unit does not exist in the recall list.";
@@ -440,10 +432,9 @@ void menu_handler::show_enemy_moves(bool ignore_units, int side_num)
 		bool invisible = u.invisible(u.get_location());
 
 		if(board().get_team(side_num).is_enemy(u.side()) && !gui_->fogged(u.get_location()) && !u.incapacitated()
-				&& !invisible) {
+			&& !invisible) {
 			const unit_movement_resetter move_reset(u);
-			const pathfind::paths& path
-					= pathfind::paths(u, false, true, gui_->viewing_team(), 0, false, ignore_units);
+			const pathfind::paths& path = pathfind::paths(u, false, true, gui_->viewing_team(), 0, false, ignore_units);
 
 			gui_->highlight_another_reach(path, hex_under_mouse);
 		}
@@ -499,7 +490,7 @@ bool units_alive(int side_num, const unit_map& units)
 
 /** Returns true if @a side_num has at least one unit that can still move. */
 bool partmoved_units(
-		int side_num, const unit_map& units, const game_board& board, const std::shared_ptr<wb::manager>& whiteb)
+	int side_num, const unit_map& units, const game_board& board, const std::shared_ptr<wb::manager>& whiteb)
 {
 	for(auto& unit : units) {
 		if(unit.side() == side_num) {
@@ -516,12 +507,12 @@ bool partmoved_units(
  * Returns true if @a side_num has at least one unit that (can but) has not moved.
  */
 bool unmoved_units(
-		int side_num, const unit_map& units, const game_board& board, const std::shared_ptr<wb::manager>& whiteb)
+	int side_num, const unit_map& units, const game_board& board, const std::shared_ptr<wb::manager>& whiteb)
 {
 	for(auto& unit : units) {
 		if(unit.side() == side_num) {
 			if(board.unit_can_move(unit) && !unit.has_moved() && !unit.user_end_turn()
-					&& (!whiteb || !whiteb->unit_has_actions(&unit))) {
+				&& (!whiteb || !whiteb->unit_has_actions(&unit))) {
 				return true;
 			}
 		}
@@ -529,7 +520,7 @@ bool unmoved_units(
 	return false;
 }
 
-} // end anon namespace
+} // namespace
 
 bool menu_handler::end_turn(int side_num)
 {
@@ -548,29 +539,27 @@ bool menu_handler::end_turn(int side_num)
 	}
 	// Ask for confirmation if the player hasn't made any moves.
 	else if(prefs::get().confirm_no_moves() && !pc_.get_undo_stack().player_acted()
-			&& (!pc_.get_whiteboard() || !pc_.get_whiteboard()->current_side_has_actions())
-			&& units_alive(side_num, pc_.get_units())) {
-		const int res = gui2::show_message("",
-				_("You have not started your turn yet. Do you really want to end your turn?"),
-				message::yes_no_buttons);
+		&& (!pc_.get_whiteboard() || !pc_.get_whiteboard()->current_side_has_actions())
+		&& units_alive(side_num, pc_.get_units())) {
+		const int res = gui2::show_message(
+			"", _("You have not started your turn yet. Do you really want to end your turn?"), message::yes_no_buttons);
 		if(res == gui2::retval::CANCEL) {
 			return false;
 		}
 	}
 	// Ask for confirmation if units still have some movement left.
-	else if(prefs::get().yellow_confirm() && partmoved_units(side_num, pc_.get_units(), board(), pc_.get_whiteboard())) {
-		const int res = gui2::show_message("",
-				_("Some units have movement left. Do you really want to end your turn?"),
-				message::yes_no_buttons);
+	else if(prefs::get().yellow_confirm()
+		&& partmoved_units(side_num, pc_.get_units(), board(), pc_.get_whiteboard())) {
+		const int res = gui2::show_message(
+			"", _("Some units have movement left. Do you really want to end your turn?"), message::yes_no_buttons);
 		if(res == gui2::retval::CANCEL) {
 			return false;
 		}
 	}
 	// Ask for confirmation if units still have all movement left.
 	else if(prefs::get().green_confirm() && unmoved_units(side_num, pc_.get_units(), board(), pc_.get_whiteboard())) {
-		const int res = gui2::show_message("",
-				_("Some units have not moved. Do you really want to end your turn?"),
-				message::yes_no_buttons);
+		const int res = gui2::show_message(
+			"", _("Some units have not moved. Do you really want to end your turn?"), message::yes_no_buttons);
 		if(res == gui2::retval::CANCEL) {
 			return false;
 		}
@@ -666,7 +655,7 @@ type_gender_variation choose_unit()
 	const auto& types_list = unit_types.types_list();
 	const auto& create_dlg = units_dialog::build_create_dialog(types_list);
 
-	if (!create_dlg->show() || !create_dlg->is_selected()) {
+	if(!create_dlg->show() || !create_dlg->is_selected()) {
 		ERR_NG << "Create unit dialog returned nonexistent or unusable unit_type id.";
 		return type_gender_variation(nullptr, unit_race::NUM_GENDERS, "");
 	}
@@ -681,8 +670,7 @@ type_gender_variation choose_unit()
  * Creates a unit and places it on the board.
  * (Intended for use with any units created via debug mode.)
  */
-void create_and_place(
-	game_display&,
+void create_and_place(game_display&,
 	const gamemap&,
 	unit_map&,
 	const map_location& loc,
@@ -691,14 +679,18 @@ void create_and_place(
 	const std::string& variation = "")
 {
 	synced_context::run_and_throw("debug_create_unit",
-		config {
-			"x", loc.wml_x(),
-			"y", loc.wml_y(),
-			"type", u_type.id(),
-			"gender", gender_string(gender),
-			"variation", variation,
-		}
-	);
+		config{
+			"x",
+			loc.wml_x(),
+			"y",
+			loc.wml_y(),
+			"type",
+			u_type.id(),
+			"gender",
+			gender_string(gender),
+			"variation",
+			variation,
+		});
 }
 
 } // Anonymous namespace
@@ -754,7 +746,7 @@ void menu_handler::change_side(mouse_handler& mousehandler)
 void menu_handler::kill_unit(mouse_handler& mousehandler)
 {
 	const map_location loc = mousehandler.get_last_hex();
-	synced_context::run_and_throw("debug_kill", config {"x", loc.wml_x(), "y", loc.wml_y()});
+	synced_context::run_and_throw("debug_kill", config{"x", loc.wml_x(), "y", loc.wml_y()});
 }
 
 void menu_handler::label_terrain(mouse_handler& mousehandler, bool team_only)
@@ -787,10 +779,7 @@ void menu_handler::clear_labels()
 {
 	if(!board().is_observer()) {
 		const int res = gui2::show_message(
-			_("Clear Labels"),
-			_("Are you sure you want to clear map labels?"),
-			message::yes_no_buttons
-		);
+			_("Clear Labels"), _("Are you sure you want to clear map labels?"), message::yes_no_buttons);
 
 		if(res == gui2::retval::OK) {
 			std::string viewing_team = gui_->viewing_team().team_name();
@@ -819,8 +808,7 @@ void menu_handler::continue_move(mouse_handler& mousehandler, int side_num)
 	move_unit_to_loc(i, i->get_interrupted_move(), true, side_num, mousehandler);
 }
 
-void menu_handler::move_unit_to_loc(
-	const unit_map::iterator& ui,
+void menu_handler::move_unit_to_loc(const unit_map::iterator& ui,
 	const map_location& target,
 	bool continue_move,
 	int side_num,
@@ -1005,24 +993,26 @@ void menu_handler::do_speak()
 	// None of the two parameters really needs to be passed since the information belong to members of the class.
 	// But since it makes the called method more generic, it is done anyway.
 	chat_handler::do_speak(
-			textbox_info_.box()->text(), textbox_info_.check() != nullptr ? textbox_info_.check()->checked() : false);
+		textbox_info_.box()->text(), textbox_info_.check() != nullptr ? textbox_info_.check()->checked() : false);
 }
 
 void menu_handler::add_chat_message(const std::time_t& time,
-		const std::string& speaker,
-		int side,
-		const std::string& message,
-		events::chat_handler::MESSAGE_TYPE type)
+	const std::string& speaker,
+	int side,
+	const std::string& message,
+	events::chat_handler::MESSAGE_TYPE type)
 {
 	gui_->get_chat_manager().add_chat_message(time, speaker, side, message, type, false);
 
 	plugins_manager::get()->notify_event("chat",
-		config {
-			"sender", prefs::get().login(),
-			"message", message,
-			"whisper", type == events::chat_handler::MESSAGE_PRIVATE,
-		}
-	);
+		config{
+			"sender",
+			prefs::get().login(),
+			"message",
+			message,
+			"whisper",
+			type == events::chat_handler::MESSAGE_PRIVATE,
+		});
 }
 
 // command handler for user :commands. Also understands all chat commands
@@ -1040,18 +1030,18 @@ public:
 	{
 	}
 
+	using chmap::command_failed;
 	using chmap::dispatch; // disambiguate
 	using chmap::get_commands_list;
-	using chmap::command_failed;
 
 protected:
 	// chat_command_handler's init_map() and handlers will end up calling these.
 	// this makes sure the commands end up in our map
 	virtual void register_command(const std::string& cmd,
-			chat_command_handler::command_handler h,
-			const std::string& help = "",
-			const std::string& usage = "",
-			const std::string& flags = "")
+		chat_command_handler::command_handler h,
+		const std::string& help = "",
+		const std::string& usage = "",
+		const std::string& flags = "")
 	{
 		chmap::register_command(cmd, h, help, usage, flags + "N"); // add chat commands as network_only
 	}
@@ -1077,11 +1067,11 @@ protected:
 	}
 
 	// these are needed to avoid ambiguities introduced by inheriting from console_command_handler
-	using chmap::register_command;
-	using chmap::register_alias;
+	using chmap::command_failed_need_arg;
 	using chmap::help;
 	using chmap::is_enabled;
-	using chmap::command_failed_need_arg;
+	using chmap::register_alias;
+	using chmap::register_command;
 
 	void do_refresh();
 	void do_droid();
@@ -1140,18 +1130,18 @@ protected:
 	{
 		std::string space(" ");
 		return (c.has_flag('D') ? space + _("(debug command)") : "")
-		     + (c.has_flag('N') ? space + _("(network only)") : "")
-		     + (c.has_flag('A') ? space + _("(admin only)") : "")
-		     + (c.has_flag('S') ? space + _("(not during other events)") : "");
+			+ (c.has_flag('N') ? space + _("(network only)") : "") + (c.has_flag('A') ? space + _("(admin only)") : "")
+			+ (c.has_flag('S') ? space + _("(not during other events)") : "");
 	}
 
 	using map::is_enabled;
 	bool is_enabled(const chmap::command& c) const
 	{
-		return !((c.has_flag('D') && !game_config::debug)
-		      || (c.has_flag('N') && !menu_handler_.pc_.is_networked_mp())
-		      || (c.has_flag('A') && !mp::logged_in_as_moderator())
-		      || (c.has_flag('S') && (synced_context::get_synced_state() != synced_context::UNSYNCED || !menu_handler_.pc_.current_team().is_local())));
+		return !((c.has_flag('D') && !game_config::debug) || (c.has_flag('N') && !menu_handler_.pc_.is_networked_mp())
+			|| (c.has_flag('A') && !mp::logged_in_as_moderator())
+			|| (c.has_flag('S')
+				&& (synced_context::get_synced_state() != synced_context::UNSYNCED
+					|| !menu_handler_.pc_.current_team().is_local())));
 	}
 
 	void print(const std::string& title, const std::string& message)
@@ -1161,7 +1151,7 @@ protected:
 
 	void init_map()
 	{
-		chat_command_handler::init_map();          // grab chat_ /command handlers
+		chat_command_handler::init_map(); // grab chat_ /command handlers
 
 		chmap::get_command("log")->flags = "";     // clear network-only flag from log
 		chmap::get_command("version")->flags = ""; // clear network-only flag
@@ -1174,29 +1164,33 @@ protected:
 
 		register_command("refresh", &console_handler::do_refresh, _("Refresh gui."));
 		register_command("droid", &console_handler::do_droid, _("Switch a side to/from AI control."),
-				// TRANSLATORS: These are the arguments accepted by the "droid" command,
-				// which must be a side-number and then optionally one of "on", "off" or "full".
-				// As with the command's name, "on", "off" and "full" are hardcoded, and shouldn't change in the translation.
-				_("[<side> [on/off/full]]\n“on” = enable but retain vision, “full” = as if it’s controlled by another player"));
+			// TRANSLATORS: These are the arguments accepted by the "droid" command,
+			// which must be a side-number and then optionally one of "on", "off" or "full".
+			// As with the command's name, "on", "off" and "full" are hardcoded, and shouldn't change in the
+			// translation.
+			_("[<side> [on/off/full]]\n“on” = enable but retain vision, “full” = as if it’s controlled by another "
+			  "player"));
 		register_command("terrain", &console_handler::do_terrain, _("Change terrain type of current hex"),
-				// TRANSLATORS: [both|base|overlay] are hardcoded literal arguments and shouldn't be translated.
-				_("<terrain type> [both|base|overlay]"), "DS");
+			// TRANSLATORS: [both|base|overlay] are hardcoded literal arguments and shouldn't be translated.
+			_("<terrain type> [both|base|overlay]"), "DS");
 		register_command("idle", &console_handler::do_idle, _("Switch a side to/from idle state."),
-				// TRANSLATORS: These are the arguments accepted by the "idle" command,
-				// which must be a side-number and then optionally "on" or "off".
-				// As with the command's name, "on" and "off" are hardcoded, and shouldn't change in the translation.
-				_("command_idle^[<side> [on/off]]"));
+			// TRANSLATORS: These are the arguments accepted by the "idle" command,
+			// which must be a side-number and then optionally "on" or "off".
+			// As with the command's name, "on" and "off" are hardcoded, and shouldn't change in the translation.
+			_("command_idle^[<side> [on/off]]"));
 		register_command("theme", &console_handler::do_theme, _("Change the in-game theme."));
 		register_command("control", &console_handler::do_control,
-				_("Assign control of a side to a different player or observer."), _("<side> <nickname>"), "N");
-		register_command("controller", &console_handler::do_controller, _("Query the controller status of a side."),
-				_("<side>"));
+			_("Assign control of a side to a different player or observer."), _("<side> <nickname>"), "N");
+		register_command(
+			"controller", &console_handler::do_controller, _("Query the controller status of a side."), _("<side>"));
 		register_command("clear", &console_handler::do_clear, _("Clear chat history."));
 		register_command("foreground", &console_handler::do_foreground, _("Debug foreground terrain."), "", "D");
 		register_command(
-				"layers", &console_handler::do_layers, _("Debug layers from terrain under the mouse."), "", "D");
+			"layers", &console_handler::do_layers, _("Debug layers from terrain under the mouse."), "", "D");
 		register_command("fps", &console_handler::do_fps, _("Display and log fps (Frames Per Second)."));
-		register_command("benchmark", &console_handler::do_benchmark, _("Similar to the ‘fps’ command, but also forces everything to redraw instead of only things that have changed."));
+		register_command("benchmark", &console_handler::do_benchmark,
+			_("Similar to the ‘fps’ command, but also forces everything to redraw instead of only things that have "
+			  "changed."));
 		register_command("save", &console_handler::do_save, _("Save game."));
 		register_alias("save", "w");
 		register_command("quit", &console_handler::do_quit, _("Quit game."));
@@ -1207,36 +1201,36 @@ protected:
 		register_command("ignore_replay_errors", &console_handler::do_ignore_replay_errors, _("Ignore replay errors."));
 		register_command("nosaves", &console_handler::do_nosaves, _("Disable autosaves."));
 		register_command("next_level", &console_handler::do_next_level,
-				_("Advance to the next scenario, or scenario identified by ‘id’"), _("<id>"), "DS");
+			_("Advance to the next scenario, or scenario identified by ‘id’"), _("<id>"), "DS");
 		register_alias("next_level", "n");
 		register_command("choose_level", &console_handler::do_choose_level, _("Choose next scenario"), "", "DS");
 		register_alias("choose_level", "cl");
 		register_command("turn", &console_handler::do_turn,
-				_("Change turn number (and time of day), or increase by one if no number is specified."), _("[turn]"),
-				"DS");
+			_("Change turn number (and time of day), or increase by one if no number is specified."), _("[turn]"),
+			"DS");
 		register_command("turn_limit", &console_handler::do_turn_limit,
-				_("Change turn limit, or turn the turn limit off if no number is specified or it’s −1."), _("[limit]"),
-				"DS");
+			_("Change turn limit, or turn the turn limit off if no number is specified or it’s −1."), _("[limit]"),
+			"DS");
 		register_command("debug", &console_handler::do_debug, _("Turn debug mode on."));
 		register_command("nodebug", &console_handler::do_nodebug, _("Turn debug mode off."), "", "D");
 		register_command(
-				"lua", &console_handler::do_lua, _("Execute a Lua statement."), _("<command>[;<command>...]"), "DS");
+			"lua", &console_handler::do_lua, _("Execute a Lua statement."), _("<command>[;<command>...]"), "DS");
 		register_command(
-				"unsafe_lua", &console_handler::do_unsafe_lua, _("Grant higher privileges to Lua scripts."), "", "D");
+			"unsafe_lua", &console_handler::do_unsafe_lua, _("Grant higher privileges to Lua scripts."), "", "D");
 		register_command("custom", &console_handler::do_custom, _("Set the command used by the custom command hotkey"),
-				_("<command>[;<command>...]"));
+			_("<command>[;<command>...]"));
 		register_command("give_control", &console_handler::do_control_dialog,
-				_("Invoke a dialog allowing changing control of MP sides."), "", "N");
+			_("Invoke a dialog allowing changing control of MP sides."), "", "N");
 		register_command("inspect", &console_handler::do_inspect, _("Launch the gamestate inspector"), "", "D");
 		register_command(
-				"alias", &console_handler::do_set_alias, _("Set or show alias to a command"), _("<name>[=<command>]"));
+			"alias", &console_handler::do_set_alias, _("Set or show alias to a command"), _("<name>[=<command>]"));
 		register_command(
-				"set_var", &console_handler::do_set_var, _("Set a scenario variable."), _("<var>=<value>"), "DS");
+			"set_var", &console_handler::do_set_var, _("Set a scenario variable."), _("<var>=<value>"), "DS");
 		register_command("show_var", &console_handler::do_show_var, _("Show a scenario variable."), _("<var>"), "D");
 		register_command("unit", &console_handler::do_unit,
-				// TRANSLATORS: Do not translate the word "advances"; it is a hardcoded literal argument.
-				_("Modify a unit variable. (Only top level keys are supported, and advances=<number>.)"),
-				_("<var>=<value>"), "DS");
+			// TRANSLATORS: Do not translate the word "advances"; it is a hardcoded literal argument.
+			_("Modify a unit variable. (Only top level keys are supported, and advances=<number>.)"),
+			_("<var>=<value>"), "DS");
 
 		// register_command("buff", &console_handler::do_buff,
 		//    _("Add a trait to a unit."), "", "D");
@@ -1251,18 +1245,18 @@ protected:
 		register_command("throw", &console_handler::do_event, _("Fire a game event."), _("<event name>"), "DS");
 		register_alias("throw", "fire");
 		register_command("show_coordinates", &console_handler::do_toggle_draw_coordinates,
-				_("Toggle overlaying of x,y coordinates on hexes."));
+			_("Toggle overlaying of x,y coordinates on hexes."));
 		register_alias("show_coordinates", "sc");
 		register_command("show_terrain_codes", &console_handler::do_toggle_draw_terrain_codes,
-				_("Toggle overlaying of terrain codes on hexes."));
+			_("Toggle overlaying of terrain codes on hexes."));
 		register_alias("show_terrain_codes", "tc");
 		register_command("show_num_of_bitmaps", &console_handler::do_toggle_draw_num_of_bitmaps,
-				_("Toggle overlaying of number of bitmaps on hexes."));
+			_("Toggle overlaying of number of bitmaps on hexes."));
 		register_alias("show_num_of_bitmaps", "bn");
 		register_command("whiteboard", &console_handler::do_toggle_whiteboard, _("Toggle planning mode."));
 		register_alias("whiteboard", "wb");
 		register_command(
-				"whiteboard_options", &console_handler::do_whiteboard_options, _("Access whiteboard options dialog."));
+			"whiteboard_options", &console_handler::do_whiteboard_options, _("Access whiteboard options dialog."));
 		register_alias("whiteboard_options", "wbo");
 
 		if(auto alias_list = prefs::get().get_alias()) {
@@ -1304,7 +1298,7 @@ void menu_handler::send_chat_message(const std::string& message, bool allies_onl
 
 	auto as_time_t = std::chrono::system_clock::to_time_t(now); // FIXME: remove
 	add_chat_message(as_time_t, cfg["id"], side, message,
-			private_message ? events::chat_handler::MESSAGE_PRIVATE : events::chat_handler::MESSAGE_PUBLIC);
+		private_message ? events::chat_handler::MESSAGE_PRIVATE : events::chat_handler::MESSAGE_PUBLIC);
 }
 
 void menu_handler::do_search(const std::string& new_search)
@@ -1355,8 +1349,7 @@ void menu_handler::do_search(const std::string& new_search)
 			if(ui != pc_.get_units().end()) {
 				const std::string& unit_name = ui->name();
 				if(translation::ci_search(unit_name, last_search_)) {
-					if(!gui_->viewing_team().is_enemy(ui->side())
-							|| !ui->invisible(ui->get_location())) {
+					if(!gui_->viewing_team().is_enemy(ui->side()) || !ui->invisible(ui->get_location())) {
 						found = true;
 					}
 				}
@@ -1378,8 +1371,8 @@ void menu_handler::do_search(const std::string& new_search)
 		symbols["search"] = last_search_;
 		const std::string msg = VGETTEXT("Could not find label or unit "
 										 "containing the string ‘$search’.",
-				symbols);
-		(void) gui2::show_message("", msg, message::auto_close);
+			symbols);
+		(void)gui2::show_message("", msg, message::auto_close);
 	}
 }
 
@@ -1417,7 +1410,8 @@ void console_handler::do_droid()
 	std::transform(action.begin(), action.end(), action.begin(), tolower);
 	// default to the current side if empty
 	const unsigned int side = side_s.empty() ? team_num_ : lexical_cast_default<unsigned int>(side_s);
-	const bool is_your_turn = menu_handler_.pc_.current_side() == static_cast<int>(menu_handler_.gui_->viewing_team().side());
+	const bool is_your_turn
+		= menu_handler_.pc_.current_side() == static_cast<int>(menu_handler_.gui_->viewing_team().side());
 
 	utils::string_map symbols;
 	symbols["side"] = std::to_string(side);
@@ -1438,7 +1432,8 @@ void console_handler::do_droid()
 
 		if(action == "on") {
 			if(is_ai && !is_your_turn) {
-				command_failed(_("It is not allowed to change a side from AI to human control when it’s not your turn."));
+				command_failed(
+					_("It is not allowed to change a side from AI to human control when it’s not your turn."));
 				return;
 			}
 			if(!is_human || !is_droid) {
@@ -1446,7 +1441,8 @@ void console_handler::do_droid()
 				menu_handler_.board().get_team(side).make_droid();
 				changed = true;
 				if(is_ai) {
-					menu_handler_.pc_.send_to_wesnothd(config {"change_controller", config {"side", side, "player", prefs::get().login(), "to", side_controller::human}});
+					menu_handler_.pc_.send_to_wesnothd(config{"change_controller",
+						config{"side", side, "player", prefs::get().login(), "to", side_controller::human}});
 				}
 				print(get_cmd(), VGETTEXT("Side ‘$side’ controller is now controlled by: AI.", symbols));
 			} else {
@@ -1454,7 +1450,8 @@ void console_handler::do_droid()
 			}
 		} else if(action == "off") {
 			if(is_ai && !is_your_turn) {
-				command_failed(_("It is not allowed to change a side from AI to human control when it’s not your turn."));
+				command_failed(
+					_("It is not allowed to change a side from AI to human control when it’s not your turn."));
 				return;
 			}
 			if(!is_human || !is_proxy_human) {
@@ -1462,7 +1459,8 @@ void console_handler::do_droid()
 				menu_handler_.board().get_team(side).make_proxy_human();
 				changed = true;
 				if(is_ai) {
-					menu_handler_.pc_.send_to_wesnothd(config {"change_controller", config {"side", side, "player", prefs::get().login(), "to", side_controller::human}});
+					menu_handler_.pc_.send_to_wesnothd(config{"change_controller",
+						config{"side", side, "player", prefs::get().login(), "to", side_controller::human}});
 				}
 				print(get_cmd(), VGETTEXT("Side ‘$side’ controller is now controlled by: human.", symbols));
 			} else {
@@ -1470,7 +1468,8 @@ void console_handler::do_droid()
 			}
 		} else if(action == "full") {
 			if(!is_your_turn) {
-				command_failed(_("It is not allowed to change a side from human to AI control when it’s not your turn."));
+				command_failed(
+					_("It is not allowed to change a side from human to AI control when it’s not your turn."));
 				return;
 			}
 			if(!is_ai || !is_droid) {
@@ -1478,7 +1477,8 @@ void console_handler::do_droid()
 				menu_handler_.board().get_team(side).make_droid();
 				changed = true;
 				if(is_human || is_proxy_human) {
-					menu_handler_.pc_.send_to_wesnothd(config {"change_controller", config {"side", side, "player", prefs::get().login(), "to", side_controller::ai}});
+					menu_handler_.pc_.send_to_wesnothd(config{"change_controller",
+						config{"side", side, "player", prefs::get().login(), "to", side_controller::ai}});
 				}
 				print(get_cmd(), VGETTEXT("Side ‘$side’ controller is now fully controlled by: AI.", symbols));
 			} else {
@@ -1486,7 +1486,8 @@ void console_handler::do_droid()
 			}
 		} else if(action == "") {
 			if(is_ai && !is_your_turn) {
-				command_failed(_("It is not allowed to change a side from AI to human control when it’s not your turn."));
+				command_failed(
+					_("It is not allowed to change a side from AI to human control when it’s not your turn."));
 				return;
 			}
 			if(is_ai || is_droid) {
@@ -1494,7 +1495,8 @@ void console_handler::do_droid()
 				menu_handler_.board().get_team(side).make_proxy_human();
 				changed = true;
 				if(is_ai) {
-					menu_handler_.pc_.send_to_wesnothd(config {"change_controller", config {"side", side, "player", prefs::get().login(), "to", side_controller::human}});
+					menu_handler_.pc_.send_to_wesnothd(config{"change_controller",
+						config{"side", side, "player", prefs::get().login(), "to", side_controller::human}});
 				}
 				print(get_cmd(), VGETTEXT("Side ‘$side’ controller is now controlled by: human.", symbols));
 			} else {
@@ -1502,12 +1504,14 @@ void console_handler::do_droid()
 				menu_handler_.board().get_team(side).make_droid();
 				changed = true;
 				if(is_ai) {
-					menu_handler_.pc_.send_to_wesnothd(config {"change_controller", config {"side", side, "player", prefs::get().login(), "to", side_controller::human}});
+					menu_handler_.pc_.send_to_wesnothd(config{"change_controller",
+						config{"side", side, "player", prefs::get().login(), "to", side_controller::human}});
 				}
 				print(get_cmd(), VGETTEXT("Side ‘$side’ controller is now controlled by: AI.", symbols));
 			}
 		} else {
-			print(get_cmd(), VGETTEXT("Invalid action provided for side ‘$side’. Valid actions are: on, off, full.", symbols));
+			print(get_cmd(),
+				VGETTEXT("Invalid action provided for side ‘$side’. Valid actions are: on, off, full.", symbols));
 		}
 
 		if(team_num_ == side && changed) {
@@ -1532,13 +1536,16 @@ void console_handler::do_terrain()
 	const map_location& loc = mousehandler.get_last_hex();
 
 	synced_context::run_and_throw("debug_terrain",
-		config {
-			"x", loc.wml_x(),
-			"y", loc.wml_y(),
-			"terrain_type", terrain_type,
-			"mode_str", mode_str,
-		}
-	);
+		config{
+			"x",
+			loc.wml_x(),
+			"y",
+			loc.wml_y(),
+			"terrain_type",
+			terrain_type,
+			"mode_str",
+			mode_str,
+		});
 }
 
 void console_handler::do_idle()
@@ -1663,7 +1670,8 @@ void console_handler::do_controller()
 
 	std::string report = side_controller::get_string(menu_handler_.board().get_team(side_num).controller());
 	if(!menu_handler_.board().get_team(side_num).is_proxy_human()) {
-		report += " (" + side_proxy_controller::get_string(menu_handler_.board().get_team(side_num).proxy_controller()) + ")";
+		report += " (" + side_proxy_controller::get_string(menu_handler_.board().get_team(side_num).proxy_controller())
+			+ ")";
 	}
 
 	if(menu_handler_.board().get_team(side_num).is_network()) {
@@ -1743,7 +1751,7 @@ void console_handler::do_nosaves()
 
 void console_handler::do_next_level()
 {
-	synced_context::run_and_throw("debug_next_level", config {"next_level", get_data()});
+	synced_context::run_and_throw("debug_next_level", config{"next_level", get_data()});
 }
 
 void console_handler::do_choose_level()
@@ -1790,7 +1798,7 @@ void console_handler::do_choose_level()
 	}
 
 	if(std::size_t(choice) < options.size()) {
-		synced_context::run_and_throw("debug_next_level", config {"next_level", options[choice]});
+		synced_context::run_and_throw("debug_next_level", config{"next_level", options[choice]});
 	}
 }
 
@@ -1803,13 +1811,13 @@ void console_handler::do_turn()
 	if(!data.empty()) {
 		turn = lexical_cast_default<int>(data, 1);
 	}
-	synced_context::run_and_throw("debug_turn", config {"turn", turn});
+	synced_context::run_and_throw("debug_turn", config{"turn", turn});
 }
 
 void console_handler::do_turn_limit()
 {
 	int limit = get_data().empty() ? -1 : lexical_cast_default<int>(get_data(), 1);
-	synced_context::run_and_throw("debug_turn_limit", config {"turn_limit", limit});
+	synced_context::run_and_throw("debug_turn_limit", config{"turn_limit", limit});
 }
 
 void console_handler::do_debug()
@@ -1836,7 +1844,7 @@ void console_handler::do_lua()
 		return;
 	}
 
-	synced_context::run_and_throw("debug_lua", config {"code", get_data()});
+	synced_context::run_and_throw("debug_lua", config{"code", get_data()});
 }
 
 void console_handler::do_unsafe_lua()
@@ -1847,8 +1855,9 @@ void console_handler::do_unsafe_lua()
 
 	const int retval = gui2::show_message(_("WARNING! Unsafe Lua Mode"),
 		_("Executing Lua code in in this manner opens your computer to potential security breaches from any "
-		"malicious add-ons or other programs you may have installed.\n\n"
-		"Do not continue unless you really know what you are doing."), message::ok_cancel_buttons);
+		  "malicious add-ons or other programs you may have installed.\n\n"
+		  "Do not continue unless you really know what you are doing."),
+		message::ok_cancel_buttons);
 
 	if(retval == gui2::retval::OK) {
 		print(get_cmd(), _("Unsafe mode enabled!"));
@@ -1898,7 +1907,7 @@ void console_handler::do_set_var()
 	if(j != data.end()) {
 		const std::string name(data.begin(), j);
 		const std::string value(j + 1, data.end());
-		synced_context::run_and_throw("debug_set_var", config {"name", name, "value", value});
+		synced_context::run_and_throw("debug_set_var", config{"name", name, "value", value});
 	} else {
 		command_failed(_("Variable not found"));
 	}
@@ -1932,9 +1941,7 @@ void console_handler::do_unit()
 	if(i == menu_handler_.pc_.get_units().end()) {
 		utils::string_map symbols;
 		symbols["unit"] = get_arg(1);
-		command_failed(VGETTEXT(
-			"Debug command ‘unit: $unit’ failed: no unit selected or hovered over.",
-			symbols));
+		command_failed(VGETTEXT("Debug command ‘unit: $unit’ failed: no unit selected or hovered over.", symbols));
 		return;
 	}
 
@@ -1951,20 +1958,22 @@ void console_handler::do_unit()
 			utils::string_map symbols;
 			symbols["alignment"] = get_arg(1);
 			command_failed(VGETTEXT(
-					"Invalid alignment: ‘$alignment’, needs to be one of lawful, neutral, chaotic, or liminal.",
-					symbols));
+				"Invalid alignment: ‘$alignment’, needs to be one of lawful, neutral, chaotic, or liminal.", symbols));
 			return;
 		}
 	}
 
 	synced_context::run_and_throw("debug_unit",
-		config {
-			"x", loc.wml_x(),
-			"y", loc.wml_y(),
-			"name", parameters[0],
-			"value", parameters[1],
-		}
-	);
+		config{
+			"x",
+			loc.wml_x(),
+			"y",
+			loc.wml_y(),
+			"name",
+			parameters[0],
+			"value",
+			parameters[1],
+		});
 }
 
 void console_handler::do_discover()
@@ -1976,8 +1985,8 @@ void console_handler::do_discover()
 
 void console_handler::do_undiscover()
 {
-	const int res = gui2::show_message("Undiscover",
-			_("Do you wish to clear all of your discovered units from help?"), message::yes_no_buttons);
+	const int res = gui2::show_message(
+		"Undiscover", _("Do you wish to clear all of your discovered units from help?"), message::yes_no_buttons);
 	if(res != gui2::retval::CANCEL) {
 		prefs::get().encountered_units().clear();
 	}
@@ -2014,12 +2023,12 @@ void console_handler::do_shroud()
 
 void console_handler::do_gold()
 {
-	synced_context::run_and_throw("debug_gold", config {"gold", lexical_cast_default<int>(get_data(), 1000)});
+	synced_context::run_and_throw("debug_gold", config{"gold", lexical_cast_default<int>(get_data(), 1000)});
 }
 
 void console_handler::do_event()
 {
-	synced_context::run_and_throw("debug_event", config {"eventname", get_data()});
+	synced_context::run_and_throw("debug_event", config{"eventname", get_data()});
 }
 
 void console_handler::do_toggle_draw_coordinates()
@@ -2065,7 +2074,8 @@ void menu_handler::do_ai_formula(const std::string& str, int side_num, mouse_han
 		add_chat_message(std::time(nullptr), "wfl", 0, ai::manager::get_singleton().evaluate_command(side_num, str));
 	} catch(const wfl::formula_error&) {
 	} catch(...) {
-		add_chat_message(std::time(nullptr), "wfl", 0, "UNKNOWN ERROR IN FORMULA: "+utils::get_unknown_exception_type());
+		add_chat_message(
+			std::time(nullptr), "wfl", 0, "UNKNOWN ERROR IN FORMULA: " + utils::get_unknown_exception_type());
 	}
 }
 
@@ -2083,7 +2093,7 @@ void menu_handler::request_control_change(int side_num, const std::string& playe
 	} else {
 		// The server will (or won't because we aren't allowed to change the controller)
 		// send us a [change_controller] back, which we then handle in playturn.cpp
-		pc_.send_to_wesnothd(config {"change_controller", config {"side", side, "player", player}});
+		pc_.send_to_wesnothd(config{"change_controller", config{"side", side, "player", player}});
 	}
 }
 

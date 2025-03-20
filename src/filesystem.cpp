@@ -29,6 +29,7 @@
 #include "serialization/unicode.hpp"
 #include "utils/general.hpp"
 
+#include "game_config_view.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -36,14 +37,13 @@
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/process.hpp>
-#include "game_config_view.hpp"
 
 #ifdef _WIN32
 #include <boost/locale.hpp>
 
-#include <windows.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <windows.h>
 
 // Work around TDM-GCC not #defining this according to @newfrenchy83.
 #ifndef VOLUME_NAME_NONE
@@ -53,8 +53,8 @@
 #endif /* !_WIN32 */
 
 #ifdef __APPLE__
-#include <mach-o/dyld.h>
 #include <limits.h>
+#include <mach-o/dyld.h>
 #endif
 
 #include <algorithm>
@@ -65,11 +65,10 @@
 // Copied from boost::predef, as it's there only since 1.55.
 #if defined(__APPLE__) && defined(__MACH__) && defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
 
-#define WESNOTH_BOOST_OS_IOS (__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__*1000)
+#define WESNOTH_BOOST_OS_IOS (__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__ * 1000)
 #include <SDL2/SDL_filesystem.h>
 
 #endif
-
 
 static lg::log_domain log_filesystem("filesystem");
 #define DBG_FS LOG_STREAM(debug, log_filesystem)
@@ -102,7 +101,7 @@ bool check_migration = false;
 const std::string observer_team_name = "observer";
 
 int cache_compression_level = 6;
-}
+} // namespace game_config
 
 namespace
 {
@@ -142,12 +141,12 @@ private:
 
 	template<typename char_t_from, typename char_t_to>
 	static void customcodecvt_do_conversion(std::mbstate_t& /*state*/,
-			const char_t_from* from,
-			const char_t_from* from_end,
-			const char_t_from*& from_next,
-			char_t_to* to,
-			char_t_to* to_end,
-			char_t_to*& to_next)
+		const char_t_from* from,
+		const char_t_from* from_end,
+		const char_t_from*& from_next,
+		char_t_to* to,
+		char_t_to* to_end,
+		char_t_to*& to_next)
 	{
 		typedef typename ucs4_convert_impl::convert_impl<char_t_from>::type impl_type_from;
 		typedef typename ucs4_convert_impl::convert_impl<char_t_to>::type impl_type_to;
@@ -181,7 +180,7 @@ public:
 	}
 
 	std::codecvt_base::result unshift(
-			std::mbstate_t& /*state*/, char* /*to*/, char* /*to_end*/, char*& /*to_next*/) const
+		std::mbstate_t& /*state*/, char* /*to*/, char* /*to_end*/, char*& /*to_next*/) const
 	{
 		// Not used by boost filesystem
 		throw "Not supported";
@@ -189,17 +188,18 @@ public:
 
 	// there are still some methods which could be implemented but aren't because boost filesystem won't use them.
 	std::codecvt_base::result do_in(std::mbstate_t& state,
-			const char* from,
-			const char* from_end,
-			const char*& from_next,
-			wchar_t* to,
-			wchar_t* to_end,
-			wchar_t*& to_next) const
+		const char* from,
+		const char* from_end,
+		const char*& from_next,
+		wchar_t* to,
+		wchar_t* to_end,
+		wchar_t*& to_next) const
 	{
 		try {
 			customcodecvt_do_conversion<char, wchar_t>(state, from, from_end, from_next, to, to_end, to_next);
 		} catch(...) {
-			ERR_FS << "Invalid UTF-8 string'" << std::string(from, from_end) << "' with exception: " << utils::get_unknown_exception_type();
+			ERR_FS << "Invalid UTF-8 string'" << std::string(from, from_end)
+				   << "' with exception: " << utils::get_unknown_exception_type();
 			return std::codecvt_base::error;
 		}
 
@@ -207,12 +207,12 @@ public:
 	}
 
 	std::codecvt_base::result do_out(std::mbstate_t& state,
-			const wchar_t* from,
-			const wchar_t* from_end,
-			const wchar_t*& from_next,
-			char* to,
-			char* to_end,
-			char*& to_next) const
+		const wchar_t* from,
+		const wchar_t* from_end,
+		const wchar_t*& from_next,
+		char* to,
+		char* to_end,
+		char*& to_next) const
 	{
 		try {
 			customcodecvt_do_conversion<wchar_t, char>(state, from, from_end, from_next, to, to_end, to_next);
@@ -294,8 +294,7 @@ const blacklist_pattern_list default_blacklist{
 		".+",
 		/* macOS metadata-like cruft (http://floatingsun.net/2007/02/07/whats-with-__macosx-in-zip-files/) */
 		"__MACOSX",
-	}
-};
+	}};
 
 static void push_if_exists(std::vector<std::string>* vec, const bfs::path& file, bool full)
 {
@@ -444,12 +443,12 @@ static bfs::path subtract_path(const bfs::path& full, const bfs::path& prefix_pa
 }
 
 void get_files_in_dir(const std::string& dir,
-		std::vector<std::string>* files,
-		std::vector<std::string>* dirs,
-		name_mode mode,
-		filter_mode filter,
-		reorder_mode reorder,
-		file_tree_checksum* checksum)
+	std::vector<std::string>* files,
+	std::vector<std::string>* dirs,
+	name_mode mode,
+	filter_mode filter,
+	reorder_mode reorder,
+	file_tree_checksum* checksum)
 {
 	if(bfs::path(dir).is_relative() && !game_config::path.empty()) {
 		bfs::path absolute_dir(game_config::path);
@@ -634,34 +633,36 @@ const std::string& get_version_path_suffix()
 }
 
 #if defined(__APPLE__) && !defined(__IPHONEOS__)
-	// Starting from Wesnoth 1.14.6, we have to use sandboxing function on macOS
-	// The problem is, that only signed builds can use sandbox. Unsigned builds
-	// would use other config directory then signed ones. So if we don't want
-	// to have two separate config dirs, we have to create symlink to new config
-	// location if exists. This part of code is only required on macOS.
-	static void migrate_apple_config_directory_for_unsandboxed_builds()
-	{
-		const char* home_str = getenv("HOME");
-		bfs::path home = home_str ? home_str : ".";
+// Starting from Wesnoth 1.14.6, we have to use sandboxing function on macOS
+// The problem is, that only signed builds can use sandbox. Unsigned builds
+// would use other config directory then signed ones. So if we don't want
+// to have two separate config dirs, we have to create symlink to new config
+// location if exists. This part of code is only required on macOS.
+static void migrate_apple_config_directory_for_unsandboxed_builds()
+{
+	const char* home_str = getenv("HOME");
+	bfs::path home = home_str ? home_str : ".";
 
-		// We don't know which of the two is in PREFERENCES_DIR now.
-		boost::filesystem::path old_saves_dir = home / "Library/Application Support/Wesnoth_";
-		old_saves_dir += get_version_path_suffix();
-		boost::filesystem::path new_saves_dir = home / "Library/Containers/org.wesnoth.Wesnoth/Data/Library/Application Support/Wesnoth_";
-		new_saves_dir += get_version_path_suffix();
+	// We don't know which of the two is in PREFERENCES_DIR now.
+	boost::filesystem::path old_saves_dir = home / "Library/Application Support/Wesnoth_";
+	old_saves_dir += get_version_path_suffix();
+	boost::filesystem::path new_saves_dir
+		= home / "Library/Containers/org.wesnoth.Wesnoth/Data/Library/Application Support/Wesnoth_";
+	new_saves_dir += get_version_path_suffix();
 
-		if(bfs::is_directory(new_saves_dir)) {
-			if(!bfs::exists(old_saves_dir)) {
-				LOG_FS << "Apple developer's userdata migration: symlinking " << old_saves_dir.string() << " to " << new_saves_dir.string();
-				bfs::create_symlink(new_saves_dir, old_saves_dir);
-			} else if(!bfs::is_symlink(old_saves_dir)) {
-				ERR_FS << "Apple developer's userdata migration: Problem! Old (non-containerized) directory " << old_saves_dir.string() << " is not a symlink. Your savegames are scattered around 2 locations.";
-			}
-			return;
+	if(bfs::is_directory(new_saves_dir)) {
+		if(!bfs::exists(old_saves_dir)) {
+			LOG_FS << "Apple developer's userdata migration: symlinking " << old_saves_dir.string() << " to "
+				   << new_saves_dir.string();
+			bfs::create_symlink(new_saves_dir, old_saves_dir);
+		} else if(!bfs::is_symlink(old_saves_dir)) {
+			ERR_FS << "Apple developer's userdata migration: Problem! Old (non-containerized) directory "
+				   << old_saves_dir.string() << " is not a symlink. Your savegames are scattered around 2 locations.";
 		}
+		return;
 	}
+}
 #endif
-
 
 static void setup_user_data_dir()
 {
@@ -710,8 +711,9 @@ static utils::optional<std::string> get_games_path()
 		bfs::path games_path = bfs::path(docs_path) / "My Games";
 		path = games_path.string();
 	} else {
-		ERR_FS << "Could not determine path to user's Documents folder! (" << std::hex << "0x" << res << std::dec << ") "
-				<< "Please report this as a bug.";
+		ERR_FS << "Could not determine path to user's Documents folder! (" << std::hex << "0x" << res << std::dec
+			   << ") "
+			   << "Please report this as a bug.";
 	}
 
 	CoTaskMemFree(docs_path);
@@ -734,7 +736,7 @@ void set_user_data_dir(std::string newprefdir)
 #ifdef _WIN32
 		newprefdir = "~/Wesnoth" + get_version_path_suffix();
 #elif defined(__APPLE__)
-		newprefdir = "~/Library/Application Support/Wesnoth_"+get_version_path_suffix();
+		newprefdir = "~/Library/Application Support/Wesnoth_" + get_version_path_suffix();
 #elif defined(WESNOTH_BOOST_OS_IOS)
 		char* sdl_pref_path = SDL_GetPrefPath("wesnoth.org", "iWesnoth");
 		if(sdl_pref_path) {
@@ -748,9 +750,9 @@ void set_user_data_dir(std::string newprefdir)
 		std::string home = h ? h : "";
 		h = std::getenv("XDG_DATA_HOME");
 		std::string xdg_data_home = h ? h : "";
-		if (!xdg_data_home.empty()) {
+		if(!xdg_data_home.empty()) {
 			newprefdir = xdg_data_home + "/wesnoth/" + get_version_path_suffix();
-		} else if (!home.empty()) {
+		} else if(!home.empty()) {
 			newprefdir = home + "/.local/share/wesnoth/" + get_version_path_suffix();
 		} else {
 			newprefdir = ".wesnoth" + get_version_path_suffix();
@@ -990,7 +992,7 @@ std::string get_exe_path()
 	std::vector<char> buffer(PATH_MAX, 0);
 	uint32_t size = PATH_MAX;
 	if(_NSGetExecutablePath(&buffer[0], &size) == 0) {
-		buffer.resize(size+1);
+		buffer.resize(size + 1);
 		return std::string(buffer.begin(), buffer.end());
 	} else {
 		ERR_FS << "Path to wesnoth executable is too long";
@@ -1009,8 +1011,9 @@ std::string get_exe_path()
 
 	// check the PATH for wesnoth's location
 	// with version
-	std::string version = std::to_string(game_config::wesnoth_version.major_version()) + "." + std::to_string(game_config::wesnoth_version.minor_version());
-	std::string exe = filesystem::get_program_invocation("wesnoth-"+version);
+	std::string version = std::to_string(game_config::wesnoth_version.major_version()) + "."
+		+ std::to_string(game_config::wesnoth_version.minor_version());
+	std::string exe = filesystem::get_program_invocation("wesnoth-" + version);
 	bfs::path search = bp::search_path(exe).string();
 	if(!search.string().empty()) {
 		return search.string();
@@ -1065,7 +1068,8 @@ bool delete_directory(const std::string& dirname, const bool keep_pbl)
 	std::vector<std::string> dirs;
 	error_code ec;
 
-	get_files_in_dir(dirname, &files, &dirs, name_mode::ENTIRE_FILE_PATH, keep_pbl ? filter_mode::SKIP_PBL_FILES : filter_mode::NO_FILTER);
+	get_files_in_dir(dirname, &files, &dirs, name_mode::ENTIRE_FILE_PATH,
+		keep_pbl ? filter_mode::SKIP_PBL_FILES : filter_mode::NO_FILTER);
 
 	if(!files.empty()) {
 		for(const std::string& f : files) {
@@ -1128,7 +1132,7 @@ std::string read_file_as_data_uri(const std::string& fname)
 
 	if(name.find(".") != std::string::npos) {
 		// convert to web-safe base64, since the + symbols will get stripped out when reading this back in later
-		img = "data:image/"+name.substr(name.find(".")+1)+";base64,"+base64::encode(view);
+		img = "data:image/" + name.substr(name.find(".") + 1) + ";base64," + base64::encode(view);
 	}
 
 	return img;
@@ -1433,14 +1437,14 @@ bool to_asset_path(std::string& path, const std::string& addon_id, const std::st
 	bool is_in_core_dir = (path.find(core_asset_dir) != std::string::npos);
 	bool is_in_addon_dir = false;
 
-	if (is_in_core_dir) {
-		rel_path = path.erase(0, core_asset_dir.size()+1);
+	if(is_in_core_dir) {
+		rel_path = path.erase(0, core_asset_dir.size() + 1);
 		found = true;
-	} else if (!addon_id.empty()) {
+	} else if(!addon_id.empty()) {
 		addon_asset_dir = get_current_editor_dir(addon_id) + "/" + asset_type;
 		is_in_addon_dir = (path.find(addon_asset_dir) != std::string::npos);
-		if (is_in_addon_dir) {
-			rel_path = path.erase(0, addon_asset_dir.size()+1);
+		if(is_in_addon_dir) {
+			rel_path = path.erase(0, addon_asset_dir.size() + 1);
 			found = true;
 		} else {
 			// Not found in either core or addons dirs,
@@ -1565,7 +1569,7 @@ static bool is_legal_file(const std::string& filename_str)
 	}
 
 	if(std::any_of(filepath.begin(), filepath.end(),
-			   [](const bfs::path& dirname) { return default_blacklist.match_dir(dirname.string()); })) {
+		   [](const bfs::path& dirname) { return default_blacklist.match_dir(dirname.string()); })) {
 		ERR_FS << "Illegal path '" << filename_str << "' (blacklisted directory name).";
 		return false;
 	}
@@ -1648,8 +1652,7 @@ utils::optional<std::string> get_binary_file_location(const std::string& type, c
 			if(result.empty()) {
 				result = bpath.string();
 			} else {
-				WRN_FS << "Conflicting files in binary_path: '" << result
-					   << "' and '" << bpath.string() << "'";
+				WRN_FS << "Conflicting files in binary_path: '" << result << "' and '" << bpath.string() << "'";
 			}
 		}
 	}
@@ -1695,14 +1698,14 @@ utils::optional<std::string> get_wml_location(const std::string& path, const uti
 		result = get_user_data_path() / "data" / path.substr(1);
 		DBG_FS << "  trying '" << result.string() << "'";
 	} else if(*fpath.begin() == ".") {
-		if (!current_dir) {
+		if(!current_dir) {
 			WRN_FS << "Cannot resolve " << path << " since the current directory is unknown!";
 			return utils::nullopt;
 		}
 		result = bfs::path(*current_dir) / path;
 		error_code ec;
 		bfs::path c = bfs::canonical(result, ec);
-		if (!is_prefix(c, bfs::path(game_config::path) / "data") && !is_prefix(c, get_user_data_path() / "data")) {
+		if(!is_prefix(c, bfs::path(game_config::path) / "data") && !is_prefix(c, get_user_data_path() / "data")) {
 			WRN_FS << "Resolved path " << c << " is outside game and user data directories!";
 		}
 	} else {
@@ -1833,7 +1836,7 @@ utils::optional<std::string> get_addon_id_from_path(const std::string& location)
 	std::string addons_path = normalize_path(get_addons_dir(), true);
 
 	if(full_path.find(addons_path) == 0) {
-		bfs::path path(full_path.substr(addons_path.size()+1));
+		bfs::path path(full_path.substr(addons_path.size() + 1));
 		if(path.size() > 0) {
 			return path.begin()->string();
 		}

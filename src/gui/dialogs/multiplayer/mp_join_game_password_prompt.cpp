@@ -15,17 +15,15 @@
 
 #include "gui/dialogs/multiplayer/mp_join_game_password_prompt.hpp"
 
-
 namespace gui2::dialogs
 {
 
 REGISTER_DIALOG(mp_join_game_password_prompt)
 
-mp_join_game_password_prompt::mp_join_game_password_prompt(
-		std::string& password)
+mp_join_game_password_prompt::mp_join_game_password_prompt(std::string& password)
 	: modal_dialog(window_id())
 {
 	register_text("password", true, password, true);
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

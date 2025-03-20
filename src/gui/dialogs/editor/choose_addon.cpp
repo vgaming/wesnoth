@@ -31,8 +31,7 @@ editor_choose_addon::editor_choose_addon(std::string& addon_id)
 	, addon_id_(addon_id)
 {
 	connect_signal_mouse_left_click(
-		find_widget<toggle_button>("show_all"),
-		std::bind(&editor_choose_addon::toggle_installed, this));
+		find_widget<toggle_button>("show_all"), std::bind(&editor_choose_addon::toggle_installed, this));
 
 	populate_list(false);
 }
@@ -91,7 +90,7 @@ void editor_choose_addon::populate_list(bool show_all)
 			};
 			existing_addons.add_row(entry);
 			if(dir == prefs::get().editor_chosen_addon()) {
-				selected_row = existing_addons.get_item_count()-1;
+				selected_row = existing_addons.get_item_count() - 1;
 			}
 		}
 	}

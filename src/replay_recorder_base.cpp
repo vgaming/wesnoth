@@ -20,14 +20,11 @@ replay_recorder_base::replay_recorder_base(void)
 	, commands_()
 	, pos_(0)
 {
-
 }
-
 
 replay_recorder_base::~replay_recorder_base(void)
 {
 }
-
 
 void replay_recorder_base::swap(replay_recorder_base& other)
 {
@@ -77,8 +74,7 @@ void replay_recorder_base::remove_command(int index)
 {
 	assert(index < size());
 	commands_.erase(commands_.begin() + index);
-	if(index < pos_)
-	{
+	if(index < pos_) {
 		--pos_;
 	}
 }
@@ -86,47 +82,38 @@ void replay_recorder_base::remove_command(int index)
 config& replay_recorder_base::insert_command(int index)
 {
 	assert(index <= size());
-	if(index < pos_)
-	{
+	if(index < pos_) {
 		++pos_;
 	}
 	return *commands_.insert(commands_.begin() + index, new config());
 }
 
-
 void replay_recorder_base::append_config(const config& data)
 {
-	if(const auto upload_log = data.optional_child("upload_log"))
-	{
+	if(const auto upload_log = data.optional_child("upload_log")) {
 		upload_log_ = upload_log.value();
 	}
-	for(const config& command : data.child_range("command"))
-	{
+	for(const config& command : data.child_range("command")) {
 		commands_.push_back(new config(command));
 	}
 }
 
 void replay_recorder_base::append_config(config& data)
 {
-	if(auto upload_log = data.optional_child("upload_log"))
-	{
+	if(auto upload_log = data.optional_child("upload_log")) {
 		upload_log_.swap(upload_log.value());
 	}
-	for(config& command : data.child_range("command"))
-	{
+	for(config& command : data.child_range("command")) {
 		config* new_config = new config();
 		new_config->swap(command);
 		commands_.push_back(new_config);
-
-
 	}
 }
 
 void replay_recorder_base::write(config_writer& out) const
 {
 	out.write_child("upload_log", upload_log_);
-	for(int i = 0; i < pos_; ++i)
-	{
+	for(int i = 0; i < pos_; ++i) {
 		out.write_child("command", commands_[i]);
 	}
 }
@@ -134,8 +121,7 @@ void replay_recorder_base::write(config_writer& out) const
 void replay_recorder_base::write(config& out) const
 {
 	out.add_child("upload_log", upload_log_);
-	for(int i = 0; i < pos_; ++i)
-	{
+	for(int i = 0; i < pos_; ++i) {
 		out.add_child("command", commands_[i]);
 	}
 }

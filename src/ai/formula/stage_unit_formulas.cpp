@@ -18,7 +18,6 @@
  * Defines formula ai unit formulas stage
  * */
 
-
 #include "ai/formula/stage_unit_formulas.hpp"
 #include "ai/formula/ai.hpp"
 
@@ -26,25 +25,22 @@
 #include "game_board.hpp"
 #include "log.hpp"
 #include "resources.hpp"
-#include "units/unit.hpp"
 #include "units/formula_manager.hpp"
+#include "units/unit.hpp"
 
 static lg::log_domain log_formula_ai("ai/stage/unit_formulas");
 #define LOG_AI LOG_STREAM(info, log_formula_ai)
 #define WRN_AI LOG_STREAM(warn, log_formula_ai)
 #define ERR_AI LOG_STREAM(err, log_formula_ai)
 
-namespace ai {
-
-stage_unit_formulas::stage_unit_formulas(
-		  ai_context &context
-		, const config &cfg
-		, formula_ai &fai)
-	: stage(context,cfg), fai_(fai)
+namespace ai
 {
 
+stage_unit_formulas::stage_unit_formulas(ai_context& context, const config& cfg, formula_ai& fai)
+	: stage(context, cfg)
+	, fai_(fai)
+{
 }
-
 
 stage_unit_formulas::~stage_unit_formulas()
 {
@@ -52,20 +48,20 @@ stage_unit_formulas::~stage_unit_formulas()
 
 bool stage_unit_formulas::do_play_stage()
 {
-	//execute units formulas first
+	// execute units formulas first
 	wfl::unit_formula_set units_with_formulas;
 
-	unit_map &units_ = resources::gameboard->units();
+	unit_map& units_ = resources::gameboard->units();
 
-	for(unit_map::unit_iterator i = units_.begin() ; i != units_.end() ; ++i)
-	{
-		if (i->side() == get_side()) {
-			if (i->formula_manager().has_formula() || i->formula_manager().has_loop_formula()) {
+	for(unit_map::unit_iterator i = units_.begin(); i != units_.end(); ++i) {
+		if(i->side() == get_side()) {
+			if(i->formula_manager().has_formula() || i->formula_manager().has_loop_formula()) {
 				int priority = 0;
-				if (i->formula_manager().has_priority_formula()) {
+				if(i->formula_manager().has_priority_formula()) {
 					try {
-						wfl::const_formula_ptr priority_formula(fai_.create_optional_formula(i->formula_manager().get_priority_formula()));
-						if (priority_formula) {
+						wfl::const_formula_ptr priority_formula(
+							fai_.create_optional_formula(i->formula_manager().get_priority_formula()));
+						if(priority_formula) {
 							wfl::map_formula_callable callable(fai_.fake_ptr());
 							callable.add("me", wfl::variant(std::make_shared<wfl::unit_callable>(*i)));
 							priority = (wfl::formula::evaluate(priority_formula, callable)).as_int();
@@ -75,7 +71,10 @@ bool stage_unit_formulas::do_play_stage()
 					} catch(wfl::formula_error& e) {
 						if(e.filename == "formula")
 							e.line = 0;
-						fai_.handle_exception( e, "Unit priority formula error for unit: '" + i->type_id() + "' standing at (" + std::to_string(i->get_location().wml_x()) + "," + std::to_string(i->get_location().wml_y()) + ")");
+						fai_.handle_exception(e,
+							"Unit priority formula error for unit: '" + i->type_id() + "' standing at ("
+								+ std::to_string(i->get_location().wml_x()) + ","
+								+ std::to_string(i->get_location().wml_y()) + ")");
 
 						priority = 0;
 					} catch(const wfl::type_error& e) {
@@ -84,56 +83,59 @@ bool stage_unit_formulas::do_play_stage()
 					}
 				}
 
-				units_with_formulas.insert( wfl::unit_formula_pair( i, priority ) );
+				units_with_formulas.insert(wfl::unit_formula_pair(i, priority));
 			}
 		}
 	}
 
-	for(wfl::unit_formula_set::iterator pair_it = units_with_formulas.begin() ; pair_it != units_with_formulas.end() ; ++pair_it)
-	{
+	for(wfl::unit_formula_set::iterator pair_it = units_with_formulas.begin(); pair_it != units_with_formulas.end();
+		++pair_it) {
 		unit_map::iterator i = pair_it->first;
 
-		if( i.valid() ) {
-
-			if (i->formula_manager().has_formula()) {
+		if(i.valid()) {
+			if(i->formula_manager().has_formula()) {
 				try {
 					wfl::const_formula_ptr formula(fai_.create_optional_formula(i->formula_manager().get_formula()));
-					if (formula) {
+					if(formula) {
 						wfl::map_formula_callable callable(fai_.fake_ptr());
 						callable.add("me", wfl::variant(std::make_shared<wfl::unit_callable>(*i)));
 						fai_.make_action(formula, callable);
 					} else {
 						WRN_AI << "unit formula skipped, maybe it's empty or incorrect";
 					}
-				}
-				catch(wfl::formula_error& e) {
+				} catch(wfl::formula_error& e) {
 					if(e.filename == "formula") {
 						e.line = 0;
 					}
-					fai_.handle_exception( e, "Unit formula error for unit: '" + i->type_id() + "' standing at (" + std::to_string(i->get_location().wml_x()) + "," + std::to_string(i->get_location().wml_y()) + ")");
+					fai_.handle_exception(e,
+						"Unit formula error for unit: '" + i->type_id() + "' standing at ("
+							+ std::to_string(i->get_location().wml_x()) + ","
+							+ std::to_string(i->get_location().wml_y()) + ")");
 				}
 			}
 		}
 
-		if( i.valid() ) {
-			if (i->formula_manager().has_loop_formula())
-			{
+		if(i.valid()) {
+			if(i->formula_manager().has_loop_formula()) {
 				try {
-					wfl::const_formula_ptr loop_formula(fai_.create_optional_formula(i->formula_manager().get_loop_formula()));
-					if (loop_formula) {
+					wfl::const_formula_ptr loop_formula(
+						fai_.create_optional_formula(i->formula_manager().get_loop_formula()));
+					if(loop_formula) {
 						wfl::map_formula_callable callable(fai_.fake_ptr());
 						callable.add("me", wfl::variant(std::make_shared<wfl::unit_callable>(*i)));
-						while ( !fai_.make_action(loop_formula, callable).is_empty() && i.valid() )
-						{
+						while(!fai_.make_action(loop_formula, callable).is_empty() && i.valid()) {
 						}
 					} else {
 						WRN_AI << "Loop formula skipped, maybe it's empty or incorrect";
 					}
 				} catch(wfl::formula_error& e) {
-					if (e.filename == "formula") {
+					if(e.filename == "formula") {
 						e.line = 0;
 					}
-					fai_.handle_exception( e, "Unit loop formula error for unit: '" + i->type_id() + "' standing at (" + std::to_string(i->get_location().wml_x()) + "," + std::to_string(i->get_location().wml_y()) + ")");
+					fai_.handle_exception(e,
+						"Unit loop formula error for unit: '" + i->type_id() + "' standing at ("
+							+ std::to_string(i->get_location().wml_x()) + ","
+							+ std::to_string(i->get_location().wml_y()) + ")");
 				}
 			}
 		}
@@ -141,17 +143,15 @@ bool stage_unit_formulas::do_play_stage()
 	return false;
 }
 
-
 void stage_unit_formulas::on_create()
 {
-	//we have no state on our own
+	// we have no state on our own
 }
-
 
 config stage_unit_formulas::to_config() const
 {
 	config cfg = stage::to_config();
-	//we have no state on our own
+	// we have no state on our own
 	return cfg;
 }
 

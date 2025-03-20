@@ -46,9 +46,7 @@ struct message_implementation
 	 * @param button_status       The button status to modify.
 	 * @param id                  The id of the button.
 	 */
-	static void init_button(window& window,
-							message::button_status& button_status,
-							const std::string& id)
+	static void init_button(window& window, message::button_status& button_status, const std::string& id)
 	{
 		button_status.ptr = window.find_widget<button>(id, false, true);
 		button_status.ptr->set_visible(button_status.visible);
@@ -101,14 +99,12 @@ void message::pre_show()
 
 void message::post_show()
 {
-	for(auto & button_status : buttons_)
-	{
+	for(auto& button_status : buttons_) {
 		button_status.ptr = nullptr;
 	}
 }
 
-void message::set_button_caption(const button_id button,
-								  const std::string& caption)
+void message::set_button_caption(const button_id button, const std::string& caption)
 {
 	buttons_[button].caption = caption;
 	if(buttons_[button].ptr) {
@@ -116,8 +112,7 @@ void message::set_button_caption(const button_id button,
 	}
 }
 
-void message::set_button_visible(const button_id button,
-								  const widget::visibility visible)
+void message::set_button_visible(const button_id button, const widget::visibility visible)
 {
 	buttons_[button].visible = visible;
 	if(buttons_[button].ptr) {
@@ -146,11 +141,11 @@ message::button_status::button_status()
 using namespace dialogs;
 
 void show_message(const std::string& title,
-				  const std::string& msg,
-				  const std::string& button_caption,
-				  const bool auto_close,
-				  const bool message_use_markup,
-				  const bool title_use_markup)
+	const std::string& msg,
+	const std::string& button_caption,
+	const bool auto_close,
+	const bool message_use_markup,
+	const bool title_use_markup)
 {
 	message dlg(title, msg, auto_close, message_use_markup, title_use_markup);
 	dlg.set_button_caption(message::ok, button_caption);
@@ -158,54 +153,45 @@ void show_message(const std::string& title,
 }
 
 int show_message(const std::string& title,
-				 const std::string& msg,
-				 const message::button_style button_style,
-				 bool message_use_markup,
-				 bool title_use_markup)
+	const std::string& msg,
+	const message::button_style button_style,
+	bool message_use_markup,
+	bool title_use_markup)
 {
-	message dlg(title,
-				 msg,
-				 button_style == message::auto_close,
-				 message_use_markup,
-				 title_use_markup);
+	message dlg(title, msg, button_style == message::auto_close, message_use_markup, title_use_markup);
 
 	switch(button_style) {
-		case message::auto_close:
-			break;
-		case message::ok_button:
-			dlg.set_button_visible(message::ok, widget::visibility::visible);
-			dlg.set_button_caption(message::ok, _("OK"));
-			break;
-		case message::close_button:
-			dlg.set_button_visible(message::ok, widget::visibility::visible);
-			break;
-		case message::ok_cancel_buttons:
-			dlg.set_button_visible(message::ok, widget::visibility::visible);
-			dlg.set_button_caption(message::ok, _("OK"));
-			[[fallthrough]];
-		case message::cancel_button:
-			dlg.set_button_visible(message::cancel, widget::visibility::visible);
-			break;
-		case message::yes_no_buttons:
-			dlg.set_button_visible(message::ok, widget::visibility::visible);
-			dlg.set_button_caption(message::ok, _("Yes"));
-			dlg.set_button_visible(message::cancel,  widget::visibility::visible);
-			dlg.set_button_caption(message::cancel, _("No"));
-			break;
+	case message::auto_close:
+		break;
+	case message::ok_button:
+		dlg.set_button_visible(message::ok, widget::visibility::visible);
+		dlg.set_button_caption(message::ok, _("OK"));
+		break;
+	case message::close_button:
+		dlg.set_button_visible(message::ok, widget::visibility::visible);
+		break;
+	case message::ok_cancel_buttons:
+		dlg.set_button_visible(message::ok, widget::visibility::visible);
+		dlg.set_button_caption(message::ok, _("OK"));
+		[[fallthrough]];
+	case message::cancel_button:
+		dlg.set_button_visible(message::cancel, widget::visibility::visible);
+		break;
+	case message::yes_no_buttons:
+		dlg.set_button_visible(message::ok, widget::visibility::visible);
+		dlg.set_button_caption(message::ok, _("Yes"));
+		dlg.set_button_visible(message::cancel, widget::visibility::visible);
+		dlg.set_button_caption(message::cancel, _("No"));
+		break;
 	}
 
 	dlg.show();
 	return dlg.get_retval();
 }
 
-void show_error_message(const std::string& msg,
-						bool message_use_markup)
+void show_error_message(const std::string& msg, bool message_use_markup)
 {
 	LOG_STREAM(err, lg::general()) << msg;
-	(void) show_message(
-				 _("Error"),
-				 msg,
-				 message::ok_button,
-				 message_use_markup);
+	(void)show_message(_("Error"), msg, message::ok_button, message_use_markup);
 }
 } // namespace gui2

@@ -25,27 +25,28 @@ static lg::log_domain log_config("config");
 #define ERR_CONFIG LOG_STREAM(err, log_config)
 
 sub_achievement::sub_achievement(const config& cfg, bool achieved)
-		: id_(cfg["id"].str())
-		, description_(cfg["description"].t_str())
-		, icon_(cfg["icon"].str()+"~GS()")
-		, icon_completed_(cfg["icon"].str())
-		, achieved_(achieved)
-{}
+	: id_(cfg["id"].str())
+	, description_(cfg["description"].t_str())
+	, icon_(cfg["icon"].str() + "~GS()")
+	, icon_completed_(cfg["icon"].str())
+	, achieved_(achieved)
+{
+}
 
 achievement::achievement(const config& cfg, const std::string& content_for, bool achieved, int progress)
-		: id_(cfg["id"].str())
-		, name_(cfg["name"].t_str())
-		, name_completed_(cfg["name_completed"].t_str())
-		, description_(cfg["description"].t_str())
-		, description_completed_(cfg["description_completed"].t_str())
-		, icon_(cfg["icon"].str()+"~GS()")
-		, icon_completed_(cfg["icon_completed"].str())
-		, hidden_(cfg["hidden"].to_bool())
-		, achieved_(achieved)
-		, max_progress_(cfg["max_progress"].to_int(0))
-		, current_progress_(progress)
-		, sound_path_(cfg["sound"].str())
-		, sub_achievements_()
+	: id_(cfg["id"].str())
+	, name_(cfg["name"].t_str())
+	, name_completed_(cfg["name_completed"].t_str())
+	, description_(cfg["description"].t_str())
+	, description_completed_(cfg["description_completed"].t_str())
+	, icon_(cfg["icon"].str() + "~GS()")
+	, icon_completed_(cfg["icon_completed"].str())
+	, hidden_(cfg["hidden"].to_bool())
+	, achieved_(achieved)
+	, max_progress_(cfg["max_progress"].to_int(0))
+	, current_progress_(progress)
+	, sound_path_(cfg["sound"].str())
+	, sub_achievements_()
 {
 	if(name_completed_.empty()) {
 		name_completed_ = name_;
@@ -58,14 +59,15 @@ achievement::achievement(const config& cfg, const std::string& content_for, bool
 		icon_completed_ = cfg["icon"].str();
 	}
 
-	for(const config& sub_ach : cfg.child_range("sub_achievement"))
-	{
+	for(const config& sub_ach : cfg.child_range("sub_achievement")) {
 		std::string sub_id = sub_ach["id"].str();
 
 		if(sub_id.empty()) {
-			ERR_CONFIG << "Achievement " << id_ << " has a sub-achievement missing the id attribute:\n" << sub_ach.debug();
+			ERR_CONFIG << "Achievement " << id_ << " has a sub-achievement missing the id attribute:\n"
+					   << sub_ach.debug();
 		} else {
-			sub_achievements_.emplace_back(sub_ach, achieved_ || prefs::get().sub_achievement(content_for, id_, sub_id));
+			sub_achievements_.emplace_back(
+				sub_ach, achieved_ || prefs::get().sub_achievement(content_for, id_, sub_id));
 			max_progress_++;
 		}
 	}
@@ -85,7 +87,8 @@ achievement_group::achievement_group(const config& cfg)
 			ERR_CONFIG << content_for_ + " achievement id " << id << " contains a comma, skipping.";
 			continue;
 		} else {
-			achievements_.emplace_back(ach, content_for_, prefs::get().achievement(content_for_, id), prefs::get().progress_achievement(content_for_, id));
+			achievements_.emplace_back(ach, content_for_, prefs::get().achievement(content_for_, id),
+				prefs::get().progress_achievement(content_for_, id));
 		}
 	}
 }
@@ -100,8 +103,9 @@ achievements::achievements()
  * Reads the mainline achievements.cfg and then all the achievements of each installed add-on.
  *
  * This is intentionally handled separately from other WML loading so that:
- * a) All achievements and their status are able to be displayed on the main menu right after Wesnoth starts and regardless of which add-ons are active.
- * b) Add-ons can add additional achievements to other content, whether UMC or mainline. For example, a modification that adds more achievements for mainline campaigns.
+ * a) All achievements and their status are able to be displayed on the main menu right after Wesnoth starts and
+ * regardless of which add-ons are active. b) Add-ons can add additional achievements to other content, whether UMC or
+ * mainline. For example, a modification that adds more achievements for mainline campaigns.
  *
  * NOTE: These are *not* in any way related to Steam achievements!
  */

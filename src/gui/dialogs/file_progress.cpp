@@ -19,14 +19,14 @@
 
 #include "draw_manager.hpp"
 #include "events.hpp"
-#include "gui/widgets/button.hpp"
 #include "gui/dialogs/modal_dialog.hpp"
+#include "gui/widgets/button.hpp"
 #include "gui/widgets/label.hpp"
 #include "gui/widgets/progress_bar.hpp"
 #include "gui/widgets/window.hpp"
 
-
-namespace gui2::dialogs {
+namespace gui2::dialogs
+{
 
 REGISTER_WINDOW(file_progress)
 
@@ -71,4 +71,4 @@ void file_progress::update_progress(unsigned value)
 	events::draw();
 }
 
-}
+} // namespace gui2::dialogs

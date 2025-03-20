@@ -15,31 +15,38 @@
 
 #define GETTEXT_DOMAIN "wesnoth-lib"
 
+#include "widgets/widget.hpp"
 #include "draw.hpp"
 #include "draw_manager.hpp"
-#include "widgets/widget.hpp"
 #include "sdl/rect.hpp"
 #include "tooltips.hpp"
 
 #include <cassert>
-namespace {
-	const SDL_Rect EmptyRect {-1234,-1234,0,0};
+namespace
+{
+const SDL_Rect EmptyRect{-1234, -1234, 0, 0};
 }
 
-namespace gui {
+namespace gui
+{
 
 bool widget::mouse_lock_ = false;
 
 widget::widget(const bool auto_join)
-	: events::sdl_handler(auto_join), focus_(true), rect_(EmptyRect),
-	  state_(UNINIT), enabled_(true), clip_(false),
-	  clip_rect_(EmptyRect), mouse_lock_local_(false)
+	: events::sdl_handler(auto_join)
+	, focus_(true)
+	, rect_(EmptyRect)
+	, state_(UNINIT)
+	, enabled_(true)
+	, clip_(false)
+	, clip_rect_(EmptyRect)
+	, mouse_lock_local_(false)
 {
 }
 
 widget::~widget()
 {
-	if (!hidden()) {
+	if(!hidden()) {
 		queue_redraw();
 	}
 	free_mouse_lock();
@@ -54,8 +61,7 @@ void widget::aquire_mouse_lock()
 
 void widget::free_mouse_lock()
 {
-	if (mouse_lock_local_)
-	{
+	if(mouse_lock_local_) {
 		mouse_lock_local_ = false;
 		mouse_lock_ = false;
 	}
@@ -127,7 +133,7 @@ const rect& widget::location() const
 
 void widget::set_focus(bool focus)
 {
-	if (focus)
+	if(focus)
 		events::focus_handler(this);
 	focus_ = focus;
 	queue_redraw();
@@ -140,12 +146,12 @@ bool widget::focus(const SDL_Event* event)
 
 void widget::hide(bool value)
 {
-	if (value) {
-		if (state_ == DIRTY || state_ == DRAWN) {
+	if(value) {
+		if(state_ == DIRTY || state_ == DRAWN) {
 			queue_redraw();
 		}
 		state_ = HIDDEN;
-	} else if (state_ == HIDDEN) {
+	} else if(state_ == HIDDEN) {
 		state_ = DRAWN;
 		queue_redraw();
 	}
@@ -160,13 +166,12 @@ void widget::set_clip_rect(const SDL_Rect& rect)
 
 bool widget::hidden() const
 {
-	return (state_ == HIDDEN || state_ == UNINIT
-		|| (clip_ && !rect_.overlaps(clip_rect_)));
+	return (state_ == HIDDEN || state_ == UNINIT || (clip_ && !rect_.overlaps(clip_rect_)));
 }
 
 void widget::enable(bool new_val)
 {
-	if (enabled_ != new_val) {
+	if(enabled_ != new_val) {
 		enabled_ = new_val;
 		queue_redraw();
 	}
@@ -179,13 +184,13 @@ bool widget::enabled() const
 
 void widget::set_dirty(bool dirty)
 {
-	if ((dirty && state_ != DRAWN) || (!dirty && state_ != DIRTY)) {
+	if((dirty && state_ != DRAWN) || (!dirty && state_ != DIRTY)) {
 		return;
 	}
 
 	state_ = dirty ? DIRTY : DRAWN;
 
-	if (dirty) {
+	if(dirty) {
 		queue_redraw();
 	}
 }
@@ -202,7 +207,7 @@ const std::string& widget::id() const
 
 void widget::set_id(const std::string& id)
 {
-	if (id_.empty()){
+	if(id_.empty()) {
 		id_ = id;
 	}
 }
@@ -219,9 +224,15 @@ void widget::queue_redraw()
 
 bool widget::expose(const rect& region)
 {
-	if (hidden()) { return false; }
-	if (!rect_.overlaps(region)) { return false; }
-	if (clip_ && !clip_rect_.overlaps(region)) { return false; }
+	if(hidden()) {
+		return false;
+	}
+	if(!rect_.overlaps(region)) {
+		return false;
+	}
+	if(clip_ && !clip_rect_.overlaps(region)) {
+		return false;
+	}
 
 	draw();
 	return true;
@@ -229,11 +240,11 @@ bool widget::expose(const rect& region)
 
 void widget::draw()
 {
-	if (hidden()) {
+	if(hidden()) {
 		return;
 	}
 
-	if (clip_) {
+	if(clip_) {
 		auto clipper = draw::reduce_clip(clip_rect_);
 		draw_contents();
 	} else {
@@ -250,10 +261,10 @@ void widget::set_tooltip_string(const std::string& str)
 
 void widget::process_tooltip_string(int mousex, int mousey)
 {
-	if (!hidden() && rect_.contains(mousex, mousey)) {
-		if (!tooltip_text_.empty())
-			tooltips::add_tooltip(rect_, tooltip_text_ );
+	if(!hidden() && rect_.contains(mousex, mousey)) {
+		if(!tooltip_text_.empty())
+			tooltips::add_tooltip(rect_, tooltip_text_);
 	}
 }
 
-}
+} // namespace gui

@@ -18,21 +18,21 @@
 #include "gui/dialogs/chat_log.hpp"
 
 #include "gui/widgets/button.hpp"
-#include "gui/widgets/text_box.hpp"
-#include "gui/widgets/window.hpp"
 #include "gui/widgets/scroll_label.hpp"
 #include "gui/widgets/slider.hpp"
+#include "gui/widgets/text_box.hpp"
+#include "gui/widgets/window.hpp"
 
-#include "font/pango/escape.hpp"
 #include "desktop/clipboard.hpp"
-#include "serialization/unicode.hpp"
-#include "preferences/preferences.hpp"
-#include "log.hpp"
-#include "replay.hpp"
+#include "font/pango/escape.hpp"
 #include "gettext.hpp"
+#include "log.hpp"
+#include "preferences/preferences.hpp"
+#include "replay.hpp"
+#include "serialization/unicode.hpp"
 
-#include <functional>
 #include "utils/iterable_pair.hpp"
+#include <functional>
 
 #include <vector>
 
@@ -88,14 +88,10 @@ public:
 	int count_of_pages() const
 	{
 		int size = chat_log_history.size();
-		return (size % COUNT_PER_PAGE == 0) ? (size / COUNT_PER_PAGE)
-											: (size / COUNT_PER_PAGE) + 1;
+		return (size % COUNT_PER_PAGE == 0) ? (size / COUNT_PER_PAGE) : (size / COUNT_PER_PAGE) + 1;
 	}
 
-	void stream_log(std::ostringstream& s,
-					int first,
-					int last,
-					bool raw = false)
+	void stream_log(std::ostringstream& s, int first, int last, bool raw = false)
 	{
 		if(first >= last) {
 			return;
@@ -104,16 +100,12 @@ public:
 		const std::string& lcfilter = utf8::lowercase(filter->get_value());
 		LOG_CHAT_LOG << "entering chat_log::model::stream_log";
 
-		for(const auto & t : make_pair(chat_log_history.begin() + first,
-										  chat_log_history.begin() + last))
-		{
-			const std::string& timestamp
-					= prefs::get().get_chat_timestamp(t.time());
+		for(const auto& t : make_pair(chat_log_history.begin() + first, chat_log_history.begin() + last)) {
+			const std::string& timestamp = prefs::get().get_chat_timestamp(t.time());
 
 			if(!lcfilter.empty()) {
-				const std::string& lcsample = utf8::lowercase(timestamp)
-											  + utf8::lowercase(t.nick())
-											  + utf8::lowercase(t.text());
+				const std::string& lcsample
+					= utf8::lowercase(timestamp) + utf8::lowercase(t.nick()) + utf8::lowercase(t.text());
 
 				if(lcsample.find(lcfilter) == std::string::npos) {
 					continue;
@@ -121,8 +113,7 @@ public:
 			}
 
 			const std::string me_prefix = "/me";
-			const bool is_me = t.text().compare(0, me_prefix.size(),
-												me_prefix) == 0;
+			const bool is_me = t.text().compare(0, me_prefix.size(), me_prefix) == 0;
 
 			std::string nick_prefix, nick_suffix;
 
@@ -146,11 +137,9 @@ public:
 			s << nick_prefix << lbracket;
 
 			if(raw) {
-				s << timestamp
-				  << t.nick();
+				s << timestamp << t.nick();
 			} else {
-				s << font::escape_text(timestamp)
-				  << font::escape_text(t.nick());
+				s << font::escape_text(timestamp) << font::escape_text(t.nick());
 			}
 
 			if(is_me) {
@@ -202,7 +191,8 @@ public:
 class chat_log::controller
 {
 public:
-	controller(model& m) : model_(m)
+	controller(model& m)
+		: model_(m)
 	{
 		LOG_CHAT_LOG << "Entering chat_log::controller";
 		LOG_CHAT_LOG << "Exiting chat_log::controller";
@@ -241,13 +231,11 @@ public:
 
 	void handle_page_number_changed()
 	{
-		LOG_CHAT_LOG
-			<< "Entering chat_log::controller::handle_page_number_changed";
+		LOG_CHAT_LOG << "Entering chat_log::controller::handle_page_number_changed";
 		model_.page = model_.page_number->get_value() - 1;
 		LOG_CHAT_LOG << "Set page to " << model_.page + 1;
 		update_view_from_model();
-		LOG_CHAT_LOG
-			<< "Exiting chat_log::controller::handle_page_number_changed";
+		LOG_CHAT_LOG << "Exiting chat_log::controller::handle_page_number_changed";
 	}
 
 	std::pair<int, int> calculate_log_line_range()
@@ -261,9 +249,7 @@ public:
 		LOG_CHAT_LOG << "Page: " << page + 1 << " of " << count_of_pages;
 
 		const int first = page * page_size;
-		const int last = page < (count_of_pages - 1)
-						 ? first + page_size
-						 : log_size;
+		const int last = page < (count_of_pages - 1) ? first + page_size : log_size;
 
 		LOG_CHAT_LOG << "First " << first << ", last " << last;
 
@@ -272,8 +258,7 @@ public:
 
 	void update_view_from_model(bool select_last_page = false)
 	{
-		LOG_CHAT_LOG
-			<< "Entering chat_log::controller::update_view_from_model";
+		LOG_CHAT_LOG << "Entering chat_log::controller::update_view_from_model";
 		model_.msg_label->set_use_markup(true);
 		int size = model_.chat_log_history.size();
 		LOG_CHAT_LOG << "Number of chat messages: " << size;
@@ -296,16 +281,14 @@ public:
 		model_.populate_chat_message_list(first, last);
 		model_.page_number->set_value_range(1, count_of_pages);
 		model_.page_number->set_active(count_of_pages > 1);
-		LOG_CHAT_LOG
-			<< "Maximum value of page number slider: " << count_of_pages;
+		LOG_CHAT_LOG << "Maximum value of page number slider: " << count_of_pages;
 		model_.page_number->set_value(page + 1);
 
 		std::ostringstream cur_page_text;
 		cur_page_text << (page + 1) << '/' << std::max(1, count_of_pages);
 		model_.page_label->set_label(cur_page_text.str());
 
-		LOG_CHAT_LOG
-			<< "Exiting chat_log::controller::update_view_from_model";
+		LOG_CHAT_LOG << "Exiting chat_log::controller::update_view_from_model";
 	}
 
 	void handle_copy_button_clicked()
@@ -318,13 +301,14 @@ private:
 	model& model_;
 };
 
-
 // The view is an interface that displays data (the model) and routes user
 // commands to the controller to act upon that data.
 class chat_log::view
 {
 public:
-	view(const vconfig& cfg, const replay& r) : model_(cfg, r), controller_(model_)
+	view(const vconfig& cfg, const replay& r)
+		: model_(cfg, r)
+		, controller_(model_)
 	{
 	}
 
@@ -364,29 +348,21 @@ public:
 	{
 		LOG_CHAT_LOG << "Entering chat_log::view::bind";
 		model_.msg_label = window.find_widget<styled_widget>("msg", false, true);
-		model_.page_number
-				= window.find_widget<slider>("page_number", false, true);
-		connect_signal_notify_modified(
-				*model_.page_number,
-				std::bind(&view::handle_page_number_changed, this));
+		model_.page_number = window.find_widget<slider>("page_number", false, true);
+		connect_signal_notify_modified(*model_.page_number, std::bind(&view::handle_page_number_changed, this));
 
-		model_.previous_page
-				= window.find_widget<button>("previous_page", false, true);
-		model_.previous_page->connect_click_handler(
-				std::bind(&view::previous_page, this));
+		model_.previous_page = window.find_widget<button>("previous_page", false, true);
+		model_.previous_page->connect_click_handler(std::bind(&view::previous_page, this));
 
 		model_.next_page = window.find_widget<button>("next_page", false, true);
-		model_.next_page->connect_click_handler(
-				std::bind(&view::next_page, this));
+		model_.next_page->connect_click_handler(std::bind(&view::next_page, this));
 
 		model_.filter = window.find_widget<text_box>("filter", false, true);
 		model_.filter->on_modified([this](const auto&) { filter(); });
 		window.keyboard_capture(model_.filter);
 
 		model_.copy_button = window.find_widget<button>("copy", false, true);
-		connect_signal_mouse_left_click(
-				*model_.copy_button,
-				std::bind(&view::handle_copy_button_clicked, this));
+		connect_signal_mouse_left_click(*model_.copy_button, std::bind(&view::handle_copy_button_clicked, this));
 
 		model_.page_label = window.find_widget<styled_widget>("page_label", false, true);
 
@@ -397,7 +373,6 @@ private:
 	model model_;
 	controller controller_;
 };
-
 
 chat_log::chat_log(const vconfig& cfg, const replay& r)
 	: modal_dialog(window_id())
@@ -421,4 +396,4 @@ void chat_log::pre_show()
 	LOG_CHAT_LOG << "Exiting chat_log::pre_show";
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

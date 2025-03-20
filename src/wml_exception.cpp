@@ -22,9 +22,9 @@
 
 #include "wml_exception.hpp"
 
+#include "formula/string_utils.hpp"
 #include "gettext.hpp"
 #include "gui/dialogs/message.hpp"
-#include "formula/string_utils.hpp"
 #include "log.hpp"
 
 static lg::log_domain log_engine("engine");
@@ -33,13 +33,12 @@ static lg::log_domain log_engine("engine");
 static lg::log_domain log_wml("wml");
 #define ERR_WML LOG_STREAM(err, log_wml)
 
-void throw_wml_exception(
-		  const char* cond
-		, const char* file
-		, const int line
-		, const char *function
-		, const std::string& message
-		, const std::string& dev_message)
+void throw_wml_exception(const char* cond,
+	const char* file,
+	const int line,
+	const char* function,
+	const std::string& message,
+	const std::string& dev_message)
 {
 	std::ostringstream sstr;
 	if(cond) {
@@ -63,19 +62,18 @@ void wml_exception::show() const
 
 	// The extra spaces between the \n are needed, otherwise the dialog doesn't show
 	// an empty line.
-	sstr << _("An error due to possibly invalid WML occurred\nThe error message is :")
-		<< "\n" << user_message << "\n \n"
-		<< _("When reporting the bug please include the following error message :")
-		<< "\n" << dev_message;
+	sstr << _("An error due to possibly invalid WML occurred\nThe error message is :") << "\n"
+		 << user_message << "\n \n"
+		 << _("When reporting the bug please include the following error message :") << "\n"
+		 << dev_message;
 
 	gui2::show_error_message(sstr.str());
 }
 
-std::string missing_mandatory_wml_key(
-		  const std::string &section
-		, const std::string &key
-		, const std::string& primary_key
-		, const std::string& primary_value)
+std::string missing_mandatory_wml_key(const std::string& section,
+	const std::string& key,
+	const std::string& primary_key,
+	const std::string& primary_value)
 {
 	utils::string_map symbols;
 	symbols["section"] = section;
@@ -87,20 +85,21 @@ std::string missing_mandatory_wml_key(
 		symbols["primary_value"] = primary_value;
 
 		return VGETTEXT("In section ‘[$section|]’ where ‘$primary_key|’ = "
-			"‘$primary_value’ the mandatory key ‘$key|’ isn’t set.", symbols);
+						"‘$primary_value’ the mandatory key ‘$key|’ isn’t set.",
+			symbols);
 	} else {
 		return VGETTEXT("In section ‘[$section|]’ the "
-			"mandatory key ‘$key|’ isn’t set.", symbols);
+						"mandatory key ‘$key|’ isn’t set.",
+			symbols);
 	}
 }
 
-std::string missing_mandatory_wml_tag(
-		  const std::string &section
-		, const std::string &tag)
+std::string missing_mandatory_wml_tag(const std::string& section, const std::string& tag)
 {
 	utils::string_map symbols;
 	symbols["section"] = section;
 	symbols["tag"] = tag;
 	return VGETTEXT("In section ‘[$section|]’ the "
-				"mandatory subtag ‘[$tag|]’ is missing.", symbols);
+					"mandatory subtag ‘[$tag|]’ is missing.",
+		symbols);
 }

@@ -27,33 +27,47 @@ class tod_manager;
 class persist_manager;
 class game_classification;
 class replay;
-namespace actions { class undo_list; }
+namespace actions
+{
+class undo_list;
+}
 
-namespace game_events { class manager; }
+namespace game_events
+{
+class manager;
+}
 
+namespace soundsource
+{
+class manager;
+}
 
-namespace soundsource { class manager; }
+namespace pathfind
+{
+class manager;
+}
 
-namespace pathfind { class manager; }
-
-namespace wb { class manager; } //whiteboard manager
+namespace wb
+{
+class manager;
+} // namespace wb
 
 namespace resources
 {
-	extern play_controller        *controller;
-	extern game_board             *gameboard;
-	extern game_data              *gamedata;
-	extern game_events::manager   *game_events;
-	extern game_lua_kernel              *lua_kernel;     // Set by game_events::manager.
-	extern persist_manager        *persist;
-	extern game_classification    *classification;
-	extern filter_context	      *filter_con;
-	extern soundsource::manager   *soundsources;
-	extern replay                 *recorder;
-	extern fake_unit_manager      *fake_units;
-	extern ::tod_manager          *tod_manager;
-	extern pathfind::manager      *tunnels;
-	extern actions::undo_list     *undo_stack;
-	extern std::shared_ptr<wb::manager> whiteboard;
-	extern bool                   simulation;
-}
+extern play_controller* controller;
+extern game_board* gameboard;
+extern game_data* gamedata;
+extern game_events::manager* game_events;
+extern game_lua_kernel* lua_kernel; // Set by game_events::manager.
+extern persist_manager* persist;
+extern game_classification* classification;
+extern filter_context* filter_con;
+extern soundsource::manager* soundsources;
+extern replay* recorder;
+extern fake_unit_manager* fake_units;
+extern ::tod_manager* tod_manager;
+extern pathfind::manager* tunnels;
+extern actions::undo_list* undo_stack;
+extern std::shared_ptr<wb::manager> whiteboard;
+extern bool simulation;
+} // namespace resources

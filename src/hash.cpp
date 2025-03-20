@@ -17,10 +17,10 @@
 
 #include "serialization/base64.hpp"
 
-#include <string>
+#include <assert.h>
 #include <sstream>
 #include <string.h>
-#include <assert.h>
+#include <string>
 
 extern "C" {
 #include "crypt_blowfish/crypt_blowfish.h"
@@ -38,18 +38,21 @@ static_assert(utils::md5::DIGEST_SIZE == CC_MD5_DIGEST_LENGTH, "Constants mismat
 
 #endif
 
-namespace {
+namespace
+{
 
 const std::string hash_prefix = "$H$";
 
 template<std::size_t len>
-std::string encode_hash(const std::array<uint8_t, len>& bytes) {
+std::string encode_hash(const std::array<uint8_t, len>& bytes)
+{
 	utils::byte_string_view view{bytes.data(), len};
 	return crypt64::encode(view);
 }
 
 template<std::size_t len>
-std::string hexencode_hash(const std::array<uint8_t, len>& input) {
+std::string hexencode_hash(const std::array<uint8_t, len>& input)
+{
 	std::ostringstream sout;
 	sout << std::hex;
 	for(uint8_t c : input) {
@@ -58,14 +61,15 @@ std::string hexencode_hash(const std::array<uint8_t, len>& input) {
 	return sout.str();
 }
 
-}
+} // namespace
 
-namespace utils {
+namespace utils
+{
 
-md5::md5(const std::string& input) {
-
+md5::md5(const std::string& input)
+{
 #ifndef __APPLE__
-	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
 	unsigned int md5_digest_len = EVP_MD_size(EVP_md5());
 	assert(utils::md5::DIGEST_SIZE == md5_digest_len);
 
@@ -81,28 +85,33 @@ md5::md5(const std::string& input) {
 #else
 	CC_MD5(input.data(), static_cast<CC_LONG>(input.size()), hash.data());
 #endif
-
 }
 
-int md5::get_iteration_count(const std::string& hash) {
+int md5::get_iteration_count(const std::string& hash)
+{
 	return crypt64::decode(hash[3]);
 }
 
-std::string md5::get_salt(const std::string& hash) {
-	return hash.substr(4,8);
+std::string md5::get_salt(const std::string& hash)
+{
+	return hash.substr(4, 8);
 }
 
 bool md5::is_valid_prefix(const std::string& hash)
 {
-	return hash.substr(0,3) == hash_prefix;
+	return hash.substr(0, 3) == hash_prefix;
 }
 
-bool md5::is_valid_hash(const std::string& hash) {
-	if(hash.size() != 34) return false;
-	if(!is_valid_prefix(hash)) return false;
+bool md5::is_valid_hash(const std::string& hash)
+{
+	if(hash.size() != 34)
+		return false;
+	if(!is_valid_prefix(hash))
+		return false;
 
 	const int iteration_count = get_iteration_count(hash);
-	if(iteration_count < 7 || iteration_count > 30) return false;
+	if(iteration_count < 7 || iteration_count > 30)
+		return false;
 
 	return true;
 }
@@ -138,7 +147,7 @@ bcrypt::bcrypt(const std::string& input)
 
 bcrypt bcrypt::from_salted_salt(const std::string& input)
 {
-	bcrypt hash { input };
+	bcrypt hash{input};
 	std::string bcrypt_salt = input.substr(0, hash.iteration_count_delim_pos + 23);
 	if(bcrypt_salt.size() >= BCRYPT_HASHSIZE)
 		throw hash_error("hash string too large");
@@ -149,7 +158,7 @@ bcrypt bcrypt::from_salted_salt(const std::string& input)
 
 bcrypt bcrypt::from_hash_string(const std::string& input)
 {
-	bcrypt hash { input };
+	bcrypt hash{input};
 	if(input.size() >= BCRYPT_HASHSIZE)
 		throw hash_error("hash string too large");
 	strcpy(hash.hash.data(), input.c_str());
@@ -166,11 +175,10 @@ bcrypt bcrypt::hash_pw(const std::string& password, bcrypt& salt)
 	return hash;
 }
 
-bool bcrypt::is_valid_prefix(const std::string& hash) {
-	return ((hash.compare(0, 4, "$2a$") == 0)
-	     || (hash.compare(0, 4, "$2b$") == 0)
-	     || (hash.compare(0, 4, "$2x$") == 0)
-	     || (hash.compare(0, 4, "$2y$") == 0));
+bool bcrypt::is_valid_prefix(const std::string& hash)
+{
+	return ((hash.compare(0, 4, "$2a$") == 0) || (hash.compare(0, 4, "$2b$") == 0) || (hash.compare(0, 4, "$2x$") == 0)
+		|| (hash.compare(0, 4, "$2y$") == 0));
 }
 
 std::string bcrypt::get_salt() const

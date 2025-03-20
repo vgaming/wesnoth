@@ -64,31 +64,31 @@ public:
 	}
 
 	// Implicit x-value conversion to string
-	operator std::string() const &&
+	operator std::string() const&&
 	{
 		return stream_.str();
 	}
 
 	// Support manipulators
-	formatter& operator<<(std::ostream&(*fn)(std::ostream&)) &
+	formatter& operator<<(std::ostream& (*fn)(std::ostream&)) &
 	{
 		fn(stream_);
 		return *this;
 	}
 
-	formatter&& operator<<(std::ostream&(*fn)(std::ostream&)) &&
+	formatter&& operator<<(std::ostream& (*fn)(std::ostream&)) &&
 	{
 		fn(stream_);
 		return std::move(*this);
 	}
 
-	formatter& operator<<(std::ios_base&(*fn)(std::ios_base&)) &
+	formatter& operator<<(std::ios_base& (*fn)(std::ios_base&)) &
 	{
 		fn(stream_);
 		return *this;
 	}
 
-	formatter&& operator<<(std::ios_base&(*fn)(std::ios_base&)) &&
+	formatter&& operator<<(std::ios_base& (*fn)(std::ios_base&)) &&
 	{
 		fn(stream_);
 		return std::move(*this);

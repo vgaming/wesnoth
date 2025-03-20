@@ -18,8 +18,8 @@
 #include "gui/dialogs/editor/resize_map.hpp"
 
 #include "gui/auxiliary/field.hpp"
-#include "gui/widgets/toggle_button.hpp"
 #include "gui/widgets/slider.hpp"
+#include "gui/widgets/toggle_button.hpp"
 
 #include <functional>
 
@@ -28,10 +28,8 @@ namespace gui2::dialogs
 
 REGISTER_DIALOG(editor_resize_map)
 
-editor_resize_map::editor_resize_map(int& width,
-									   int& height,
-									   EXPAND_DIRECTION& expand_direction,
-									   bool& copy_edge_terrain)
+editor_resize_map::editor_resize_map(
+	int& width, int& height, EXPAND_DIRECTION& expand_direction, bool& copy_edge_terrain)
 	: modal_dialog(window_id())
 	, width_(register_integer("width", true, width))
 	, height_(register_integer("height", true, height))
@@ -49,23 +47,18 @@ editor_resize_map::editor_resize_map(int& width,
 void editor_resize_map::pre_show()
 {
 	slider& height = find_widget<slider>("height");
-	connect_signal_notify_modified(
-			height,
-			std::bind(&editor_resize_map::update_expand_direction, this));
+	connect_signal_notify_modified(height, std::bind(&editor_resize_map::update_expand_direction, this));
 
 	slider& width = find_widget<slider>("width");
-	connect_signal_notify_modified(
-			width,
-			std::bind(&editor_resize_map::update_expand_direction, this));
+	connect_signal_notify_modified(width, std::bind(&editor_resize_map::update_expand_direction, this));
 
 	std::string name_prefix = "expand";
 	for(int i = 0; i < 9; ++i) {
 		std::string name = name_prefix + std::to_string(i);
-		direction_buttons_[i]
-				= find_widget<toggle_button>(name, false, true);
+		direction_buttons_[i] = find_widget<toggle_button>(name, false, true);
 
-		connect_signal_notify_modified(*direction_buttons_[i],
-			std::bind(&editor_resize_map::update_expand_direction, this));
+		connect_signal_notify_modified(
+			*direction_buttons_[i], std::bind(&editor_resize_map::update_expand_direction, this));
 	}
 	direction_buttons_[0]->set_value(true);
 	update_expand_direction();
@@ -87,17 +80,14 @@ static int resize_grid_xy_to_idx(const int x, const int y)
 void editor_resize_map::set_direction_icon(int index, const std::string& icon)
 {
 	if(index < 9) {
-		direction_buttons_[index]->set_icon_name("icons/arrows/arrows_blank_"
-												 + icon + "_30.png");
+		direction_buttons_[index]->set_icon_name("icons/arrows/arrows_blank_" + icon + "_30.png");
 	}
 }
 
 void editor_resize_map::update_expand_direction()
 {
 	for(int i = 0; i < 9; ++i) {
-		if(direction_buttons_[i]->get_value()
-		   && static_cast<int>(expand_direction_) != i) {
-
+		if(direction_buttons_[i]->get_value() && static_cast<int>(expand_direction_) != i) {
 			expand_direction_ = static_cast<EXPAND_DIRECTION>(i);
 			break;
 		}
@@ -149,4 +139,4 @@ void editor_resize_map::update_expand_direction()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

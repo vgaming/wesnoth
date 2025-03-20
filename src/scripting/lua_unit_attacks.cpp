@@ -19,11 +19,10 @@
 #include "scripting/lua_unit.hpp"
 #include "scripting/lua_unit_type.hpp"
 #include "scripting/push_check.hpp"
-#include "units/unit.hpp"
-#include "units/types.hpp"
 #include "units/attack_type.hpp"
+#include "units/types.hpp"
+#include "units/unit.hpp"
 #include "utils/const_clone.hpp"
-
 
 #include <type_traits>
 #include <utility>
@@ -31,11 +30,19 @@
 static const char uattacksKey[] = "unit attacks table";
 static const char uattackKey[] = "unit attack";
 
-struct attack_ref {
+struct attack_ref
+{
 	attack_ptr attack;
 	const_attack_ptr cattack;
-	attack_ref(const attack_ptr& atk) : attack(atk), cattack(atk) {}
-	attack_ref(const_attack_ptr atk) : cattack(std::move(atk)) {}
+	attack_ref(const attack_ptr& atk)
+		: attack(atk)
+		, cattack(atk)
+	{
+	}
+	attack_ref(const_attack_ptr atk)
+		: cattack(std::move(atk))
+	{
+	}
 };
 
 void push_unit_attacks_table(lua_State* L, int idx)
@@ -124,7 +131,7 @@ auto find_attack(T* u, std::size_t i) -> attack_ptr_in<T>
  * - Arg 2: index (int) or id (string) identifying a particular attack.
  * - Ret 1: the unit's attacks.
  */
-static int impl_unit_attacks_get(lua_State *L)
+static int impl_unit_attacks_get(lua_State* L)
 {
 	if(!lua_istable(L, 1)) {
 		return luaW_type_error(L, 1, "unit attacks");
@@ -134,10 +141,12 @@ static int impl_unit_attacks_get(lua_State *L)
 	const unit_type* ut = luaW_tounittype(L, -1);
 	if(lu && lu->get()) {
 		unit* u = lu->get();
-		attack_ptr atk = lua_isnumber(L, 2) ? find_attack(u, luaL_checkinteger(L, 2) - 1) : find_attack(u, luaL_checkstring(L, 2));
+		attack_ptr atk
+			= lua_isnumber(L, 2) ? find_attack(u, luaL_checkinteger(L, 2) - 1) : find_attack(u, luaL_checkstring(L, 2));
 		luaW_pushweapon(L, atk);
 	} else if(ut) {
-		const_attack_ptr atk = lua_isnumber(L, 2) ? find_attack(ut, luaL_checkinteger(L, 2) - 1) : find_attack(ut, luaL_checkstring(L, 2));
+		const_attack_ptr atk = lua_isnumber(L, 2) ? find_attack(ut, luaL_checkinteger(L, 2) - 1)
+												  : find_attack(ut, luaL_checkstring(L, 2));
 		luaW_pushweapon(L, atk);
 	} else {
 		return luaL_argerror(L, 1, "unit not found");
@@ -148,9 +157,8 @@ static int impl_unit_attacks_get(lua_State *L)
 static attack_itors::iterator get_attack_iter(unit& u, attack_ptr atk)
 {
 	// This is slightly inefficient since it walks the attack list a second time...
-	return std::find_if(u.attacks().begin(), u.attacks().end(), [&atk](const attack_type& atk2) {
-		return &atk2 == atk.get();
-	});
+	return std::find_if(
+		u.attacks().begin(), u.attacks().end(), [&atk](const attack_type& atk2) { return &atk2 == atk.get(); });
 }
 
 static int impl_unit_attacks_set(lua_State* L)
@@ -165,7 +173,8 @@ static int impl_unit_attacks_set(lua_State* L)
 	}
 
 	unit& u = luaW_checkunit(L, -1);
-	attack_ptr atk = lua_isnumber(L, 2) ? find_attack(&u, luaL_checkinteger(L, 2) - 1) : find_attack(&u, luaL_checkstring(L, 2));
+	attack_ptr atk
+		= lua_isnumber(L, 2) ? find_attack(&u, luaL_checkinteger(L, 2) - 1) : find_attack(&u, luaL_checkstring(L, 2));
 	if(lua_isnumber(L, 2) && lua_tonumber(L, 2) - 1 > u.attacks().size()) {
 		return luaL_argerror(L, 2, "attack can only be added at the end of the list");
 	}
@@ -204,7 +213,7 @@ static int impl_unit_attacks_set(lua_State* L)
  * - Arg 1: table containing the userdata containing the unit id.
  * - Ret 1: size of unit attacks vector.
  */
-static int impl_unit_attacks_len(lua_State *L)
+static int impl_unit_attacks_len(lua_State* L)
 {
 	if(!lua_istable(L, 1)) {
 		return luaW_type_error(L, 1, "unit attacks");
@@ -219,7 +228,7 @@ static int impl_unit_attacks_len(lua_State *L)
 	return 1;
 }
 
-static int impl_unit_attacks_next(lua_State *L)
+static int impl_unit_attacks_next(lua_State* L)
 {
 	lua_len(L, 1);
 	int n = luaL_checkinteger(L, 2) + 1;
@@ -247,11 +256,11 @@ static int impl_unit_attacks_iter(lua_State* L)
  * - Arg 2: string
  * - Ret 1:
  */
-static int impl_unit_attack_get(lua_State *L)
+static int impl_unit_attack_get(lua_State* L)
 {
 	attack_ref& atk_ref = luaW_checkweapon_ref(L, 1);
 	const attack_type& attack = *atk_ref.cattack;
-	char const *m = luaL_checkstring(L, 2);
+	char const* m = luaL_checkstring(L, 2);
 	return_bool_attrib("read_only", atk_ref.attack == nullptr);
 	return_string_attrib("description", attack.name());
 	return_string_attrib("name", attack.id());
@@ -285,10 +294,10 @@ static int impl_unit_attack_get(lua_State *L)
  * - Arg 2: string
  * - Ret 1:
  */
-static int impl_unit_attack_set(lua_State *L)
+static int impl_unit_attack_set(lua_State* L)
 {
 	attack_type& attack = luaW_checkweapon(L, 1);
-	char const *m = luaL_checkstring(L, 2);
+	char const* m = luaL_checkstring(L, 2);
 	modify_tstring_attrib("description", attack.set_name(value));
 	modify_string_attrib("name", attack.set_id(value));
 	modify_string_attrib("type", attack.set_type(value));
@@ -361,43 +370,44 @@ int intf_create_attack(lua_State* L)
 	return 1;
 }
 
-namespace lua_units {
-	std::string register_attacks_metatables(lua_State* L)
-	{
-		std::ostringstream cmd_out;
+namespace lua_units
+{
+std::string register_attacks_metatables(lua_State* L)
+{
+	std::ostringstream cmd_out;
 
-		// Create the unit attacks metatable.
-		cmd_out << "Adding unit attacks metatable...\n";
+	// Create the unit attacks metatable.
+	cmd_out << "Adding unit attacks metatable...\n";
 
-		luaL_newmetatable(L, uattacksKey);
-		lua_pushcfunction(L, impl_unit_attacks_get);
-		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, impl_unit_attacks_set);
-		lua_setfield(L, -2, "__newindex");
-		lua_pushcfunction(L, impl_unit_attacks_len);
-		lua_setfield(L, -2, "__len");
-		lua_pushcfunction(L, impl_unit_attacks_iter);
-		lua_setfield(L, -2, "__ipairs");
-		lua_pushstring(L, uattacksKey);
-		lua_setfield(L, -2, "__metatable");
+	luaL_newmetatable(L, uattacksKey);
+	lua_pushcfunction(L, impl_unit_attacks_get);
+	lua_setfield(L, -2, "__index");
+	lua_pushcfunction(L, impl_unit_attacks_set);
+	lua_setfield(L, -2, "__newindex");
+	lua_pushcfunction(L, impl_unit_attacks_len);
+	lua_setfield(L, -2, "__len");
+	lua_pushcfunction(L, impl_unit_attacks_iter);
+	lua_setfield(L, -2, "__ipairs");
+	lua_pushstring(L, uattacksKey);
+	lua_setfield(L, -2, "__metatable");
 
-		// Create the unit attack metatable
-		luaL_newmetatable(L, uattackKey);
-		lua_pushcfunction(L, impl_unit_attack_get);
-		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, impl_unit_attack_set);
-		lua_setfield(L, -2, "__newindex");
-		lua_pushcfunction(L, impl_unit_attack_equal);
-		lua_setfield(L, -2, "__eq");
-		lua_pushcfunction(L, impl_unit_attack_tostring);
-		lua_setfield(L, -2, "__tostring");
-		lua_pushcfunction(L, impl_unit_attack_collect);
-		lua_setfield(L, -2, "__gc");
-		lua_pushstring(L, uattackKey);
-		lua_setfield(L, -2, "__metatable");
-		lua_pushcfunction(L, impl_unit_attack_match);
-		lua_setfield(L, -2, "matches");
+	// Create the unit attack metatable
+	luaL_newmetatable(L, uattackKey);
+	lua_pushcfunction(L, impl_unit_attack_get);
+	lua_setfield(L, -2, "__index");
+	lua_pushcfunction(L, impl_unit_attack_set);
+	lua_setfield(L, -2, "__newindex");
+	lua_pushcfunction(L, impl_unit_attack_equal);
+	lua_setfield(L, -2, "__eq");
+	lua_pushcfunction(L, impl_unit_attack_tostring);
+	lua_setfield(L, -2, "__tostring");
+	lua_pushcfunction(L, impl_unit_attack_collect);
+	lua_setfield(L, -2, "__gc");
+	lua_pushstring(L, uattackKey);
+	lua_setfield(L, -2, "__metatable");
+	lua_pushcfunction(L, impl_unit_attack_match);
+	lua_setfield(L, -2, "matches");
 
-		return cmd_out.str();
-	}
+	return cmd_out.str();
 }
+} // namespace lua_units

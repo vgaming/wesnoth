@@ -87,9 +87,8 @@ bool hotkey_base::bindings_equal(const hotkey_ptr& other)
 		return false;
 	}
 
-	const hk_scopes scopematch =
-		hotkey::get_hotkey_command(get_command()).scope &
-		hotkey::get_hotkey_command(other->get_command()).scope;
+	const hk_scopes scopematch
+		= hotkey::get_hotkey_command(get_command()).scope & hotkey::get_hotkey_command(other->get_command()).scope;
 
 	if(scopematch.none()) {
 		return false;
@@ -271,8 +270,8 @@ bool hotkey_keyboard::matches_helper(const SDL_Event& event) const
 	const hotkey_command& command = get_hotkey_command(get_command());
 
 	if((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
-		&& (mods & KMOD_CTRL || mods & KMOD_ALT || mods & KMOD_GUI || command.toggle || CKey::is_uncomposable(event.key))
-	) {
+		&& (mods & KMOD_CTRL || mods & KMOD_ALT || mods & KMOD_GUI || command.toggle
+			|| CKey::is_uncomposable(event.key))) {
 		return event.key.keysym.sym == keycode_ && mods == mod_;
 	}
 

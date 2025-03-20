@@ -15,28 +15,26 @@
 
 #include "actions/undo_action.hpp"
 #include "game_board.hpp"
-#include "log.hpp"                   // for LOG_STREAM, logger, etc
-#include "scripting/game_lua_kernel.hpp"
-#include "resources.hpp"
-#include "variable.hpp" // vconfig
 #include "game_data.hpp"
+#include "log.hpp" // for LOG_STREAM, logger, etc
+#include "resources.hpp"
+#include "scripting/game_lua_kernel.hpp"
+#include "sound.hpp"
 #include "units/unit.hpp"
 #include "utils/general.hpp"
 #include "utils/ranges.hpp"
-#include "sound.hpp"
+#include "variable.hpp" // vconfig
 
+#include <algorithm>
 #include <cassert>
 #include <iterator>
-#include <algorithm>
 
 static lg::log_domain log_engine("engine");
 #define ERR_NG LOG_STREAM(err, log_engine)
 #define LOG_NG LOG_STREAM(info, log_engine)
 
-
 namespace actions
 {
-
 
 undo_action_container::undo_action_container()
 	: steps_()
@@ -62,7 +60,6 @@ void undo_action_container::add(t_step_ptr&& action)
 	steps_.emplace_back(std::move(action));
 }
 
-
 void undo_action_container::read(const config& cfg)
 {
 	for(const config& step : cfg.child_range("step")) {
@@ -86,11 +83,6 @@ undo_action_container::t_factory_map& undo_action_container::get_factories()
 	return res;
 }
 
-
-
-
-
-
 undo_event::undo_event(int fcn_idx, const config& args, const game_events::queued_event& ctx)
 	: lua_idx(fcn_idx)
 	, commands(args)
@@ -99,7 +91,8 @@ undo_event::undo_event(int fcn_idx, const config& args, const game_events::queue
 	, loc2(ctx.loc2)
 	, filter_loc1(ctx.loc1.filter_loc())
 	, filter_loc2(ctx.loc2.filter_loc())
-	, uid1(), uid2()
+	, uid1()
+	, uid2()
 {
 	unit_const_ptr u1 = ctx.loc1.get_unit(), u2 = ctx.loc2.get_unit();
 	if(u1) {
@@ -119,7 +112,8 @@ undo_event::undo_event(const config& cmds, const game_events::queued_event& ctx)
 	, loc2(ctx.loc2)
 	, filter_loc1(ctx.loc1.filter_loc())
 	, filter_loc2(ctx.loc2.filter_loc())
-	, uid1(), uid2()
+	, uid1()
+	, uid2()
 {
 	unit_const_ptr u1 = ctx.loc1.get_unit(), u2 = ctx.loc2.get_unit();
 	if(u1) {
@@ -148,12 +142,11 @@ undo_event::undo_event(const config& first, const config& second, const config& 
 
 undo_event::undo_event(const config& cfg)
 	: undo_event(cfg.child_or_empty("filter"),
-		cfg.child_or_empty("filter_second"),
-		cfg.child_or_empty("data"),
-		cfg.child_or_empty("command"))
+		  cfg.child_or_empty("filter_second"),
+		  cfg.child_or_empty("data"),
+		  cfg.child_or_empty("command"))
 {
 }
-
 
 namespace
 {
@@ -238,7 +231,6 @@ void undo_event::write(config& cfg) const
 	second["x"] = evt.loc2.wml_x();
 	second["y"] = evt.loc2.wml_y();
 }
-
 
 static auto red_undo_event = undo_action_container::subaction_factory<undo_event>();
 

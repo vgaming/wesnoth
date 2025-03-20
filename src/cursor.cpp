@@ -52,27 +52,27 @@ struct cursor_data
 // Array with each available cursor type.
 // macOS needs 16x16 b&w cursors. TODO: is that still the case?
 //
-std::array<cursor_data, cursor::NUM_CURSORS> available_cursors {{
+std::array<cursor_data, cursor::NUM_CURSORS> available_cursors{{
 #ifdef __APPLE__
-	{ nullptr, boost::indeterminate, "normal.png",          "normal.png",      0, 0  },
-	{ nullptr, boost::indeterminate, "wait-alt.png",        "wait.png",        0, 0  },
-	{ nullptr, boost::indeterminate, "ibeam.png",           "ibeam.png",       14, 14 },
-	{ nullptr, boost::indeterminate, "move.png",            "move.png",        0, 0  },
-	{ nullptr, boost::indeterminate, "attack.png",          "attack.png",      0, 0  },
-	{ nullptr, boost::indeterminate, "select.png",          "select.png",      0, 0  },
-	{ nullptr, boost::indeterminate, "move_drag_alt.png",   "move_drag.png",   2, 20 },
-	{ nullptr, boost::indeterminate, "attack_drag_alt.png", "attack_drag.png", 3, 22 },
-	{ nullptr, boost::indeterminate, "no_cursor.png",       "",                0, 0  }
+	{nullptr, boost::indeterminate, "normal.png", "normal.png", 0, 0},
+	{nullptr, boost::indeterminate, "wait-alt.png", "wait.png", 0, 0},
+	{nullptr, boost::indeterminate, "ibeam.png", "ibeam.png", 14, 14},
+	{nullptr, boost::indeterminate, "move.png", "move.png", 0, 0},
+	{nullptr, boost::indeterminate, "attack.png", "attack.png", 0, 0},
+	{nullptr, boost::indeterminate, "select.png", "select.png", 0, 0},
+	{nullptr, boost::indeterminate, "move_drag_alt.png", "move_drag.png", 2, 20},
+	{nullptr, boost::indeterminate, "attack_drag_alt.png", "attack_drag.png", 3, 22},
+	{nullptr, boost::indeterminate, "no_cursor.png", "", 0, 0}
 #else
-	{ nullptr, boost::indeterminate, "normal.png",      "normal.png",      0, 0  },
-	{ nullptr, boost::indeterminate, "wait.png",        "wait.png",        0, 0  },
-	{ nullptr, boost::indeterminate, "ibeam.png",       "ibeam.png",       14, 14 },
-	{ nullptr, boost::indeterminate, "move.png",        "move.png",        0, 0  },
-	{ nullptr, boost::indeterminate, "attack.png",      "attack.png",      0, 0  },
-	{ nullptr, boost::indeterminate, "select.png",      "select.png",      0, 0  },
-	{ nullptr, boost::indeterminate, "move_drag.png",   "move_drag.png",   2, 20 },
-	{ nullptr, boost::indeterminate, "attack_drag.png", "attack_drag.png", 3, 22 },
-	{ nullptr, boost::indeterminate, "no_cursor.png",   "",                0, 0  }
+	{nullptr, boost::indeterminate, "normal.png", "normal.png", 0, 0},
+	{nullptr, boost::indeterminate, "wait.png", "wait.png", 0, 0},
+	{nullptr, boost::indeterminate, "ibeam.png", "ibeam.png", 14, 14},
+	{nullptr, boost::indeterminate, "move.png", "move.png", 0, 0},
+	{nullptr, boost::indeterminate, "attack.png", "attack.png", 0, 0},
+	{nullptr, boost::indeterminate, "select.png", "select.png", 0, 0},
+	{nullptr, boost::indeterminate, "move_drag.png", "move_drag.png", 2, 20},
+	{nullptr, boost::indeterminate, "attack_drag.png", "attack_drag.png", 3, 22},
+	{nullptr, boost::indeterminate, "no_cursor.png", "", 0, 0}
 
 #endif
 }};
@@ -160,7 +160,7 @@ SDL_Cursor* get_cursor(cursor::CURSOR_TYPE type)
 	return data.cursor.get();
 }
 
-} // end anon namespace
+} // namespace
 
 manager::manager()
 {
@@ -197,16 +197,20 @@ void set_dragging(bool drag)
 {
 	switch(current_cursor) {
 	case MOVE:
-		if(drag) cursor::set(MOVE_DRAG);
+		if(drag)
+			cursor::set(MOVE_DRAG);
 		break;
 	case ATTACK:
-		if(drag) cursor::set(ATTACK_DRAG);
+		if(drag)
+			cursor::set(ATTACK_DRAG);
 		break;
 	case MOVE_DRAG:
-		if(!drag) cursor::set(MOVE);
+		if(!drag)
+			cursor::set(MOVE);
 		break;
 	case ATTACK_DRAG:
-		if(!drag) cursor::set(ATTACK);
+		if(!drag)
+			cursor::set(ATTACK);
 		break;
 	default:
 		break;

@@ -15,8 +15,8 @@
 
 #pragma once
 
-#include <vector>
 #include <array>
+#include <vector>
 
 struct battle_context_unit_stats;
 
@@ -25,16 +25,16 @@ struct battle_context_unit_stats;
 struct combatant
 {
 	/** Construct a combatant. */
-	combatant(const battle_context_unit_stats &u, const combatant *prev = nullptr);
+	combatant(const battle_context_unit_stats& u, const combatant* prev = nullptr);
 
 	/** Copy constructor */
-	combatant(const combatant &that, const battle_context_unit_stats &u);
+	combatant(const combatant& that, const battle_context_unit_stats& u);
 
-	combatant(const combatant &that) = delete;
-	combatant& operator=(const combatant &) = delete;
+	combatant(const combatant& that) = delete;
+	combatant& operator=(const combatant&) = delete;
 
 	/** Simulate a fight!  Can be called multiple times for cumulative calculations. */
-	void fight(combatant &opponent, bool levelup_considered=true);
+	void fight(combatant& opponent, bool levelup_considered = true);
 
 	/** Resulting probability distribution (might be not as large as max_hp) */
 	std::vector<double> hp_dist;
@@ -57,7 +57,7 @@ struct combatant
 	void reset();
 #endif
 
-	const battle_context_unit_stats &u_;
+	const battle_context_unit_stats& u_;
 
 private:
 	static const unsigned int MONTE_CARLO_SIMULATION_THRESHOLD = 50000u;

@@ -42,10 +42,11 @@ static lg::log_domain log_scripting_formula("scripting/formula");
 namespace wfl
 {
 /**
- * For printing error messages when WFL parsing or evaluation fails, this contains the names of the WFL functions being evaluated.
+ * For printing error messages when WFL parsing or evaluation fails, this contains the names of the WFL functions being
+ * evaluated.
  *
- * Two C++ threads might be evaluating WFL at the same; declaring this thread_local is a quick bugfix which should probably be replaced
- * by having a context-object for each WFL evaluation.
+ * Two C++ threads might be evaluating WFL at the same; declaring this thread_local is a quick bugfix which should
+ * probably be replaced by having a context-object for each WFL evaluation.
  */
 thread_local static std::deque<std::string> call_stack;
 
@@ -241,7 +242,7 @@ void display_float(const map_location& location, const std::string& text)
 {
 	game_display::get_singleton()->float_label(location, text, color_t(255, 0, 0));
 }
-} // end anon namespace
+} // namespace
 
 DEFINE_WFL_FUNCTION(debug_float, 2, 3)
 {
@@ -602,7 +603,8 @@ DEFINE_WFL_FUNCTION(root, 2, 2)
 {
 	const double base = args()[0]->evaluate(variables, fdb).as_decimal() / 1000.0;
 	const double root = args()[1]->evaluate(variables, fdb).as_decimal() / 1000.0;
-	const double result = base < 0 && std::fmod(root, 2) == 1 ? -std::pow(-base, 1.0 / root) : std::pow(base, 1.0 / root);
+	const double result
+		= base < 0 && std::fmod(root, 2) == 1 ? -std::pow(-base, 1.0 / root) : std::pow(base, 1.0 / root);
 	if(std::isnan(result)) {
 		return variant();
 	}
@@ -719,15 +721,18 @@ DEFINE_WFL_FUNCTION(wave, 1, 1)
 DEFINE_WFL_FUNCTION(lerp, 3, 3)
 {
 	const double lo = args()[0]->evaluate(variables, add_debug_info(fdb, 0, "lerp:lo")).as_decimal() / 1000.0;
-	const double hi = args()[1]->evaluate(variables, add_debug_info(fdb, 1, "lerp:hi")).as_decimal() / 1000.0;;
-	const double alpha = args()[2]->evaluate(variables, add_debug_info(fdb, 2, "lerp:alpha")).as_decimal() / 1000.0;;
+	const double hi = args()[1]->evaluate(variables, add_debug_info(fdb, 1, "lerp:hi")).as_decimal() / 1000.0;
+	;
+	const double alpha = args()[2]->evaluate(variables, add_debug_info(fdb, 2, "lerp:alpha")).as_decimal() / 1000.0;
+	;
 	return variant(static_cast<int>((lo + alpha * (hi - lo)) * 1000.0), variant::DECIMAL_VARIANT);
 }
 
 DEFINE_WFL_FUNCTION(lerp_index, 2, 2)
 {
 	const std::vector<variant> items = args()[0]->evaluate(variables, fdb).as_list();
-	if(items.empty()) return variant();
+	if(items.empty())
+		return variant();
 	const double alpha = args()[1]->evaluate(variables, fdb).as_decimal() / 1000.0;
 	// Same formula as red_to_green etc
 	const double val_scaled = std::clamp(0.01 * alpha, 0.0, 1.0);
@@ -766,7 +771,8 @@ DEFINE_WFL_FUNCTION(clamp, 3, 3)
 	if(val.is_int() && lo.is_int() && hi.is_int()) {
 		return variant(std::clamp<int>(val.as_int(), lo.as_int(), hi.as_int()));
 	}
-	return variant(static_cast<int>(std::clamp<int>(val.as_decimal(), lo.as_decimal(), hi.as_decimal())), variant::DECIMAL_VARIANT);
+	return variant(static_cast<int>(std::clamp<int>(val.as_decimal(), lo.as_decimal(), hi.as_decimal())),
+		variant::DECIMAL_VARIANT);
 }
 
 namespace
@@ -810,7 +816,7 @@ private:
 	const formula_callable* fallback_;
 	mutable variant a_, b_;
 };
-} // end anon namespace
+} // namespace
 
 DEFINE_WFL_FUNCTION(sort, 1, 2)
 {
@@ -1032,9 +1038,7 @@ struct comparator
 };
 
 std::vector<variant> get_input(
-		const function_expression::args_list& args,
-		const formula_callable& variables,
-		formula_debugger* fdb)
+	const function_expression::args_list& args, const formula_callable& variables, formula_debugger* fdb)
 {
 	if(args.size() == 1) {
 		const variant list = args[0]->evaluate(variables, fdb);
@@ -1050,7 +1054,7 @@ std::vector<variant> get_input(
 		return input;
 	}
 }
-} // end anon namespace
+} // namespace
 
 DEFINE_WFL_FUNCTION(zip, 1, -1)
 {
@@ -1279,31 +1283,28 @@ DEFINE_WFL_FUNCTION(as_decimal, 1, 1)
 
 DEFINE_WFL_FUNCTION(loc, 2, 2)
 {
-	return variant(std::make_shared<location_callable>(map_location(
-		args()[0]->evaluate(variables, add_debug_info(fdb, 0, "loc:x")).as_int(),
-		args()[1]->evaluate(variables, add_debug_info(fdb, 1, "loc:y")).as_int(), wml_loc()
-	)));
+	return variant(std::make_shared<location_callable>(
+		map_location(args()[0]->evaluate(variables, add_debug_info(fdb, 0, "loc:x")).as_int(),
+			args()[1]->evaluate(variables, add_debug_info(fdb, 1, "loc:y")).as_int(), wml_loc())));
 }
 
 DEFINE_WFL_FUNCTION(pair, 2, 2)
 {
-	return variant(std::make_shared<key_value_pair>(
-		args()[0]->evaluate(variables, add_debug_info(fdb, 0, "pair:key")),
-		args()[1]->evaluate(variables, add_debug_info(fdb, 1, "pair_value"))
-	));
+	return variant(std::make_shared<key_value_pair>(args()[0]->evaluate(variables, add_debug_info(fdb, 0, "pair:key")),
+		args()[1]->evaluate(variables, add_debug_info(fdb, 1, "pair_value"))));
 }
 
 DEFINE_WFL_FUNCTION(distance_between, 2, 2)
 {
 	const map_location loc1 = args()[0]
-		->evaluate(variables, add_debug_info(fdb, 0, "distance_between:location_A"))
-		.convert_to<location_callable>()
-		->loc();
+								  ->evaluate(variables, add_debug_info(fdb, 0, "distance_between:location_A"))
+								  .convert_to<location_callable>()
+								  ->loc();
 
 	const map_location loc2 = args()[1]
-		->evaluate(variables, add_debug_info(fdb, 1, "distance_between:location_B"))
-		.convert_to<location_callable>()
-		->loc();
+								  ->evaluate(variables, add_debug_info(fdb, 1, "distance_between:location_B"))
+								  .convert_to<location_callable>()
+								  ->loc();
 
 	return variant(distance_between(loc1, loc2));
 }
@@ -1311,9 +1312,9 @@ DEFINE_WFL_FUNCTION(distance_between, 2, 2)
 DEFINE_WFL_FUNCTION(adjacent_locs, 1, 1)
 {
 	const map_location loc = args()[0]
-		->evaluate(variables, add_debug_info(fdb, 0, "adjacent_locs:location"))
-		.convert_to<location_callable>()
-		->loc();
+								 ->evaluate(variables, add_debug_info(fdb, 0, "adjacent_locs:location"))
+								 .convert_to<location_callable>()
+								 ->loc();
 
 	std::vector<variant> v;
 	for(const map_location& adj : get_adjacent_tiles(loc)) {
@@ -1355,14 +1356,14 @@ DEFINE_WFL_FUNCTION(locations_in_radius, 2, 2)
 DEFINE_WFL_FUNCTION(are_adjacent, 2, 2)
 {
 	const map_location loc1 = args()[0]
-		->evaluate(variables, add_debug_info(fdb, 0, "are_adjacent:location_A"))
-		.convert_to<location_callable>()
-		->loc();
+								  ->evaluate(variables, add_debug_info(fdb, 0, "are_adjacent:location_A"))
+								  .convert_to<location_callable>()
+								  ->loc();
 
 	const map_location loc2 = args()[1]
-		->evaluate(variables, add_debug_info(fdb, 1, "are_adjacent:location_B"))
-		.convert_to<location_callable>()
-		->loc();
+								  ->evaluate(variables, add_debug_info(fdb, 1, "are_adjacent:location_B"))
+								  .convert_to<location_callable>()
+								  ->loc();
 
 	return variant(tiles_adjacent(loc1, loc2) ? 1 : 0);
 }
@@ -1370,14 +1371,14 @@ DEFINE_WFL_FUNCTION(are_adjacent, 2, 2)
 DEFINE_WFL_FUNCTION(relative_dir, 2, 2)
 {
 	const map_location loc1 = args()[0]
-		->evaluate(variables, add_debug_info(fdb, 0, "relative_dir:location_A"))
-		.convert_to<location_callable>()
-		->loc();
+								  ->evaluate(variables, add_debug_info(fdb, 0, "relative_dir:location_A"))
+								  .convert_to<location_callable>()
+								  ->loc();
 
 	const map_location loc2 = args()[1]
-		->evaluate(variables, add_debug_info(fdb, 1, "relative_dir:location_B"))
-		.convert_to<location_callable>()
-		->loc();
+								  ->evaluate(variables, add_debug_info(fdb, 1, "relative_dir:location_B"))
+								  .convert_to<location_callable>()
+								  ->loc();
 
 	return variant(map_location::write_direction(loc1.get_relative_dir(loc2)));
 }
@@ -1385,16 +1386,15 @@ DEFINE_WFL_FUNCTION(relative_dir, 2, 2)
 DEFINE_WFL_FUNCTION(direction_from, 2, 3)
 {
 	const map_location loc = args()[0]
-		->evaluate(variables, add_debug_info(fdb, 0, "direction_from:location"))
-		.convert_to<location_callable>()
-		->loc();
+								 ->evaluate(variables, add_debug_info(fdb, 0, "direction_from:location"))
+								 .convert_to<location_callable>()
+								 ->loc();
 
-	const std::string dir_str =
-		args()[1]->evaluate(variables, add_debug_info(fdb, 1, "direction_from:dir")).as_string();
+	const std::string dir_str
+		= args()[1]->evaluate(variables, add_debug_info(fdb, 1, "direction_from:dir")).as_string();
 
-	int n = args().size() == 3
-		? args()[2]->evaluate(variables, add_debug_info(fdb, 2, "direction_from:count")).as_int()
-		: 1;
+	int n = args().size() == 3 ? args()[2]->evaluate(variables, add_debug_info(fdb, 2, "direction_from:count")).as_int()
+							   : 1;
 
 	return variant(std::make_shared<location_callable>(loc.get_direction(map_location::parse_direction(dir_str), n)));
 }
@@ -1402,18 +1402,17 @@ DEFINE_WFL_FUNCTION(direction_from, 2, 3)
 DEFINE_WFL_FUNCTION(rotate_loc_around, 2, 3)
 {
 	const map_location center = args()[0]
-		->evaluate(variables, add_debug_info(fdb, 0, "direction_from:center"))
-		.convert_to<location_callable>()
-		->loc();
+									->evaluate(variables, add_debug_info(fdb, 0, "direction_from:center"))
+									.convert_to<location_callable>()
+									->loc();
 
 	const map_location loc = args()[1]
-		->evaluate(variables, add_debug_info(fdb, 1, "direction_from:location"))
-		.convert_to<location_callable>()
-		->loc();
+								 ->evaluate(variables, add_debug_info(fdb, 1, "direction_from:location"))
+								 .convert_to<location_callable>()
+								 ->loc();
 
-	int n = args().size() == 3
-		? args()[2]->evaluate(variables, add_debug_info(fdb, 2, "direction_from:count")).as_int()
-		: 1;
+	int n = args().size() == 3 ? args()[2]->evaluate(variables, add_debug_info(fdb, 2, "direction_from:count")).as_int()
+							   : 1;
 
 	return variant(std::make_shared<location_callable>(loc.rotate_right_around_center(center, n)));
 }
@@ -1439,8 +1438,8 @@ DEFINE_WFL_FUNCTION(safe_call, 2, 2)
 DEFINE_WFL_FUNCTION(set_var, 2, 2)
 {
 	return variant(std::make_shared<set_var_callable>(
-	args()[0]->evaluate(variables, add_debug_info(fdb, 0, "set_var:key")).as_string(),
-	args()[1]->evaluate(variables, add_debug_info(fdb, 1, "set_var:value"))));
+		args()[0]->evaluate(variables, add_debug_info(fdb, 0, "set_var:key")).as_string(),
+		args()[1]->evaluate(variables, add_debug_info(fdb, 1, "set_var:value"))));
 }
 
 } // namespace actions
@@ -1472,10 +1471,10 @@ void key_value_pair::serialize_to_string(std::string& str) const
 }
 
 formula_function_expression::formula_function_expression(const std::string& name,
-		const args_list& args,
-		const_formula_ptr formula,
-		const_formula_ptr precondition,
-		const std::vector<std::string>& arg_names)
+	const args_list& args,
+	const_formula_ptr formula,
+	const_formula_ptr precondition,
+	const std::vector<std::string>& arg_names)
 	: function_expression(name, args, arg_names.size(), arg_names.size())
 	, formula_(std::move(formula))
 	, precondition_(std::move(precondition))
@@ -1531,7 +1530,7 @@ variant formula_function_expression::execute(const formula_callable& variables, 
 }
 
 function_expression_ptr user_formula_function::generate_function_expression(
-		const std::vector<expression_ptr>& args) const
+	const std::vector<expression_ptr>& args) const
 {
 	return std::make_shared<formula_function_expression>(name_, args, formula_, precondition_, args_);
 }
@@ -1547,7 +1546,7 @@ void function_symbol_table::add_function(const std::string& name, formula_functi
 }
 
 expression_ptr function_symbol_table::create_function(
-		const std::string& fn, const std::vector<expression_ptr>& args) const
+	const std::string& fn, const std::vector<expression_ptr>& args) const
 {
 	const auto i = custom_formulas_.find(fn);
 	if(i != custom_formulas_.end()) {
@@ -1672,4 +1671,4 @@ action_function_symbol_table::action_function_symbol_table(const std::shared_ptr
 	DECLARE_WFL_FUNCTION(safe_call);
 	DECLARE_WFL_FUNCTION(set_var);
 }
-}
+} // namespace wfl

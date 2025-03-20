@@ -23,16 +23,10 @@
 
 class config;
 
-namespace sound {
+namespace sound
+{
 
-enum channel_group {
-	NULL_CHANNEL = -1,
-	SOUND_SOURCES = 0,
-	SOUND_BELL,
-	SOUND_TIMER,
-	SOUND_UI,
-	SOUND_FX
-};
+enum channel_group { NULL_CHANNEL = -1, SOUND_SOURCES = 0, SOUND_BELL, SOUND_TIMER, SOUND_UI, SOUND_FX };
 
 std::string current_driver();
 std::vector<std::string> enumerate_drivers();
@@ -58,7 +52,7 @@ void stop_UI_sound();
 void stop_bell();
 
 // Read config entry, alter track list accordingly.
-void play_music_config(const config &music_node, bool allow_interrupt_current_track = false, int i = -1);
+void play_music_config(const config& music_node, bool allow_interrupt_current_track = false, int i = -1);
 // Act on any track list changes from above.
 void commit_music_changes();
 
@@ -73,7 +67,7 @@ void play_music();
 
 // Change parameters of a playing sound, given its id
 void reposition_sound(int id, unsigned int distance);
-#define DISTANCE_SILENT		255
+#define DISTANCE_SILENT 255
 
 // Check if there's a sound associated with given id playing
 bool is_sound_playing(int id);
@@ -86,7 +80,7 @@ void play_sound(const std::string& files, channel_group group = SOUND_FX, unsign
 
 // Play sound, or random one of comma-separated sounds. Use specified
 // distance and associate it with specified id (of a sound source).
-void play_sound_positioned(const std::string &files, int id, int repeats, unsigned int distance);
+void play_sound_positioned(const std::string& files, int id, int repeats, unsigned int distance);
 
 // Play sound, or random one of comma-separated sounds in bell channel
 void play_bell(const std::string& files);
@@ -100,15 +94,19 @@ void play_timer(const std::string& files,
 void play_UI_sound(const std::string& files);
 
 // A class to periodically check for new music that needs to be played
-class music_thinker : public events::pump_monitor {
+class music_thinker : public events::pump_monitor
+{
 	void process();
 };
 
 // A class to mute music when the game is in background
-class music_muter : public events::sdl_handler {
+class music_muter : public events::sdl_handler
+{
 public:
 	music_muter();
-	void handle_event(const SDL_Event&) override {}
+	void handle_event(const SDL_Event&) override
+	{
+	}
 	void handle_window_event(const SDL_Event& event) override;
 };
 
@@ -132,4 +130,4 @@ void play_track(unsigned int i);
 
 void flush_cache();
 
-}
+} // namespace sound

@@ -21,29 +21,40 @@
 #include <array>
 #include <boost/test/unit_test.hpp>
 
-constexpr uint32_t red 		= 0xFF'FF'00'00;
-constexpr uint32_t green 	= 0xFF'00'FF'00;
-constexpr uint32_t blue 	= 0xFF'00'00'FF;
-constexpr uint32_t yellow 	= 0xFF'FF'FF'00;
-constexpr uint32_t white 	= 0xFF'FF'FF'FF;
-constexpr uint32_t black 	= 0xFF'00'00'00;
+constexpr uint32_t red = 0xFF'FF'00'00;
+constexpr uint32_t green = 0xFF'00'FF'00;
+constexpr uint32_t blue = 0xFF'00'00'FF;
+constexpr uint32_t yellow = 0xFF'FF'FF'00;
+constexpr uint32_t white = 0xFF'FF'FF'FF;
+constexpr uint32_t black = 0xFF'00'00'00;
 
-constexpr std::array<uint32_t, 16> img_4x4 {
-    red,    white,  green,  black,
-    black,  black,  black,  black,
-    blue,   white,  yellow, black,
-    black,  black,  black,  black,
+constexpr std::array<uint32_t, 16> img_4x4{
+	red,
+	white,
+	green,
+	black,
+	black,
+	black,
+	black,
+	black,
+	blue,
+	white,
+	yellow,
+	black,
+	black,
+	black,
+	black,
+	black,
 };
 
-constexpr std::array<uint32_t, 4> img_4x4_to_2x2_result {
-    red,    green,
-    blue,   yellow,
+constexpr std::array<uint32_t, 4> img_4x4_to_2x2_result{
+	red,
+	green,
+	blue,
+	yellow,
 };
 
-constexpr std::array<uint32_t, 6> img_4x4_to_3x2_result {
-    red,    white, 	green,
-    blue,   white, 	yellow
-};
+constexpr std::array<uint32_t, 6> img_4x4_to_3x2_result{red, white, green, blue, white, yellow};
 
 template<size_t w, size_t h>
 surface array_to_surface(const std::array<uint32_t, w * h>& arr)

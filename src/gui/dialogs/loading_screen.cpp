@@ -42,33 +42,36 @@ static lg::log_domain log_loadscreen("loadscreen");
 static lg::log_domain log_display("display");
 #define DBG_DP LOG_STREAM(debug, log_display)
 
-static const std::map<loading_stage, std::string> stage_names {
-	{ loading_stage::build_terrain,       N_("Building terrain rules") },
-	{ loading_stage::create_cache,        N_("Reading files and creating cache") },
-	{ loading_stage::init_display,        N_("Initializing display") },
-	{ loading_stage::init_fonts,          N_("Reinitialize fonts for the current language") },
-	{ loading_stage::init_teams,          N_("Initializing teams") },
-	{ loading_stage::init_theme,          N_("Initializing display") },
-	{ loading_stage::load_config,         N_("Loading game configuration") },
-	{ loading_stage::load_data,           N_("Loading data files") },
-	{ loading_stage::load_level,          N_("Loading level") },
-	{ loading_stage::init_lua,            N_("Initializing scripting engine") },
-	{ loading_stage::init_whiteboard,     N_("Initializing planning mode") },
-	{ loading_stage::load_unit_types,     N_("Reading unit files") },
-	{ loading_stage::load_units,          N_("Loading units") },
-	{ loading_stage::refresh_addons,      N_("Searching for installed add-ons") },
-	{ loading_stage::start_game,          N_("Starting game") },
-	{ loading_stage::verify_cache,        N_("Verifying cache") },
-	{ loading_stage::connect_to_server,   N_("Connecting to server") },
-	{ loading_stage::login_response,      N_("Logging in") },
-	{ loading_stage::waiting,             N_("Waiting for server") },
-	{ loading_stage::redirect,            N_("Connecting to redirected server") },
-	{ loading_stage::next_scenario,       N_("Waiting for next scenario") },
-	{ loading_stage::download_level_data, N_("Getting game data") },
-	{ loading_stage::download_lobby_data, N_("Downloading lobby data") },
+static const std::map<loading_stage, std::string> stage_names{
+	{loading_stage::build_terrain, N_("Building terrain rules")},
+	{loading_stage::create_cache, N_("Reading files and creating cache")},
+	{loading_stage::init_display, N_("Initializing display")},
+	{loading_stage::init_fonts, N_("Reinitialize fonts for the current language")},
+	{loading_stage::init_teams, N_("Initializing teams")},
+	{loading_stage::init_theme, N_("Initializing display")},
+	{loading_stage::load_config, N_("Loading game configuration")},
+	{loading_stage::load_data, N_("Loading data files")},
+	{loading_stage::load_level, N_("Loading level")},
+	{loading_stage::init_lua, N_("Initializing scripting engine")},
+	{loading_stage::init_whiteboard, N_("Initializing planning mode")},
+	{loading_stage::load_unit_types, N_("Reading unit files")},
+	{loading_stage::load_units, N_("Loading units")},
+	{loading_stage::refresh_addons, N_("Searching for installed add-ons")},
+	{loading_stage::start_game, N_("Starting game")},
+	{loading_stage::verify_cache, N_("Verifying cache")},
+	{loading_stage::connect_to_server, N_("Connecting to server")},
+	{loading_stage::login_response, N_("Logging in")},
+	{loading_stage::waiting, N_("Waiting for server")},
+	{loading_stage::redirect, N_("Connecting to redirected server")},
+	{loading_stage::next_scenario, N_("Waiting for next scenario")},
+	{loading_stage::download_level_data, N_("Getting game data")},
+	{loading_stage::download_lobby_data, N_("Downloading lobby data")},
 };
 
-namespace { std::chrono::steady_clock::time_point last_spin; }
+namespace
+{
+std::chrono::steady_clock::time_point last_spin;
+}
 
 namespace gui2::dialogs
 {
@@ -126,19 +129,19 @@ void loading_screen::progress(loading_stage stage)
 void loading_screen::spin()
 {
 	// If we're not showing a loading screen, do nothing.
-	if (!singleton_) {
+	if(!singleton_) {
 		return;
 	}
 
 	// If we're not the main thread, do nothing.
-	if (!events::is_in_main_thread()) {
+	if(!events::is_in_main_thread()) {
 		return;
 	}
 
 	// Restrict actual update rate.
 	auto now = std::chrono::steady_clock::now();
 	auto elapsed = now - last_spin;
-	if (elapsed > draw_manager::get_frame_length()) {
+	if(elapsed > draw_manager::get_frame_length()) {
 		last_spin = now;
 		events::pump_and_draw();
 	}
@@ -146,7 +149,7 @@ void loading_screen::spin()
 
 void loading_screen::raise()
 {
-	if (singleton_) {
+	if(singleton_) {
 		draw_manager::raise_drawable(singleton_);
 	}
 }
@@ -154,12 +157,14 @@ void loading_screen::raise()
 // This will be run inside the window::show() loop.
 void loading_screen::process()
 {
-	if (load_funcs_.empty()) {
+	if(load_funcs_.empty()) {
 		return;
 	}
 
 	// Do not automatically recurse.
-	if (running_) { return; }
+	if(running_) {
+		return;
+	}
 	running_ = true;
 
 	// Run the loading function.
@@ -171,7 +176,7 @@ void loading_screen::process()
 	running_ = false;
 
 	// If there's nothing more to do, close.
-	if (load_funcs_.empty()) {
+	if(load_funcs_.empty()) {
 		queue_redraw();
 		window::close();
 	}
@@ -185,7 +190,8 @@ void loading_screen::layout()
 
 	loading_stage stage = current_stage_.load(std::memory_order_acquire);
 
-	if(stage != loading_stage::none && (current_visible_stage_ == visible_stages_.end() || stage != current_visible_stage_->first)) {
+	if(stage != loading_stage::none
+		&& (current_visible_stage_ == visible_stages_.end() || stage != current_visible_stage_->first)) {
 		auto iter = visible_stages_.find(stage);
 		if(iter == visible_stages_.end()) {
 			WRN_LS << "Stage missing description.";
@@ -204,7 +210,8 @@ void loading_screen::layout()
 		animation_start_ = now;
 	}
 
-	animation_->get_drawing_canvas().set_variable("time", wfl::variant(duration_cast<milliseconds>(now - *animation_start_).count()));
+	animation_->get_drawing_canvas().set_variable(
+		"time", wfl::variant(duration_cast<milliseconds>(now - *animation_start_).count()));
 	animation_->queue_redraw();
 }
 
@@ -225,4 +232,4 @@ void loading_screen::display(const std::function<void()>& f)
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

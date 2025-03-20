@@ -17,12 +17,12 @@
 
 #include "gui/widgets/spinner.hpp"
 
-#include "gui/widgets/repeating_button.hpp"
-#include "gui/widgets/text_box.hpp"
+#include "gettext.hpp"
 #include "gui/core/log.hpp"
 #include "gui/core/register_widget.hpp"
+#include "gui/widgets/repeating_button.hpp"
+#include "gui/widgets/text_box.hpp"
 #include "gui/widgets/window.hpp"
-#include "gettext.hpp"
 #include "wml_exception.hpp"
 
 #include <functional>
@@ -56,7 +56,7 @@ text_box* spinner::get_internal_text_box()
 void spinner::set_value(const int val)
 {
 	text_box* edit_area = get_internal_text_box();
-	if (edit_area != nullptr) {
+	if(edit_area != nullptr) {
 		edit_area->set_value(std::to_string(val));
 	}
 }
@@ -69,7 +69,7 @@ int spinner::get_value()
 	int val;
 	try {
 		text_box* edit_area = get_internal_text_box();
-		if (edit_area != nullptr) {
+		if(edit_area != nullptr) {
 			val = stoi(edit_area->get_value());
 			invalid_ = false;
 		} else {
@@ -93,7 +93,6 @@ void spinner::finalize_setup()
 	repeating_button* btn_next = find_widget<repeating_button>("_next", false, true);
 	btn_prev->connect_signal_mouse_left_down(std::bind(&spinner::prev, this));
 	btn_next->connect_signal_mouse_left_down(std::bind(&spinner::next, this));
-
 }
 
 void spinner::set_self_active(const bool active)
@@ -134,11 +133,13 @@ spinner_definition::spinner_definition(const config& cfg)
 }
 
 spinner_definition::resolution::resolution(const config& cfg)
-	: resolution_definition(cfg), grid(nullptr)
+	: resolution_definition(cfg)
+	, grid(nullptr)
 {
 	// Note the order should be the same as the enum state_t is spinner.hpp.
 	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("spinner", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("spinner", "state_disabled")));
+	state.emplace_back(
+		VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("spinner", "state_disabled")));
 
 	auto child = VALIDATE_WML_CHILD(cfg, "grid", missing_mandatory_wml_tag("spinner", "grid"));
 	grid = std::make_shared<builder_grid>(child);
@@ -164,8 +165,7 @@ std::unique_ptr<widget> builder_spinner::build() const
 	widget->init_grid(*conf->grid);
 	widget->finalize_setup();
 
-	DBG_GUI_G << "Window builder: placed spinner '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed spinner '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

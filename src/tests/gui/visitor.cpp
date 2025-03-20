@@ -19,32 +19,28 @@
 
 #include "config_cache.hpp"
 #include "gui/auxiliary/iterator/walker.hpp"
-#include "gui/widgets/label.hpp"
 #include "gui/widgets/grid.hpp"
+#include "gui/widgets/label.hpp"
 
 #include <typeinfo>
 
-static void add_widget(gui2::grid& grid
-		, std::unique_ptr<gui2::widget> widget
-		, const std::string& id
-		, const unsigned row
-		, const unsigned column)
+static void add_widget(gui2::grid& grid,
+	std::unique_ptr<gui2::widget> widget,
+	const std::string& id,
+	const unsigned row,
+	const unsigned column)
 {
 	BOOST_REQUIRE_NE(widget.get(), static_cast<gui2::widget*>(nullptr));
 
 	widget->set_id(id);
-	grid.set_child(std::move(widget)
-			, row
-			, column
-			, gui2::grid::VERTICAL_GROW_SEND_TO_CLIENT
-				| gui2::grid::HORIZONTAL_GROW_SEND_TO_CLIENT
-			, 0);
+	grid.set_child(std::move(widget), row, column,
+		gui2::grid::VERTICAL_GROW_SEND_TO_CLIENT | gui2::grid::HORIZONTAL_GROW_SEND_TO_CLIENT, 0);
 }
 
 template<class T>
 static void test_control(T&& control)
 {
-	//PLAIN_LOG << __func__ << ": " << typeid(T).name() << ".";
+	// PLAIN_LOG << __func__ << ": " << typeid(T).name() << ".";
 
 	const auto visitor = control.create_walker();
 
@@ -90,10 +86,10 @@ static void test_grid()
 	/* An empty grid behaves the same as a control so test here. */
 	test_control(gui2::grid());
 
-	//PLAIN_LOG << __func__ << ": Detailed test.";
+	// PLAIN_LOG << __func__ << ": Detailed test.";
 
 	/* Test the child part here. */
-	gui2::grid grid(2 ,2);
+	gui2::grid grid(2, 2);
 	add_widget(grid, std::make_unique<gui2::label>(gui2::implementation::builder_label(config())), "(1,1)", 0, 0);
 	add_widget(grid, std::make_unique<gui2::label>(gui2::implementation::builder_label(config())), "(1,2)", 0, 1);
 	add_widget(grid, std::make_unique<gui2::label>(gui2::implementation::builder_label(config())), "(2,1)", 1, 0);
@@ -150,7 +146,6 @@ static void test_grid()
 
 BOOST_AUTO_TEST_CASE(test_gui2_visitor)
 {
-
 	/**** Initialize the environment. *****/
 	game_config::config_cache& cache = game_config::config_cache::instance();
 

@@ -34,25 +34,22 @@ tod_new_schedule::tod_new_schedule(std::string& schedule_id, t_string& schedule_
 {
 }
 
-void tod_new_schedule::pre_show() {
+void tod_new_schedule::pre_show()
+{
 	find_widget<text_box>("id_box").set_value(schedule_id_);
 	find_widget<text_box>("name_box").set_value(schedule_name_);
 
 	find_widget<button>("ok").set_active(false);
 
 	connect_signal_notify_modified(
-		find_widget<text_box>("name_box"),
-		std::bind(&tod_new_schedule::button_state_change, this));
+		find_widget<text_box>("name_box"), std::bind(&tod_new_schedule::button_state_change, this));
 	connect_signal_notify_modified(
-		find_widget<text_box>("id_box"),
-		std::bind(&tod_new_schedule::button_state_change, this));
+		find_widget<text_box>("id_box"), std::bind(&tod_new_schedule::button_state_change, this));
 }
 
-void tod_new_schedule::button_state_change() {
-	if (
-		find_widget<text_box>("id_box").get_value().empty()
-		|| find_widget<text_box>("name_box").get_value().empty())
-	{
+void tod_new_schedule::button_state_change()
+{
+	if(find_widget<text_box>("id_box").get_value().empty() || find_widget<text_box>("name_box").get_value().empty()) {
 		find_widget<button>("ok").set_active(false);
 	} else {
 		find_widget<button>("ok").set_active(true);
@@ -67,4 +64,4 @@ void tod_new_schedule::post_show()
 	schedule_name_ = find_widget<text_box>("name_box").get_value();
 }
 
-}
+} // namespace gui2::dialogs

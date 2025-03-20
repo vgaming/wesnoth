@@ -48,8 +48,8 @@
 
 #include <cstdlib>
 #include <limits>
-#include <string>
 #include <sstream>
+#include <string>
 #include <type_traits>
 
 #define DEBUG_THROW(id)
@@ -60,15 +60,11 @@
  * Contains the implementation details for lexical_cast and shouldn't be used
  * directly.
  */
-namespace implementation {
+namespace implementation
+{
 
-	template<
-		  typename To
-		, typename From
-		, typename ToEnable = void
-		, typename FromEnable = void
-	>
-	struct lexical_caster;
+template<typename To, typename From, typename ToEnable = void, typename FromEnable = void>
+struct lexical_caster;
 
 } // namespace implementation
 
@@ -116,7 +112,8 @@ struct bad_lexical_cast : std::exception
 	}
 };
 
-namespace implementation {
+namespace implementation
+{
 
 /**
  * Base class for the conversion.
@@ -129,12 +126,7 @@ namespace implementation {
  * @tparam ToEnable               Filter to enable the To type.
  * @tparam FromEnable             Filter to enable the From type.
  */
-template<
-	  typename To
-	, typename From
-	, typename ToEnable
-	, typename FromEnable
->
+template<typename To, typename From, typename ToEnable, typename FromEnable>
 struct lexical_caster
 {
 	To operator()(From value, utils::optional<To> fallback) const
@@ -145,7 +137,9 @@ struct lexical_caster
 		std::stringstream sstr;
 
 		if(!(sstr << value && sstr >> result)) {
-			if(fallback) { return *fallback; }
+			if(fallback) {
+				return *fallback;
+			}
 
 			throw bad_lexical_cast();
 		} else {
@@ -160,18 +154,13 @@ struct lexical_caster
  * Specialized for returning strings from an integral type or a pointer to an
  * integral type.
  */
-template <typename From>
-struct lexical_caster<
-	  std::string
-	, From
-	, void
-	, std::enable_if_t<std::is_arithmetic_v<From>>
->
+template<typename From>
+struct lexical_caster<std::string, From, void, std::enable_if_t<std::is_arithmetic_v<From>>>
 {
 	std::string operator()(From value, utils::optional<std::string>) const
 	{
 		DEBUG_THROW("specialized - To std::string - From arithmetic");
-		if constexpr (std::is_same_v<bool, From>) {
+		if constexpr(std::is_same_v<bool, From>) {
 			return value ? "1" : "0";
 		} else {
 			return utils::charconv_buffer<From>(value).to_string();
@@ -179,20 +168,13 @@ struct lexical_caster<
 	}
 };
 
-
-
 /**
  * Specialized conversion class.
  *
  * @note is specialized to silence C4804 from MSVC.
  */
-template <>
-struct lexical_caster<
-	  bool
-	, std::string_view
-	, void
-	, void
->
+template<>
+struct lexical_caster<bool, std::string_view, void, void>
 {
 	bool operator()(std::string_view str, utils::optional<bool> fallback) const
 	{
@@ -202,7 +184,7 @@ struct lexical_caster<
 			return true;
 		} else if(str == "0") {
 			return false;
-		} else if (fallback) {
+		} else if(fallback) {
 			return *fallback;
 		} else {
 			throw bad_lexical_cast();
@@ -215,13 +197,8 @@ struct lexical_caster<
  *
  * Specialized for returning arithmetic from a string_view, also used by std::string and (const) char*
  */
-template <typename To>
-struct lexical_caster<
-	  To
-	, std::string_view
-	, std::enable_if_t<std::is_arithmetic_v<To>>
-	, void
->
+template<typename To>
+struct lexical_caster<To, std::string_view, std::enable_if_t<std::is_arithmetic_v<To>>, void>
 {
 	To operator()(std::string_view str, utils::optional<To> fallback) const
 	{
@@ -234,7 +211,7 @@ struct lexical_caster<
 		auto [ptr, ec] = utils::charconv::from_chars(str.data(), str.data() + str.size(), res);
 		if(ec == std::errc()) {
 			return res;
-		} else if(fallback){
+		} else if(fallback) {
 			return *fallback;
 		} else {
 			throw bad_lexical_cast();
@@ -247,17 +224,13 @@ struct lexical_caster<
  *
  * Specialized for returning arithmetic from a std::string
  */
-template <typename To>
-struct lexical_caster<
-	  To
-	, std::string
-	, std::enable_if_t<std::is_arithmetic_v<To>>
-	, void
->
+template<typename To>
+struct lexical_caster<To, std::string, std::enable_if_t<std::is_arithmetic_v<To>>, void>
 {
 	To operator()(const std::string& value, utils::optional<To> fallback) const
 	{
-		// Dont DEBUG_THROW. the test shodul test what actual implementaiton is used in the end, not which specialazion that jsut forwards  to another
+		// Dont DEBUG_THROW. the test shodul test what actual implementaiton is used in the end, not which specialazion
+		// that jsut forwards  to another
 		if(fallback) {
 			return lexical_cast_default<To>(std::string_view(value), *fallback);
 		} else {
@@ -266,23 +239,21 @@ struct lexical_caster<
 	}
 };
 
-
 /**
  * Specialized conversion class.
  *
  * Specialized for returning arithmetic from a (const) char*.
  */
-template <class To, class From>
-struct lexical_caster<
-	  To
-	, From
-	, std::enable_if_t<std::is_arithmetic_v<To> >
-	, std::enable_if_t<std::is_same_v<From, const char*> || std::is_same_v<From, char*> >
->
+template<class To, class From>
+struct lexical_caster<To,
+	From,
+	std::enable_if_t<std::is_arithmetic_v<To>>,
+	std::enable_if_t<std::is_same_v<From, const char*> || std::is_same_v<From, char*>>>
 {
 	To operator()(const std::string& value, utils::optional<To> fallback) const
 	{
-		// Dont DEBUG_THROW. the test shodul test what actual implementaiton is used in the end, not which specialazion that jsut forwards  to another
+		// Dont DEBUG_THROW. the test shodul test what actual implementaiton is used in the end, not which specialazion
+		// that jsut forwards  to another
 		if(fallback) {
 			return lexical_cast_default<To>(std::string_view(value), *fallback);
 		} else {

@@ -17,33 +17,33 @@
 
 #include <algorithm>
 
-namespace events{
+namespace events
+{
 
-generic_event::generic_event(const std::string& name) :
-	name_(name),
-	observers_(),
-	change_handler_(false),
-	notify_active_(false)
+generic_event::generic_event(const std::string& name)
+	: name_(name)
+	, observers_()
+	, change_handler_(false)
+	, notify_active_(false)
 {
 }
 
-bool generic_event::attach_handler(observer* obs){
+bool generic_event::attach_handler(observer* obs)
+{
 	bool handler_attached = false;
 
-	//make sure observers are not notified right now
-	if (!notify_active_){
+	// make sure observers are not notified right now
+	if(!notify_active_) {
 		change_handler_ = true;
-		try{
+		try {
 			std::vector<observer*>::const_iterator it = std::find(observers_.begin(), observers_.end(), obs);
-			if (it != observers_.end()){
+			if(it != observers_.end()) {
 				handler_attached = false;
-			}
-			else{
+			} else {
 				observers_.push_back(obs);
 				handler_attached = true;
 			}
-		}
-		catch (...){
+		} catch(...) {
 			change_handler_ = false;
 			throw;
 		}
@@ -53,16 +53,16 @@ bool generic_event::attach_handler(observer* obs){
 	return handler_attached;
 }
 
-bool generic_event::detach_handler(observer* obs){
+bool generic_event::detach_handler(observer* obs)
+{
 	bool handler_detached = false;
 
-	//make sure observers are not notified right now
-	if (!notify_active_){
+	// make sure observers are not notified right now
+	if(!notify_active_) {
 		auto it = std::find(observers_.begin(), observers_.end(), obs);
-		if (it == observers_.end()){
+		if(it == observers_.end()) {
 			handler_detached = false;
-		}
-		else{
+		} else {
 			observers_.erase(it);
 			handler_detached = true;
 		}
@@ -72,17 +72,16 @@ bool generic_event::detach_handler(observer* obs){
 	return handler_detached;
 }
 
-void generic_event::notify_observers(){
-	if (!change_handler_){
+void generic_event::notify_observers()
+{
+	if(!change_handler_) {
 		notify_active_ = true;
-		try{
-			for (std::vector<observer*>::const_iterator it = observers_.begin();
-				it != observers_.end(); ++it){
+		try {
+			for(std::vector<observer*>::const_iterator it = observers_.begin(); it != observers_.end(); ++it) {
 				(*it)->handle_generic_event(name_);
 			}
-		}
-		catch (...){
-			//reset the flag if event handlers throw exceptions and don't catch them
+		} catch(...) {
+			// reset the flag if event handlers throw exceptions and don't catch them
 			notify_active_ = false;
 			throw;
 		}
@@ -90,4 +89,4 @@ void generic_event::notify_observers(){
 	}
 }
 
-} //namespace events
+} // namespace events

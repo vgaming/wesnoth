@@ -19,11 +19,11 @@
 
 #include "picture.hpp" // We want the file in src/
 
-#include "gui/core/widget_definition.hpp"
+#include "gettext.hpp"
 #include "gui/core/log.hpp"
 #include "gui/core/register_widget.hpp"
+#include "gui/core/widget_definition.hpp"
 #include "wml_exception.hpp"
-#include "gettext.hpp"
 
 #define LOG_SCOPE_HEADER get_control_type() + " [" + id() + "] " + __func__
 #define LOG_HEADER LOG_SCOPE_HEADER + ':'
@@ -52,7 +52,7 @@ point image::calculate_best_size() const
 	const point minimum = get_config_default_size();
 	const point maximum = get_config_maximum_size();
 
-	point result {image_size.x, image_size.y};
+	point result{image_size.x, image_size.y};
 
 	if(minimum.x > 0 && result.x < minimum.x) {
 		DBG_GUI_L << LOG_HEADER << " increase width to minimum.";
@@ -108,7 +108,8 @@ image_definition::resolution::resolution(const config& cfg)
 	: resolution_definition(cfg)
 {
 	// Note the order should be the same as the enum state_t in image.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("image_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("image_definition][resolution", "state_enabled")));
 }
 
 // }---------- BUILDER -----------{
@@ -116,7 +117,8 @@ image_definition::resolution::resolution(const config& cfg)
 namespace implementation
 {
 
-builder_image::builder_image(const config& cfg) : builder_styled_widget(cfg)
+builder_image::builder_image(const config& cfg)
+	: builder_styled_widget(cfg)
 {
 }
 
@@ -124,8 +126,7 @@ std::unique_ptr<widget> builder_image::build() const
 {
 	auto widget = std::make_unique<image>(*this);
 
-	DBG_GUI_G << "Window builder: placed image '" << id << "' with definition '"
-			  << definition << "'.";
+	DBG_GUI_G << "Window builder: placed image '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

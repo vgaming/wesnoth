@@ -35,7 +35,7 @@ dismiss_action::dismiss_action(const config& cfg)
 /**
  * Writes this into the provided config.
  */
-void dismiss_action::write(config & cfg) const
+void dismiss_action::write(config& cfg) const
 {
 	undo_action::write(cfg);
 	dismissed_unit->write(cfg.add_child("unit"));
@@ -47,7 +47,7 @@ void dismiss_action::write(config & cfg) const
  */
 bool dismiss_action::undo(int side)
 {
-	team &current_team = resources::gameboard->get_team(side);
+	team& current_team = resources::gameboard->get_team(side);
 
 	current_team.recall_list().add(dismissed_unit);
 	return true;
@@ -55,4 +55,4 @@ bool dismiss_action::undo(int side)
 
 static auto red_undo_dismiss = undo_action_container::subaction_factory<dismiss_action>();
 
-}
+} // namespace actions::undo

@@ -15,43 +15,44 @@
 
 #define GETTEXT_DOMAIN "wesnoth-test"
 
-#include <array>
-#include <vector>
-#include <string>
 #include "serialization/base64.hpp"
 #include "serialization/string_utils.hpp"
 #include "serialization/unicode.hpp"
+#include <array>
 #include <boost/test/unit_test.hpp>
+#include <string>
+#include <vector>
 
-namespace std {
+namespace std
+{
 static std::ostream& operator<<(std::ostream& str, const std::pair<const std::string, std::string>& p)
 {
 	return str << '(' << p.first << " => " << p.second << ')';
 }
-}
+} // namespace std
 
-BOOST_AUTO_TEST_SUITE ( test_serialization_utils_and_unicode )
+BOOST_AUTO_TEST_SUITE(test_serialization_utils_and_unicode)
 
-BOOST_AUTO_TEST_CASE( utils_join_test )
+BOOST_AUTO_TEST_CASE(utils_join_test)
 {
 	std::vector<std::string> fruit;
 
-	BOOST_CHECK( utils::join(fruit).empty() );
-	BOOST_CHECK( utils::join(fruit, "---").empty() );
+	BOOST_CHECK(utils::join(fruit).empty());
+	BOOST_CHECK(utils::join(fruit, "---").empty());
 
 	fruit.push_back("apples");
 
-	BOOST_CHECK( utils::join(fruit) == "apples" );
-	BOOST_CHECK( utils::join(fruit, "---") == "apples" );
+	BOOST_CHECK(utils::join(fruit) == "apples");
+	BOOST_CHECK(utils::join(fruit, "---") == "apples");
 
 	fruit.push_back("oranges");
 	fruit.push_back("lemons");
 
-	BOOST_CHECK( utils::join(fruit) == "apples,oranges,lemons" );
-	BOOST_CHECK( utils::join(fruit, "---") == "apples---oranges---lemons" );
+	BOOST_CHECK(utils::join(fruit) == "apples,oranges,lemons");
+	BOOST_CHECK(utils::join(fruit, "---") == "apples---oranges---lemons");
 }
 
-BOOST_AUTO_TEST_CASE( utils_split_test )
+BOOST_AUTO_TEST_CASE(utils_split_test)
 {
 	const std::string test_string = "a,  ,  bb,  ccc  ||  d,  ee,,  fff  | |  g,  ,  hh,  iii";
 
@@ -107,7 +108,7 @@ BOOST_AUTO_TEST_CASE( utils_split_test )
 	}
 }
 
-BOOST_AUTO_TEST_CASE( utils_quoted_split_test )
+BOOST_AUTO_TEST_CASE(utils_quoted_split_test)
 {
 	const std::string test_string = "a,  `,  bb,  ccc  ||  d,  ee,,  fff  | `|  g,  `,  hh,  iii";
 
@@ -153,19 +154,14 @@ BOOST_AUTO_TEST_CASE( utils_quoted_split_test )
 	}
 }
 
-BOOST_AUTO_TEST_CASE( utils_map_split_test )
+BOOST_AUTO_TEST_CASE(utils_map_split_test)
 {
 	const std::string test_string = "a = b:2,, c = d:.9, e = f:5;; x = r:12, y = b:9.2,, z = g:45";
 
 	{
 		auto split = utils::map_split(test_string);
-		std::map<std::string, std::string> expect = {
-			{"a = b", "2"},
-			{"c = d", ".9"},
-			{"e = f", "5;; x = r:12"},
-			{"y = b", "9.2"},
-			{"z = g", "45"}
-		};
+		std::map<std::string, std::string> expect
+			= {{"a = b", "2"}, {"c = d", ".9"}, {"e = f", "5;; x = r:12"}, {"y = b", "9.2"}, {"z = g", "45"}};
 		BOOST_CHECK_EQUAL_COLLECTIONS(split.begin(), split.end(), expect.begin(), expect.end());
 	}
 
@@ -201,10 +197,8 @@ BOOST_AUTO_TEST_CASE( utils_map_split_test )
 	}
 	{
 		auto split = utils::map_split(test_string, ';', '.', utils::REMOVE_EMPTY | utils::STRIP_SPACES);
-		std::map<std::string, std::string> expect = {
-			{"a = b:2,, c = d:", "9, e = f:5"},
-			{"x = r:12, y = b:9", "2,, z = g:45"}
-		};
+		std::map<std::string, std::string> expect
+			= {{"a = b:2,, c = d:", "9, e = f:5"}, {"x = r:12, y = b:9", "2,, z = g:45"}};
 		BOOST_CHECK_EQUAL_COLLECTIONS(split.begin(), split.end(), expect.begin(), expect.end());
 	}
 
@@ -240,10 +234,8 @@ BOOST_AUTO_TEST_CASE( utils_map_split_test )
 	}
 	{
 		auto split = utils::map_split(test_string, ';', '.', utils::REMOVE_EMPTY);
-		std::map<std::string, std::string> expect = {
-			{"a = b:2,, c = d:", "9, e = f:5"},
-			{" x = r:12, y = b:9", "2,, z = g:45"}
-		};
+		std::map<std::string, std::string> expect
+			= {{"a = b:2,, c = d:", "9, e = f:5"}, {" x = r:12, y = b:9", "2,, z = g:45"}};
 		BOOST_CHECK_EQUAL_COLLECTIONS(split.begin(), split.end(), expect.begin(), expect.end());
 	}
 
@@ -284,11 +276,8 @@ BOOST_AUTO_TEST_CASE( utils_map_split_test )
 	}
 	{
 		auto split = utils::map_split(test_string, ';', '.', utils::STRIP_SPACES);
-		std::map<std::string, std::string> expect = {
-			{"a = b:2,, c = d:", "9, e = f:5"},
-			{"", ""},
-			{"x = r:12, y = b:9", "2,, z = g:45"}
-		};
+		std::map<std::string, std::string> expect
+			= {{"a = b:2,, c = d:", "9, e = f:5"}, {"", ""}, {"x = r:12, y = b:9", "2,, z = g:45"}};
 		BOOST_CHECK_EQUAL_COLLECTIONS(split.begin(), split.end(), expect.begin(), expect.end());
 	}
 
@@ -329,16 +318,13 @@ BOOST_AUTO_TEST_CASE( utils_map_split_test )
 	}
 	{
 		auto split = utils::map_split(test_string, ';', '.', 0);
-		std::map<std::string, std::string> expect = {
-			{"a = b:2,, c = d:", "9, e = f:5"},
-			{"", ""},
-			{" x = r:12, y = b:9", "2,, z = g:45"}
-		};
+		std::map<std::string, std::string> expect
+			= {{"a = b:2,, c = d:", "9, e = f:5"}, {"", ""}, {" x = r:12, y = b:9", "2,, z = g:45"}};
 		BOOST_CHECK_EQUAL_COLLECTIONS(split.begin(), split.end(), expect.begin(), expect.end());
 	}
 }
 
-BOOST_AUTO_TEST_CASE( utils_parenthetical_split_test )
+BOOST_AUTO_TEST_CASE(utils_parenthetical_split_test)
 {
 	{
 		auto split = utils::parenthetical_split("a ( b ) c { d } e ( f { g } ) h", 0, "({", ")}");
@@ -362,17 +348,20 @@ BOOST_AUTO_TEST_CASE( utils_parenthetical_split_test )
 		BOOST_CHECK_EQUAL_COLLECTIONS(split.begin(), split.end(), expect.begin(), expect.end());
 	}
 	{
-		auto split = utils::parenthetical_split("a, (b, c), {d, e},, f(g,g), h{i,i}", ',', "({", ")}", utils::REMOVE_EMPTY | utils::STRIP_SPACES);
+		auto split = utils::parenthetical_split(
+			"a, (b, c), {d, e},, f(g,g), h{i,i}", ',', "({", ")}", utils::REMOVE_EMPTY | utils::STRIP_SPACES);
 		std::array expect = {"a", "(b, c)", "{d, e}", "f(g,g)", "h{i,i}"};
 		BOOST_CHECK_EQUAL_COLLECTIONS(split.begin(), split.end(), expect.begin(), expect.end());
 	}
 	{
-		auto split = utils::parenthetical_split("a, (b, c), {d, e},, f(g,g), h{i,i}", ',', "({", ")}", utils::REMOVE_EMPTY);
+		auto split
+			= utils::parenthetical_split("a, (b, c), {d, e},, f(g,g), h{i,i}", ',', "({", ")}", utils::REMOVE_EMPTY);
 		std::array expect = {"a", " (b, c)", " {d, e}", " f(g,g)", " h{i,i}"};
 		BOOST_CHECK_EQUAL_COLLECTIONS(split.begin(), split.end(), expect.begin(), expect.end());
 	}
 	{
-		auto split = utils::parenthetical_split("a, (b, c), {d, e},, f(g,g), h{i,i}", ',', "({", ")}", utils::STRIP_SPACES);
+		auto split
+			= utils::parenthetical_split("a, (b, c), {d, e},, f(g,g), h{i,i}", ',', "({", ")}", utils::STRIP_SPACES);
 		std::array expect = {"a", "(b, c)", "{d, e}", "", "f(g,g)", "h{i,i}"};
 		BOOST_CHECK_EQUAL_COLLECTIONS(split.begin(), split.end(), expect.begin(), expect.end());
 	}
@@ -383,7 +372,7 @@ BOOST_AUTO_TEST_CASE( utils_parenthetical_split_test )
 	}
 }
 
-BOOST_AUTO_TEST_CASE( utils_square_parenthetical_split )
+BOOST_AUTO_TEST_CASE(utils_square_parenthetical_split)
 {
 	{
 		auto split = utils::square_parenthetical_split(" a ,, b ,, c ");
@@ -391,7 +380,8 @@ BOOST_AUTO_TEST_CASE( utils_square_parenthetical_split )
 		BOOST_CHECK_EQUAL_COLLECTIONS(split.begin(), split.end(), expect.begin(), expect.end());
 	}
 	{
-		auto split = utils::square_parenthetical_split(" a ,, b ,, c ", ',', "([", ")]", utils::REMOVE_EMPTY | utils::STRIP_SPACES);
+		auto split = utils::square_parenthetical_split(
+			" a ,, b ,, c ", ',', "([", ")]", utils::REMOVE_EMPTY | utils::STRIP_SPACES);
 		std::array expect = {"a", "b", "c"};
 		BOOST_CHECK_EQUAL_COLLECTIONS(split.begin(), split.end(), expect.begin(), expect.end());
 	}
@@ -482,26 +472,26 @@ BOOST_AUTO_TEST_CASE( utils_square_parenthetical_split )
 	}
 }
 
-BOOST_AUTO_TEST_CASE( utils_unicode_test )
+BOOST_AUTO_TEST_CASE(utils_unicode_test)
 {
 	std::string unicode = "ünicod€ check";
-	BOOST_CHECK( utf8::size(unicode) == 13 );
+	BOOST_CHECK(utf8::size(unicode) == 13);
 
-	int euro = utf8::index(unicode,6);
-	BOOST_CHECK( unicode.substr(euro,utf8::index(unicode,7)-euro) == "€" );
+	int euro = utf8::index(unicode, 6);
+	BOOST_CHECK(unicode.substr(euro, utf8::index(unicode, 7) - euro) == "€");
 
-	BOOST_CHECK( utf8::truncate(unicode,3) == "üni");
+	BOOST_CHECK(utf8::truncate(unicode, 3) == "üni");
 
 	std::string apple_u8("apple");
 	std::u32string apple_u4 = unicode_cast<std::u32string>(apple_u8);
 	std::u16string apple_u16 = unicode_cast<std::u16string>(apple_u4);
 
-	BOOST_CHECK( apple_u4.size() == 5 );
-	BOOST_CHECK_EQUAL( apple_u8, unicode_cast<std::string>(apple_u4) );
-	BOOST_CHECK_EQUAL( apple_u8, unicode_cast<std::string>(apple_u16) );
-	BOOST_CHECK( apple_u4 == unicode_cast<std::u32string>(apple_u16) );
-	BOOST_CHECK( apple_u16 == unicode_cast<std::u16string>(apple_u4) );
-	BOOST_CHECK_EQUAL( apple_u8.size(), apple_u16.size() );
+	BOOST_CHECK(apple_u4.size() == 5);
+	BOOST_CHECK_EQUAL(apple_u8, unicode_cast<std::string>(apple_u4));
+	BOOST_CHECK_EQUAL(apple_u8, unicode_cast<std::string>(apple_u16));
+	BOOST_CHECK(apple_u4 == unicode_cast<std::u32string>(apple_u16));
+	BOOST_CHECK(apple_u16 == unicode_cast<std::u16string>(apple_u4));
+	BOOST_CHECK_EQUAL(apple_u8.size(), apple_u16.size());
 
 	std::u32string water_u4;
 	water_u4.push_back(0x6C34);
@@ -531,15 +521,15 @@ BOOST_AUTO_TEST_CASE( utils_unicode_test )
 	BOOST_CHECK(nonbmp_u4 == unicode_cast<std::u32string>(nonbmp_u16));
 }
 
-BOOST_AUTO_TEST_CASE( test_lowercase )
+BOOST_AUTO_TEST_CASE(test_lowercase)
 {
-	BOOST_CHECK_EQUAL ( utf8::lowercase("FOO") , "foo" );
-	BOOST_CHECK_EQUAL ( utf8::lowercase("foo") , "foo" );
-	BOOST_CHECK_EQUAL ( utf8::lowercase("FoO") , "foo" );
-	BOOST_CHECK_EQUAL ( utf8::lowercase("fO0") , "fo0" );
+	BOOST_CHECK_EQUAL(utf8::lowercase("FOO"), "foo");
+	BOOST_CHECK_EQUAL(utf8::lowercase("foo"), "foo");
+	BOOST_CHECK_EQUAL(utf8::lowercase("FoO"), "foo");
+	BOOST_CHECK_EQUAL(utf8::lowercase("fO0"), "fo0");
 }
 
-BOOST_AUTO_TEST_CASE( test_wildcard_string_match )
+BOOST_AUTO_TEST_CASE(test_wildcard_string_match)
 {
 	const std::string str = "foo bar baz";
 
@@ -585,7 +575,7 @@ BOOST_AUTO_TEST_CASE( test_wildcard_string_match )
 	BOOST_CHECK(!utils::wildcard_string_match("", "???"));
 }
 
-BOOST_AUTO_TEST_CASE( test_base64_encodings )
+BOOST_AUTO_TEST_CASE(test_base64_encodings)
 {
 	const std::vector<uint8_t> empty;
 	const std::string empty_b64;

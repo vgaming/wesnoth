@@ -21,9 +21,9 @@
 #include "game_data.hpp"
 
 #include "log.hpp" //LOG_STREAM
-#include "variable.hpp" //scoped_wml_variable
 #include "serialization/string_utils.hpp"
 #include "utils/ranges.hpp"
+#include "variable.hpp" //scoped_wml_variable
 
 static lg::log_domain log_engine("engine");
 #define ERR_NG LOG_STREAM(err, log_engine)
@@ -60,26 +60,23 @@ game_data::game_data(const game_data& data)
 	, end_turn_forced_(data.end_turn_forced_)
 	, next_scenario_(data.next_scenario_)
 {
-	//TODO: is there a reason why this cctor is not "=default" ? (or whether it is used in the first place)
+	// TODO: is there a reason why this cctor is not "=default" ? (or whether it is used in the first place)
 }
-//throws
-config::attribute_value &game_data::get_variable(const std::string& key)
+// throws
+config::attribute_value& game_data::get_variable(const std::string& key)
 {
 	return get_variable_access_write(key).as_scalar();
 }
 
-config::attribute_value game_data::get_variable_const(const std::string &key) const
+config::attribute_value game_data::get_variable_const(const std::string& key) const
 {
-	try
-	{
+	try {
 		return get_variable_access_read(key).as_scalar();
-	}
-	catch(const invalid_variablename_exception&)
-	{
+	} catch(const invalid_variablename_exception&) {
 		return config::attribute_value();
 	}
 }
-//throws
+// throws
 config& game_data::get_variable_cfg(const std::string& key)
 {
 	return get_variable_access_write(key).as_container();
@@ -87,43 +84,34 @@ config& game_data::get_variable_cfg(const std::string& key)
 
 void game_data::set_variable(const std::string& key, const t_string& value)
 {
-	try
-	{
+	try {
 		get_variable(key) = value;
-	}
-	catch(const invalid_variablename_exception&)
-	{
+	} catch(const invalid_variablename_exception&) {
 		ERR_NG << "variable " << key << "cannot be set to " << value;
 	}
 }
-//throws
+// throws
 config& game_data::add_variable_cfg(const std::string& key, const config& value)
 {
-	std::vector<config> temp {value};
+	std::vector<config> temp{value};
 	return get_variable_access_write(key).append_array(temp).front();
 }
 
 void game_data::clear_variable_cfg(const std::string& varname)
 {
-	try
-	{
+	try {
 		get_variable_access_throw(varname).clear(true);
-	}
-	catch(const invalid_variablename_exception&)
-	{
-		//variable doesn't exist, nothing to delete
+	} catch(const invalid_variablename_exception&) {
+		// variable doesn't exist, nothing to delete
 	}
 }
 
 void game_data::clear_variable(const std::string& varname)
 {
-	try
-	{
+	try {
 		get_variable_access_throw(varname).clear(false);
-	}
-	catch(const invalid_variablename_exception&)
-	{
-		//variable doesn't exist, nothing to delete
+	} catch(const invalid_variablename_exception&) {
+		// variable doesn't exist, nothing to delete
 	}
 }
 
@@ -143,29 +131,29 @@ void game_data::write_snapshot(config& cfg) const
 	cfg["random_calls"] = rng_.get_random_calls();
 
 	cfg.add_child("variables", variables_);
-
 }
 
-namespace {
-	bool recursive_activation = false;
+namespace
+{
+bool recursive_activation = false;
 
 } // end anonymous namespace
 
 void game_data::activate_scope_variable(std::string var_name) const
 {
-	if (recursive_activation) {
+	if(recursive_activation) {
 		return;
 	}
 
-	const std::string::iterator itor = std::find(var_name.begin(),var_name.end(),'.');
+	const std::string::iterator itor = std::find(var_name.begin(), var_name.end(), '.');
 	if(itor != var_name.end()) {
 		var_name.erase(itor, var_name.end());
 	}
 
-	for (scoped_wml_variable* v : scoped_variables | utils::views::reverse) {
-		if (v->name() == var_name) {
+	for(scoped_wml_variable* v : scoped_variables | utils::views::reverse) {
+		if(v->name() == var_name) {
 			recursive_activation = true;
-			if (!v->activated()) {
+			if(!v->activated()) {
 				v->activate();
 			}
 			recursive_activation = false;
@@ -188,7 +176,6 @@ game_data::PHASE game_data::read_phase(const config& cfg)
 	return game_data::TURN_PLAYING;
 }
 
-
 bool game_data::has_current_player() const
 {
 	return phase() == TURN_STARTING || phase() == TURN_PLAYING || phase() == TURN_ENDED;
@@ -206,5 +193,6 @@ bool game_data::is_after_start() const
 
 void game_data::write_phase(config& cfg, game_data::PHASE phase)
 {
-	cfg["init_side_done"] = !(phase == INITIAL || phase == PRELOAD || phase == PRESTART || phase == TURN_STARTING_WAITING);
+	cfg["init_side_done"]
+		= !(phase == INITIAL || phase == PRELOAD || phase == PRESTART || phase == TURN_STARTING_WAITING);
 }

@@ -27,10 +27,10 @@ namespace gui2::dialogs
 REGISTER_DIALOG(simple_item_selector)
 
 simple_item_selector::simple_item_selector(const std::string& title,
-											 const std::string& message,
-											 const list_type& items,
-											 bool title_uses_markup,
-											 bool message_uses_markup)
+	const std::string& message,
+	const list_type& items,
+	bool title_uses_markup,
+	bool message_uses_markup)
 	: modal_dialog(window_id())
 	, index_(-1)
 	, single_button_(false)
@@ -47,8 +47,7 @@ void simple_item_selector::pre_show()
 	listbox& list = find_widget<listbox>("listbox");
 	keyboard_capture(&list);
 
-	for(const auto & it : items_)
-	{
+	for(const auto& it : items_) {
 		widget_data data;
 		widget_item column;
 
@@ -87,4 +86,4 @@ void simple_item_selector::post_show()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

@@ -19,20 +19,19 @@
  */
 
 #include "units/attack_type.hpp"
-#include "units/unit.hpp"
+#include "deprecation.hpp"
 #include "formula/callable_objects.hpp"
 #include "formula/formula.hpp"
-#include "formula/string_utils.hpp"
 #include "formula/function_gamestate.hpp"
-#include "deprecation.hpp"
+#include "formula/string_utils.hpp"
 #include "game_version.hpp"
+#include "units/unit.hpp"
 
+#include "gettext.hpp"
 #include "lexical_cast.hpp"
 #include "log.hpp"
 #include "serialization/string_utils.hpp"
-#include "gettext.hpp"
 #include "utils/math.hpp"
-
 
 static lg::log_domain log_config("config");
 #define ERR_CF LOG_STREAM(err, log_config)
@@ -71,11 +70,11 @@ attack_type::attack_type(const config& cfg)
 	, specials_(cfg.child_or_empty("specials"))
 	, changed_(true)
 {
-	if (description_.empty())
+	if(description_.empty())
 		description_ = translation::egettext(id_.c_str());
 
-	if(icon_.empty()){
-		if (!id_.empty())
+	if(icon_.empty()) {
+		if(!id_.empty())
 			icon_ = "attacks/" + id_ + ".png";
 		else
 			icon_ = "attacks/blank-attack.png";
@@ -102,7 +101,8 @@ std::string attack_type::accuracy_parry_description() const
  * Returns whether or not *this matches the given @a filter, ignoring the
  * complexities introduced by [and], [or], and [not].
  */
-static bool matches_simple_filter(const attack_type & attack, const config & filter, const std::string& check_if_recursion)
+static bool matches_simple_filter(
+	const attack_type& attack, const config& filter, const std::string& check_if_recursion)
 {
 	const std::set<std::string> filter_range = utils::split_set(filter["range"].str());
 	const std::string& filter_min_range = filter["min_range"];
@@ -125,61 +125,63 @@ static bool matches_simple_filter(const attack_type & attack, const config & fil
 	const std::vector<std::string> filter_special_type_active = utils::split(filter["special_type_active"]);
 	const std::string filter_formula = filter["formula"];
 
-	if (!filter_min_range.empty() && !in_ranges(attack.min_range(), utils::parse_ranges_int(filter_min_range)))
+	if(!filter_min_range.empty() && !in_ranges(attack.min_range(), utils::parse_ranges_int(filter_min_range)))
 		return false;
 
-	if (!filter_max_range.empty() && !in_ranges(attack.max_range(), utils::parse_ranges_int(filter_max_range)))
+	if(!filter_max_range.empty() && !in_ranges(attack.max_range(), utils::parse_ranges_int(filter_max_range)))
 		return false;
 
-	if ( !filter_range.empty() && filter_range.count(attack.range()) == 0 )
+	if(!filter_range.empty() && filter_range.count(attack.range()) == 0)
 		return false;
 
-	if ( !filter_damage.empty() && !in_ranges(attack.damage(), utils::parse_ranges_unsigned(filter_damage)) )
+	if(!filter_damage.empty() && !in_ranges(attack.damage(), utils::parse_ranges_unsigned(filter_damage)))
 		return false;
 
-	if (!filter_attacks.empty() && !in_ranges(attack.num_attacks(), utils::parse_ranges_unsigned(filter_attacks)))
+	if(!filter_attacks.empty() && !in_ranges(attack.num_attacks(), utils::parse_ranges_unsigned(filter_attacks)))
 		return false;
 
-	if (!filter_accuracy.empty() && !in_ranges(attack.accuracy(), utils::parse_ranges_int(filter_accuracy)))
+	if(!filter_accuracy.empty() && !in_ranges(attack.accuracy(), utils::parse_ranges_int(filter_accuracy)))
 		return false;
 
-	if (!filter_parry.empty() && !in_ranges(attack.parry(), utils::parse_ranges_int(filter_parry)))
+	if(!filter_parry.empty() && !in_ranges(attack.parry(), utils::parse_ranges_int(filter_parry)))
 		return false;
 
-	if (!filter_movement.empty() && !in_ranges(attack.movement_used(), utils::parse_ranges_unsigned(filter_movement)))
+	if(!filter_movement.empty() && !in_ranges(attack.movement_used(), utils::parse_ranges_unsigned(filter_movement)))
 		return false;
 
-	if (!filter_attacks_used.empty() && !in_ranges(attack.attacks_used(), utils::parse_ranges_unsigned(filter_attacks_used)))
+	if(!filter_attacks_used.empty()
+		&& !in_ranges(attack.attacks_used(), utils::parse_ranges_unsigned(filter_attacks_used)))
 		return false;
 
 	if(!filter_alignment.empty() && filter_alignment.count(attack.alignment_str()) == 0)
 		return false;
 
-	if ( !filter_name.empty() && filter_name.count(attack.id()) == 0)
+	if(!filter_name.empty() && filter_name.count(attack.id()) == 0)
 		return false;
 
-	if (!filter_type.empty()){
+	if(!filter_type.empty()) {
 		// Although there's a general guard against infinite recursion, the "damage_type" special
 		// should always use the base type of the weapon. Otherwise it will flip-flop between the
 		// special being active or inactive based on whether ATTACK_RECURSION_LIMIT is even or odd;
 		// without this it will also behave differently when calculating resistance_against.
-		if(check_if_recursion == "damage_type"){
-			if (filter_type.count(attack.type()) == 0){
+		if(check_if_recursion == "damage_type") {
+			if(filter_type.count(attack.type()) == 0) {
 				return false;
 			}
 		} else {
-			//if the type is different from "damage_type" then damage_type() can be called for safe checking.
-			if (filter_type.count(attack.effective_damage_type().first) == 0){
+			// if the type is different from "damage_type" then damage_type() can be called for safe checking.
+			if(filter_type.count(attack.effective_damage_type().first) == 0) {
 				return false;
 			}
 		}
 	}
 
-	if ( !filter_base_type.empty() && filter_base_type.count(attack.type()) == 0 )
+	if(!filter_base_type.empty() && filter_base_type.count(attack.type()) == 0)
 		return false;
 
 	if(!filter_special.empty()) {
-		deprecated_message("special=", DEP_LEVEL::PREEMPTIVE, {1, 17, 0}, "Please use special_id or special_type instead");
+		deprecated_message(
+			"special=", DEP_LEVEL::PREEMPTIVE, {1, 17, 0}, "Please use special_id or special_type instead");
 		bool found = false;
 		for(auto& special : filter_special) {
 			if(attack.has_special(special, true)) {
@@ -205,7 +207,8 @@ static bool matches_simple_filter(const attack_type & attack, const config & fil
 	}
 
 	if(!filter_special_active.empty()) {
-		deprecated_message("special_active=", DEP_LEVEL::PREEMPTIVE, {1, 17, 0}, "Please use special_id_active or special_type_active instead");
+		deprecated_message("special_active=", DEP_LEVEL::PREEMPTIVE, {1, 17, 0},
+			"Please use special_id_active or special_type_active instead");
 		bool found = false;
 		for(auto& special : filter_special_active) {
 			if(attack.has_special(special, false)) {
@@ -254,15 +257,15 @@ static bool matches_simple_filter(const attack_type & attack, const config & fil
 		}
 	}
 
-	//children filter_special are checked later,
-	//but only when the function doesn't return earlier
+	// children filter_special are checked later,
+	// but only when the function doesn't return earlier
 	if(auto sub_filter_special = filter.optional_child("filter_special")) {
 		if(!attack.has_special_or_ability_with_filter(*sub_filter_special)) {
 			return false;
 		}
 	}
 
-	if (!filter_formula.empty()) {
+	if(!filter_formula.empty()) {
 		try {
 			const wfl::attack_type_callable callable(attack);
 			wfl::gamestate_function_symbol_table symbols;
@@ -271,7 +274,8 @@ static bool matches_simple_filter(const attack_type & attack, const config & fil
 				return false;
 			}
 		} catch(const wfl::formula_error& e) {
-			lg::log_to_chat() << "Formula error in weapon filter: " << e.type << " at " << e.filename << ':' << e.line << ")\n";
+			lg::log_to_chat() << "Formula error in weapon filter: " << e.type << " at " << e.filename << ':' << e.line
+							  << ")\n";
 			ERR_WML << "Formula error in weapon filter: " << e.type << " at " << e.filename << ':' << e.line << ")";
 			// Formulae with syntax errors match nothing
 			return false;
@@ -291,18 +295,17 @@ bool attack_type::matches_filter(const config& filter, const std::string& check_
 	bool matches = matches_simple_filter(*this, filter, check_if_recursion);
 
 	// Handle [and], [or], and [not] with in-order precedence
-	for(const auto [key, condition_cfg] : filter.all_children_view() )
-	{
+	for(const auto [key, condition_cfg] : filter.all_children_view()) {
 		// Handle [and]
-		if ( key == "and" )
+		if(key == "and")
 			matches = matches && matches_filter(condition_cfg, check_if_recursion);
 
 		// Handle [or]
-		else if ( key == "or" )
+		else if(key == "or")
 			matches = matches || matches_filter(condition_cfg, check_if_recursion);
 
 		// Handle [not]
-		else if ( key == "not" )
+		else if(key == "not")
 			matches = matches && !matches_filter(condition_cfg, check_if_recursion);
 	}
 
@@ -312,7 +315,7 @@ bool attack_type::matches_filter(const config& filter, const std::string& check_
 void attack_type::remove_special_by_filter(const config& filter)
 {
 	config::all_children_iterator i = specials_.ordered_begin();
-	while (i != specials_.ordered_end()) {
+	while(i != specials_.ordered_end()) {
 		if(special_matches_filter(i->cfg, i->key, filter)) {
 			i = specials_.erase(i);
 		} else {
@@ -329,7 +332,7 @@ void attack_type::remove_special_by_filter(const config& filter)
  */
 bool attack_type::apply_modification(const config& cfg)
 {
-	if( !matches_filter(cfg) )
+	if(!matches_filter(cfg))
 		return false;
 
 	set_changed(true);
@@ -391,9 +394,8 @@ bool attack_type::apply_modification(const config& cfg)
 		const std::vector<std::string>& dsl = utils::split(del_specials);
 		config new_specials;
 		for(const auto [key, cfg] : specials_.all_children_view()) {
-			std::vector<std::string>::const_iterator found_id =
-				std::find(dsl.begin(), dsl.end(), cfg["id"].str());
-			if (found_id == dsl.end()) {
+			std::vector<std::string>::const_iterator found_id = std::find(dsl.begin(), dsl.end(), cfg["id"].str());
+			if(found_id == dsl.end()) {
 				new_specials.add_child(key, cfg);
 			}
 		}
@@ -401,10 +403,11 @@ bool attack_type::apply_modification(const config& cfg)
 	}
 
 	if(set_specials) {
-		const std::string &mode = set_specials["mode"];
-		if(mode.empty()){
+		const std::string& mode = set_specials["mode"];
+		if(mode.empty()) {
 			deprecated_message("[set_specials]mode=<unset>", DEP_LEVEL::INDEFINITE, "",
-				"The mode defaults to 'replace', but should often be 'append' instead. The default may change in a future version, or the attribute may become mandatory.");
+				"The mode defaults to 'replace', but should often be 'append' instead. The default may change in a "
+				"future version, or the attribute may become mandatory.");
 			// fall through to mode != "append"
 		}
 		if(mode != "append") {
@@ -437,7 +440,7 @@ bool attack_type::apply_modification(const config& cfg)
 
 	if(set_damage.empty() == false) {
 		damage_ = std::stoi(set_damage);
-		if (damage_ < 0) {
+		if(damage_ < 0) {
 			damage_ = 0;
 		}
 	}
@@ -451,10 +454,9 @@ bool attack_type::apply_modification(const config& cfg)
 
 	if(set_attacks.empty() == false) {
 		num_attacks_ = std::stoi(set_attacks);
-		if (num_attacks_ < 0) {
+		if(num_attacks_ < 0) {
 			num_attacks_ = 0;
 		}
-
 	}
 
 	if(increase_attacks.empty() == false) {
@@ -494,11 +496,11 @@ bool attack_type::apply_modification(const config& cfg)
 	}
 
 	if(set_attack_weight.empty() == false) {
-		attack_weight_ = lexical_cast_default<double>(set_attack_weight,1.0);
+		attack_weight_ = lexical_cast_default<double>(set_attack_weight, 1.0);
 	}
 
 	if(set_defense_weight.empty() == false) {
-		defense_weight_ = lexical_cast_default<double>(set_defense_weight,1.0);
+		defense_weight_ = lexical_cast_default<double>(set_defense_weight, 1.0);
 	}
 
 	return true;
@@ -515,9 +517,9 @@ bool attack_type::apply_modification(const config& cfg)
  *
  * @returns whether or not @c this matched the @a cfg as a filter.
  */
-bool attack_type::describe_modification(const config& cfg,std::string* description)
+bool attack_type::describe_modification(const config& cfg, std::string* description)
 {
-	if( !matches_filter(cfg) )
+	if(!matches_filter(cfg))
 		return false;
 
 	// Did the caller want the description?
@@ -543,130 +545,133 @@ bool attack_type::describe_modification(const config& cfg,std::string* descripti
 
 		if(!set_min_range.empty()) {
 			desc.emplace_back(VGETTEXT(
-				// TRANSLATORS: Current value for WML code set_min_range, documented in https://wiki.wesnoth.org/EffectWML
-				"$number min range",
-				{{"number", set_min_range}}));
+				// TRANSLATORS: Current value for WML code set_min_range, documented in
+				// https://wiki.wesnoth.org/EffectWML
+				"$number min range", {{"number", set_min_range}}));
 		}
 
 		if(!increase_min_range.empty()) {
 			desc.emplace_back(VGETTEXT(
-				// TRANSLATORS: Current value for WML code increase_min_range, documented in https://wiki.wesnoth.org/EffectWML
+				// TRANSLATORS: Current value for WML code increase_min_range, documented in
+				// https://wiki.wesnoth.org/EffectWML
 				"<span color=\"$color\">$number_or_percent</span> min range",
-				{{"number_or_percent", utils::print_modifier(increase_min_range)}, {"color", increase_min_range[0] == '-' ? "#f00" : "#0f0"}}));
+				{{"number_or_percent", utils::print_modifier(increase_min_range)},
+					{"color", increase_min_range[0] == '-' ? "#f00" : "#0f0"}}));
 		}
 
 		if(!set_max_range.empty()) {
 			desc.emplace_back(VGETTEXT(
-				// TRANSLATORS: Current value for WML code set_max_range, documented in https://wiki.wesnoth.org/EffectWML
-				"$number max range",
-				{{"number", set_max_range}}));
+				// TRANSLATORS: Current value for WML code set_max_range, documented in
+				// https://wiki.wesnoth.org/EffectWML
+				"$number max range", {{"number", set_max_range}}));
 		}
 
 		if(!increase_max_range.empty()) {
 			desc.emplace_back(VGETTEXT(
-				// TRANSLATORS: Current value for WML code increase_max_range, documented in https://wiki.wesnoth.org/EffectWML
+				// TRANSLATORS: Current value for WML code increase_max_range, documented in
+				// https://wiki.wesnoth.org/EffectWML
 				"<span color=\"$color\">$number_or_percent</span> max range",
-				{{"number_or_percent", utils::print_modifier(increase_max_range)}, {"color", increase_max_range[0] == '-' ? "#f00" : "#0f0"}}));
+				{{"number_or_percent", utils::print_modifier(increase_max_range)},
+					{"color", increase_max_range[0] == '-' ? "#f00" : "#0f0"}}));
 		}
 
 		if(!increase_damage.empty()) {
 			desc.emplace_back(VNGETTEXT(
-				// TRANSLATORS: Current value for WML code increase_damage, documented in https://wiki.wesnoth.org/EffectWML
+				// TRANSLATORS: Current value for WML code increase_damage, documented in
+				// https://wiki.wesnoth.org/EffectWML
 				"<span color=\"$color\">$number_or_percent</span> damage",
-				"<span color=\"$color\">$number_or_percent</span> damage",
-				std::stoi(increase_damage),
-				{{"number_or_percent", utils::print_modifier(increase_damage)}, {"color", increase_damage[0] == '-' ? "#f00" : "#0f0"}}));
+				"<span color=\"$color\">$number_or_percent</span> damage", std::stoi(increase_damage),
+				{{"number_or_percent", utils::print_modifier(increase_damage)},
+					{"color", increase_damage[0] == '-' ? "#f00" : "#0f0"}}));
 		}
 
 		if(!set_damage.empty()) {
 			// TRANSLATORS: Current value for WML code set_damage, documented in https://wiki.wesnoth.org/EffectWML
-			desc.emplace_back(VNGETTEXT(
-				"$number damage",
-				"$number damage",
-				std::stoi(set_damage),
-				{{"number", set_damage}}));
+			desc.emplace_back(
+				VNGETTEXT("$number damage", "$number damage", std::stoi(set_damage), {{"number", set_damage}}));
 		}
 
 		if(!increase_attacks.empty()) {
 			desc.emplace_back(VNGETTEXT(
-				// TRANSLATORS: Current value for WML code increase_attacks, documented in https://wiki.wesnoth.org/EffectWML
+				// TRANSLATORS: Current value for WML code increase_attacks, documented in
+				// https://wiki.wesnoth.org/EffectWML
 				"<span color=\"$color\">$number_or_percent</span> strike",
-				"<span color=\"$color\">$number_or_percent</span> strikes",
-				std::stoi(increase_attacks),
-				{{"number_or_percent", utils::print_modifier(increase_attacks)}, {"color", increase_attacks[0] == '-' ? "#f00" : "#0f0"}}));
+				"<span color=\"$color\">$number_or_percent</span> strikes", std::stoi(increase_attacks),
+				{{"number_or_percent", utils::print_modifier(increase_attacks)},
+					{"color", increase_attacks[0] == '-' ? "#f00" : "#0f0"}}));
 		}
 
 		if(!set_attacks.empty()) {
 			desc.emplace_back(VNGETTEXT(
 				// TRANSLATORS: Current value for WML code set_attacks, documented in https://wiki.wesnoth.org/EffectWML
-				"$number strike",
-				"$number strikes",
-				std::stoi(set_attacks),
-				{{"number", set_attacks}}));
+				"$number strike", "$number strikes", std::stoi(set_attacks), {{"number", set_attacks}}));
 		}
 
 		if(!set_accuracy.empty()) {
 			desc.emplace_back(VGETTEXT(
-				// TRANSLATORS: Current value for WML code set_accuracy, documented in https://wiki.wesnoth.org/EffectWML
-				"$number| accuracy",
-				{{"number", set_accuracy}}));
+				// TRANSLATORS: Current value for WML code set_accuracy, documented in
+				// https://wiki.wesnoth.org/EffectWML
+				"$number| accuracy", {{"number", set_accuracy}}));
 		}
 
 		if(!increase_accuracy.empty()) {
 			desc.emplace_back(VGETTEXT(
-				// TRANSLATORS: Current value for WML code increase_accuracy, documented in https://wiki.wesnoth.org/EffectWML
+				// TRANSLATORS: Current value for WML code increase_accuracy, documented in
+				// https://wiki.wesnoth.org/EffectWML
 				"<span color=\"$color\">$number_or_percent|%</span> accuracy",
-				{{"number_or_percent", utils::print_modifier(increase_accuracy)}, {"color", increase_accuracy[0] == '-' ? "#f00" : "#0f0"}}));
+				{{"number_or_percent", utils::print_modifier(increase_accuracy)},
+					{"color", increase_accuracy[0] == '-' ? "#f00" : "#0f0"}}));
 		}
 
 		if(!set_parry.empty()) {
 			desc.emplace_back(VGETTEXT(
 				// TRANSLATORS: Current value for WML code set_parry, documented in https://wiki.wesnoth.org/EffectWML
-				"$number parry",
-				{{"number", set_parry}}));
+				"$number parry", {{"number", set_parry}}));
 		}
 
 		if(!increase_parry.empty()) {
 			desc.emplace_back(VGETTEXT(
-				// TRANSLATORS: Current value for WML code increase_parry, documented in https://wiki.wesnoth.org/EffectWML
+				// TRANSLATORS: Current value for WML code increase_parry, documented in
+				// https://wiki.wesnoth.org/EffectWML
 				"<span color=\"$color\">$number_or_percent</span> parry",
-				{{"number_or_percent", utils::print_modifier(increase_parry)}, {"color", increase_parry[0] == '-' ? "#f00" : "#0f0"}}));
+				{{"number_or_percent", utils::print_modifier(increase_parry)},
+					{"color", increase_parry[0] == '-' ? "#f00" : "#0f0"}}));
 		}
 
 		if(!set_movement.empty()) {
 			desc.emplace_back(VNGETTEXT(
-				// TRANSLATORS: Current value for WML code set_movement_used, documented in https://wiki.wesnoth.org/EffectWML
-				"$number movement point",
-				"$number movement points",
-				std::stoi(set_movement),
+				// TRANSLATORS: Current value for WML code set_movement_used, documented in
+				// https://wiki.wesnoth.org/EffectWML
+				"$number movement point", "$number movement points", std::stoi(set_movement),
 				{{"number", set_movement}}));
 		}
 
 		if(!increase_movement.empty()) {
 			desc.emplace_back(VNGETTEXT(
-				// TRANSLATORS: Current value for WML code increase_movement_used, documented in https://wiki.wesnoth.org/EffectWML
+				// TRANSLATORS: Current value for WML code increase_movement_used, documented in
+				// https://wiki.wesnoth.org/EffectWML
 				"<span color=\"$color\">$number_or_percent</span> movement point",
-				"<span color=\"$color\">$number_or_percent</span> movement points",
-				std::stoi(increase_movement),
-				{{"number_or_percent", utils::print_modifier(increase_movement)}, {"color", increase_movement[0] == '-' ? "#f00" : "#0f0"}}));
+				"<span color=\"$color\">$number_or_percent</span> movement points", std::stoi(increase_movement),
+				{{"number_or_percent", utils::print_modifier(increase_movement)},
+					{"color", increase_movement[0] == '-' ? "#f00" : "#0f0"}}));
 		}
 
 		if(!set_attacks_used.empty()) {
 			desc.emplace_back(VNGETTEXT(
-				// TRANSLATORS: Current value for WML code set_attacks_used, documented in https://wiki.wesnoth.org/EffectWML
-				"$number attack used",
-				"$number attacks used",
-				std::stoi(set_attacks_used),
+				// TRANSLATORS: Current value for WML code set_attacks_used, documented in
+				// https://wiki.wesnoth.org/EffectWML
+				"$number attack used", "$number attacks used", std::stoi(set_attacks_used),
 				{{"number", set_attacks_used}}));
 		}
 
 		if(!increase_attacks_used.empty()) {
 			desc.emplace_back(VNGETTEXT(
-				// TRANSLATORS: Current value for WML code increase_attacks_used, documented in https://wiki.wesnoth.org/EffectWML
+				// TRANSLATORS: Current value for WML code increase_attacks_used, documented in
+				// https://wiki.wesnoth.org/EffectWML
 				"<span color=\"$color\">$number_or_percent</span> attack used",
-				"<span color=\"$color\">$number_or_percent</span> attacks used",
-				std::stoi(increase_attacks_used),
-				{{"number_or_percent", utils::print_modifier(increase_attacks_used)}, {"color", increase_attacks_used[0] == '-' ? "#f00" : "#0f0"}}));
+				"<span color=\"$color\">$number_or_percent</span> attacks used", std::stoi(increase_attacks_used),
+				{{"number_or_percent", utils::print_modifier(increase_attacks_used)},
+					{"color", increase_attacks_used[0] == '-' ? "#f00" : "#0f0"}}));
 		}
 
 		*description = utils::format_conjunct_list("", desc);
@@ -696,7 +701,8 @@ attack_type::recursion_guard::recursion_guard(attack_type::recursion_guard&& oth
 	std::swap(parent, other.parent);
 }
 
-attack_type::recursion_guard::operator bool() const {
+attack_type::recursion_guard::operator bool() const
+{
 	return bool(parent);
 }
 

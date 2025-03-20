@@ -13,17 +13,16 @@
 	See the COPYING file for more details.
 */
 
-
 #include "gui/dialogs/unit_attack.hpp"
 
 #include "color.hpp"
+#include "game_config.hpp"
+#include "gettext.hpp"
 #include "gui/dialogs/attack_predictions.hpp"
 #include "gui/widgets/button.hpp"
 #include "gui/widgets/listbox.hpp"
 #include "gui/widgets/unit_preview_pane.hpp"
 #include "gui/widgets/window.hpp"
-#include "game_config.hpp"
-#include "gettext.hpp"
 #include "language.hpp"
 #include "serialization/markup.hpp"
 #include "units/unit.hpp"
@@ -36,11 +35,11 @@ namespace gui2::dialogs
 REGISTER_DIALOG(unit_attack)
 
 unit_attack::unit_attack(const unit_map::iterator& attacker_itor,
-						   const unit_map::iterator& defender_itor,
-						   std::vector<battle_context>&& weapons,
-						   const int best_weapon,
-						   std::vector<gui2::widget_data>& bc_widget_data_vector,
-						   const int leadership_bonus)
+	const unit_map::iterator& defender_itor,
+	std::vector<battle_context>&& weapons,
+	const int best_weapon,
+	std::vector<gui2::widget_data>& bc_widget_data_vector,
+	const int leadership_bonus)
 	: modal_dialog(window_id())
 	, selected_weapon_(-1)
 	, attacker_itor_(attacker_itor)
@@ -55,20 +54,18 @@ unit_attack::unit_attack(const unit_map::iterator& attacker_itor,
 void unit_attack::damage_calc_callback()
 {
 	const std::size_t index = find_widget<listbox>("weapon_list").get_selected_row();
-	attack_predictions::display(weapons_[index], attacker_itor_.get_shared_ptr(), defender_itor_.get_shared_ptr(), leadership_bonus_);
+	attack_predictions::display(
+		weapons_[index], attacker_itor_.get_shared_ptr(), defender_itor_.get_shared_ptr(), leadership_bonus_);
 }
 
 void unit_attack::pre_show()
 {
 	connect_signal_mouse_left_click(
-			find_widget<button>("damage_calculation"),
-			std::bind(&unit_attack::damage_calc_callback, this));
+		find_widget<button>("damage_calculation"), std::bind(&unit_attack::damage_calc_callback, this));
 
-	find_widget<unit_preview_pane>("attacker_pane")
-		.set_display_data(*attacker_itor_);
+	find_widget<unit_preview_pane>("attacker_pane").set_display_data(*attacker_itor_);
 
-	find_widget<unit_preview_pane>("defender_pane")
-		.set_display_data(*defender_itor_);
+	find_widget<unit_preview_pane>("defender_pane").set_display_data(*defender_itor_);
 
 	selected_weapon_ = -1;
 
@@ -93,5 +90,4 @@ void unit_attack::post_show()
 	}
 }
 
-
-} // namespace dialogs
+} // namespace gui2::dialogs

@@ -43,7 +43,8 @@ namespace gui2::event
 class resource_locker
 {
 public:
-	resource_locker(bool& locked) : locked_(locked)
+	resource_locker(bool& locked)
+		: locked_(locked)
 	{
 		assert(!locked_);
 		locked_ = true;
@@ -58,7 +59,6 @@ public:
 private:
 	bool& locked_;
 };
-
 
 /***** ***** ***** ***** mouse_motion ***** ***** ***** ***** *****/
 
@@ -75,60 +75,29 @@ mouse_motion::mouse_motion(widget& owner, const dispatcher::queue_position queue
 	, signal_handler_sdl_mouse_motion_entered_(false)
 {
 	owner.connect_signal<event::SDL_MOUSE_MOTION>(
-		std::bind(&mouse_motion::signal_handler_sdl_mouse_motion,
-			this,
-			std::placeholders::_2,
-			std::placeholders::_3,
+		std::bind(&mouse_motion::signal_handler_sdl_mouse_motion, this, std::placeholders::_2, std::placeholders::_3,
 			std::placeholders::_5),
 		queue_position);
 
 	owner.connect_signal<event::SDL_TOUCH_MOTION>(
-		std::bind(&mouse_motion::signal_handler_sdl_touch_motion,
-			this,
-			std::placeholders::_2,
-			std::placeholders::_3,
-			std::placeholders::_5,
-			std::placeholders::_6),
+		std::bind(&mouse_motion::signal_handler_sdl_touch_motion, this, std::placeholders::_2, std::placeholders::_3,
+			std::placeholders::_5, std::placeholders::_6),
 		queue_position);
 
-	owner_.connect_signal<event::SDL_WHEEL_UP>(
-		std::bind(&mouse_motion::signal_handler_sdl_wheel,
-			this,
-			std::placeholders::_2,
-			std::placeholders::_3,
-			std::placeholders::_5
-		));
+	owner_.connect_signal<event::SDL_WHEEL_UP>(std::bind(&mouse_motion::signal_handler_sdl_wheel, this,
+		std::placeholders::_2, std::placeholders::_3, std::placeholders::_5));
 
-	owner_.connect_signal<event::SDL_WHEEL_DOWN>(
-		std::bind(&mouse_motion::signal_handler_sdl_wheel,
-			this,
-			std::placeholders::_2,
-			std::placeholders::_3,
-			std::placeholders::_5
-		));
+	owner_.connect_signal<event::SDL_WHEEL_DOWN>(std::bind(&mouse_motion::signal_handler_sdl_wheel, this,
+		std::placeholders::_2, std::placeholders::_3, std::placeholders::_5));
 
-	owner_.connect_signal<event::SDL_WHEEL_LEFT>(
-		std::bind(&mouse_motion::signal_handler_sdl_wheel,
-			this,
-			std::placeholders::_2,
-			std::placeholders::_3,
-			std::placeholders::_5
-		));
+	owner_.connect_signal<event::SDL_WHEEL_LEFT>(std::bind(&mouse_motion::signal_handler_sdl_wheel, this,
+		std::placeholders::_2, std::placeholders::_3, std::placeholders::_5));
 
-	owner_.connect_signal<event::SDL_WHEEL_RIGHT>(
-		std::bind(&mouse_motion::signal_handler_sdl_wheel,
-			this,
-			std::placeholders::_2,
-			std::placeholders::_3,
-			std::placeholders::_5
-		));
+	owner_.connect_signal<event::SDL_WHEEL_RIGHT>(std::bind(&mouse_motion::signal_handler_sdl_wheel, this,
+		std::placeholders::_2, std::placeholders::_3, std::placeholders::_5));
 
-	owner.connect_signal<event::SHOW_HELPTIP>(
-		std::bind(&mouse_motion::signal_handler_show_helptip,
-			this,
-			std::placeholders::_2,
-			std::placeholders::_3,
-			std::placeholders::_5),
+	owner.connect_signal<event::SHOW_HELPTIP>(std::bind(&mouse_motion::signal_handler_show_helptip, this,
+												  std::placeholders::_2, std::placeholders::_3, std::placeholders::_5),
 		queue_position);
 }
 
@@ -325,8 +294,7 @@ void mouse_motion::start_hover_timer(widget* widget, const point& coordinate)
 		return;
 	}
 
-	DBG_GUI_E << LOG_HEADER << "Start hover timer for widget '" << widget->id()
-			  << "' at address " << widget << ".";
+	DBG_GUI_E << LOG_HEADER << "Start hover timer for widget '" << widget->id() << "' at address " << widget << ".";
 
 	using namespace std::chrono_literals;
 	hover_timer_ = add_timer(50ms, std::bind(&mouse_motion::show_tooltip, this));
@@ -343,9 +311,8 @@ void mouse_motion::stop_hover_timer()
 {
 	if(hover_timer_) {
 		assert(hover_widget_);
-		DBG_GUI_E << LOG_HEADER << "Stop hover timer for widget '"
-				  << hover_widget_->id() << "' at address " << hover_widget_
-				  << ".";
+		DBG_GUI_E << LOG_HEADER << "Stop hover timer for widget '" << hover_widget_->id() << "' at address "
+				  << hover_widget_ << ".";
 
 		if(!remove_timer(hover_timer_)) {
 			ERR_GUI_E << LOG_HEADER << "Failed to remove hover timer.";
@@ -416,18 +383,12 @@ mouse_button<I>::mouse_button(widget& owner, const dispatcher::queue_position qu
 	static_assert(I < mouse_data.size(), "Out-of-bounds mouse_button template index");
 
 	owner_.connect_signal<mouse_data[I].sdl_button_down_event>(
-		std::bind(&mouse_button::signal_handler_sdl_button_down,
-			this,
-			std::placeholders::_2,
-			std::placeholders::_3,
+		std::bind(&mouse_button::signal_handler_sdl_button_down, this, std::placeholders::_2, std::placeholders::_3,
 			std::placeholders::_5),
 		queue_position);
 
 	owner_.connect_signal<mouse_data[I].sdl_button_up_event>(
-		std::bind(&mouse_button::signal_handler_sdl_button_up,
-			this,
-			std::placeholders::_2,
-			std::placeholders::_3,
+		std::bind(&mouse_button::signal_handler_sdl_button_up, this, std::placeholders::_2, std::placeholders::_3,
 			std::placeholders::_5),
 		queue_position);
 }
@@ -494,8 +455,7 @@ void mouse_button<I>::signal_handler_sdl_button_down(
 }
 
 template<std::size_t I>
-void mouse_button<I>::signal_handler_sdl_button_up(
-	const event::ui_event event, bool& handled, const point& coordinate)
+void mouse_button<I>::signal_handler_sdl_button_up(const event::ui_event event, bool& handled, const point& coordinate)
 {
 	if(signal_handler_sdl_button_up_entered_) {
 		return;
@@ -577,7 +537,7 @@ void mouse_button<I>::mouse_button_click(widget* widget)
  * @todo Test whether the state is properly tracked when an input blocker is
  * used.
  */
-distributor::distributor(widget& owner,const dispatcher::queue_position queue_position)
+distributor::distributor(widget& owner, const dispatcher::queue_position queue_position)
 	: mouse_motion(owner, queue_position)
 	, mouse_button_left(owner, queue_position)
 	, mouse_button_middle(owner, queue_position)
@@ -591,72 +551,34 @@ distributor::distributor(widget& owner,const dispatcher::queue_position queue_po
 		}
 	}
 
-	owner_.connect_signal<event::SDL_KEY_DOWN>(
-		std::bind(&distributor::signal_handler_sdl_key_down,
-			this,
-			std::placeholders::_5,
-			std::placeholders::_6,
-			std::placeholders::_7
-		));
+	owner_.connect_signal<event::SDL_KEY_DOWN>(std::bind(&distributor::signal_handler_sdl_key_down, this,
+		std::placeholders::_5, std::placeholders::_6, std::placeholders::_7));
 
-	owner_.connect_signal<event::SDL_TEXT_INPUT>(
-		std::bind(&distributor::signal_handler_sdl_text_input,
-			this,
-			std::placeholders::_5,
-			std::placeholders::_6,
-			std::placeholders::_7
-		));
+	owner_.connect_signal<event::SDL_TEXT_INPUT>(std::bind(&distributor::signal_handler_sdl_text_input, this,
+		std::placeholders::_5, std::placeholders::_6, std::placeholders::_7));
 
-	owner_.connect_signal<event::SDL_TEXT_EDITING>(
-		std::bind(&distributor::signal_handler_sdl_text_editing,
-			this,
-			std::placeholders::_5,
-			std::placeholders::_6,
-			std::placeholders::_7
-		));
+	owner_.connect_signal<event::SDL_TEXT_EDITING>(std::bind(&distributor::signal_handler_sdl_text_editing, this,
+		std::placeholders::_5, std::placeholders::_6, std::placeholders::_7));
 
 	owner_.connect_signal<event::NOTIFY_REMOVAL>(
-		std::bind(&distributor::signal_handler_notify_removal,
-			this,
-			std::placeholders::_1,
-			std::placeholders::_2
-		));
+		std::bind(&distributor::signal_handler_notify_removal, this, std::placeholders::_1, std::placeholders::_2));
 
 	initialize_state();
 }
 
 distributor::~distributor()
 {
-	owner_.disconnect_signal<event::SDL_KEY_DOWN>(
-		std::bind(&distributor::signal_handler_sdl_key_down,
-			this,
-			std::placeholders::_5,
-			std::placeholders::_6,
-			std::placeholders::_7
-		));
+	owner_.disconnect_signal<event::SDL_KEY_DOWN>(std::bind(&distributor::signal_handler_sdl_key_down, this,
+		std::placeholders::_5, std::placeholders::_6, std::placeholders::_7));
 
-	owner_.disconnect_signal<event::SDL_TEXT_INPUT>(
-		std::bind(&distributor::signal_handler_sdl_text_input,
-			this,
-			std::placeholders::_5,
-			std::placeholders::_6,
-			std::placeholders::_7
-		));
+	owner_.disconnect_signal<event::SDL_TEXT_INPUT>(std::bind(&distributor::signal_handler_sdl_text_input, this,
+		std::placeholders::_5, std::placeholders::_6, std::placeholders::_7));
 
-	owner_.disconnect_signal<event::SDL_TEXT_EDITING>(
-		std::bind(&distributor::signal_handler_sdl_text_editing,
-			this,
-			std::placeholders::_5,
-			std::placeholders::_6,
-			std::placeholders::_7
-		));
+	owner_.disconnect_signal<event::SDL_TEXT_EDITING>(std::bind(&distributor::signal_handler_sdl_text_editing, this,
+		std::placeholders::_5, std::placeholders::_6, std::placeholders::_7));
 
 	owner_.disconnect_signal<event::NOTIFY_REMOVAL>(
-		std::bind(&distributor::signal_handler_notify_removal,
-			this,
-			std::placeholders::_1,
-			std::placeholders::_2
-		));
+		std::bind(&distributor::signal_handler_notify_removal, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void distributor::initialize_state()
@@ -693,7 +615,8 @@ void distributor::keyboard_capture(widget* widget)
 void distributor::keyboard_add_to_chain(widget* widget)
 {
 	assert(widget);
-	assert(std::find(keyboard_focus_chain_.begin(), keyboard_focus_chain_.end(), widget) == keyboard_focus_chain_.end());
+	assert(
+		std::find(keyboard_focus_chain_.begin(), keyboard_focus_chain_.end(), widget) == keyboard_focus_chain_.end());
 	keyboard_focus_chain_.push_back(widget);
 }
 
@@ -767,7 +690,8 @@ void distributor::signal_handler_keyboard_internal(event::ui_event evt, P1&& p1,
 	}
 }
 
-void distributor::signal_handler_sdl_key_down(const SDL_Keycode key, const SDL_Keymod modifier, const std::string& unicode)
+void distributor::signal_handler_sdl_key_down(
+	const SDL_Keycode key, const SDL_Keymod modifier, const std::string& unicode)
 {
 	signal_handler_keyboard_internal<signal_keyboard>(event::SDL_KEY_DOWN, key, modifier, unicode);
 }

@@ -17,9 +17,8 @@
 #include "color.hpp"
 #include "sdl/rect.hpp"
 
-const SDL_PixelFormat surface::neutral_pixel_format = []() {
-	return *SDL_CreateRGBSurfaceWithFormat(0, 1, 1, 32, SDL_PIXELFORMAT_ARGB8888)->format;
-}();
+const SDL_PixelFormat surface::neutral_pixel_format
+	= []() { return *SDL_CreateRGBSurfaceWithFormat(0, 1, 1, 32, SDL_PIXELFORMAT_ARGB8888)->format; }();
 
 surface::surface(SDL_Surface* surf)
 	: surface_(surf)
@@ -30,7 +29,7 @@ surface::surface(SDL_Surface* surf)
 surface::surface(int w, int h)
 	: surface_(nullptr)
 {
-	if (w < 0 || h < 0) {
+	if(w < 0 || h < 0) {
 		throw std::invalid_argument("Creating surface with negative dimensions");
 	}
 
@@ -39,10 +38,8 @@ surface::surface(int w, int h)
 
 bool surface::is_neutral() const
 {
-	return surface_
-		&& SDL_ISPIXELFORMAT_INDEXED(surface_->format->format) == SDL_FALSE
-		&&  surface_->format->BytesPerPixel == 4
-		&&  surface_->format->Rmask == SDL_RED_MASK
+	return surface_ && SDL_ISPIXELFORMAT_INDEXED(surface_->format->format) == SDL_FALSE
+		&& surface_->format->BytesPerPixel == 4 && surface_->format->Rmask == SDL_RED_MASK
 		&& (surface_->format->Amask | SDL_ALPHA_MASK) == SDL_ALPHA_MASK;
 }
 
@@ -88,12 +85,9 @@ std::ostream& operator<<(std::ostream& stream, const surface& surf)
 	} else if(!surf->format) {
 		stream << "<invalid surface>";
 	} else {
-		stream << "{ " << surf->w << 'x' << surf->h << '@'
-			   << unsigned(surf->format->BitsPerPixel) << "bpp"
-			   << (surf->format->palette ? " indexed" : "")
-			   << " clip_rect=[" << surf->clip_rect
-			   << "] refcount=" << surf->refcount
-			   << " }";
+		stream << "{ " << surf->w << 'x' << surf->h << '@' << unsigned(surf->format->BitsPerPixel) << "bpp"
+			   << (surf->format->palette ? " indexed" : "") << " clip_rect=[" << surf->clip_rect
+			   << "] refcount=" << surf->refcount << " }";
 	}
 
 	return stream;

@@ -17,15 +17,15 @@
 
 #include "gui/widgets/text_box.hpp"
 
+#include "gettext.hpp"
 #include "gui/core/log.hpp"
 #include "gui/core/register_widget.hpp"
 #include "gui/widgets/settings.hpp"
 #include "gui/widgets/window.hpp"
 #include "preferences/preferences.hpp"
 #include "serialization/unicode.hpp"
-#include <functional>
 #include "wml_exception.hpp"
-#include "gettext.hpp"
+#include <functional>
 
 #define LOG_SCOPE_HEADER get_control_type() + " [" + id() + "] " + __func__
 #define LOG_HEADER LOG_SCOPE_HEADER + ':'
@@ -37,8 +37,7 @@ namespace gui2
 
 REGISTER_WIDGET(text_box)
 
-text_history text_history::get_history(const std::string& id,
-										 const bool enabled)
+text_history text_history::get_history(const std::string& id, const bool enabled)
 {
 	std::vector<std::string>* vec = prefs::get().get_history(id);
 	return text_history(vec, enabled);
@@ -59,7 +58,6 @@ void text_history::push(const std::string& text)
 
 std::string text_history::up(const std::string& text)
 {
-
 	if(!enabled_) {
 		return "";
 	} else if(pos_ == history_->size()) {
@@ -108,14 +106,14 @@ text_box::text_box(const implementation::builder_styled_widget& builder)
 {
 	set_wants_mouse_left_double_click();
 
-	connect_signal<event::MOUSE_MOTION>(std::bind(
-			&text_box::signal_handler_mouse_motion, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_5));
-	connect_signal<event::LEFT_BUTTON_DOWN>(std::bind(
-			&text_box::signal_handler_left_button_down, this, std::placeholders::_2, std::placeholders::_3));
-	connect_signal<event::LEFT_BUTTON_UP>(std::bind(
-			&text_box::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::MOUSE_MOTION>(std::bind(&text_box::signal_handler_mouse_motion, this, std::placeholders::_2,
+		std::placeholders::_3, std::placeholders::_5));
+	connect_signal<event::LEFT_BUTTON_DOWN>(
+		std::bind(&text_box::signal_handler_left_button_down, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::LEFT_BUTTON_UP>(
+		std::bind(&text_box::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
 	connect_signal<event::LEFT_BUTTON_DOUBLE_CLICK>(std::bind(
-			&text_box::signal_handler_left_button_double_click, this, std::placeholders::_2, std::placeholders::_3));
+		&text_box::signal_handler_left_button_double_click, this, std::placeholders::_2, std::placeholders::_3));
 
 	const auto conf = cast_config_to<text_box_definition>();
 	assert(conf);
@@ -194,9 +192,7 @@ void text_box::update_canvas()
 	const int max_width = get_text_maximum_width();
 	const int max_height = get_text_maximum_height();
 
-	for(auto & tmp : get_canvases())
-	{
-
+	for(auto& tmp : get_canvases()) {
 		tmp.set_variable("text", wfl::variant(get_value()));
 		tmp.set_variable("text_x_offset", wfl::variant(text_x_offset_));
 		tmp.set_variable("text_y_offset", wfl::variant(text_y_offset_));
@@ -205,8 +201,7 @@ void text_box::update_canvas()
 
 		tmp.set_variable("editable", wfl::variant(is_editable()));
 
-		tmp.set_variable("cursor_offset",
-						 wfl::variant(get_cursor_position(start + length).x));
+		tmp.set_variable("cursor_offset", wfl::variant(get_cursor_position(start + length).x));
 
 		tmp.set_variable("selection_offset", wfl::variant(start_offset));
 		tmp.set_variable("selection_width", wfl::variant(end_offset - start_offset));
@@ -256,9 +251,8 @@ void text_box::handle_mouse_selection(point mouse, const bool start_selection)
 	mouse.x -= get_x();
 	mouse.y -= get_y();
 	// FIXME we don't test for overflow in width
-	if(mouse.x < static_cast<int>(text_x_offset_)
-	   || mouse.y < static_cast<int>(text_y_offset_)
-	   || mouse.y >= static_cast<int>(text_y_offset_ + text_height_)) {
+	if(mouse.x < static_cast<int>(text_x_offset_) || mouse.y < static_cast<int>(text_y_offset_)
+		|| mouse.y >= static_cast<int>(text_y_offset_ + text_height_)) {
 		return;
 	}
 
@@ -267,7 +261,6 @@ void text_box::handle_mouse_selection(point mouse, const bool start_selection)
 	if(offset < 0) {
 		return;
 	}
-
 
 	set_cursor(offset, !start_selection);
 	update_canvas();
@@ -292,8 +285,7 @@ void text_box::update_offsets()
 
 	// Since this variable doesn't change set it here instead of in
 	// update_canvas().
-	for(auto & tmp : get_canvases())
-	{
+	for(auto& tmp : get_canvases()) {
 		tmp.set_variable("text_font_height", wfl::variant(text_height_));
 	}
 
@@ -345,9 +337,7 @@ void text_box::handle_key_clear_line(SDL_Keymod /*modifier*/, bool& handled)
 	set_value("");
 }
 
-void text_box::signal_handler_mouse_motion(const event::ui_event event,
-											bool& handled,
-											const point& coordinate)
+void text_box::signal_handler_mouse_motion(const event::ui_event event, bool& handled, const point& coordinate)
 {
 	DBG_GUI_E << get_control_type() << "[" << id() << "]: " << event << ".";
 
@@ -358,8 +348,7 @@ void text_box::signal_handler_mouse_motion(const event::ui_event event,
 	handled = true;
 }
 
-void text_box::signal_handler_left_button_down(const event::ui_event event,
-												bool& handled)
+void text_box::signal_handler_left_button_down(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -371,8 +360,7 @@ void text_box::signal_handler_left_button_down(const event::ui_event event,
 	handled = true;
 }
 
-void text_box::signal_handler_left_button_up(const event::ui_event event,
-											  bool& handled)
+void text_box::signal_handler_left_button_up(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -380,9 +368,7 @@ void text_box::signal_handler_left_button_up(const event::ui_event event,
 	handled = true;
 }
 
-void
-text_box::signal_handler_left_button_double_click(const event::ui_event event,
-												   bool& handled)
+void text_box::signal_handler_left_button_double_click(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -406,10 +392,14 @@ text_box_definition::resolution::resolution(const config& cfg)
 	, text_y_offset(cfg["text_y_offset"])
 {
 	// Note the order should be the same as the enum state_t in text_box.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("text_box_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("text_box_definition][resolution", "state_disabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_focused", missing_mandatory_wml_tag("text_box_definition][resolution", "state_focused")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_hovered", missing_mandatory_wml_tag("text_box_definition][resolution", "state_hovered")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("text_box_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_disabled", missing_mandatory_wml_tag("text_box_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_focused", missing_mandatory_wml_tag("text_box_definition][resolution", "state_focused")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_hovered", missing_mandatory_wml_tag("text_box_definition][resolution", "state_hovered")));
 }
 
 // }---------- BUILDER -----------{
@@ -442,8 +432,7 @@ std::unique_ptr<widget> builder_text_box::build() const
 	widget->set_hint_data(hint_text, hint_image);
 	widget->set_editable(editable);
 
-	DBG_GUI_G << "Window builder: placed text box '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed text box '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

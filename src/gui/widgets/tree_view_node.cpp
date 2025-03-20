@@ -32,10 +32,8 @@
 
 namespace gui2
 {
-tree_view_node::tree_view_node(const std::string& id,
-		tree_view_node* parent_node,
-		tree_view& parent_tree_view,
-		const widget_data& data)
+tree_view_node::tree_view_node(
+	const std::string& id, tree_view_node* parent_node, tree_view& parent_tree_view, const widget_data& data)
 	: widget()
 	, parent_node_(parent_node)
 	, tree_view_(&parent_tree_view)
@@ -90,11 +88,13 @@ tree_view_node::tree_view_node(const std::string& id,
 
 		if(label_) {
 			label_widget->connect_signal<event::LEFT_BUTTON_CLICK>(
-				std::bind(&tree_view_node::signal_handler_label_left_button_click, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
+				std::bind(&tree_view_node::signal_handler_label_left_button_click, this, std::placeholders::_2,
+					std::placeholders::_3, std::placeholders::_4),
 				event::dispatcher::front_child);
 
 			label_widget->connect_signal<event::LEFT_BUTTON_CLICK>(
-				std::bind(&tree_view_node::signal_handler_label_left_button_click, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
+				std::bind(&tree_view_node::signal_handler_label_left_button_click, this, std::placeholders::_2,
+					std::placeholders::_3, std::placeholders::_4),
 				event::dispatcher::front_pre_child);
 
 			if(!get_tree_view().selected_item_) {
@@ -156,9 +156,7 @@ tree_view_node& tree_view_node::add_child_impl(std::shared_ptr<tree_view_node>&&
 	point best_size = node.get_best_size();
 	best_size.x += get_indentation_level() * get_tree_view().indentation_step_size_;
 
-	const int width_modification = best_size.x > current_size.x
-		? best_size.x - current_size.x
-		: 0;
+	const int width_modification = best_size.x > current_size.x ? best_size.x - current_size.x : 0;
 
 	// Calculate height modification.
 	// For this, we only increase height if the best size of the tree (that is, the size with the new node)
@@ -182,7 +180,8 @@ tree_view_node& tree_view_node::add_child_impl(std::shared_ptr<tree_view_node>&&
 	return node;
 }
 
-std::vector<std::shared_ptr<gui2::tree_view_node>> tree_view_node::replace_children(const std::string& id, const std::vector<widget_data>& data)
+std::vector<std::shared_ptr<gui2::tree_view_node>> tree_view_node::replace_children(
+	const std::string& id, const std::vector<widget_data>& data)
 {
 	std::vector<std::shared_ptr<gui2::tree_view_node>> nodes;
 	clear();
@@ -217,12 +216,9 @@ std::vector<std::shared_ptr<gui2::tree_view_node>> tree_view_node::replace_child
 		int best_size = node->get_best_size().x;
 		best_size += get_indentation_level() * get_tree_view().indentation_step_size_;
 
-		int new_width = best_size > current_size.x
-			? best_size - current_size.x
-			: 0;
+		int new_width = best_size > current_size.x ? best_size - current_size.x : 0;
 
-		if(new_width > width_modification)
-		{
+		if(new_width > width_modification) {
 			width_modification = new_width;
 		}
 	}
@@ -249,7 +245,7 @@ std::vector<std::shared_ptr<gui2::tree_view_node>> tree_view_node::replace_child
 	assert(height_modification >= 0);
 
 	// Request new size.
-	auto& last_node = children_.at(children_.size()-1);
+	auto& last_node = children_.at(children_.size() - 1);
 	get_tree_view().resize_content(width_modification, height_modification, -1, last_node->calculate_ypos());
 
 	return nodes;
@@ -397,9 +393,8 @@ private:
 
 public:
 	template<class W>
-	static W* find_at(utils::const_clone_ref<tree_view_node, W> tree_view_node,
-			const point& coordinate,
-			const bool must_be_active)
+	static W* find_at(
+		utils::const_clone_ref<tree_view_node, W> tree_view_node, const point& coordinate, const bool must_be_active)
 	{
 		if(W* widget = tree_view_node.grid_.find_at(coordinate, must_be_active)) {
 			return widget;
@@ -802,9 +797,8 @@ tree_view_node* tree_view_node::get_node_above()
 	}
 
 	if(!cur) {
-		throw std::domain_error(
-			"tree_view_node::get_node_above(): Cannot determine which node is this line, or which "
-			"node is the line above this one, if any.");
+		throw std::domain_error("tree_view_node::get_node_above(): Cannot determine which node is this line, or which "
+								"node is the line above this one, if any.");
 	}
 
 	return cur;

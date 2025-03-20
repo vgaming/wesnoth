@@ -42,7 +42,7 @@ public:
 	 *  @param seed         A hex string. Should not have 0x leading.
 	 *  @param call_count   Value to set internal call counter to after seeding.
 	 */
-	void seed_random(const std::string & seed, const unsigned int call_count = 0);
+	void seed_random(const std::string& seed, const unsigned int call_count = 0);
 
 	/**
 	 * Resets the random to the 0 calls and the seed to the random
@@ -51,14 +51,22 @@ public:
 	 */
 	void rotate_random();
 
-	uint32_t get_random_seed() const { return random_seed_; }
+	uint32_t get_random_seed() const
+	{
+		return random_seed_;
+	}
 	std::string get_random_seed_str() const;
-	unsigned int get_random_calls() const { return random_calls_; }
+	unsigned int get_random_calls() const
+	{
+		return random_calls_;
+	}
 
-	//Comparisons, mainly used for testing
-	bool operator== (const mt_rng &other) const;
-	bool operator!= (const mt_rng &other) const
-	{ return !operator==(other); }
+	// Comparisons, mainly used for testing
+	bool operator==(const mt_rng& other) const;
+	bool operator!=(const mt_rng& other) const
+	{
+		return !operator==(other);
+	}
 
 private:
 	/** Initial seed for the pool. */
@@ -82,4 +90,4 @@ private:
 	void seed_random(const uint32_t seed, const unsigned int call_count = 0);
 };
 
-} // ends randomness namespace
+} // namespace randomness

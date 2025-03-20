@@ -46,4 +46,4 @@ void player_record::enter_lobby()
 	game_.reset();
 }
 
-}
+} // namespace wesnothd

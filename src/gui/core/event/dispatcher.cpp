@@ -17,7 +17,6 @@
 
 #include "gui/core/event/dispatcher_private.hpp"
 
-
 namespace gui2
 {
 namespace event
@@ -98,11 +97,8 @@ bool dispatcher::fire(const ui_event event, widget& target, const point& coordin
 	return fire_event<event_category::mouse>(event, this, &target, coordinate);
 }
 
-bool dispatcher::fire(const ui_event event,
-		widget& target,
-		const SDL_Keycode key,
-		const SDL_Keymod modifier,
-		const std::string& unicode)
+bool dispatcher::fire(
+	const ui_event event, widget& target, const SDL_Keycode key, const SDL_Keymod modifier, const std::string& unicode)
 {
 	assert(is_in_category(event, event_category::keyboard));
 	return fire_event<event_category::keyboard>(event, this, &target, key, modifier, unicode);
@@ -114,7 +110,8 @@ bool dispatcher::fire(const ui_event event, widget& target, const point& pos, co
 	return fire_event<event_category::touch_motion>(event, this, &target, pos, distance);
 }
 
-bool dispatcher::fire(const ui_event event, widget& target, const point& center, float dTheta, float dDist, uint8_t numFingers)
+bool dispatcher::fire(
+	const ui_event event, widget& target, const point& center, float dTheta, float dDist, uint8_t numFingers)
 {
 	assert(is_in_category(event, event_category::touch_gesture));
 	return fire_event<event_category::touch_gesture>(event, this, &target, center, dTheta, dDist, numFingers);
@@ -193,7 +190,6 @@ void disconnect_signal_mouse_left_release(dispatcher& dispatcher, const signal& 
 {
 	dispatcher.disconnect_signal<LEFT_BUTTON_UP>(signal);
 }
-
 
 void connect_signal_mouse_left_double_click(dispatcher& dispatcher, const signal& signal)
 {

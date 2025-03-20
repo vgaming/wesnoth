@@ -17,26 +17,25 @@
 
 #include "gui/dialogs/multiplayer/mp_change_control.hpp"
 
-#include "serialization/markup.hpp"
 #include "formatter.hpp"
 #include "formula/string_utils.hpp"
 #include "game_board.hpp"
 #include "game_display.hpp"
-#include "preferences/preferences.hpp"
 #include "gui/widgets/label.hpp"
 #include "gui/widgets/listbox.hpp"
 #include "gui/widgets/window.hpp"
 #include "log.hpp"
 #include "menu_events.hpp"
+#include "preferences/preferences.hpp"
 #include "serialization/markup.hpp"
 #include "team.hpp"
 
 #include <functional>
 
 static lg::log_domain log_gui("gui/dialogs/mp_change_control");
-#define ERR_GUI LOG_STREAM(err,   log_gui)
-#define WRN_GUI LOG_STREAM(warn,  log_gui)
-#define LOG_GUI LOG_STREAM(info,  log_gui)
+#define ERR_GUI LOG_STREAM(err, log_gui)
+#define WRN_GUI LOG_STREAM(warn, log_gui)
+#define LOG_GUI LOG_STREAM(info, log_gui)
 #define DBG_GUI LOG_STREAM(debug, log_gui)
 
 namespace gui2::dialogs
@@ -59,11 +58,9 @@ void mp_change_control::pre_show()
 	listbox& sides_list = find_widget<listbox>("sides_list");
 	listbox& nicks_list = find_widget<listbox>("nicks_list");
 
-	connect_signal_notify_modified(sides_list,
-		std::bind(&mp_change_control::handle_sides_list_item_clicked, this));
+	connect_signal_notify_modified(sides_list, std::bind(&mp_change_control::handle_sides_list_item_clicked, this));
 
-	connect_signal_notify_modified(nicks_list,
-		std::bind(&mp_change_control::handle_nicks_list_item_clicked, this));
+	connect_signal_notify_modified(nicks_list, std::bind(&mp_change_control::handle_nicks_list_item_clicked, this));
 
 	//
 	// Initialize sides list
@@ -94,9 +91,8 @@ void mp_change_control::pre_show()
 	//
 	std::set<std::string> temp_nicks;
 	for(const auto& team : menu_handler_.board().teams()) {
-		if(!team.is_local_ai() && !team.is_network_ai() && !team.is_idle()
-			&& !team.is_empty() && !team.current_player().empty())
-		{
+		if(!team.is_local_ai() && !team.is_network_ai() && !team.is_idle() && !team.is_empty()
+			&& !team.current_player().empty()) {
 			temp_nicks.insert(team.current_player());
 		}
 	}
@@ -149,7 +145,8 @@ void mp_change_control::highlight_side_nick()
 	for(const std::string& nick : nicks_) {
 		std::string label_str = "";
 
-		if(selected_side_ <= static_cast<unsigned int>(teams.size()) && teams.at(selected_side_).current_player() == nick) {
+		if(selected_side_ <= static_cast<unsigned int>(teams.size())
+			&& teams.at(selected_side_).current_player() == nick) {
 			label_str = markup::bold(nick);
 		} else {
 			label_str = nick;
@@ -165,15 +162,10 @@ void mp_change_control::highlight_side_nick()
 void mp_change_control::post_show()
 {
 	if(get_retval() == retval::OK) {
-		DBG_GUI << "Main: changing control of side "
-		        << sides_[selected_side_] << " to nick "
-		        << nicks_[selected_nick_];
+		DBG_GUI << "Main: changing control of side " << sides_[selected_side_] << " to nick " << nicks_[selected_nick_];
 
-		menu_handler_.request_control_change(
-			sides_[selected_side_],
-			nicks_[selected_nick_]
-		);
+		menu_handler_.request_control_change(sides_[selected_side_], nicks_[selected_nick_]);
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

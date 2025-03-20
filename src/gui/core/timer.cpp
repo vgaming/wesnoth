@@ -45,7 +45,7 @@ static std::map<std::size_t, timer>& get_timers()
 /**
 	The id of the event being executed, 0 if none.
 	NOTE: it is possible that multiple timers are executed at the same time
-	      if one of the timer starts an event loop for example if its handler
+		  if one of the timer starts an event loop for example if its handler
 		  shows a dialog. In that case code that relies on this breaks. This
 		  could probably fixed my making this a list/stack of ids.
 */
@@ -120,9 +120,8 @@ static uint32_t timer_callback(uint32_t, void* id)
 
 } // extern "C"
 
-std::size_t add_timer(const std::chrono::milliseconds& interval,
-				 const std::function<void(std::size_t id)>& callback,
-				 const bool repeat)
+std::size_t add_timer(
+	const std::chrono::milliseconds& interval, const std::function<void(std::size_t id)>& callback, const bool repeat)
 {
 	static_assert(sizeof(std::size_t) == sizeof(void*), "Pointer and std::size_t are not the same size");
 
@@ -136,8 +135,7 @@ std::size_t add_timer(const std::chrono::milliseconds& interval,
 			++next_timer_id;
 		} while(next_timer_id == 0 || get_timers().count(next_timer_id) > 0);
 
-		timer.sdl_id = SDL_AddTimer(
-				interval.count(), timer_callback, reinterpret_cast<void*>(next_timer_id));
+		timer.sdl_id = SDL_AddTimer(interval.count(), timer_callback, reinterpret_cast<void*>(next_timer_id));
 	}
 
 	if(timer.sdl_id == 0) {

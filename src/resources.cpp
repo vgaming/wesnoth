@@ -17,20 +17,20 @@
 
 namespace resources
 {
-	game_board           *gameboard = nullptr;
-	play_controller      *controller = nullptr;
-	game_data            *gamedata = nullptr;
-	filter_context	     *filter_con = nullptr;
-	game_events::manager *game_events = nullptr;
-	game_lua_kernel      *lua_kernel = nullptr;
-	persist_manager      *persist = nullptr;
-	soundsource::manager *soundsources = nullptr;
-	replay               *recorder = nullptr;
-	::tod_manager        *tod_manager = nullptr;
-	fake_unit_manager    *fake_units = nullptr;
-	pathfind::manager    *tunnels = nullptr;
-	actions::undo_list   *undo_stack = nullptr;
-	std::shared_ptr<wb::manager> whiteboard = std::shared_ptr<wb::manager>();
-	game_classification  *classification = nullptr;
-	bool                 simulation = false;
-}
+game_board* gameboard = nullptr;
+play_controller* controller = nullptr;
+game_data* gamedata = nullptr;
+filter_context* filter_con = nullptr;
+game_events::manager* game_events = nullptr;
+game_lua_kernel* lua_kernel = nullptr;
+persist_manager* persist = nullptr;
+soundsource::manager* soundsources = nullptr;
+replay* recorder = nullptr;
+::tod_manager* tod_manager = nullptr;
+fake_unit_manager* fake_units = nullptr;
+pathfind::manager* tunnels = nullptr;
+actions::undo_list* undo_stack = nullptr;
+std::shared_ptr<wb::manager> whiteboard = std::shared_ptr<wb::manager>();
+game_classification* classification = nullptr;
+bool simulation = false;
+} // namespace resources

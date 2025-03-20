@@ -28,11 +28,11 @@ namespace gui2
 namespace implementation
 {
 
-static std::map<std::string, scrollbar_mode> scrollbar_mode_map {
-	{ "always",        scrollbar_mode::ALWAYS_VISIBLE },
-	{ "never",         scrollbar_mode::ALWAYS_INVISIBLE },
-	{ "auto",          scrollbar_mode::AUTO_VISIBLE },
-	{ "initial_auto",  scrollbar_mode::AUTO_VISIBLE_FIRST_RUN },
+static std::map<std::string, scrollbar_mode> scrollbar_mode_map{
+	{"always", scrollbar_mode::ALWAYS_VISIBLE},
+	{"never", scrollbar_mode::ALWAYS_INVISIBLE},
+	{"auto", scrollbar_mode::AUTO_VISIBLE},
+	{"initial_auto", scrollbar_mode::AUTO_VISIBLE_FIRST_RUN},
 };
 
 unsigned get_v_align(const std::string& v_align)
@@ -43,8 +43,7 @@ unsigned get_v_align(const std::string& v_align)
 		return grid::VERTICAL_ALIGN_BOTTOM;
 	} else {
 		if(!v_align.empty() && v_align != "center") {
-			ERR_GUI_E << "Invalid vertical alignment '" << v_align
-					  << "' falling back to 'center'.";
+			ERR_GUI_E << "Invalid vertical alignment '" << v_align << "' falling back to 'center'.";
 		}
 		return grid::VERTICAL_ALIGN_CENTER;
 	}
@@ -58,8 +57,7 @@ unsigned get_h_align(const std::string& h_align)
 		return grid::HORIZONTAL_ALIGN_RIGHT;
 	} else {
 		if(!h_align.empty() && h_align != "center") {
-			ERR_GUI_E << "Invalid horizontal alignment '" << h_align
-					  << "' falling back to 'center'.";
+			ERR_GUI_E << "Invalid horizontal alignment '" << h_align << "' falling back to 'center'.";
 		}
 		return grid::HORIZONTAL_ALIGN_CENTER;
 	}
@@ -68,8 +66,7 @@ unsigned get_h_align(const std::string& h_align)
 unsigned get_border(const std::vector<std::string>& borders)
 {
 	unsigned result = 0;
-	for(const auto & border : borders)
-	{
+	for(const auto& border : borders) {
 		if(border == "all") {
 			return grid::BORDER_ALL;
 		} else if(border == "top") {
@@ -126,7 +123,7 @@ scrollbar_mode get_scrollbar_mode(const std::string& scrollbar_mode)
 
 	if(scrollbar_mode_map.find(scrollbar_mode) == scrollbar_mode_map.end()) {
 		ERR_GUI_E << "Invalid scrollbar mode '" << scrollbar_mode << "'."
-		          << "Falling back to 'initial_auto'.";
+				  << "Falling back to 'initial_auto'.";
 
 		return scrollbar_container::AUTO_VISIBLE_FIRST_RUN;
 	}
@@ -134,17 +131,14 @@ scrollbar_mode get_scrollbar_mode(const std::string& scrollbar_mode)
 	return scrollbar_mode_map[scrollbar_mode];
 }
 
-int get_retval(const std::string& retval_id,
-			   const int retval,
-			   const std::string& id)
+int get_retval(const std::string& retval_id, const int retval, const std::string& id)
 {
 	if(!retval_id.empty()) {
 		int result = window::get_retval_by_id(retval_id);
 		if(result) {
 			return result;
 		} else {
-			ERR_GUI_E << "Window builder: retval_id '" << retval_id
-					  << "' is unknown.";
+			ERR_GUI_E << "Window builder: retval_id '" << retval_id << "' is unknown.";
 		}
 	}
 

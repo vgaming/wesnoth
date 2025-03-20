@@ -29,10 +29,10 @@ using config_array_view = std::vector<std::reference_wrapper<const config>>;
  **/
 class game_config_view
 {
-
 public:
 	game_config_view()
-	{}
+	{
+	}
 
 	static game_config_view wrap(const config& cfg)
 	{
@@ -41,8 +41,8 @@ public:
 
 	config_array_view child_range(config_key_type key) const;
 
-	optional_const_config find_child(config_key_type key, const std::string &name, const std::string &value) const;
-	const config& find_mandatory_child(config_key_type key, const std::string &name, const std::string &value) const;
+	optional_const_config find_child(config_key_type key, const std::string& name, const std::string& value) const;
+	const config& find_mandatory_child(config_key_type key, const std::string& name, const std::string& value) const;
 
 	// const config& child(config_key_type key) const;
 	const config& mandatory_child(config_key_type key) const;
@@ -52,14 +52,12 @@ public:
 
 	game_config_view merged_children_view(config_key_type key) const;
 
-
 	config_array_view& data()
 	{
 		return cfgs_;
 	}
 
 private:
-
 	explicit game_config_view(const config& cfg)
 		: cfgs_()
 	{

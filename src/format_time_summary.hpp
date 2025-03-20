@@ -18,6 +18,7 @@
 #include <ctime>
 #include <string>
 
-namespace utils {
-	std::string format_time_summary(std::time_t t);
+namespace utils
+{
+std::string format_time_summary(std::time_t t);
 }

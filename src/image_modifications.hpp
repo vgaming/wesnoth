@@ -24,7 +24,8 @@
 #include <map>
 #include <memory>
 
-namespace image {
+namespace image
+{
 
 class modification;
 
@@ -44,11 +45,14 @@ public:
 	{
 	}
 
-	bool empty() const  { return priorities_.empty(); }
+	bool empty() const
+	{
+		return priorities_.empty();
+	}
 	void push(std::unique_ptr<modification> mod);
 	void pop();
 	std::size_t size() const;
-	modification * top() const;
+	modification* top() const;
 
 private:
 	/** Map from a mod's priority() to the mods having that priority. */
@@ -61,10 +65,8 @@ private:
 class modification
 {
 public:
-
 	/** Exception thrown by the operator() when an error occurs. */
-	struct imod_exception final
-		: public lua_jailbreak_exception
+	struct imod_exception final : public lua_jailbreak_exception
 	{
 		/**
 		 * Constructor.
@@ -86,26 +88,32 @@ public:
 		 */
 		imod_exception(const std::string& message);
 
-		~imod_exception() noexcept {}
+		~imod_exception() noexcept
+		{
+		}
 
 		/** The error message regarding the failed operation. */
 		const std::string message;
 
 	private:
-
 		IMPLEMENT_LUA_JAILBREAK_EXCEPTION(imod_exception)
 	};
 
 	/** Decodes modifications from a modification string */
 	static modification_queue decode(const std::string&);
 
-	virtual ~modification() {}
+	virtual ~modification()
+	{
+	}
 
 	/** Applies the image-path modification on the specified surface */
 	virtual void operator()(surface& src) const = 0;
 
 	/** Specifies the priority of the modification */
-	virtual int priority() const { return 0; }
+	virtual int priority() const
+	{
+		return 0;
+	}
 };
 
 /**
@@ -122,23 +130,37 @@ public:
 	 */
 	rc_modification()
 		: rc_map_()
-	{}
+	{
+	}
 	/**
 	 * RC-map based constructor.
 	 * @param recolor_map The palette switch map.
 	 */
 	rc_modification(const color_range_map& recolor_map)
 		: rc_map_(recolor_map)
-	{}
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
 	// The rc modification has a higher priority
-	virtual int priority() const override { return 1; }
+	virtual int priority() const override
+	{
+		return 1;
+	}
 
-	bool no_op() const { return rc_map_.empty(); }
+	bool no_op() const
+	{
+		return rc_map_.empty();
+	}
 
-	const color_range_map& map() const { return rc_map_;}
-	color_range_map& map() { return rc_map_;}
+	const color_range_map& map() const
+	{
+		return rc_map_;
+	}
+	color_range_map& map()
+	{
+		return rc_map_;
+	}
 
 private:
 	color_range_map rc_map_;
@@ -158,21 +180,43 @@ public:
 	fl_modification(bool horiz = false, bool vert = false)
 		: horiz_(horiz)
 		, vert_(vert)
-	{}
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
-	void set_horiz(bool val)  { horiz_ = val; }
-	void set_vert(bool val)   { vert_ = val; }
-	bool get_horiz() const    { return horiz_; }
-	bool get_vert() const     { return vert_; }
+	void set_horiz(bool val)
+	{
+		horiz_ = val;
+	}
+	void set_vert(bool val)
+	{
+		vert_ = val;
+	}
+	bool get_horiz() const
+	{
+		return horiz_;
+	}
+	bool get_vert() const
+	{
+		return vert_;
+	}
 	/** Toggle horizontal mirror flag.
 	 *  @return The new flag state after toggling. */
-	bool toggle_horiz()       { return((horiz_ = !horiz_)); }
+	bool toggle_horiz()
+	{
+		return ((horiz_ = !horiz_));
+	}
 	/** Toggle vertical mirror flag.
 	 *  @return The new flag state after toggling. */
-	bool toggle_vert()        { return((vert_ = !vert_)); }
+	bool toggle_vert()
+	{
+		return ((vert_ = !vert_));
+	}
 
-	bool no_op() const { return ((!horiz_) && (!vert_)); }
+	bool no_op() const
+	{
+		return ((!horiz_) && (!vert_));
+	}
 
 private:
 	bool horiz_;
@@ -203,11 +247,17 @@ public:
 	 *                If @a offset is greater than @a zoom the result will have empty pixels.
 	 */
 	rotate_modification(int degrees = 90, int zoom = 16, int offset = 8)
-		: degrees_(degrees), zoom_(zoom), offset_(offset)
-	{}
+		: degrees_(degrees)
+		, zoom_(zoom)
+		, offset_(offset)
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
-	bool no_op() const { return degrees_ % 360 == 0; }
+	bool no_op() const
+	{
+		return degrees_ % 360 == 0;
+	}
 
 private:
 	int degrees_;
@@ -239,8 +289,12 @@ public:
 class bw_modification : public modification
 {
 public:
-	bw_modification(int threshold): threshold_(threshold) {}
+	bw_modification(int threshold)
+		: threshold_(threshold)
+	{
+	}
 	virtual void operator()(surface& src) const override;
+
 private:
 	int threshold_;
 };
@@ -259,8 +313,14 @@ struct sepia_modification : modification
 class negative_modification : public modification
 {
 public:
-	negative_modification(int r, int g, int b): red_(r), green_(g), blue_(b) {}
+	negative_modification(int r, int g, int b)
+		: red_(r)
+		, green_(g)
+		, blue_(b)
+	{
+	}
 	virtual void operator()(surface& src) const override;
+
 private:
 	int red_, green_, blue_;
 };
@@ -291,7 +351,8 @@ class adjust_alpha_modification : public modification
 public:
 	adjust_alpha_modification(const std::string& formula)
 		: formula_(formula)
-	{}
+	{
+	}
 
 	virtual void operator()(surface& src) const override;
 
@@ -336,7 +397,8 @@ class crop_modification : public modification
 public:
 	crop_modification(const SDL_Rect& slice)
 		: slice_(slice)
-	{}
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
 	const SDL_Rect& get_slice() const
@@ -356,8 +418,11 @@ class blit_modification : public modification
 {
 public:
 	blit_modification(const surface& surf, int x, int y)
-		: surf_(surf), x_(x), y_(y)
-	{}
+		: surf_(surf)
+		, x_(x)
+		, y_(y)
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
 	const surface& get_surface() const
@@ -389,8 +454,11 @@ class mask_modification : public modification
 {
 public:
 	mask_modification(const surface& mask, int x, int y)
-		: mask_(mask), x_(x), y_(y)
-	{}
+		: mask_(mask)
+		, x_(x)
+		, y_(y)
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
 	const surface& get_mask() const
@@ -423,7 +491,8 @@ class light_modification : public modification
 public:
 	light_modification(const surface& surf)
 		: surf_(surf)
-	{}
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
 	const surface& get_surface() const
@@ -443,26 +512,33 @@ class scale_modification : public modification
 public:
 	// Bit-unique scaling flags
 	enum SCALE_FLAGS : uint8_t {
-		SCALE_LINEAR          = 0b00000,
-		SCALE_SHARP           = 0b00001,
-		FIT_TO_SIZE           = 0b00010,
+		SCALE_LINEAR = 0b00000,
+		SCALE_SHARP = 0b00001,
+		FIT_TO_SIZE = 0b00010,
 		PRESERVE_ASPECT_RATIO = 0b00100,
-		X_BY_FACTOR           = 0b01000,
-		Y_BY_FACTOR           = 0b10000,
+		X_BY_FACTOR = 0b01000,
+		Y_BY_FACTOR = 0b10000,
 	};
 
 	scale_modification(point target_size, uint8_t flags)
 		: target_size_(target_size)
 		, flags_(flags)
-	{}
+	{
+	}
 
 	virtual void operator()(surface& src) const override;
 
-	int get_w() const { return target_size_.x; }
-	int get_h() const { return target_size_.y; }
+	int get_w() const
+	{
+		return target_size_.x;
+	}
+	int get_h() const
+	{
+		return target_size_.y;
+	}
 
 private:
-	point target_size_{0,0};
+	point target_size_{0, 0};
 
 	uint8_t flags_ = SCALE_LINEAR | FIT_TO_SIZE;
 };
@@ -475,7 +551,8 @@ class xbrz_modification : public modification
 public:
 	xbrz_modification(int z)
 		: z_(z)
-	{}
+	{
+	}
 
 	virtual void operator()(surface& src) const override;
 
@@ -491,7 +568,8 @@ class o_modification : public modification
 public:
 	o_modification(float opacity)
 		: opacity_(opacity)
-	{}
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
 	float get_opacity() const
@@ -510,13 +588,25 @@ class cs_modification : public modification
 {
 public:
 	cs_modification(int r, int g, int b)
-		: r_(r), g_(g), b_(b)
-	{}
+		: r_(r)
+		, g_(g)
+		, b_(b)
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
-	int get_r() const { return r_; }
-	int get_g() const { return g_; }
-	int get_b() const { return b_; }
+	int get_r() const
+	{
+		return r_;
+	}
+	int get_g() const
+	{
+		return g_;
+	}
+	int get_b() const
+	{
+		return b_;
+	}
 
 private:
 	int r_, g_, b_;
@@ -529,14 +619,30 @@ class blend_modification : public modification
 {
 public:
 	blend_modification(int r, int g, int b, float a)
-		: r_(r), g_(g), b_(b), a_(a)
-	{}
+		: r_(r)
+		, g_(g)
+		, b_(b)
+		, a_(a)
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
-	int   get_r() const { return r_; }
-	int   get_g() const { return g_; }
-	int   get_b() const { return b_; }
-	float get_a() const { return a_; }
+	int get_r() const
+	{
+		return r_;
+	}
+	int get_g() const
+	{
+		return g_;
+	}
+	int get_b() const
+	{
+		return b_;
+	}
+	float get_a() const
+	{
+		return a_;
+	}
 
 private:
 	int r_, g_, b_;
@@ -551,7 +657,8 @@ class bl_modification : public modification
 public:
 	bl_modification(int depth)
 		: depth_(depth)
-	{}
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
 	int get_depth() const
@@ -568,7 +675,10 @@ private:
  */
 struct background_modification : modification
 {
-	background_modification(const color_t& c): color_(c) {}
+	background_modification(const color_t& c)
+		: color_(c)
+	{
+	}
 	virtual void operator()(surface& src) const override;
 
 	const color_t& get_color() const
@@ -586,8 +696,15 @@ private:
 class swap_modification : public modification
 {
 public:
-	swap_modification(channel r, channel g, channel b, channel a): red_(r), green_(g), blue_(b), alpha_(a) {}
+	swap_modification(channel r, channel g, channel b, channel a)
+		: red_(r)
+		, green_(g)
+		, blue_(b)
+		, alpha_(a)
+	{
+	}
 	virtual void operator()(surface& src) const override;
+
 private:
 	channel red_;
 	channel green_;

@@ -21,7 +21,8 @@
 #include "ai/composite/rca.hpp"
 #include "log.hpp"
 
-namespace ai {
+namespace ai
+{
 
 static lg::log_domain log_ai_stage_rca("ai/stage/rca");
 #define DBG_AI_STAGE_RCA LOG_STREAM(debug, log_ai_stage_rca)
@@ -31,14 +32,18 @@ static lg::log_domain log_ai_stage_rca("ai/stage/rca");
 const double candidate_action::BAD_SCORE = 0;
 const double candidate_action::HIGH_SCORE = 10000000;
 
-candidate_action::candidate_action(rca_context &context, const config &cfg):
-	recursion_counter_(context.get_recursion_count()),
-	enabled_(cfg["enabled"].to_bool(true)), engine_(cfg["engine"]),
-	score_(cfg["score"].to_double(BAD_SCORE)),
-	max_score_(cfg["max_score"].to_double(HIGH_SCORE)),
-	id_(cfg["id"]), name_(cfg["name"]), type_(cfg["type"]), to_be_removed_(false)
+candidate_action::candidate_action(rca_context& context, const config& cfg)
+	: recursion_counter_(context.get_recursion_count())
+	, enabled_(cfg["enabled"].to_bool(true))
+	, engine_(cfg["engine"])
+	, score_(cfg["score"].to_double(BAD_SCORE))
+	, max_score_(cfg["max_score"].to_double(HIGH_SCORE))
+	, id_(cfg["id"])
+	, name_(cfg["name"])
+	, type_(cfg["type"])
+	, to_be_removed_(false)
 {
-	if (auto filter_own = cfg.optional_child("filter_own")) {
+	if(auto filter_own = cfg.optional_child("filter_own")) {
 		vconfig vcfg(*filter_own);
 		vcfg.make_safe();
 		filter_own_.reset(new unit_filter(vcfg));
@@ -87,7 +92,7 @@ std::shared_ptr<unit_filter> candidate_action::get_filter_own() const
 
 bool candidate_action::is_allowed_unit(const unit& u) const
 {
-	if (filter_own_) {
+	if(filter_own_) {
 		return (*filter_own_)(u);
 	}
 	return true;
@@ -107,7 +112,7 @@ config candidate_action::to_config() const
 	cfg["name"] = name_;
 	cfg["score"] = score_;
 	cfg["max_score"] = max_score_;
-	if (filter_own_ && !filter_own_->empty()) {
+	if(filter_own_ && !filter_own_->empty()) {
 		cfg.add_child("filter_own", filter_own_->to_config());
 	}
 	cfg["type"] = type_;
@@ -127,7 +132,7 @@ bool candidate_action::to_be_removed()
 // This is defined in the source file so that it can easily access the logger
 bool candidate_action_factory::is_duplicate(const std::string& name)
 {
-	if (get_list().find(name) != get_list().end()) {
+	if(get_list().find(name) != get_list().end()) {
 		ERR_AI_STAGE_RCA << "Error: Attempt to double-register candidate action " << name;
 		return true;
 	}
@@ -136,9 +141,10 @@ bool candidate_action_factory::is_duplicate(const std::string& name)
 
 //============================================================================
 
-std::ostream &operator<<(std::ostream &s, const ai::candidate_action& ca) {
-	s << "candidate action with name ["<< ca.get_name() <<"]";
+std::ostream& operator<<(std::ostream& s, const ai::candidate_action& ca)
+{
+	s << "candidate action with name [" << ca.get_name() << "]";
 	return s;
 }
 
-} // of namespace ai
+} // namespace ai

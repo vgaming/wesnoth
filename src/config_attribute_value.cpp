@@ -136,11 +136,10 @@ bool from_string_verify(std::string_view source, To& res)
 		return false;
 	}
 
-
 	// Check 2: convertible back to the same string.
 	return str_equals_number(source, res);
 }
-} // end anon namespace
+} // namespace
 
 config_attribute_value& config_attribute_value::operator=(std::string&& v)
 {
@@ -263,20 +262,44 @@ class attribute_numeric_visitor
 {
 public:
 	// Constructor stores the default value.
-	attribute_numeric_visitor(T def) : def_(def) {}
+	attribute_numeric_visitor(T def)
+		: def_(def)
+	{
+	}
 
-	T operator()(const utils::monostate&) const { return def_; }
-	T operator()(bool)                 const { return def_; }
-	T operator()(int i)                const { return static_cast<T>(i); }
-	T operator()(unsigned long long u) const { return static_cast<T>(u); }
-	T operator()(double d)             const { return static_cast<T>(d); }
-	T operator()(const std::string& s) const { return lexical_cast_default<T>(s, def_); }
-	T operator()(const t_string&)     const { return def_; }
+	T operator()(const utils::monostate&) const
+	{
+		return def_;
+	}
+	T operator()(bool) const
+	{
+		return def_;
+	}
+	T operator()(int i) const
+	{
+		return static_cast<T>(i);
+	}
+	T operator()(unsigned long long u) const
+	{
+		return static_cast<T>(u);
+	}
+	T operator()(double d) const
+	{
+		return static_cast<T>(d);
+	}
+	T operator()(const std::string& s) const
+	{
+		return lexical_cast_default<T>(s, def_);
+	}
+	T operator()(const t_string&) const
+	{
+		return def_;
+	}
 
 private:
 	const T def_;
 };
-} // end anon namespace
+} // namespace
 
 int config_attribute_value::to_int(int def) const
 {
@@ -317,17 +340,44 @@ class config_attribute_value::string_visitor
 	const std::string default_;
 
 public:
-	string_visitor(const std::string& fallback) : default_(fallback) {}
+	string_visitor(const std::string& fallback)
+		: default_(fallback)
+	{
+	}
 
-	std::string operator()(const utils::monostate &) const { return default_; }
-	std::string operator()(const yes_no & b)     const { return b.str(); }
-	std::string operator()(const true_false & b) const { return b.str(); }
-	//this has to use the same method as in from_string_verify
-	std::string operator()(int i)                const { return utils::charconv_buffer(i).to_string(); }
-	std::string operator()(unsigned long long u) const { return utils::charconv_buffer(u).to_string(); }
-	std::string operator()(double d)             const { return utils::charconv_buffer(d).to_string(); }
-	std::string operator()(const std::string& s) const { return s; }
-	std::string operator()(const t_string& s)    const { return s.str(); }
+	std::string operator()(const utils::monostate&) const
+	{
+		return default_;
+	}
+	std::string operator()(const yes_no& b) const
+	{
+		return b.str();
+	}
+	std::string operator()(const true_false& b) const
+	{
+		return b.str();
+	}
+	// this has to use the same method as in from_string_verify
+	std::string operator()(int i) const
+	{
+		return utils::charconv_buffer(i).to_string();
+	}
+	std::string operator()(unsigned long long u) const
+	{
+		return utils::charconv_buffer(u).to_string();
+	}
+	std::string operator()(double d) const
+	{
+		return utils::charconv_buffer(d).to_string();
+	}
+	std::string operator()(const std::string& s) const
+	{
+		return s;
+	}
+	std::string operator()(const t_string& s) const
+	{
+		return s.str();
+	}
 };
 
 std::string config_attribute_value::str(const std::string& fallback) const
@@ -421,7 +471,8 @@ std::ostream& operator<<(std::ostream& os, const config_attribute_value& v)
 
 namespace utils
 {
-	std::vector<std::string> split(const config_attribute_value& val) {
-		return utils::split(val.str());
-	}
+std::vector<std::string> split(const config_attribute_value& val)
+{
+	return utils::split(val.str());
 }
+} // namespace utils

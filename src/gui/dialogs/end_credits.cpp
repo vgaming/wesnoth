@@ -18,11 +18,11 @@
 
 #include "about.hpp"
 #include "game_config.hpp"
-#include "gui/widgets/grid.hpp"
-#include "gui/widgets/scrollbar.hpp"
-#include "gui/widgets/scroll_label.hpp"
-#include "gui/widgets/window.hpp"
 #include "gettext.hpp"
+#include "gui/widgets/grid.hpp"
+#include "gui/widgets/scroll_label.hpp"
+#include "gui/widgets/scrollbar.hpp"
+#include "gui/widgets/window.hpp"
 #include "serialization/markup.hpp"
 
 #include <functional>
@@ -104,17 +104,17 @@ void end_credits::pre_show()
 		if(i % lines_per_chunk_ == 0) {
 			chunks_.emplace_back();
 		}
-		std::vector<std::string>& last_chunk = chunks_[chunks_.size()-1];
+		std::vector<std::string>& last_chunk = chunks_[chunks_.size() - 1];
 		last_chunk.emplace_back(line.size() < 200 ? line : line.substr(0, 200));
 		i++;
 	}
 
 	sliding_content_.clear();
-	for(std::size_t i = 0; i <= sliding_size_; i++){
+	for(std::size_t i = 0; i <= sliding_size_; i++) {
 		sliding_content_ += utils::join(chunks_.at(i), "\n") + "\n";
 	}
 
-	//concat substring strings
+	// concat substring strings
 	text_widget_->set_label(sliding_content_);
 	// HACK: always hide the scrollbar, even if it's needed.
 	// This should probably be implemented as a scrollbar mode.
@@ -123,8 +123,8 @@ void end_credits::pre_show()
 		v_grid->find_widget<scrollbar_base>("_vertical_scrollbar").set_visible(widget::visibility::hidden);
 
 		// TODO: enable again if e24336afeb7 is reverted.
-		//v_grid.find_widget<repeating_button>("_half_page_up").set_visible(widget::visibility::hidden);
-		//v_grid.find_widget<repeating_button>("_half_page_down").set_visible(widget::visibility::hidden);
+		// v_grid.find_widget<repeating_button>("_half_page_up").set_visible(widget::visibility::hidden);
+		// v_grid.find_widget<repeating_button>("_half_page_down").set_visible(widget::visibility::hidden);
 	}
 }
 
@@ -145,15 +145,15 @@ void end_credits::update()
 
 	// TODO: this doesn't allow for scrolling up again after been scrolled down
 	// only the content in the current sliding window can be scrolled up
-	if(cur_pos <= text_widget_->get_height()){
+	if(cur_pos <= text_widget_->get_height()) {
 		text_widget_->set_vertical_scrollbar_item_position(cur_pos + needed_dist);
 	} else {
-		if(first_idx_ < chunks_.size() - sliding_size_ - 1){
+		if(first_idx_ < chunks_.size() - sliding_size_ - 1) {
 			first_idx_++;
 			last_idx_ = first_idx_ + sliding_size_;
 			sliding_content_.clear();
 
-			if(last_idx_ <= chunks_.size()){
+			if(last_idx_ <= chunks_.size()) {
 				for(std::size_t i = first_idx_; i <= last_idx_; i++) {
 					sliding_content_ += utils::join(chunks_[i], "\n") + "\n";
 				}
@@ -179,4 +179,4 @@ void end_credits::key_press_callback(const SDL_Keycode key)
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

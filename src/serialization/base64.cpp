@@ -17,13 +17,14 @@
 
 #include <string>
 
-namespace {
+namespace
+{
 const std::string base64_itoa_map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const std::string crypt64_itoa_map = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 void fill_atoi_map(std::vector<int>& atoi, const std::string& itoa)
 {
-	for(int i=0; i<64; ++i) {
+	for(int i = 0; i < 64; ++i) {
 		atoi[itoa[i]] = i;
 	}
 }
@@ -62,16 +63,16 @@ std::vector<uint8_t> generic_decode_be(std::string_view in, const std::vector<in
 	out.reserve(length);
 
 	int val = 0, bits = -8;
-	for(unsigned char c: in) {
+	for(unsigned char c : in) {
 		if(atoi_map[c] == -1) {
 			// Non-base64 character encountered. Should be =
-			if(c != '='){
+			if(c != '=') {
 				// If it's not a valid char, return an empty result
 				return {};
 			}
 			break;
 		}
-		val = (val<<6) + atoi_map[c];
+		val = (val << 6) + atoi_map[c];
 		bits += 6;
 		if(bits >= 0) {
 			out.push_back(static_cast<char>((val >> bits) & 0xFF));
@@ -98,37 +99,37 @@ std::vector<uint8_t> generic_decode_le(std::string_view in, const std::vector<in
 	out.reserve(length);
 
 	for(std::size_t i = 0; i <= last_char; i += 4) {
-		//add first char (always)
+		// add first char (always)
 		unsigned value = atoi_map[in[i]];
 
 		const bool second_char = i + 1 <= last_char;
 		if(!second_char) {
 			break;
 		}
-		//add second char (if present)
-		value |= atoi_map[in[i+1]] << 6;
+		// add second char (if present)
+		value |= atoi_map[in[i + 1]] << 6;
 
-		//output first byte (if second char)
+		// output first byte (if second char)
 		out.push_back(value & 0xFF);
 
 		const bool third_char = i + 2 <= last_char;
 		if(!third_char) {
 			break;
 		}
-		//add third char (if present)
-		value |= atoi_map[in[i+2]] << 12;
+		// add third char (if present)
+		value |= atoi_map[in[i + 2]] << 12;
 
-		//output second byte (if third char)
+		// output second byte (if third char)
 		out.push_back((value >> 8) & 0xFF);
 
 		const bool fourth_char = i + 3 <= last_char;
 		if(!fourth_char) {
 			break;
 		}
-		//add fourth char (if present)
-		value |= atoi_map[in[i+3]] << 18;
+		// add fourth char (if present)
+		value |= atoi_map[in[i + 3]] << 18;
 
-		//output third byte (if fourth char)
+		// output third byte (if fourth char)
 		out.push_back((value >> 16) & 0xFF);
 	}
 
@@ -166,7 +167,6 @@ std::string generic_encode_be(utils::byte_string_view in, const std::string& ito
 	}
 
 	return out;
-
 }
 std::string generic_encode_le(utils::byte_string_view in, const std::string& itoa_map, bool pad)
 {
@@ -179,28 +179,28 @@ std::string generic_encode_le(utils::byte_string_view in, const std::string& ito
 	int i = 0;
 	out.reserve(out_len);
 	while(i < in_len) {
-		//add first byte (always)
+		// add first byte (always)
 		unsigned value = in[i];
-		//output first char (always)
+		// output first char (always)
 		out.push_back(itoa(value, itoa_map));
-		//add second byte (if present)
+		// add second byte (if present)
 		const bool second_byte = ++i < in_len;
 		if(second_byte) {
 			value |= static_cast<int>(in[i]) << 8;
 		}
-		//output second char (always, contains 2 bits from first byte)
+		// output second char (always, contains 2 bits from first byte)
 		out.push_back(itoa(value >> 6, itoa_map));
 		if(!second_byte) {
 			break;
 		}
-		//add third byte (if present)
+		// add third byte (if present)
 		const bool third_byte = ++i < in_len;
 		if(third_byte) {
 			value |= static_cast<int>(in[i]) << 16;
 		}
-		//output third char (if second byte)
+		// output third char (if second byte)
 		out.push_back(itoa(value >> 12, itoa_map));
-		//output fourth char (if third byte)
+		// output fourth char (if third byte)
 		if(third_byte) {
 			out.push_back(itoa(value >> 18, itoa_map));
 			++i;
@@ -213,11 +213,11 @@ std::string generic_encode_le(utils::byte_string_view in, const std::string& ito
 	}
 
 	return out;
-
 }
-}
+} // namespace
 
-namespace base64 {
+namespace base64
+{
 std::vector<uint8_t> decode(std::string_view in)
 {
 	return generic_decode_be(in, base64_atoi_map());
@@ -226,8 +226,9 @@ std::string encode(utils::byte_string_view bytes)
 {
 	return generic_encode_be(bytes, base64_itoa_map, true);
 }
-}
-namespace crypt64{
+} // namespace base64
+namespace crypt64
+{
 std::vector<uint8_t> decode(std::string_view in)
 {
 	return generic_decode_le(in, crypt64_atoi_map());
@@ -245,4 +246,4 @@ char encode(int value)
 {
 	return itoa(value, crypt64_itoa_map);
 }
-}
+} // namespace crypt64

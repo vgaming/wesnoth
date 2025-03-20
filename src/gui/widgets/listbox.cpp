@@ -28,9 +28,9 @@
 #include "gui/widgets/widget_helpers.hpp"
 #include "gui/widgets/window.hpp"
 #include "sdl/rect.hpp"
+#include "utils/optional_fwd.hpp"
 #include "wml_exception.hpp"
 #include <functional>
-#include "utils/optional_fwd.hpp"
 
 #define LOG_SCOPE_HEADER get_control_type() + " [" + id() + "] " + __func__
 #define LOG_HEADER LOG_SCOPE_HEADER + ':'
@@ -72,18 +72,15 @@ listbox::listbox(const implementation::builder_listbox_base& builder)
 	// "Inherited."
 	scrollbar_container::finalize_setup();
 
-	auto generator = generator_base::build(
-		builder.has_minimum,
-		builder.has_maximum,
-		builder.placement,
-		builder.allow_selection);
+	auto generator
+		= generator_base::build(builder.has_minimum, builder.has_maximum, builder.placement, builder.allow_selection);
 
 	// Save our *non-owning* pointer before this gets moved into the grid.
 	generator_ = generator.get();
 	assert(generator_);
 
-	generator->create_items(-1, *list_builder_, builder.list_data,
-		std::bind(&listbox::list_item_clicked, this, std::placeholders::_1));
+	generator->create_items(
+		-1, *list_builder_, builder.list_data, std::bind(&listbox::list_item_clicked, this, std::placeholders::_1));
 
 	// TODO: can we use the replacements system here?
 	swap_grid(nullptr, content_grid(), std::move(generator), "_list_grid");
@@ -92,7 +89,8 @@ listbox::listbox(const implementation::builder_listbox_base& builder)
 grid& listbox::add_row(const widget_item& item, const int index)
 {
 	assert(generator_);
-	grid& row = generator_->create_item(index, *list_builder_, item, std::bind(&listbox::list_item_clicked, this, std::placeholders::_1));
+	grid& row = generator_->create_item(
+		index, *list_builder_, item, std::bind(&listbox::list_item_clicked, this, std::placeholders::_1));
 
 	resize_content(row);
 
@@ -102,7 +100,8 @@ grid& listbox::add_row(const widget_item& item, const int index)
 grid& listbox::add_row(const widget_data& data, const int index)
 {
 	assert(generator_);
-	grid& row = generator_->create_item(index, *list_builder_, data, std::bind(&listbox::list_item_clicked, this, std::placeholders::_1));
+	grid& row = generator_->create_item(
+		index, *list_builder_, data, std::bind(&listbox::list_item_clicked, this, std::placeholders::_1));
 
 	resize_content(row);
 
@@ -383,7 +382,7 @@ void listbox::place(const point& origin, const point& size)
 	utils::optional<unsigned> vertical_scrollbar_position, horizontal_scrollbar_position;
 
 	// Check if this is the first time placing the list box
-	if(get_origin() != point {-1, -1}) {
+	if(get_origin() != point{-1, -1}) {
 		vertical_scrollbar_position = get_vertical_scrollbar_item_position();
 		horizontal_scrollbar_position = get_horizontal_scrollbar_item_position();
 	}
@@ -411,16 +410,15 @@ void listbox::place(const point& origin, const point& size)
 }
 
 void listbox::resize_content(const int width_modification,
-		const int height_modification,
-		const int width_modification_pos,
-		const int height_modification_pos)
+	const int height_modification,
+	const int width_modification_pos,
+	const int height_modification_pos)
 {
 	DBG_GUI_L << LOG_HEADER << " current size " << content_grid()->get_size() << " width_modification "
 			  << width_modification << " height_modification " << height_modification << ".";
 
 	if(content_resize_request(
-		width_modification, height_modification, width_modification_pos, height_modification_pos))
-	{
+		   width_modification, height_modification, width_modification_pos, height_modification_pos)) {
 		// Calculate new size.
 		point size = content_grid()->get_size();
 		size.x += width_modification;
@@ -562,10 +560,12 @@ void listbox::handle_key_right_arrow(SDL_Keymod modifier, bool& handled)
 void listbox::initialize_sorter(std::string_view id, generator_sort_array&& array)
 {
 	auto header = find_widget<grid>("_header_grid", false, false);
-	if(!header) return;
+	if(!header)
+		return;
 
 	auto toggle = header->find_widget<selectable_item>(id, false, false);
-	if(!toggle) return;
+	if(!toggle)
+		return;
 
 	const std::size_t i = orders_.size();
 	orders_.emplace_back(toggle, std::move(array));
@@ -576,8 +576,7 @@ void listbox::initialize_sorter(std::string_view id, generator_sort_array&& arra
 	w.set_visible(widget::visibility::visible);
 
 	// TODO: we can bind the pair directly if we remove the on-order callback
-	connect_signal_notify_modified(w,
-		std::bind(&listbox::order_by_column, this, i, std::placeholders::_1));
+	connect_signal_notify_modified(w, std::bind(&listbox::order_by_column, this, i, std::placeholders::_1));
 }
 
 void listbox::order_by_column(unsigned column, widget& widget)
@@ -626,7 +625,8 @@ bool listbox::sort_helper::more(const t_string& lhs, const t_string& rhs)
 void listbox::set_active_sorter(std::string_view id, sort_order::type order, bool select_first)
 {
 	for(auto& [w, _] : orders_) {
-		if(!w || dynamic_cast<widget*>(w)->id() != id) continue;
+		if(!w || dynamic_cast<widget*>(w)->id() != id)
+			continue;
 
 		// Set the state and fire a modified event to handle updating the list
 		w->set_value(utils::to_underlying(order), true);
@@ -640,15 +640,16 @@ void listbox::set_active_sorter(std::string_view id, sort_order::type order, boo
 std::pair<widget*, sort_order::type> listbox::get_active_sorter() const
 {
 	for(const auto& [w, _] : orders_) {
-		if(!w) continue;
+		if(!w)
+			continue;
 
 		auto sort = sort_order::get_enum(w->get_value()).value_or(sort_order::type::none);
 		if(sort != sort_order::type::none) {
-			return { dynamic_cast<widget*>(w), sort };
+			return {dynamic_cast<widget*>(w), sort};
 		}
 	}
 
-	return { nullptr, sort_order::type::none };
+	return {nullptr, sort_order::type::none};
 }
 
 void listbox::mark_as_unsorted()
@@ -704,8 +705,10 @@ listbox_definition::resolution::resolution(const config& cfg)
 	, grid(nullptr)
 {
 	// Note the order should be the same as the enum state_t in listbox.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("listbox_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("listbox_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("listbox_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_disabled", missing_mandatory_wml_tag("listbox_definition][resolution", "state_disabled")));
 
 	auto child = VALIDATE_WML_CHILD(cfg, "grid", missing_mandatory_wml_tag("listbox_definition][resolution", "grid"));
 	grid = std::make_shared<builder_grid>(child);
@@ -721,8 +724,7 @@ static std::vector<widget_data> parse_list_data(const config& data, const unsign
 		auto cols = row.child_range("column");
 
 		VALIDATE(static_cast<unsigned>(cols.size()) == req_cols,
-			_("‘list_data’ must have the same number of columns as the ‘list_definition’.")
-		);
+			_("‘list_data’ must have the same number of columns as the ‘list_definition’."));
 
 		for(const auto& c : cols) {
 			list_data.emplace_back();

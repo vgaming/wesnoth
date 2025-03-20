@@ -18,13 +18,12 @@
  * Formula debugger - implementation
  * */
 
-
 #include "formula/debugger.hpp"
 #include "formula/formula.hpp"
 #include "formula/function.hpp"
 #include "game_display.hpp"
-#include "log.hpp"
 #include "gui/dialogs/formula_debugger.hpp"
+#include "log.hpp"
 
 static lg::log_domain log_formula_debugger("scripting/formula/debug");
 #define DBG_FDB LOG_STREAM(debug, log_formula_debugger)
@@ -32,19 +31,29 @@ static lg::log_domain log_formula_debugger("scripting/formula/debug");
 #define WRN_FDB LOG_STREAM(warn, log_formula_debugger)
 #define ERR_FDB LOG_STREAM(err, log_formula_debugger)
 
-namespace wfl {
+namespace wfl
+{
 
-
-debug_info::debug_info(int arg_number, int counter, int level, const std::string &name, const std::string &str, const variant &value, bool evaluated)
-	: arg_number_(arg_number), counter_(counter), level_(level), name_(name), str_(str), value_(value), evaluated_(evaluated)
+debug_info::debug_info(int arg_number,
+	int counter,
+	int level,
+	const std::string& name,
+	const std::string& str,
+	const variant& value,
+	bool evaluated)
+	: arg_number_(arg_number)
+	, counter_(counter)
+	, level_(level)
+	, name_(name)
+	, str_(str)
+	, value_(value)
+	, evaluated_(evaluated)
 {
 }
-
 
 debug_info::~debug_info()
 {
 }
-
 
 int debug_info::level() const
 {
@@ -56,61 +65,58 @@ const std::string& debug_info::name() const
 	return name_;
 }
 
-
 int debug_info::counter() const
 {
 	return counter_;
 }
-
 
 const variant& debug_info::value() const
 {
 	return value_;
 }
 
-
-void debug_info::set_value(const variant &value)
+void debug_info::set_value(const variant& value)
 {
 	value_ = value;
 }
-
 
 bool debug_info::evaluated() const
 {
 	return evaluated_;
 }
 
-
 void debug_info::set_evaluated(bool evaluated)
 {
 	evaluated_ = evaluated;
 }
-
 
 const std::string& debug_info::str() const
 {
 	return str_;
 }
 
-
 formula_debugger::formula_debugger()
-	: call_stack_(), counter_(0), current_breakpoint_(), breakpoints_(), execution_trace_(),arg_number_extra_debug_info(-1), f_name_extra_debug_info("")
+	: call_stack_()
+	, counter_(0)
+	, current_breakpoint_()
+	, breakpoints_()
+	, execution_trace_()
+	, arg_number_extra_debug_info(-1)
+	, f_name_extra_debug_info("")
 {
 	add_breakpoint_step_into();
 	add_breakpoint_continue_to_end();
 }
 
-
 formula_debugger::~formula_debugger()
 {
 }
 
-
-static void msg(const char *act, debug_info &i, const char *to="", const char *result = "")
+static void msg(const char* act, debug_info& i, const char* to = "", const char* result = "")
 {
-	DBG_FDB << "#" << i.counter() << act << std::endl <<"     \""<< i.name() << "\"='" << i.str() << "' " << to << result;
+	DBG_FDB << "#" << i.counter() << act << std::endl
+			<< "     \"" << i.name() << "\"='" << i.str() << "' " << to << result;
 }
-
 
 void formula_debugger::add_debug_info(int arg_number, const std::string& f_name)
 {
@@ -118,12 +124,10 @@ void formula_debugger::add_debug_info(int arg_number, const std::string& f_name)
 	f_name_extra_debug_info = f_name;
 }
 
-
 const std::list<debug_info>& formula_debugger::get_call_stack() const
 {
 	return call_stack_;
 }
-
 
 const breakpoint_ptr formula_debugger::get_current_breakpoint() const
 {
@@ -138,11 +142,11 @@ const std::list<debug_info>& formula_debugger::get_execution_trace() const
 void formula_debugger::check_breakpoints()
 {
 	for(std::list<breakpoint_ptr>::iterator b = breakpoints_.begin(); b != breakpoints_.end(); ++b) {
-		if ((*b)->is_break_now()){
+		if((*b)->is_break_now()) {
 			current_breakpoint_ = (*b);
 			show_gui();
 			current_breakpoint_ = breakpoint_ptr();
-			if ((*b)->is_one_time_only()) {
+			if((*b)->is_one_time_only()) {
 				b = breakpoints_.erase(b);
 			}
 			break;
@@ -152,25 +156,25 @@ void formula_debugger::check_breakpoints()
 
 void formula_debugger::show_gui()
 {
-	if (game_display::get_singleton() == nullptr) {
+	if(game_display::get_singleton() == nullptr) {
 		WRN_FDB << "skipping WFL debug window due to nullptr gui";
 		return;
 	}
-	if (game_config::debug) {
+	if(game_config::debug) {
 		gui2::dialogs::formula_debugger::display(*this);
 	} else {
 		WRN_FDB << "skipping WFL debug window because :debug is not enabled";
 	}
 }
 
-void formula_debugger::call_stack_push(const std::string &str)
+void formula_debugger::call_stack_push(const std::string& str)
 {
-	call_stack_.emplace_back(arg_number_extra_debug_info,counter_++,call_stack_.size(),f_name_extra_debug_info,str,variant(),false);
+	call_stack_.emplace_back(
+		arg_number_extra_debug_info, counter_++, call_stack_.size(), f_name_extra_debug_info, str, variant(), false);
 	arg_number_extra_debug_info = -1;
 	f_name_extra_debug_info = "";
 	execution_trace_.push_back(call_stack_.back());
 }
-
 
 void formula_debugger::call_stack_pop()
 {
@@ -178,89 +182,84 @@ void formula_debugger::call_stack_pop()
 	call_stack_.pop_back();
 }
 
-
 void formula_debugger::call_stack_set_evaluated(bool evaluated)
 {
 	call_stack_.back().set_evaluated(evaluated);
 }
 
-void formula_debugger::call_stack_set_value(const variant &v)
+void formula_debugger::call_stack_set_value(const variant& v)
 {
 	call_stack_.back().set_value(v);
 }
 
-variant formula_debugger::evaluate_arg_callback(const formula_expression &expression, const formula_callable &variables)
+variant formula_debugger::evaluate_arg_callback(const formula_expression& expression, const formula_callable& variables)
 {
 	call_stack_push(expression.str());
 	check_breakpoints();
-	msg(" evaluating expression: ",call_stack_.back());
-	variant v = expression.execute(variables,this);
+	msg(" evaluating expression: ", call_stack_.back());
+	variant v = expression.execute(variables, this);
 	call_stack_set_value(v);
 	call_stack_set_evaluated(true);
-	msg(" evaluated expression: ",call_stack_.back()," to ",v.to_debug_string(true).c_str());
+	msg(" evaluated expression: ", call_stack_.back(), " to ", v.to_debug_string(true).c_str());
 	check_breakpoints();
 	call_stack_pop();
 	return v;
 }
 
-
-variant formula_debugger::evaluate_formula_callback(const formula &f, const formula_callable &variables)
+variant formula_debugger::evaluate_formula_callback(const formula& f, const formula_callable& variables)
 {
 	call_stack_push(f.str());
 	check_breakpoints();
-	msg(" evaluating formula: ",call_stack_.back());
-	variant v = f.execute(variables,this);
+	msg(" evaluating formula: ", call_stack_.back());
+	variant v = f.execute(variables, this);
 	call_stack_set_value(v);
 	call_stack_set_evaluated(true);
-	msg(" evaluated formula: ",call_stack_.back()," to ",v.to_debug_string(true).c_str());
+	msg(" evaluated formula: ", call_stack_.back(), " to ", v.to_debug_string(true).c_str());
 	check_breakpoints();
 	call_stack_pop();
 	return v;
 }
 
-
-variant formula_debugger::evaluate_formula_callback(const formula &f)
+variant formula_debugger::evaluate_formula_callback(const formula& f)
 {
 	call_stack_push(f.str());
 	check_breakpoints();
-	msg(" evaluating formula without variables: ",call_stack_.back());
+	msg(" evaluating formula without variables: ", call_stack_.back());
 	variant v = f.execute(this);
 	call_stack_set_value(v);
 	call_stack_set_evaluated(true);
-	msg(" evaluated formula without variables: ",call_stack_.back()," to ",v.to_debug_string(true).c_str());
+	msg(" evaluated formula without variables: ", call_stack_.back(), " to ", v.to_debug_string(true).c_str());
 	check_breakpoints();
 	call_stack_pop();
 	return v;
 }
 
-
-base_breakpoint::base_breakpoint(formula_debugger &fdb, const std::string &name, bool one_time_only)
-	: fdb_(fdb), name_(name), one_time_only_(one_time_only)
+base_breakpoint::base_breakpoint(formula_debugger& fdb, const std::string& name, bool one_time_only)
+	: fdb_(fdb)
+	, name_(name)
+	, one_time_only_(one_time_only)
 {
-
 }
-
 
 base_breakpoint::~base_breakpoint()
 {
 }
-
 
 bool base_breakpoint::is_one_time_only() const
 {
 	return one_time_only_;
 }
 
-
 const std::string& base_breakpoint::name() const
 {
 	return name_;
 }
 
-class end_breakpoint : public base_breakpoint {
+class end_breakpoint : public base_breakpoint
+{
 public:
-	end_breakpoint(formula_debugger &fdb)
-		: base_breakpoint(fdb,"End", true)
+	end_breakpoint(formula_debugger& fdb)
+		: base_breakpoint(fdb, "End", true)
 	{
 	}
 
@@ -270,19 +269,19 @@ public:
 
 	virtual bool is_break_now() const
 	{
-		const std::list<debug_info> &call_stack = fdb_.get_call_stack();
-		if ((call_stack.size() == 1) && (call_stack.front().evaluated()) ) {
+		const std::list<debug_info>& call_stack = fdb_.get_call_stack();
+		if((call_stack.size() == 1) && (call_stack.front().evaluated())) {
 			return true;
 		}
 		return false;
 	}
 };
 
-
-class step_in_breakpoint : public base_breakpoint {
+class step_in_breakpoint : public base_breakpoint
+{
 public:
-	step_in_breakpoint(formula_debugger &fdb)
-		: base_breakpoint(fdb,"Step",true)
+	step_in_breakpoint(formula_debugger& fdb)
+		: base_breakpoint(fdb, "Step", true)
 	{
 	}
 
@@ -292,8 +291,8 @@ public:
 
 	virtual bool is_break_now() const
 	{
-		const std::list<debug_info> &call_stack = fdb_.get_call_stack();
-		if (call_stack.empty() || call_stack.back().evaluated()) {
+		const std::list<debug_info>& call_stack = fdb_.get_call_stack();
+		if(call_stack.empty() || call_stack.back().evaluated()) {
 			return false;
 		}
 
@@ -301,11 +300,12 @@ public:
 	}
 };
 
-
-class step_out_breakpoint : public base_breakpoint {
+class step_out_breakpoint : public base_breakpoint
+{
 public:
-	step_out_breakpoint(formula_debugger &fdb)
-		: base_breakpoint(fdb,"Step out",true), level_(fdb.get_call_stack().size()-1)
+	step_out_breakpoint(formula_debugger& fdb)
+		: base_breakpoint(fdb, "Step out", true)
+		, level_(fdb.get_call_stack().size() - 1)
 	{
 	}
 
@@ -315,25 +315,27 @@ public:
 
 	virtual bool is_break_now() const
 	{
-		const std::list<debug_info> &call_stack = fdb_.get_call_stack();
-		if (call_stack.empty() || call_stack.back().evaluated()) {
+		const std::list<debug_info>& call_stack = fdb_.get_call_stack();
+		if(call_stack.empty() || call_stack.back().evaluated()) {
 			return false;
 		}
 
-		if (call_stack.size() == level_) {
+		if(call_stack.size() == level_) {
 			return true;
 		}
 		return false;
 	}
+
 private:
 	std::size_t level_;
 };
 
-
-class next_breakpoint : public base_breakpoint {
+class next_breakpoint : public base_breakpoint
+{
 public:
-	next_breakpoint(formula_debugger &fdb)
-		: base_breakpoint(fdb,"Next",true), level_(fdb.get_call_stack().size())
+	next_breakpoint(formula_debugger& fdb)
+		: base_breakpoint(fdb, "Next", true)
+		, level_(fdb.get_call_stack().size())
 	{
 	}
 
@@ -343,19 +345,19 @@ public:
 
 	virtual bool is_break_now() const
 	{
-		const std::list<debug_info> &call_stack = fdb_.get_call_stack();
-		if (call_stack.empty() || call_stack.back().evaluated()) {
+		const std::list<debug_info>& call_stack = fdb_.get_call_stack();
+		if(call_stack.empty() || call_stack.back().evaluated()) {
 			return false;
 		}
-		if (call_stack.size() == level_) {
+		if(call_stack.size() == level_) {
 			return true;
 		}
 		return false;
 	}
+
 private:
 	std::size_t level_;
 };
-
 
 void formula_debugger::add_breakpoint_continue_to_end()
 {
@@ -363,13 +365,11 @@ void formula_debugger::add_breakpoint_continue_to_end()
 	LOG_FDB << "added 'end' breakpoint";
 }
 
-
 void formula_debugger::add_breakpoint_step_into()
 {
 	breakpoints_.emplace_back(new step_in_breakpoint(*this));
 	LOG_FDB << "added 'step into' breakpoint";
 }
-
 
 void formula_debugger::add_breakpoint_step_out()
 {
@@ -377,12 +377,10 @@ void formula_debugger::add_breakpoint_step_out()
 	LOG_FDB << "added 'step out' breakpoint";
 }
 
-
 void formula_debugger::add_breakpoint_next()
 {
 	breakpoints_.emplace_back(new next_breakpoint(*this));
 	LOG_FDB << "added 'next' breakpoint";
 }
-
 
 } // end of namespace wfl

@@ -16,7 +16,6 @@
 
 #include "gui/widgets/unit_preview_pane.hpp"
 
-
 #include "gui/core/register_widget.hpp"
 #include "gui/widgets/button.hpp"
 #include "gui/widgets/drawing.hpp"
@@ -27,19 +26,19 @@
 
 #include "formatter.hpp"
 #include "formula/string_utils.hpp"
-#include "language.hpp"
-#include "preferences/preferences.hpp"
 #include "gettext.hpp"
 #include "help/help.hpp"
 #include "help/help_impl.hpp"
+#include "language.hpp"
 #include "play_controller.hpp"
+#include "preferences/preferences.hpp"
 #include "resources.hpp"
 #include "serialization/markup.hpp"
 #include "team.hpp"
 #include "terrain/movement.hpp"
 #include "terrain/type_data.hpp"
-#include "units/types.hpp"
 #include "units/helper.hpp"
+#include "units/types.hpp"
 #include "units/unit.hpp"
 #include "wml_exception.hpp"
 
@@ -71,35 +70,35 @@ unit_preview_pane::unit_preview_pane(const implementation::builder_unit_preview_
 void unit_preview_pane::finalize_setup()
 {
 	// Icons
-	icon_type_              = find_widget<drawing>("type_image", false, false);
-	icon_race_              = find_widget<image>("type_race", false, false);
-	icon_alignment_         = find_widget<image>("type_alignment", false, false);
+	icon_type_ = find_widget<drawing>("type_image", false, false);
+	icon_race_ = find_widget<image>("type_race", false, false);
+	icon_alignment_ = find_widget<image>("type_alignment", false, false);
 
 	// Labels
-	label_name_             = find_widget<label>("type_name", false, false);
-	label_level_            = find_widget<label>("type_level", false, false);
-	label_race_             = find_widget<label>("type_race_label", false, false);
-	label_details_          = find_widget<styled_widget>("type_details_minimal", false, false);
+	label_name_ = find_widget<label>("type_name", false, false);
+	label_level_ = find_widget<label>("type_level", false, false);
+	label_race_ = find_widget<label>("type_race_label", false, false);
+	label_details_ = find_widget<styled_widget>("type_details_minimal", false, false);
 
-	tree_details_           = find_widget<tree_view>("type_details", false, false);
+	tree_details_ = find_widget<tree_view>("type_details", false, false);
 
 	// Profile button
 	button_profile_ = find_widget<button>("type_profile", false, false);
 
 	if(button_profile_) {
-		connect_signal_mouse_left_click(*button_profile_,
-			std::bind(&unit_preview_pane::profile_button_callback, this));
+		connect_signal_mouse_left_click(*button_profile_, std::bind(&unit_preview_pane::profile_button_callback, this));
 	}
 }
 
-static inline tree_view_node& add_name_tree_node(tree_view_node& header_node, const std::string& type, const t_string& label, const t_string& tooltip = "")
+static inline tree_view_node& add_name_tree_node(
+	tree_view_node& header_node, const std::string& type, const t_string& label, const t_string& tooltip = "")
 {
 	/* Note: We have to pass data instead of just doing 'child_label.set_label(label)' below
 	 * because the tree_view_node::add_child needs to have the correct size of the
 	 * node child widgets for its internal size calculations.
 	 * Same is true for 'use_markup'
 	 */
-	auto& child_node = header_node.add_child(type, { { "name",{ { "label", label },{ "use_markup", "true" } } } });
+	auto& child_node = header_node.add_child(type, {{"name", {{"label", label}, {"use_markup", "true"}}}});
 	auto& child_label = child_node.find_widget<styled_widget>("name", true);
 
 	child_label.set_tooltip(tooltip);
@@ -114,7 +113,7 @@ static inline std::string get_hp_tooltip(
 	std::vector<std::string> resistances_table;
 
 	bool att_def_diff = false;
-	for(const utils::string_map_res::value_type &resist : res) {
+	for(const utils::string_map_res::value_type& resist : res) {
 		std::ostringstream line;
 		line << translation::dgettext("wesnoth", resist.first.c_str()) << ": ";
 
@@ -138,14 +137,14 @@ static inline std::string get_hp_tooltip(
 		tooltip << _("(Att / Def)");
 	}
 
-	for(const std::string &line : resistances_table) {
+	for(const std::string& line : resistances_table) {
 		tooltip << '\n' << font::unicode_bullet << " " << line;
 	}
 
 	return tooltip.str();
 }
 
-static inline std::string get_mp_tooltip(int total_movement, const std::function<int (t_translation::terrain_code)>& get)
+static inline std::string get_mp_tooltip(int total_movement, const std::function<int(t_translation::terrain_code)>& get)
 {
 	std::set<terrain_movement> terrain_moves;
 	std::ostringstream tooltip;
@@ -158,7 +157,8 @@ static inline std::string get_mp_tooltip(int total_movement, const std::function
 	}
 
 	for(t_translation::terrain_code terrain : prefs::get().encountered_terrains()) {
-		if(terrain == t_translation::FOGGED || terrain == t_translation::VOID_TERRAIN || t_translation::terrain_matches(terrain, t_translation::ALL_OFF_MAP)) {
+		if(terrain == t_translation::FOGGED || terrain == t_translation::VOID_TERRAIN
+			|| t_translation::terrain_matches(terrain, t_translation::ALL_OFF_MAP)) {
 			continue;
 		}
 
@@ -168,19 +168,18 @@ static inline std::string get_mp_tooltip(int total_movement, const std::function
 		}
 	}
 
-	for(const terrain_movement& tm: terrain_moves)
-	{
+	for(const terrain_movement& tm : terrain_moves) {
 		tooltip << '\n' << font::unicode_bullet << " " << tm.name << ": ";
 
 		// movement  -  range: 1 .. 5, movetype::UNREACHABLE=impassable
-		const bool cannot_move = tm.moves > total_movement;     // cannot move in this terrain
+		const bool cannot_move = tm.moves > total_movement; // cannot move in this terrain
 		double movement_red_to_green = 100.0 - 25.0 * tm.moves;
 
 		std::stringstream move_ss;
 		// A 5 MP margin; if the movement costs go above the unit's max moves + 5, we replace it with dashes.
 		if(cannot_move && (tm.moves > total_movement + 5)) {
 			move_ss << font::unicode_figure_dash;
-		} else if (cannot_move) {
+		} else if(cannot_move) {
 			move_ss << "(" << tm.moves << ")";
 		} else {
 			move_ss << tm.moves;
@@ -212,7 +211,6 @@ void unit_preview_pane::print_attack_details(T attacks, tree_view_node& parent_n
 		return;
 	}
 
-
 	auto& header_node = add_name_tree_node(parent_node, "header", markup::bold(_("Attacks")));
 
 	for(const auto& a : attacks) {
@@ -227,33 +225,24 @@ void unit_preview_pane::print_attack_details(T attacks, tree_view_node& parent_n
 		const std::string label = markup::span_color(
 			font::unit_type_color, a.damage(), font::weapon_numbers_sep, a.num_attacks(), " ", a.name());
 
-		auto& subsection = header_node.add_child(
-			"item_image",
+		auto& subsection = header_node.add_child("item_image",
 			{
-				{ "image_range", { { "label", range_png } } },
-				{ "image_type", { { "label", type_png } } },
-				{ "name", { { "label", label }, { "use_markup", "true" } } },
-			}
-		);
+				{"image_range", {{"label", range_png}}},
+				{"image_type", {{"label", type_png}}},
+				{"name", {{"label", label}, {"use_markup", "true"}}},
+			});
 
 		subsection.find_widget<styled_widget>("image_range", true).set_tooltip(range);
 		subsection.find_widget<styled_widget>("image_type", true).set_tooltip(type);
 
 		if(!range_png_exists || !type_png_exists) {
-			add_name_tree_node(
-				subsection,
-				"item",
-				markup::span_color(font::weapon_details_color, range, font::weapon_details_sep, type)
-			);
+			add_name_tree_node(subsection, "item",
+				markup::span_color(font::weapon_details_color, range, font::weapon_details_sep, type));
 		}
 
 		for(const auto& pair : a.special_tooltips()) {
-			add_name_tree_node(
-				subsection,
-				"item",
-				markup::span_color(font::weapon_details_color, pair.first),
-				markup::span_size("x-large", pair.first) + "\n" + pair.second
-			);
+			add_name_tree_node(subsection, "item", markup::span_color(font::weapon_details_color, pair.first),
+				markup::span_size("x-large", pair.first) + "\n" + pair.second);
 		}
 	}
 }
@@ -267,9 +256,8 @@ void unit_preview_pane::set_display_data(const unit_type& type)
 		std::string mods;
 
 		if(resources::controller) {
-			mods = "~RC(" + type.flag_rgb() + ">" +
-				 team::get_side_color_id(resources::controller->current_side())
-				 + ")";
+			mods
+				= "~RC(" + type.flag_rgb() + ">" + team::get_side_color_id(resources::controller->current_side()) + ")";
 		}
 
 		mods += image_mods_;
@@ -291,7 +279,7 @@ void unit_preview_pane::set_display_data(const unit_type& type)
 	}
 
 	if(label_race_) {
-		label_race_ ->set_label(type.race()->name(type.genders().front()));
+		label_race_->set_label(type.race()->name(type.genders().front()));
 	}
 
 	if(icon_race_) {
@@ -302,9 +290,7 @@ void unit_preview_pane::set_display_data(const unit_type& type)
 		const std::string& alignment_name = unit_alignments::get_string(type.alignment());
 
 		icon_alignment_->set_label("icons/alignments/alignment_" + alignment_name + "_30.png");
-		icon_alignment_->set_tooltip(unit_type::alignment_description(
-			type.alignment(),
-			type.genders().front()));
+		icon_alignment_->set_tooltip(unit_type::alignment_description(type.alignment(), type.genders().front()));
 	}
 
 	if(label_details_) {
@@ -321,7 +307,7 @@ void unit_preview_pane::set_display_data(const unit_type& type)
 
 		str << "\n"; // Leave a blank line where traits would be
 
-		str <<  _("HP: ") << type.hitpoints() << "\n";
+		str << _("HP: ") << type.hitpoints() << "\n";
 
 		str << _("XP: ") << type.experience_needed(true);
 
@@ -330,25 +316,40 @@ void unit_preview_pane::set_display_data(const unit_type& type)
 	}
 
 	if(tree_details_) {
-
 		tree_details_->clear();
-		tree_details_->add_node("hp_xp_mp", {
-			{ "hp",{
-				{ "label", markup::tag("small", markup::span_color(unit::hp_color_max(), markup::bold(_("HP: ")), type.hitpoints()), " | ") },
-				{ "use_markup", "true" },
-				{ "tooltip", get_hp_tooltip(type.movement_type().get_resistances().damage_table(), [&type](const std::string& dt, bool is_attacker) { return type.resistance_against(dt, is_attacker); }) }
-			} },
-			{ "xp",{
-				{ "label",  markup::tag("small", markup::span_color(unit::xp_color(100, type.can_advance(), true), markup::bold(_("XP: ")), type.experience_needed()), " | ") },
-				{ "use_markup", "true" },
-				{ "tooltip", (formatter() << _("Experience Modifier: ") << unit_experience_accelerator::get_acceleration() << '%').str() }
-			} },
-			{ "mp",{
-				{ "label", markup::tag("small", markup::bold(_("MP: ")) + std::to_string(type.movement())) },
-				{ "use_markup", "true" },
-				{ "tooltip", get_mp_tooltip(type.movement(), [&type](t_translation::terrain_code terrain) { return type.movement_type().movement_cost(terrain); }) }
-			} },
-		});
+		tree_details_->add_node("hp_xp_mp",
+			{
+				{"hp",
+					{{"label",
+						 markup::tag("small",
+							 markup::span_color(unit::hp_color_max(), markup::bold(_("HP: ")), type.hitpoints()),
+							 " | ")},
+						{"use_markup", "true"},
+						{"tooltip",
+							get_hp_tooltip(type.movement_type().get_resistances().damage_table(),
+								[&type](const std::string& dt, bool is_attacker) {
+									return type.resistance_against(dt, is_attacker);
+								})}}},
+				{"xp",
+					{{"label",
+						 markup::tag("small",
+							 markup::span_color(unit::xp_color(100, type.can_advance(), true), markup::bold(_("XP: ")),
+								 type.experience_needed()),
+							 " | ")},
+						{"use_markup", "true"},
+						{"tooltip",
+							(formatter() << _("Experience Modifier: ")
+										 << unit_experience_accelerator::get_acceleration() << '%')
+								.str()}}},
+				{"mp",
+					{{"label", markup::tag("small", markup::bold(_("MP: ")) + std::to_string(type.movement()))},
+						{"use_markup", "true"},
+						{"tooltip",
+							get_mp_tooltip(type.movement(),
+								[&type](t_translation::terrain_code terrain) {
+									return type.movement_type().movement_cost(terrain);
+								})}}},
+			});
 
 		// Print trait details
 		{
@@ -361,7 +362,8 @@ void unit_preview_pane::set_display_data(const unit_type& type)
 				}
 
 				if(header_node == nullptr) {
-					header_node = &add_name_tree_node(tree_details_->get_root_node(), "header", markup::bold(_("Traits")));
+					header_node
+						= &add_name_tree_node(tree_details_->get_root_node(), "header", markup::bold(_("Traits")));
 				}
 
 				add_name_tree_node(*header_node, "item", name);
@@ -370,17 +372,13 @@ void unit_preview_pane::set_display_data(const unit_type& type)
 
 		// Print ability details
 		if(!type.abilities_metadata().empty()) {
-
-			auto& header_node = add_name_tree_node(tree_details_->get_root_node(), "header", markup::bold(_("Abilities")));
+			auto& header_node
+				= add_name_tree_node(tree_details_->get_root_node(), "header", markup::bold(_("Abilities")));
 
 			for(const auto& ab : type.abilities_metadata()) {
 				if(!ab.name.empty()) {
 					add_name_tree_node(
-						header_node,
-						"item",
-						ab.name,
-						markup::span_size("x-large", ab.name) + "\n" + ab.description
-					);
+						header_node, "item", ab.name, markup::span_size("x-large", ab.name) + "\n" + ab.description);
 				}
 			}
 		}
@@ -413,7 +411,8 @@ void unit_preview_pane::set_display_data(const unit& u)
 	if(label_name_) {
 		std::string name;
 		if(!u.name().empty()) {
-			name = markup::span_size("large", u.name() + "\n") + markup::tag("small", markup::span_color(font::unit_type_color, u.type_name()));
+			name = markup::span_size("large", u.name() + "\n")
+				+ markup::tag("small", markup::span_color(font::unit_type_color, u.type_name()));
 		} else {
 			name = markup::span_size("large", u.type_name()) + "\n";
 		}
@@ -442,9 +441,7 @@ void unit_preview_pane::set_display_data(const unit& u)
 		const std::string& alignment_name = unit_alignments::get_string(u.alignment());
 
 		icon_alignment_->set_label("icons/alignments/alignment_" + alignment_name + "_30.png");
-		icon_alignment_->set_tooltip(unit_type::alignment_description(
-			u.alignment(),
-			u.gender()));
+		icon_alignment_->set_tooltip(unit_type::alignment_description(u.alignment(), u.gender()));
 	}
 
 	if(label_details_) {
@@ -476,49 +473,54 @@ void unit_preview_pane::set_display_data(const unit& u)
 
 	if(tree_details_) {
 		tree_details_->clear();
-		const std::string unit_xp = u.can_advance() ? (formatter() << u.experience() << "/" << u.max_experience()).str() : font::unicode_en_dash;
-		tree_details_->add_node("hp_xp_mp", {
-			{ "hp",{
-				{ "label", markup::tag("small", markup::span_color(u.hp_color(), markup::bold(_("HP: ")), u.hitpoints(), "/", u.max_hitpoints(), " | ")) },
-				{ "use_markup", "true" },
-				{ "tooltip", get_hp_tooltip(u.get_base_resistances(), [&u](const std::string& dt, bool is_attacker) { return u.resistance_against(dt, is_attacker, u.get_location()); }) }
-			} },
-			{ "xp",{
-				{ "label",  markup::tag("small", markup::span_color(u.xp_color(), markup::bold(_("XP: ")), unit_xp, " | ")) },
-				{ "use_markup", "true" },
-				{ "tooltip", (formatter() << _("Experience Modifier: ") << unit_experience_accelerator::get_acceleration() << '%').str() }
-			} },
-			{ "mp",{
-				{ "label", markup::tag("small", markup::bold(_("MP: ")), u.movement_left(), "/", u.total_movement()) },
-				{ "use_markup", "true" },
-				{ "tooltip", get_mp_tooltip(u.total_movement(), [&u](t_translation::terrain_code terrain) { return u.movement_cost(terrain); }) }
-			} },
-		});
+		const std::string unit_xp = u.can_advance() ? (formatter() << u.experience() << "/" << u.max_experience()).str()
+													: font::unicode_en_dash;
+		tree_details_->add_node("hp_xp_mp",
+			{
+				{"hp",
+					{{"label",
+						 markup::tag("small",
+							 markup::span_color(
+								 u.hp_color(), markup::bold(_("HP: ")), u.hitpoints(), "/", u.max_hitpoints(), " | "))},
+						{"use_markup", "true"},
+						{"tooltip",
+							get_hp_tooltip(u.get_base_resistances(),
+								[&u](const std::string& dt, bool is_attacker) {
+									return u.resistance_against(dt, is_attacker, u.get_location());
+								})}}},
+				{"xp",
+					{{"label",
+						 markup::tag(
+							 "small", markup::span_color(u.xp_color(), markup::bold(_("XP: ")), unit_xp, " | "))},
+						{"use_markup", "true"},
+						{"tooltip",
+							(formatter() << _("Experience Modifier: ")
+										 << unit_experience_accelerator::get_acceleration() << '%')
+								.str()}}},
+				{"mp",
+					{{"label",
+						 markup::tag("small", markup::bold(_("MP: ")), u.movement_left(), "/", u.total_movement())},
+						{"use_markup", "true"},
+						{"tooltip",
+							get_mp_tooltip(u.total_movement(),
+								[&u](t_translation::terrain_code terrain) { return u.movement_cost(terrain); })}}},
+			});
 
 		if(!u.trait_names().empty()) {
 			auto& header_node = add_name_tree_node(tree_details_->get_root_node(), "header", markup::bold(_("Traits")));
 
 			assert(u.trait_names().size() == u.trait_descriptions().size());
-			for (std::size_t i = 0; i < u.trait_names().size(); ++i) {
-				add_name_tree_node(
-					header_node,
-					"item",
-					u.trait_names()[i],
-					u.trait_descriptions()[i]
-				);
+			for(std::size_t i = 0; i < u.trait_names().size(); ++i) {
+				add_name_tree_node(header_node, "item", u.trait_names()[i], u.trait_descriptions()[i]);
 			}
 		}
 
 		if(!u.get_ability_list().empty()) {
-			auto& header_node = add_name_tree_node(tree_details_->get_root_node(), "header", markup::bold(_("Abilities")));
+			auto& header_node
+				= add_name_tree_node(tree_details_->get_root_node(), "header", markup::bold(_("Abilities")));
 
 			for(const auto& ab : u.ability_tooltips()) {
-				add_name_tree_node(
-					header_node,
-					"item",
-					std::get<2>(ab),
-					std::get<3>(ab)
-				);
+				add_name_tree_node(header_node, "item", std::get<2>(ab), std::get<3>(ab));
 			}
 		}
 		print_attack_details(u.attacks(), tree_details_->get_root_node());
@@ -568,12 +570,16 @@ unit_preview_pane_definition::unit_preview_pane_definition(const config& cfg)
 }
 
 unit_preview_pane_definition::resolution::resolution(const config& cfg)
-	: resolution_definition(cfg), grid()
+	: resolution_definition(cfg)
+	, grid()
 {
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "background", missing_mandatory_wml_tag("unit_preview_pane_definition][resolution", "background")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "foreground", missing_mandatory_wml_tag("unit_preview_pane_definition][resolution", "foreground")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "background", missing_mandatory_wml_tag("unit_preview_pane_definition][resolution", "background")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "foreground", missing_mandatory_wml_tag("unit_preview_pane_definition][resolution", "foreground")));
 
-	auto child = VALIDATE_WML_CHILD(cfg, "grid", missing_mandatory_wml_tag("unit_preview_pane_definition][resolution", "grid"));
+	auto child = VALIDATE_WML_CHILD(
+		cfg, "grid", missing_mandatory_wml_tag("unit_preview_pane_definition][resolution", "grid"));
 	grid = std::make_shared<builder_grid>(child);
 }
 
@@ -592,8 +598,7 @@ std::unique_ptr<widget> builder_unit_preview_pane::build() const
 {
 	auto widget = std::make_unique<unit_preview_pane>(*this);
 
-	DBG_GUI_G << "Window builder: placed unit preview pane '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed unit preview pane '" << id << "' with definition '" << definition << "'.";
 
 	const auto conf = widget->cast_config_to<unit_preview_pane_definition>();
 	assert(conf);

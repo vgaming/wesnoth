@@ -16,14 +16,14 @@
 
 #include "draw.hpp"
 #include "exceptions.hpp"
-#include "log.hpp"
 #include "gui/core/top_level_drawable.hpp"
+#include "log.hpp"
 #include "sdl/rect.hpp"
 #include "utils/general.hpp"
 #include "video.hpp"
 
-#include <thread>
 #include <algorithm>
+#include <thread>
 #include <vector>
 
 static lg::log_domain log_draw_man("draw/manager");
@@ -38,9 +38,13 @@ using namespace std::chrono_literals;
 
 // This is not publically exposed, because nobody else should be using it.
 // Implementation is in video.cpp.
-namespace video { void render_screen(); }
+namespace video
+{
+void render_screen();
+}
 
-namespace {
+namespace
+{
 std::vector<top_level_drawable*> top_level_drawables_;
 std::vector<rect> invalidated_regions_;
 bool drawing_ = false;
@@ -49,7 +53,8 @@ steady_clock::time_point last_sparkle_;
 bool extra_pass_requested_ = false;
 } // namespace
 
-namespace draw_manager {
+namespace draw_manager
+{
 
 static void update();
 static void layout();
@@ -60,51 +65,47 @@ static void tidy_drawables();
 
 void invalidate_region(const rect& region)
 {
-	if (drawing_) {
-		ERR_DM << "Attempted to invalidate region " << region
-			<< " during draw";
+	if(drawing_) {
+		ERR_DM << "Attempted to invalidate region " << region << " during draw";
 		throw game::error("invalidate during draw");
 	}
 
 	// On-add region optimization
 	rect progressive_cover = region;
 	int64_t cumulative_area = 0;
-	for (auto& r : invalidated_regions_) {
-		if (r.contains(region)) {
+	for(auto& r : invalidated_regions_) {
+		if(r.contains(region)) {
 			// An existing invalidated region already contains it,
 			// no need to do anything in this case.
-			//DBG_DM << "no need to invalidate " << region;
-			//STREAMING_LOG << '.';
+			// DBG_DM << "no need to invalidate " << region;
+			// STREAMING_LOG << '.';
 			return;
 		}
-		if (region.contains(r)) {
+		if(region.contains(r)) {
 			// This region contains a previously invalidated region,
 			// might as well supercede it with this.
-			DBG_DM << "superseding previous invalidation " << r
-				<< " with " << region;
-			//STREAMING_LOG << '\'';
+			DBG_DM << "superseding previous invalidation " << r << " with " << region;
+			// STREAMING_LOG << '\'';
 			r = region;
 			return;
 		}
 		// maybe merge with another rect
 		rect m = r.minimal_cover(region);
-		if (m.area() <= r.area() + region.area()) {
+		if(m.area() <= r.area() + region.area()) {
 			// This won't always be the best,
 			// but it also won't ever be the worst.
-			DBG_DM << "merging " << region << " with " << r
-				<< " to invalidate " << m;
-			//STREAMING_LOG << ':';
+			DBG_DM << "merging " << region << " with " << r << " to invalidate " << m;
+			// STREAMING_LOG << ':';
 			r = m;
 			return;
 		}
 		// maybe merge *all* the rects
 		progressive_cover.expand_to_cover(r);
 		cumulative_area += r.area();
-		if (progressive_cover.area() <= cumulative_area) {
-			DBG_DM << "conglomerating invalidations to "
-				<< progressive_cover;
-			//STREAMING_LOG << '%';
-			// replace the first one, so we can easily prune later
+		if(progressive_cover.area() <= cumulative_area) {
+			DBG_DM << "conglomerating invalidations to " << progressive_cover;
+			// STREAMING_LOG << '%';
+			//  replace the first one, so we can easily prune later
 			invalidated_regions_[0] = progressive_cover;
 			return;
 		}
@@ -112,7 +113,7 @@ void invalidate_region(const rect& region)
 
 	// No optimization was found, so add a new invalidation
 	DBG_DM << "invalidating region " << region;
-	//STREAMING_LOG << '.';
+	// STREAMING_LOG << '.';
 	invalidated_regions_.push_back(region);
 }
 
@@ -129,13 +130,13 @@ void request_extra_render_pass()
 
 void sparkle()
 {
-	if (drawing_) {
+	if(drawing_) {
 		ERR_DM << "Draw recursion detected";
 		throw game::error("recursive draw");
 	}
 
 	// Remove any invalidated TLDs from previous iterations or events.
-	if (tlds_need_tidying_) {
+	if(tlds_need_tidying_) {
 		tidy_drawables();
 		tlds_need_tidying_ = false;
 	}
@@ -160,13 +161,13 @@ void sparkle()
 	bool drew_something = draw_manager::expose();
 
 	// If extra render passes are requested, render and draw again.
-	while (extra_pass_requested_) {
+	while(extra_pass_requested_) {
 		extra_pass_requested_ = false;
 		draw_manager::render();
 		drew_something |= draw_manager::expose();
 	}
 
-	if (drew_something) {
+	if(drew_something) {
 		// We only need to flip the screen if something was drawn.
 		video::render_screen();
 	} else {
@@ -179,7 +180,7 @@ void sparkle()
 std::chrono::milliseconds get_frame_length()
 {
 	int rr = video::current_refresh_rate();
-	if (rr <= 0) {
+	if(rr <= 0) {
 		// make something up
 		rr = 60;
 	}
@@ -192,7 +193,7 @@ static void wait_for_vsync()
 {
 	auto now = steady_clock::now();
 	auto next_frame = last_sparkle_ + get_frame_length();
-	if (now < next_frame) {
+	if(now < next_frame) {
 		// delay a maximum of 1 second in case something crazy happens
 		std::this_thread::sleep_for(std::min<steady_clock::duration>(next_frame - now, 1s));
 	}
@@ -200,25 +201,31 @@ static void wait_for_vsync()
 
 static void update()
 {
-	for (size_t i = 0; i < top_level_drawables_.size(); ++i) {
+	for(size_t i = 0; i < top_level_drawables_.size(); ++i) {
 		top_level_drawable* tld = top_level_drawables_[i];
-		if (tld) { tld->update(); }
+		if(tld) {
+			tld->update();
+		}
 	}
 }
 
 static void layout()
 {
-	for (size_t i = 0; i < top_level_drawables_.size(); ++i) {
+	for(size_t i = 0; i < top_level_drawables_.size(); ++i) {
 		top_level_drawable* tld = top_level_drawables_[i];
-		if (tld) { tld->layout(); }
+		if(tld) {
+			tld->layout();
+		}
 	}
 }
 
 static void render()
 {
-	for (size_t i = 0; i < top_level_drawables_.size(); ++i) {
+	for(size_t i = 0; i < top_level_drawables_.size(); ++i) {
 		top_level_drawable* tld = top_level_drawables_[i];
-		if (tld) { tld->render(); }
+		if(tld) {
+			tld->render();
+		}
 	}
 }
 
@@ -229,43 +236,45 @@ static bool expose()
 	// For now just send all regions to all TLDs in the correct order.
 	bool drawn = false;
 next:
-	while (!invalidated_regions_.empty()) {
+	while(!invalidated_regions_.empty()) {
 		rect r = invalidated_regions_.back();
 		invalidated_regions_.pop_back();
 		// check if this will be superceded by or should be merged with another
-		for (auto& other : invalidated_regions_) {
+		for(auto& other : invalidated_regions_) {
 			// r will never contain other, due to construction
-			if (other.contains(r)) {
+			if(other.contains(r)) {
 				DBG_DM << "skipping redundant draw " << r;
-				//STREAMING_LOG << "-";
+				// STREAMING_LOG << "-";
 				goto next;
 			}
 			rect m = other.minimal_cover(r);
-			if (m.area() <= r.area() + other.area()) {
+			if(m.area() <= r.area() + other.area()) {
 				DBG_DM << "merging inefficient draws " << r;
-				//STREAMING_LOG << "=";
+				// STREAMING_LOG << "=";
 				other = m;
 				goto next;
 			}
 		}
 		DBG_DM << "drawing " << r;
-		//STREAMING_LOG << "+";
+		// STREAMING_LOG << "+";
 		auto clipper = draw::override_clip(r);
-		for (auto tld : top_level_drawables_) {
-			if (!tld) { continue; }
+		for(auto tld : top_level_drawables_) {
+			if(!tld) {
+				continue;
+			}
 			rect i = r.intersect(tld->screen_location());
-			if (i.empty()) {
-				//DBG_DM << "  skip " << static_cast<void*>(tld);
-				//STREAMING_LOG << "x";
+			if(i.empty()) {
+				// DBG_DM << "  skip " << static_cast<void*>(tld);
+				// STREAMING_LOG << "x";
 				continue;
 			}
 			DBG_DM << "  to " << static_cast<void*>(tld);
-			//STREAMING_LOG << "*";
+			// STREAMING_LOG << "*";
 			try {
 				drawn |= tld->expose(i);
 			} catch(...) {
-				WRN_DM << "exception " << utils::get_unknown_exception_type()
-					   << " thrown during expose " << static_cast<void*>(tld);
+				WRN_DM << "exception " << utils::get_unknown_exception_type() << " thrown during expose "
+					   << static_cast<void*>(tld);
 				drawing_ = false;
 				throw;
 			}
@@ -281,7 +290,7 @@ void register_drawable(top_level_drawable* tld)
 {
 	DBG_DM << "registering TLD " << static_cast<void*>(tld);
 	auto& vec = top_level_drawables_;
-	if (std::find(vec.begin(), vec.end(), tld) != vec.end()) {
+	if(std::find(vec.begin(), vec.end(), tld) != vec.end()) {
 		raise_drawable(tld);
 	} else {
 		top_level_drawables_.push_back(tld);
@@ -294,9 +303,8 @@ void deregister_drawable(top_level_drawable* tld)
 	auto& vec = top_level_drawables_;
 	auto it = std::find(vec.begin(), vec.end(), tld);
 	// Sanity check
-	if (it == vec.end()) {
-		WRN_DM << "attempted to deregister nonexistent TLD "
-			<< static_cast<void*>(tld);
+	if(it == vec.end()) {
+		WRN_DM << "attempted to deregister nonexistent TLD " << static_cast<void*>(tld);
 		return;
 	}
 	// Replace it with a null pointer. We will tidy it later.
@@ -311,13 +319,12 @@ void raise_drawable(top_level_drawable* tld)
 	auto& vec = top_level_drawables_;
 	auto it = std::find(vec.begin(), vec.end(), tld);
 	// Sanity check
-	if (it == vec.end()) {
-		ERR_DM << "attempted to raise nonexistent TLD "
-			<< static_cast<void*>(tld);
+	if(it == vec.end()) {
+		ERR_DM << "attempted to raise nonexistent TLD " << static_cast<void*>(tld);
 		return;
 	}
 	// Invalidate existing occurances. They will be removed later.
-	for ( ; it != vec.end(); it = std::find(it, vec.end(), tld)) {
+	for(; it != vec.end(); it = std::find(it, vec.end(), tld)) {
 		*it = nullptr;
 	}
 	// Then just readd it on the end.

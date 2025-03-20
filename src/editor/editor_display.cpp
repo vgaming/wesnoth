@@ -15,9 +15,9 @@
 
 #define GETTEXT_DOMAIN "wesnoth-editor"
 
+#include "editor/editor_display.hpp"
 #include "draw.hpp"
 #include "editor/controller/editor_controller.hpp"
-#include "editor/editor_display.hpp"
 #include "floating_label.hpp"
 #include "font/sdl_ttf_compat.hpp" // for pango_line_size
 #include "formula/string_utils.hpp"
@@ -27,11 +27,13 @@
 #include "terrain/builder.hpp"
 #include "video.hpp"
 
-namespace wb {
-	class manager;
+namespace wb
+{
+class manager;
 }
 
-namespace editor {
+namespace editor
+{
 
 editor_display::editor_display(editor_controller& controller, reports& reports_object)
 	: display(nullptr, std::shared_ptr<wb::manager>(), reports_object, "editor", config())
@@ -66,7 +68,8 @@ void editor_display::remove_brush_loc(const map_location& hex)
 	invalidate(hex);
 }
 
-void editor_display::rebuild_terrain(const map_location &loc) {
+void editor_display::rebuild_terrain(const map_location& loc)
+{
 	builder_->rebuild_terrain(loc);
 }
 
@@ -80,16 +83,14 @@ void editor_display::draw_hex(const map_location& loc)
 
 	if(get_map().in_selection(loc)) {
 		drawing_buffer_add(drawing_layer::fog_shroud, loc,
-			[tex = image::get_texture(image::locator{"editor/selection-overlay.png"}, image::TOD_COLORED)](const rect& d) {
-				draw::blit(tex, d);
-			});
+			[tex = image::get_texture(image::locator{"editor/selection-overlay.png"}, image::TOD_COLORED)](
+				const rect& d) { draw::blit(tex, d); });
 	}
 
 	if(brush_locations_.find(loc) != brush_locations_.end()) {
 		static const image::locator brush(game_config::images::editor_brush);
-		drawing_buffer_add(drawing_layer::selected_hex, loc, [tex = image::get_texture(brush, image::HEXED)](const rect& d) {
-			draw::blit(tex, d);
-		});
+		drawing_buffer_add(drawing_layer::selected_hex, loc,
+			[tex = image::get_texture(brush, image::HEXED)](const rect& d) { draw::blit(tex, d); });
 	}
 
 	// Paint mouseover overlays
@@ -114,7 +115,7 @@ void editor_display::layout()
 	config element;
 	config::attribute_value& text = element.add_child("element")["text"];
 	// Fill in the terrain report
-	if (get_map().on_board_with_border(mouseoverHex_)) {
+	if(get_map().on_board_with_border(mouseoverHex_)) {
 		text = get_map().get_terrain_editor_string(mouseoverHex_);
 		refresh_report("terrain", &element);
 		refresh_report("terrain_info");
@@ -122,7 +123,7 @@ void editor_display::layout()
 		refresh_report("position", &element);
 	}
 
-	if (context().teams().empty()) {
+	if(context().teams().empty()) {
 		text = int(get_map().villages().size());
 		refresh_report("villages", &element);
 	} else {
@@ -166,7 +167,7 @@ void editor_display::set_status(const std::string& str, const bool is_success)
 	const int border = 3;
 
 	std::string formatted_str;
-	if (is_success) {
+	if(is_success) {
 		formatted_str = VGETTEXT("<span color='#66ff00'><span face='DejaVuSans'>✔</span> $msg</span>", {{"msg", str}});
 	} else {
 		formatted_str = VGETTEXT("<span color='red'><span face='DejaVuSans'>✘</span> $msg</span>", {{"msg", str}});
@@ -190,9 +191,9 @@ void editor_display::set_help_string_enabled(bool value)
 {
 	help_string_enabled_ = value;
 
-	if (!value) {
+	if(!value) {
 		clear_help_string();
-	} else if (!help_string_.empty()) {
+	} else if(!help_string_.empty()) {
 		set_help_string(help_string_);
 	}
 }
@@ -211,7 +212,7 @@ void editor_display::set_help_string(const std::string& str)
 
 	clear_help_string();
 
-	if (!help_string_enabled_ || help_string_.empty()) {
+	if(!help_string_enabled_ || help_string_.empty()) {
 		return;
 	}
 
@@ -245,4 +246,4 @@ void editor_display::set_help_string(const std::string& str)
 	font::move_floating_label(help_handle_, 0.0, -double(r.h));
 }
 
-} //end namespace editor
+} // end namespace editor

@@ -31,7 +31,6 @@
 #define LOG_SCOPE_HEADER get_control_type() + " [" + id() + "] " + __func__
 #define LOG_HEADER LOG_SCOPE_HEADER + ':'
 
-
 namespace gui2
 {
 
@@ -55,16 +54,16 @@ combobox::combobox(const implementation::builder_combobox& builder)
 
 	set_wants_mouse_left_double_click();
 
-	connect_signal<event::MOUSE_MOTION>(std::bind(
-			&combobox::signal_handler_mouse_motion, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_5));
-	connect_signal<event::LEFT_BUTTON_DOWN>(std::bind(
-			&combobox::signal_handler_left_button_down, this, std::placeholders::_2, std::placeholders::_3));
-	connect_signal<event::LEFT_BUTTON_UP>(std::bind(
-			&combobox::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::MOUSE_MOTION>(std::bind(&combobox::signal_handler_mouse_motion, this, std::placeholders::_2,
+		std::placeholders::_3, std::placeholders::_5));
+	connect_signal<event::LEFT_BUTTON_DOWN>(
+		std::bind(&combobox::signal_handler_left_button_down, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::LEFT_BUTTON_UP>(
+		std::bind(&combobox::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
 	connect_signal<event::LEFT_BUTTON_DOUBLE_CLICK>(std::bind(
-			&combobox::signal_handler_left_button_double_click, this, std::placeholders::_2, std::placeholders::_3));
+		&combobox::signal_handler_left_button_double_click, this, std::placeholders::_2, std::placeholders::_3));
 	connect_signal<event::MOUSE_ENTER>(
-			std::bind(&combobox::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
+		std::bind(&combobox::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
 
 	const auto conf = cast_config_to<combobox_definition>();
 	assert(conf);
@@ -80,7 +79,7 @@ void combobox::place(const point& origin, const point& size)
 	// Inherited.
 	styled_widget::place(origin, size);
 
-	set_maximum_width(get_text_maximum_width()-ICON_SIZE);
+	set_maximum_width(get_text_maximum_width() - ICON_SIZE);
 	set_maximum_height(get_text_maximum_height(), false);
 
 	set_maximum_length(max_input_length_);
@@ -143,17 +142,14 @@ void combobox::update_canvas()
 	const int max_width = get_text_maximum_width() - ICON_SIZE;
 	const int max_height = get_text_maximum_height();
 
-	for(auto & tmp : get_canvases())
-	{
-
+	for(auto& tmp : get_canvases()) {
 		tmp.set_variable("text", wfl::variant(get_value()));
 		tmp.set_variable("text_x_offset", wfl::variant(text_x_offset_));
 		tmp.set_variable("text_y_offset", wfl::variant(text_y_offset_));
 		tmp.set_variable("text_maximum_width", wfl::variant(max_width));
 		tmp.set_variable("text_maximum_height", wfl::variant(max_height));
 
-		tmp.set_variable("cursor_offset",
-						 wfl::variant(get_cursor_position(start + length).x));
+		tmp.set_variable("cursor_offset", wfl::variant(get_cursor_position(start + length).x));
 
 		tmp.set_variable("selection_offset", wfl::variant(start_offset));
 		tmp.set_variable("selection_width", wfl::variant(end_offset - start_offset));
@@ -203,9 +199,8 @@ void combobox::handle_mouse_selection(point mouse, const bool start_selection)
 	mouse.x -= get_x();
 	mouse.y -= get_y();
 	// FIXME we don't test for overflow in width
-	if(mouse.x < static_cast<int>(text_x_offset_)
-	   || mouse.y < static_cast<int>(text_y_offset_)
-	   || mouse.y >= static_cast<int>(text_y_offset_ + text_height_)) {
+	if(mouse.x < static_cast<int>(text_x_offset_) || mouse.y < static_cast<int>(text_y_offset_)
+		|| mouse.y >= static_cast<int>(text_y_offset_ + text_height_)) {
 		return;
 	}
 
@@ -214,7 +209,6 @@ void combobox::handle_mouse_selection(point mouse, const bool start_selection)
 	if(offset < 0) {
 		return;
 	}
-
 
 	set_cursor(offset, !start_selection);
 	update_canvas();
@@ -238,8 +232,7 @@ void combobox::update_offsets()
 	text_y_offset_ = conf->text_y_offset(variables);
 
 	// Since this variable doesn't change set it here instead of in update_canvas().
-	for(auto & tmp : get_canvases())
-	{
+	for(auto& tmp : get_canvases()) {
 		tmp.set_variable("text_font_height", wfl::variant(text_height_));
 	}
 
@@ -257,7 +250,7 @@ void combobox::handle_key_up_arrow(SDL_Keymod /*modifier*/, bool& handled)
 {
 	DBG_GUI_E << LOG_SCOPE_HEADER;
 	handled = true;
-	if (selected_ > 1) {
+	if(selected_ > 1) {
 		set_selected(selected_ - 1, true);
 	}
 }
@@ -266,7 +259,7 @@ void combobox::handle_key_down_arrow(SDL_Keymod /*modifier*/, bool& handled)
 {
 	DBG_GUI_E << LOG_SCOPE_HEADER;
 	handled = true;
-	if (selected_ < values_.size()-1) {
+	if(selected_ < values_.size() - 1) {
 		set_selected(selected_ + 1, true);
 	}
 }
@@ -298,7 +291,7 @@ void combobox::set_selected(unsigned selected, bool fire_event)
 	selected_ = selected;
 
 	text_box_base::set_value(values_[selected_]["label"]);
-	if (fire_event) {
+	if(fire_event) {
 		fire(event::NOTIFY_MODIFIED, *this, nullptr);
 	}
 }
@@ -308,22 +301,19 @@ void combobox::update_mouse_cursor()
 	unsigned right_border = get_x() + this->get_size().x;
 	unsigned mouse_x = get_mouse_position().x;
 
-	if ((mouse_x <= right_border) && (mouse_x >= right_border-ICON_SIZE)) {
+	if((mouse_x <= right_border) && (mouse_x >= right_border - ICON_SIZE)) {
 		cursor::set(cursor::NORMAL);
 	} else {
 		cursor::set(cursor::IBEAM);
 	}
 }
 
-void combobox::signal_handler_mouse_enter(const event::ui_event /*event*/,
-											   bool& /*handled*/)
+void combobox::signal_handler_mouse_enter(const event::ui_event /*event*/, bool& /*handled*/)
 {
 	update_mouse_cursor();
 }
 
-void combobox::signal_handler_mouse_motion(const event::ui_event event,
-											bool& handled,
-											const point& coordinate)
+void combobox::signal_handler_mouse_motion(const event::ui_event event, bool& handled, const point& coordinate)
 {
 	DBG_GUI_E << get_control_type() << "[" << id() << "]: " << event << ".";
 
@@ -336,8 +326,7 @@ void combobox::signal_handler_mouse_motion(const event::ui_event event,
 	handled = true;
 }
 
-void combobox::signal_handler_left_button_down(const event::ui_event event,
-												bool& handled)
+void combobox::signal_handler_left_button_down(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -349,7 +338,7 @@ void combobox::signal_handler_left_button_down(const event::ui_event event,
 	unsigned right_border = get_x() + this->get_size().x;
 	unsigned mouse_x = get_mouse_position().x;
 
-	if ((mouse_x <= right_border) && (mouse_x >= right_border-ICON_SIZE)) {
+	if((mouse_x <= right_border) && (mouse_x >= right_border - ICON_SIZE)) {
 		// If a button has a retval do the default handling.
 		dialogs::drop_down_menu droplist(this, values_, selected_, false);
 
@@ -374,8 +363,7 @@ void combobox::signal_handler_left_button_down(const event::ui_event event,
 	handled = true;
 }
 
-void combobox::signal_handler_left_button_up(const event::ui_event event,
-											  bool& handled)
+void combobox::signal_handler_left_button_up(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -383,9 +371,7 @@ void combobox::signal_handler_left_button_up(const event::ui_event event,
 	handled = true;
 }
 
-void
-combobox::signal_handler_left_button_double_click(const event::ui_event event,
-												   bool& handled)
+void combobox::signal_handler_left_button_double_click(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -409,10 +395,14 @@ combobox_definition::resolution::resolution(const config& cfg)
 	, text_y_offset(cfg["text_y_offset"])
 {
 	// Note the order should be the same as the enum state_t in combobox.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("combobox_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("combobox_definition][resolution", "state_disabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_focused", missing_mandatory_wml_tag("combobox_definition][resolution", "state_focused")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_hovered", missing_mandatory_wml_tag("combobox_definition][resolution", "state_hovered")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("combobox_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_disabled", missing_mandatory_wml_tag("combobox_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_focused", missing_mandatory_wml_tag("combobox_definition][resolution", "state_focused")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_hovered", missing_mandatory_wml_tag("combobox_definition][resolution", "state_hovered")));
 }
 
 // }---------- BUILDER -----------{
@@ -443,8 +433,7 @@ std::unique_ptr<widget> builder_combobox::build() const
 		widget->set_values(options_);
 	}
 
-	DBG_GUI_G << "Window builder: placed text box '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed text box '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

@@ -15,19 +15,23 @@
 
 #pragma once
 
-#include <string>
 #include "config.hpp"
+#include <string>
 
-//Similar to config_of but it stores references to configs (instead of cyoping them).
+// Similar to config_of but it stores references to configs (instead of cyoping them).
 struct configr_of
 {
-	template <typename AT>
-	configr_of(const std::string& attrname, AT value) : subtags_(), data_()
+	template<typename AT>
+	configr_of(const std::string& attrname, AT value)
+		: subtags_()
+		, data_()
 	{
 		this->operator()(attrname, value);
 	}
 
-	configr_of(const config& cfg) : subtags_(), data_()
+	configr_of(const config& cfg)
+		: subtags_()
+		, data_()
 	{
 		this->operator()(cfg);
 	}

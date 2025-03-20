@@ -36,8 +36,8 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/streambuf.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/asio/streambuf.hpp>
 
 class config;
 
@@ -134,7 +134,7 @@ private:
 	typedef boost::asio::ip::tcp::resolver resolver;
 	resolver resolver_;
 
-	boost::asio::ssl::context tls_context_ { boost::asio::ssl::context::sslv23 };
+	boost::asio::ssl::context tls_context_{boost::asio::ssl::context::sslv23};
 
 	typedef std::unique_ptr<boost::asio::ip::tcp::socket> raw_socket;
 	typedef std::unique_ptr<boost::asio::ssl::stream<raw_socket::element_type>> tls_socket;
@@ -173,4 +173,4 @@ private:
 	std::size_t bytes_to_read_;
 	std::size_t bytes_read_;
 };
-}
+} // namespace network_asio

@@ -34,7 +34,9 @@ public:
 	typedef std::vector<frame_description> anim_description;
 
 	animated(const std::chrono::milliseconds& start_time = std::chrono::milliseconds{0});
-	explicit animated(const anim_description& cfg, const std::chrono::milliseconds& start_time = std::chrono::milliseconds{0}, bool force_change = false);
+	explicit animated(const anim_description& cfg,
+		const std::chrono::milliseconds& start_time = std::chrono::milliseconds{0},
+		bool force_change = false);
 
 	virtual ~animated() = default;
 

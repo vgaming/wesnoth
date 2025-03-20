@@ -41,14 +41,14 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include <windows.h>
 #include <shlobj.h>
+#include <windows.h>
 
 #endif
 
 static lg::log_domain log_desktop("desktop");
-#define ERR_DU LOG_STREAM(err,   log_desktop)
-#define LOG_DU LOG_STREAM(info,  log_desktop)
+#define ERR_DU LOG_STREAM(err, log_desktop)
+#define LOG_DU LOG_STREAM(info, log_desktop)
 #define DBG_DU LOG_STREAM(debug, log_desktop)
 
 namespace desktop
@@ -74,7 +74,7 @@ void enumerate_storage_devices(std::vector<path_info>& res)
 			drive[0] += n;
 
 			const DWORD label_bufsize = MAX_PATH + 1;
-			wchar_t label[label_bufsize] { 0 };
+			wchar_t label[label_bufsize]{0};
 
 			if(GetVolumeInformation(drive, label, label_bufsize, nullptr, nullptr, nullptr, nullptr, 0) == 0) {
 				// Probably an empty removable drive, just ignore it and carry on.
@@ -93,7 +93,7 @@ void enumerate_storage_devices(std::vector<path_info>& res)
 
 	// Probably as unreliable as /media|/mnt on other platforms, not worth
 	// examining in detail.
-	res.push_back({{ N_("filesystem_path_system^Volumes"), GETTEXT_DOMAIN }, "", "/Volumes"});
+	res.push_back({{N_("filesystem_path_system^Volumes"), GETTEXT_DOMAIN}, "", "/Volumes"});
 
 #else
 
@@ -106,7 +106,7 @@ void enumerate_storage_devices(std::vector<path_info>& res)
 	// directly and actively controlled by the user themselves).
 	// Note that the first candidate is actually /run/media/USERNAME -- we need
 	// to fetch the username at runtime from passwd to complete the path.
-	std::vector<std::string> candidates { "/media", "/mnt" };
+	std::vector<std::string> candidates{"/media", "/mnt"};
 
 	// Fetch passwd entry for the effective user the current process runs as
 	if(const passwd* pw = getpwuid(geteuid()); pw && pw->pw_name && pw->pw_name[0]) {
@@ -121,10 +121,9 @@ void enumerate_storage_devices(std::vector<path_info>& res)
 				DBG_DU << "enumerate_mount_parents(): " << mnt << " appears to be a non-empty dir";
 				res.push_back({mnt, "", mnt});
 			}
-		}
-		catch(...) {
-			//bool is_empty(const path& p, system::error_code& ec) might throw.
-			//For example if you have no permission on that directory. Don't list the file in that case.
+		} catch(...) {
+			// bool is_empty(const path& p, system::error_code& ec) might throw.
+			// For example if you have no permission on that directory. Don't list the file in that case.
 			DBG_DU << "caught exception " << utils::get_unknown_exception_type() << " in enumerate_storage_devices";
 		}
 	}
@@ -153,7 +152,7 @@ inline config get_bookmarks_config()
 	const auto& cfg = prefs::get().dir_bookmarks();
 	return cfg.has_value() ? cfg.value() : config();
 
-//	return cfg ? *cfg : config{};
+	//	return cfg ? *cfg : config{};
 }
 
 inline void commit_bookmarks_config(config& cfg)
@@ -207,19 +206,19 @@ std::vector<path_info> game_paths(const std::set<GAME_PATH_TYPES>& paths)
 	std::vector<path_info> res;
 
 	if(paths.count(GAME_BIN_DIR) > 0 && !have_path(res, game_bin_dir)) {
-		res.push_back({{ N_("filesystem_path_game^Game executables"), GETTEXT_DOMAIN }, "", game_bin_dir});
+		res.push_back({{N_("filesystem_path_game^Game executables"), GETTEXT_DOMAIN}, "", game_bin_dir});
 	}
 
 	if(paths.count(GAME_CORE_DATA_DIR) > 0 && !have_path(res, game_data_dir)) {
-		res.push_back({{ N_("filesystem_path_game^Game data"), GETTEXT_DOMAIN }, "", game_data_dir});
+		res.push_back({{N_("filesystem_path_game^Game data"), GETTEXT_DOMAIN}, "", game_data_dir});
 	}
 
 	if(paths.count(GAME_USER_DATA_DIR) > 0 && !have_path(res, game_user_data_dir)) {
-		res.push_back({{ N_("filesystem_path_game^User data"), GETTEXT_DOMAIN }, "", game_user_data_dir});
+		res.push_back({{N_("filesystem_path_game^User data"), GETTEXT_DOMAIN}, "", game_user_data_dir});
 	}
 
 	if(paths.count(GAME_EDITOR_MAP_DIR) > 0 && !have_path(res, game_editor_map_dir)) {
-		res.push_back({{ N_("filesystem_path_game^Editor maps"), GETTEXT_DOMAIN }, "", game_editor_map_dir});
+		res.push_back({{N_("filesystem_path_game^Editor maps"), GETTEXT_DOMAIN}, "", game_editor_map_dir});
 	}
 
 	return res;
@@ -232,7 +231,7 @@ std::vector<path_info> system_paths(const std::set<SYSTEM_PATH_TYPES>& paths)
 	std::vector<path_info> res;
 
 	if(paths.count(SYSTEM_USER_PROFILE) > 0 && !home_dir.empty()) {
-		res.push_back({{ N_("filesystem_path_system^Home"), GETTEXT_DOMAIN }, "", home_dir});
+		res.push_back({{N_("filesystem_path_system^Home"), GETTEXT_DOMAIN}, "", home_dir});
 	}
 
 	if(paths.count(SYSTEM_ALL_DRIVES) > 0) {
@@ -241,7 +240,7 @@ std::vector<path_info> system_paths(const std::set<SYSTEM_PATH_TYPES>& paths)
 
 #ifndef _WIN32
 	if(paths.count(SYSTEM_ROOTFS) > 0) {
-		res.push_back({{ N_("filesystem_path_system^Root"), GETTEXT_DOMAIN }, "", "/"});
+		res.push_back({{N_("filesystem_path_system^Root"), GETTEXT_DOMAIN}, "", "/"});
 	}
 #endif
 
@@ -254,7 +253,7 @@ unsigned add_user_bookmark(const std::string& label, const std::string& path)
 
 	config& bookmark_cfg = cfg.add_child("bookmark");
 	bookmark_cfg["label"] = label;
-	bookmark_cfg["path"]  = path;
+	bookmark_cfg["path"] = path;
 
 	commit_bookmarks_config(cfg);
 
@@ -280,7 +279,7 @@ std::vector<bookmark_info> user_bookmarks()
 
 	if(cfg.has_child("bookmark")) {
 		for(const config& bookmark_cfg : cfg.child_range("bookmark")) {
-			res.push_back({ bookmark_cfg["label"], bookmark_cfg["path"] });
+			res.push_back({bookmark_cfg["label"], bookmark_cfg["path"]});
 		}
 	}
 

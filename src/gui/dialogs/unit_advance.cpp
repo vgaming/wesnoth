@@ -20,9 +20,9 @@
 #include "gui/widgets/listbox.hpp"
 #include "gui/widgets/unit_preview_pane.hpp"
 #include "gui/widgets/window.hpp"
-#include "units/unit.hpp"
-#include "units/types.hpp"
 #include "help/help.hpp"
+#include "units/types.hpp"
+#include "units/unit.hpp"
 
 #include <functional>
 
@@ -47,9 +47,7 @@ void unit_advance::pre_show()
 
 	keyboard_capture(&list);
 
-	connect_signal_mouse_left_click(
-		find_widget<button>("show_help"),
-		std::bind(&unit_advance::show_help, this));
+	connect_signal_mouse_left_click(find_widget<button>("show_help"), std::bind(&unit_advance::show_help, this));
 
 	for(std::size_t i = 0; i < previews_.size(); i++) {
 		const unit& sample = *previews_[i];
@@ -93,15 +91,13 @@ void unit_advance::pre_show()
 
 void unit_advance::list_item_clicked()
 {
-	const int selected_row
-		= find_widget<listbox>("advance_choice").get_selected_row();
+	const int selected_row = find_widget<listbox>("advance_choice").get_selected_row();
 
 	if(selected_row == -1) {
 		return;
 	}
 
-	find_widget<unit_preview_pane>("advancement_details")
-		.set_display_data(*previews_[selected_row]);
+	find_widget<unit_preview_pane>("advancement_details").set_display_data(*previews_[selected_row]);
 }
 
 void unit_advance::show_help()
@@ -112,9 +108,8 @@ void unit_advance::show_help()
 void unit_advance::post_show()
 {
 	if(get_retval() == retval::OK) {
-		selected_index_ = find_widget<listbox>("advance_choice")
-			.get_selected_row();
+		selected_index_ = find_widget<listbox>("advance_choice").get_selected_row();
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

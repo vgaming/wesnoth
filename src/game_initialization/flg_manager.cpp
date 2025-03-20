@@ -33,7 +33,10 @@ namespace ng
 {
 
 flg_manager::flg_manager(const std::vector<const config*>& era_factions,
-		const config& side, const bool lock_settings, const bool use_map_settings, const bool saved_game)
+	const config& side,
+	const bool lock_settings,
+	const bool use_map_settings,
+	const bool saved_game)
 	: era_factions_(era_factions)
 	, side_num_(side["side"].to_int())
 	, faction_from_recruit_(side["faction_from_recruit"].to_bool())
@@ -96,7 +99,6 @@ flg_manager::flg_manager(const std::vector<const config*>& era_factions,
 		}
 	}
 
-
 	if(!default_leader_type_.empty() && default_leader_type_ != "random") {
 		if(unit_types.find(default_leader_type_) == nullptr) {
 			default_leader_type_.clear();
@@ -107,7 +109,6 @@ flg_manager::flg_manager(const std::vector<const config*>& era_factions,
 	update_available_factions();
 
 	select_default_faction();
-
 }
 
 void flg_manager::set_current_faction(const unsigned index)
@@ -185,21 +186,20 @@ void flg_manager::resolve_random(randomness::mt_rng& rng, const std::vector<std:
 
 			const std::string& faction_id = faction["id"];
 
-			if(!faction_choices.empty() && std::find(faction_choices.begin(), faction_choices.end(),
-					faction_id) == faction_choices.end()) {
+			if(!faction_choices.empty()
+				&& std::find(faction_choices.begin(), faction_choices.end(), faction_id) == faction_choices.end()) {
 				continue;
 			}
 
-			if(!faction_excepts.empty() && std::find(faction_excepts.begin(), faction_excepts.end(),
-					faction_id) != faction_excepts.end()) {
+			if(!faction_excepts.empty()
+				&& std::find(faction_excepts.begin(), faction_excepts.end(), faction_id) != faction_excepts.end()) {
 				continue;
 			}
 
 			// This side is consistent with this random faction, remember as a fallback.
 			fallback_nonrandom_sides.push_back(i);
 
-			if(!avoid.empty() && std::find(avoid.begin(), avoid.end(),
-					faction_id) != avoid.end()) {
+			if(!avoid.empty() && std::find(avoid.begin(), avoid.end(), faction_id) != avoid.end()) {
 				continue;
 			}
 
@@ -258,7 +258,8 @@ void flg_manager::resolve_random(randomness::mt_rng& rng, const std::vector<std:
 			const int gchoice = rng.get_next_random() % nonrandom_genders.size();
 			current_gender_ = nonrandom_genders[gchoice];
 		} else {
-			throw config::error(VGETTEXT("Cannot obtain genders for invalid leader $leader", {{"leader", current_leader_}}));
+			throw config::error(
+				VGETTEXT("Cannot obtain genders for invalid leader $leader", {{"leader", current_leader_}}));
 		}
 	}
 }
@@ -270,7 +271,6 @@ void flg_manager::update_available_factions()
 
 	for(const config* faction : era_factions_) {
 		if((*faction)["id"] == "Custom" && !show_custom_faction) {
-
 			// "Custom" faction should not be available if both
 			// "recruit" and "previous_recruits" lists are empty.
 			// However, it should be available if it was explicitly stated so.
@@ -300,7 +300,6 @@ void flg_manager::update_available_leaders()
 	available_leaders_.clear();
 
 	if(!default_leader_type_.empty() || !leader_lock_) {
-
 		int random_pos = 0;
 		// Add a default leader if there is one.
 		if(!default_leader_type_.empty()) {
@@ -354,9 +353,7 @@ void flg_manager::update_available_genders()
 			}
 
 			for(unit_race::GENDER gender : unit->genders()) {
-				const std::string gender_str = gender == unit_race::FEMALE
-					? unit_race::s_female
-					: unit_race::s_male;
+				const std::string gender_str = gender == unit_race::FEMALE ? unit_race::s_female : unit_race::s_male;
 
 				// Add default gender to the top of the list.
 				if(default_leader_gender_ == gender_str) {
@@ -381,7 +378,8 @@ void flg_manager::update_choosable_factions()
 {
 	choosable_factions_ = available_factions_;
 
-	if(faction_lock_) {;
+	if(faction_lock_) {
+		;
 		const int faction_index = find_suitable_faction();
 		if(faction_index >= 0) {
 			const config* faction = choosable_factions_[faction_index];
@@ -396,18 +394,16 @@ void flg_manager::update_choosable_leaders()
 	choosable_leaders_ = available_leaders_;
 
 	if(!default_leader_type_.empty() && leader_lock_) {
-		if(std::find(available_leaders_.begin(), available_leaders_.end(),
-			default_leader_type_) != available_leaders_.end()) {
-
+		if(std::find(available_leaders_.begin(), available_leaders_.end(), default_leader_type_)
+			!= available_leaders_.end()) {
 			choosable_leaders_.clear();
 			choosable_leaders_.push_back(default_leader_type_);
 		}
 	}
 
 	// Sort alphabetically, but with the 'random' option always first
-	std::sort(choosable_leaders_.begin() + 1, choosable_leaders_.end(), [](const std::string& str1, const std::string& str2) {
-		return str1 < str2;
-	});
+	std::sort(choosable_leaders_.begin() + 1, choosable_leaders_.end(),
+		[](const std::string& str1, const std::string& str2) { return str1 < str2; });
 }
 
 void flg_manager::update_choosable_genders()
@@ -420,7 +416,8 @@ void flg_manager::update_choosable_genders()
 			default_gender = choosable_genders_.front();
 		}
 
-		if(std::find(available_genders_.begin(), available_genders_.end(), default_gender) != available_genders_.end()) {
+		if(std::find(available_genders_.begin(), available_genders_.end(), default_gender)
+			!= available_genders_.end()) {
 			choosable_genders_.clear();
 			choosable_genders_.push_back(default_gender);
 		}
@@ -431,9 +428,7 @@ void flg_manager::select_default_faction()
 {
 	const std::string& default_faction = original_faction_;
 	auto default_faction_it = std::find_if(choosable_factions_.begin(), choosable_factions_.end(),
-		[&default_faction](const config* faction) {
-			return (*faction)["id"] == default_faction;
-		});
+		[&default_faction](const config* faction) { return (*faction)["id"] == default_faction; });
 
 	if(default_faction_it != choosable_factions_.end()) {
 		set_current_faction(std::distance(choosable_factions_.begin(), default_faction_it));
@@ -494,8 +489,7 @@ void flg_manager::append_leaders_from_faction(const config* faction)
 {
 	std::vector<std::string> leaders_to_append = utils::split((*faction)["leader"]);
 
-	available_leaders_.insert(available_leaders_.end(), leaders_to_append.begin(),
-		leaders_to_append.end());
+	available_leaders_.insert(available_leaders_.end(), leaders_to_append.begin(), leaders_to_append.end());
 }
 
 int flg_manager::faction_index(const config& faction) const

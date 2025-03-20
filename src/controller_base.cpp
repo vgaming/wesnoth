@@ -19,15 +19,15 @@
 #include "display.hpp"
 #include "events.hpp"
 #include "game_config_manager.hpp"
+#include "gui/core/event/handler.hpp" // gui2::is_in_dialog
+#include "gui/core/timer.hpp"
 #include "hotkey/command_executor.hpp"
 #include "log.hpp"
 #include "mouse_handler_base.hpp"
 #include "preferences/preferences.hpp"
 #include "scripting/plugins/context.hpp"
-#include "gui/core/event/handler.hpp" // gui2::is_in_dialog
-#include "soundsource.hpp"
-#include "gui/core/timer.hpp"
 #include "sdl/input.hpp" // get_mouse_state
+#include "soundsource.hpp"
 #include "video.hpp"
 
 static lg::log_domain log_display("display");
@@ -81,10 +81,8 @@ void controller_base::long_touch_callback(int x, int y)
 		int threshold = get_mouse_handler_base().drag_threshold();
 		bool yes_actually_dragging = dx * dx + dy * dy >= threshold * threshold;
 
-		if(!yes_actually_dragging
-		   && (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0
-		   && get_display().map_area().contains(x_now, y_now))
-		{
+		if(!yes_actually_dragging && (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0
+			&& get_display().map_area().contains(x_now, y_now)) {
 			const theme::menu* const m = get_mouse_handler_base().gui().get_theme().context_menu();
 			if(m != nullptr) {
 				show_menu(get_display().get_theme().context_menu()->items(), x_now, y_now, true, get_display());
@@ -181,9 +179,8 @@ void controller_base::handle_event(const SDL_Event& event)
 		last_mouse_is_touch_ = event.button.which == SDL_TOUCH_MOUSEID;
 
 		if(last_mouse_is_touch_ && long_touch_timer_ == 0) {
-			long_touch_timer_ = gui2::add_timer(
-					long_touch_duration,
-					std::bind(&controller_base::long_touch_callback, this, event.button.x, event.button.y));
+			long_touch_timer_ = gui2::add_timer(long_touch_duration,
+				std::bind(&controller_base::long_touch_callback, this, event.button.x, event.button.y));
 		}
 
 		mh_base.mouse_press(event.button, is_browsing());
@@ -204,27 +201,21 @@ void controller_base::handle_event(const SDL_Event& event)
 
 		mh_base.mouse_press(event.button, is_browsing());
 		if(mh_base.get_show_menu()) {
-			show_menu(get_display().get_theme().context_menu()->items(), event.button.x, event.button.y, true,
-					get_display());
+			show_menu(
+				get_display().get_theme().context_menu()->items(), event.button.x, event.button.y, true, get_display());
 		}
 		break;
-	case DOUBLE_CLICK_EVENT:
-		{
-			int x = static_cast<int>(reinterpret_cast<std::intptr_t>(event.user.data1));
-			int y = static_cast<int>(reinterpret_cast<std::intptr_t>(event.user.data2));
-			if(event.user.code == static_cast<int>(SDL_TOUCH_MOUSEID)
-			   // TODO: Move to right_click_show_menu?
-			   && get_display().map_area().contains(x, y)
-			   // TODO: This chain repeats in several places, move to a method.
-			   && get_display().get_theme().context_menu() != nullptr) {
-				show_menu(get_display().get_theme().context_menu()->items(),
-						  x,
-						  y,
-						  true,
-						  get_display());
-			}
+	case DOUBLE_CLICK_EVENT: {
+		int x = static_cast<int>(reinterpret_cast<std::intptr_t>(event.user.data1));
+		int y = static_cast<int>(reinterpret_cast<std::intptr_t>(event.user.data2));
+		if(event.user.code == static_cast<int>(SDL_TOUCH_MOUSEID)
+			// TODO: Move to right_click_show_menu?
+			&& get_display().map_area().contains(x, y)
+			// TODO: This chain repeats in several places, move to a method.
+			&& get_display().get_theme().context_menu() != nullptr) {
+			show_menu(get_display().get_theme().context_menu()->items(), x, y, true, get_display());
 		}
-		break;
+	} break;
 
 	case SDL_FINGERUP:
 		// handled by mouse case
@@ -297,16 +288,12 @@ bool controller_base::have_keyboard_focus()
 
 bool controller_base::handle_scroll(int mousex, int mousey, int mouse_flags)
 {
-	const bool mouse_in_window =
-		video::window_has_mouse_focus()
-		|| prefs::get().get_scroll_when_mouse_outside(true);
+	const bool mouse_in_window = video::window_has_mouse_focus() || prefs::get().get_scroll_when_mouse_outside(true);
 
 	int scroll_speed = prefs::get().scroll_speed();
 	double dx = 0.0, dy = 0.0;
 
-	int scroll_threshold = prefs::get().mouse_scrolling()
-		? prefs::get().mouse_scroll_threshold()
-		: 0;
+	int scroll_threshold = prefs::get().mouse_scrolling() ? prefs::get().mouse_scroll_threshold() : 0;
 
 	for(const theme::menu& m : get_display().get_theme().menus()) {
 		if(m.get_location().contains(mousex, mousey)) {
@@ -319,7 +306,7 @@ bool controller_base::handle_scroll(int mousex, int mousey, int mouse_flags)
 
 	// If we weren't previously scrolling, start small.
 	auto dt = 1ms;
-	if (scrolling_) {
+	if(scrolling_) {
 		dt = std::chrono::duration_cast<std::chrono::milliseconds>(tick_now - last_scroll_tick_);
 	}
 
@@ -330,9 +317,9 @@ bool controller_base::handle_scroll(int mousex, int mousey, int mouse_flags)
 	last_scroll_tick_ = tick_now;
 
 	// Apply keyboard scrolling
-	dy -= scroll_up_    * scroll_amount;
-	dy += scroll_down_  * scroll_amount;
-	dx -= scroll_left_  * scroll_amount;
+	dy -= scroll_up_ * scroll_amount;
+	dy += scroll_down_ * scroll_amount;
+	dx -= scroll_left_ * scroll_amount;
 	dx += scroll_right_ * scroll_amount;
 
 	// Scroll if mouse is placed near the edge of the screen
@@ -361,9 +348,7 @@ bool controller_base::handle_scroll(int mousex, int mousey, int mouse_flags)
 		const SDL_Point original_loc = mh_base.get_scroll_start();
 
 		if(mh_base.scroll_started()) {
-			if(get_display().map_outside_area().contains(mousex, mousey)
-				&& mh_base.scroll_started())
-			{
+			if(get_display().map_outside_area().contains(mousex, mousey) && mh_base.scroll_started()) {
 				// Scroll speed is proportional from the distance from the first
 				// middle click and scrolling speed preference.
 				const double speed = 0.01 * scroll_amount;
@@ -385,12 +370,12 @@ bool controller_base::handle_scroll(int mousex, int mousey, int mouse_flags)
 	}
 
 	// If nothing is scrolling, just return.
-	if (!dx && !dy) {
+	if(!dx && !dy) {
 		return false;
 	}
 
 	// If we are continuing a scroll, carry over any subpixel movement.
-	if (scrolling_) {
+	if(scrolling_) {
 		dx += scroll_carry_x_;
 		dy += scroll_carry_y_;
 	}
@@ -461,7 +446,7 @@ void controller_base::play_slice()
 }
 
 void controller_base::show_menu(
-		const std::vector<config>& items_arg, int xloc, int yloc, bool context_menu, display& disp)
+	const std::vector<config>& items_arg, int xloc, int yloc, bool context_menu, display& disp)
 {
 	hotkey::command_executor* cmd_exec = get_hotkey_command_executor();
 	if(!cmd_exec) {

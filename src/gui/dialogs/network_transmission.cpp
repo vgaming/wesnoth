@@ -18,8 +18,8 @@
 #include "gui/dialogs/network_transmission.hpp"
 
 #include "gettext.hpp"
-#include "gui/widgets/progress_bar.hpp"
 #include "gui/widgets/label.hpp"
+#include "gui/widgets/progress_bar.hpp"
 #include "gui/widgets/window.hpp"
 #include "serialization/string_utils.hpp"
 
@@ -38,27 +38,23 @@ void network_transmission::pump_monitor::process()
 		window_->set_retval(retval::OK);
 	} else {
 		size_t completed, total;
-			completed = connection_->current();
-			total = connection_->total();
+		completed = connection_->current();
+		total = connection_->total();
 		if(total) {
-			window_.ptr()->find_widget<progress_bar>("progress")
-					.set_percentage((completed * 100.) / total);
+			window_.ptr()->find_widget<progress_bar>("progress").set_percentage((completed * 100.) / total);
 
 			std::stringstream ss;
 			ss << utils::si_string(completed, true, _("unit_byte^B")) << "/"
 			   << utils::si_string(total, true, _("unit_byte^B"));
 
-			window_.ptr()->find_widget<label>("numeric_progress")
-					.set_label(ss.str());
+			window_.ptr()->find_widget<label>("numeric_progress").set_label(ss.str());
 			window_->invalidate_layout();
 		}
 	}
 }
 
 network_transmission::network_transmission(
-		connection_data& connection,
-		const std::string& title,
-		const std::string& subtitle)
+	connection_data& connection, const std::string& title, const std::string& subtitle)
 	: modal_dialog(window_id())
 	, connection_(&connection)
 	, pump_monitor_(connection_)
@@ -71,8 +67,7 @@ void network_transmission::pre_show()
 {
 	// ***** ***** ***** ***** Set up the widgets ***** ***** ***** *****
 	if(!subtitle_.empty()) {
-		label& subtitle_label
-				= find_widget<label>("subtitle");
+		label& subtitle_label = find_widget<label>("subtitle");
 
 		subtitle_label.set_label(subtitle_);
 		subtitle_label.set_use_markup(true);
@@ -93,4 +88,4 @@ void network_transmission::post_show()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

@@ -18,17 +18,17 @@
 #include "sdl/point.hpp"
 #include "video.hpp"
 
-#include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_keyboard.h>
+#include <SDL2/SDL_mouse.h>
 
 namespace sdl
 {
 
-uint32_t get_mouse_state(int *x, int *y)
+uint32_t get_mouse_state(int* x, int* y)
 {
 	uint32_t buttons = SDL_GetMouseState(x, y);
 
-	if (video::headless()) {
+	if(video::headless()) {
 		return buttons;
 	}
 

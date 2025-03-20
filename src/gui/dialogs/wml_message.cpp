@@ -25,10 +25,7 @@
 namespace gui2::dialogs
 {
 
-void wml_message_base::set_input(
-	const std::string& caption,
-	std::string* text,
-	const unsigned maximum_length)
+void wml_message_base::set_input(const std::string& caption, std::string* text, const unsigned maximum_length)
 {
 	assert(text);
 
@@ -38,9 +35,7 @@ void wml_message_base::set_input(
 	input_maximum_length_ = maximum_length;
 }
 
-void wml_message_base::set_option_list(
-	const std::vector<wml_message_option>& option_list,
-	int* chosen_option)
+void wml_message_base::set_option_list(const std::vector<wml_message_option>& option_list, int* chosen_option)
 {
 	assert(!option_list.empty());
 	assert(chosen_option);
@@ -106,9 +101,7 @@ void wml_message_base::pre_show()
 		}
 
 		// Avoid negative and 0 since item 0 is already selected.
-		if(*chosen_option_ > 0 && static_cast<std::size_t>(*chosen_option_)
-								  < option_list_.size()) {
-
+		if(*chosen_option_ > 0 && static_cast<std::size_t>(*chosen_option_) < option_list_.size()) {
 			options.select_row(*chosen_option_);
 		}
 
@@ -129,13 +122,11 @@ void wml_message_base::pre_show()
 void wml_message_base::post_show()
 {
 	if(has_input_) {
-		*input_text_
-				= find_widget<text_box>("input", true).get_value();
+		*input_text_ = find_widget<text_box>("input", true).get_value();
 	}
 
 	if(!option_list_.empty()) {
-		*chosen_option_ = find_widget<listbox>("input_list", true)
-								  .get_selected_row();
+		*chosen_option_ = find_widget<listbox>("input_list", true).get_selected_row();
 	}
 }
 
@@ -153,11 +144,11 @@ REGISTER_DIALOG(wml_message_right)
 REGISTER_DIALOG(wml_message_double)
 
 int show_wml_message(const std::string& title,
-					 const std::string& message,
-					 const wml_message_portrait* left,
-					 const wml_message_portrait* right,
-					 const wml_message_options& options,
-					 const wml_message_input& input)
+	const std::string& message,
+	const wml_message_portrait* left,
+	const wml_message_portrait* right,
+	const wml_message_options& options,
+	const wml_message_input& input)
 {
 	std::shared_ptr<wml_message_base> dlg;
 	if(left && !right) {
@@ -181,4 +172,4 @@ int show_wml_message(const std::string& title,
 	return dlg->get_retval();
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

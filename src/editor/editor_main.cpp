@@ -18,22 +18,22 @@
 #include "editor/controller/editor_controller.hpp"
 
 #include "addon/validation.hpp"
+#include "editor/action/action_base.hpp"
+#include "filesystem.hpp"
 #include "gettext.hpp"
 #include "gui/dialogs/editor/choose_addon.hpp"
 #include "gui/dialogs/prompt.hpp"
-#include "filesystem.hpp"
-#include "editor/action/action_base.hpp"
 #include "serialization/chrono.hpp"
 
 lg::log_domain log_editor("editor");
 
-namespace editor {
+namespace editor
+{
 
 std::string initialize_addon()
 {
 	std::string addon_id = "";
-	while(true)
-	{
+	while(true) {
 		gui2::dialogs::editor_choose_addon choose(addon_id);
 		if(choose.show()) {
 			break;
@@ -116,7 +116,8 @@ std::string initialize_addon()
 	return addon_id;
 }
 
-EXIT_STATUS start(bool clear_id, const std::string& filename, bool take_screenshot, const std::string& screenshot_filename)
+EXIT_STATUS start(
+	bool clear_id, const std::string& filename, bool take_screenshot, const std::string& screenshot_filename)
 {
 	EXIT_STATUS e = EXIT_ERROR;
 	try {
@@ -124,8 +125,8 @@ EXIT_STATUS start(bool clear_id, const std::string& filename, bool take_screensh
 
 		editor_controller editor(clear_id);
 
-		if (!filename.empty() && filesystem::file_exists(filename)) {
-			if (filesystem::is_directory(filename)) {
+		if(!filename.empty() && filesystem::file_exists(filename)) {
+			if(filesystem::is_directory(filename)) {
 				editor.context_manager_->set_default_dir(filename);
 				editor.context_manager_->load_map_dialog(true);
 			} else {
@@ -142,24 +143,24 @@ EXIT_STATUS start(bool clear_id, const std::string& filename, bool take_screensh
 				editor.set_button_state();
 			}
 
-			if (take_screenshot) {
+			if(take_screenshot) {
 				editor.do_screenshot(screenshot_filename);
 				e = EXIT_NORMAL;
 			}
 		}
 
-		if (!take_screenshot) {
+		if(!take_screenshot) {
 			e = editor.main_loop();
 		}
 	} catch(const editor_exception& e) {
 		ERR_ED << "Editor exception in editor::start: " << e.what();
 		throw;
 	}
-	if (editor_action::get_instance_count() != 0) {
+	if(editor_action::get_instance_count() != 0) {
 		ERR_ED << "Possibly leaked " << editor_action::get_instance_count() << " action objects";
 	}
 
 	return e;
 }
 
-} //end namespace editor
+} // end namespace editor

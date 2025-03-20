@@ -24,8 +24,6 @@
 **  here.
 */
 
-
-
 /*
 **  Wesnoth-specific modifications.
 */
@@ -39,7 +37,7 @@
  */
 
 #include <string.h>
-#define strcoll(a,b) strcmp(a,b)
+#define strcoll(a, b) strcmp(a, b)
 
 /*  Push std::exception::what() strings onto the Lua stack for use by
  *  luaW_pcall().
@@ -54,30 +52,33 @@
 
 #include "lua_jailbreak_exception.hpp"
 
-#define LUAI_THROW(L,c) throw(c)
+#define LUAI_THROW(L, c) throw(c)
 
-#define LUAI_TRY(L,c,a) \
-	try { \
-		try { \
-			a \
-		} catch(const lua_jailbreak_exception &) { \
-			throw; \
-		} catch(const std::exception &e) { \
-			lua_pushstring(L, e.what()); \
-			luaG_errormsg(L); \
-			throw; \
-		} catch (const lua_longjmp *) { \
-			/*this exception is used internaly by lua exceptions*/ \
-			throw; \
-		} catch(...) { \
-			assert(false && "Lua is swallowing an un-named exception... this indicates a programmer error, please derive all exceptions from either std::exception, or lua_jailbreak_exception (and not with multiple inheritance pathways to either or this exception handler will not work!)"); \
-			throw; \
-		} \
-	} catch(...) { \
-	if((c)->status == 0) \
-		(c)->status = -1;\
+#define LUAI_TRY(L, c, a)                                                                                              \
+	try {                                                                                                              \
+		try {                                                                                                          \
+			a                                                                                                          \
+		} catch(const lua_jailbreak_exception&) {                                                                      \
+			throw;                                                                                                     \
+		} catch(const std::exception& e) {                                                                             \
+			lua_pushstring(L, e.what());                                                                               \
+			luaG_errormsg(L);                                                                                          \
+			throw;                                                                                                     \
+		} catch(const lua_longjmp*) {                                                                                  \
+			/*this exception is used internaly by lua exceptions*/                                                     \
+			throw;                                                                                                     \
+		} catch(...) {                                                                                                 \
+			assert(false                                                                                               \
+				&& "Lua is swallowing an un-named exception... this indicates a programmer error, please derive all "  \
+				   "exceptions from either std::exception, or lua_jailbreak_exception (and not with multiple "         \
+				   "inheritance pathways to either or this exception handler will not work!)");                        \
+			throw;                                                                                                     \
+		}                                                                                                              \
+	} catch(...) {                                                                                                     \
+		if((c)->status == 0)                                                                                           \
+			(c)->status = -1;                                                                                          \
 	}
 
-#define luai_jmpbuf     int  /* dummy variable */
+#define luai_jmpbuf int /* dummy variable */
 
 #endif

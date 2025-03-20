@@ -14,15 +14,15 @@
 
 #include "scripting/lua_formula_bridge.hpp"
 
-#include "game_board.hpp"
-#include "scripting/lua_unit.hpp"
-#include "scripting/lua_common.hpp"
-#include "scripting/lua_team.hpp"
-#include "scripting/lua_unit_attacks.hpp"
-#include "scripting/lua_unit_type.hpp"
-#include "lua/wrapper_lauxlib.h"
 #include "formula/callable_objects.hpp"
 #include "formula/formula.hpp"
+#include "game_board.hpp"
+#include "lua/wrapper_lauxlib.h"
+#include "scripting/lua_common.hpp"
+#include "scripting/lua_team.hpp"
+#include "scripting/lua_unit.hpp"
+#include "scripting/lua_unit_attacks.hpp"
+#include "scripting/lua_unit_type.hpp"
 #include "variable.hpp"
 
 #include "resources.hpp"
@@ -36,12 +36,19 @@ using namespace wfl;
 void luaW_pushfaivariant(lua_State* L, const variant& val);
 variant luaW_tofaivariant(lua_State* L, int i);
 
-class lua_callable : public formula_callable {
+class lua_callable : public formula_callable
+{
 	lua_State* mState;
 	int table_i;
+
 public:
-	lua_callable(lua_State* L, int i) : mState(L), table_i(lua_absindex(L,i)) {}
-	variant get_value(const std::string& key) const {
+	lua_callable(lua_State* L, int i)
+		: mState(L)
+		, table_i(lua_absindex(L, i))
+	{
+	}
+	variant get_value(const std::string& key) const
+	{
 		if(key == "__list") {
 			std::vector<variant> values;
 			std::size_t n = lua_rawlen(mState, table_i);
@@ -55,7 +62,7 @@ public:
 			}
 			return variant(values);
 		} else if(key == "__map") {
-			std::map<variant,variant> values;
+			std::map<variant, variant> values;
 			for(lua_pushnil(mState); lua_next(mState, table_i); lua_pop(mState, 1)) {
 				values[luaW_tofaivariant(mState, -2)] = luaW_tofaivariant(mState, -1);
 			}
@@ -67,10 +74,11 @@ public:
 		lua_pop(mState, 1);
 		return result;
 	}
-	void get_inputs(formula_input_vector& inputs) const {
+	void get_inputs(formula_input_vector& inputs) const
+	{
 		add_input(inputs, "__list");
 		add_input(inputs, "__map");
-		for(lua_pushnil(mState); lua_next(mState, table_i); lua_pop(mState,1)) {
+		for(lua_pushnil(mState); lua_next(mState, table_i); lua_pop(mState, 1)) {
 			lua_pushvalue(mState, -2);
 			bool is_valid_key = (lua_type(mState, -1) == LUA_TSTRING) && !lua_isnumber(mState, -1);
 			lua_pop(mState, 1);
@@ -82,7 +90,8 @@ public:
 			}
 		}
 	}
-	int do_compare(const formula_callable* other) const {
+	int do_compare(const formula_callable* other) const
+	{
 		const lua_callable* lua = dynamic_cast<const lua_callable*>(other);
 		if(lua == nullptr) {
 			return formula_callable::do_compare(other);
@@ -119,7 +128,8 @@ public:
 	}
 };
 
-void luaW_pushfaivariant(lua_State* L, const variant& val) {
+void luaW_pushfaivariant(lua_State* L, const variant& val)
+{
 	if(val.is_int()) {
 		lua_pushinteger(L, val.as_int());
 	} else if(val.is_decimal()) {
@@ -135,7 +145,7 @@ void luaW_pushfaivariant(lua_State* L, const variant& val) {
 			lua_settable(L, -3);
 		}
 	} else if(val.is_map()) {
-		typedef std::map<variant,variant>::value_type kv_type;
+		typedef std::map<variant, variant>::value_type kv_type;
 		lua_newtable(L);
 		for(const kv_type& v : val.as_map()) {
 			luaW_pushfaivariant(L, v.first);
@@ -183,36 +193,37 @@ void luaW_pushfaivariant(lua_State* L, const variant& val) {
 	}
 }
 
-variant luaW_tofaivariant(lua_State* L, int i) {
+variant luaW_tofaivariant(lua_State* L, int i)
+{
 	switch(lua_type(L, i)) {
-		case LUA_TBOOLEAN:
-			return variant(lua_tointeger(L, i));
-		case LUA_TNUMBER:
-			return variant(lua_tonumber(L, i), variant::DECIMAL_VARIANT);
-		case LUA_TSTRING:
-			return variant(lua_tostring(L, i));
-		case LUA_TTABLE:
-			return variant(std::make_shared<lua_callable>(L, i));
-		case LUA_TUSERDATA:
-			static t_string tstr;
-			static vconfig vcfg = vconfig::unconstructed_vconfig();
-			static map_location loc;
-			if(luaW_totstring(L, i, tstr)) {
-				return variant(tstr.str());
-			} else if(luaW_tovconfig(L, i, vcfg)) {
-				return variant(std::make_shared<config_callable>(vcfg.get_parsed_config()));
-			} else if(unit* u = luaW_tounit(L, i)) {
-				return variant(std::make_shared<unit_callable>(*u));
-			} else if(const unit_type* ut = luaW_tounittype(L, i)) {
-				return variant(std::make_shared<unit_type_callable>(*ut));
-			} else if(const_attack_ptr atk = luaW_toweapon(L, i)) {
-				return variant(std::make_shared<attack_type_callable>(*atk));
-			} else if(team* t = luaW_toteam(L, i)) {
-				return variant(std::make_shared<team_callable>(*t));
-			} else if(luaW_tolocation(L, i, loc)) {
-				return variant(std::make_shared<location_callable>(loc));
-			}
-			break;
+	case LUA_TBOOLEAN:
+		return variant(lua_tointeger(L, i));
+	case LUA_TNUMBER:
+		return variant(lua_tonumber(L, i), variant::DECIMAL_VARIANT);
+	case LUA_TSTRING:
+		return variant(lua_tostring(L, i));
+	case LUA_TTABLE:
+		return variant(std::make_shared<lua_callable>(L, i));
+	case LUA_TUSERDATA:
+		static t_string tstr;
+		static vconfig vcfg = vconfig::unconstructed_vconfig();
+		static map_location loc;
+		if(luaW_totstring(L, i, tstr)) {
+			return variant(tstr.str());
+		} else if(luaW_tovconfig(L, i, vcfg)) {
+			return variant(std::make_shared<config_callable>(vcfg.get_parsed_config()));
+		} else if(unit* u = luaW_tounit(L, i)) {
+			return variant(std::make_shared<unit_callable>(*u));
+		} else if(const unit_type* ut = luaW_tounittype(L, i)) {
+			return variant(std::make_shared<unit_type_callable>(*ut));
+		} else if(const_attack_ptr atk = luaW_toweapon(L, i)) {
+			return variant(std::make_shared<attack_type_callable>(*atk));
+		} else if(team* t = luaW_toteam(L, i)) {
+			return variant(std::make_shared<team_callable>(*t));
+		} else if(luaW_tolocation(L, i, loc)) {
+			return variant(std::make_shared<location_callable>(loc));
+		}
+		break;
 	}
 	return variant();
 }
@@ -223,7 +234,8 @@ variant luaW_tofaivariant(lua_State* L, int i) {
  * Raises an error if a formula is not found, or if there's an error in compilation.
  * Thus, it never returns a null pointer.
  */
-lua_formula_bridge::fpointer luaW_check_formula(lua_State* L, int idx, bool allow_str) {
+lua_formula_bridge::fpointer luaW_check_formula(lua_State* L, int idx, bool allow_str)
+{
 	using namespace lua_formula_bridge;
 	fpointer form;
 	if(void* ud = luaL_testudata(L, idx, formulaKey)) {
@@ -246,7 +258,7 @@ lua_formula_bridge::fpointer luaW_check_formula(lua_State* L, int idx, bool allo
  * - Arg 2: optional context; can be a unit or a Lua table.
  * - Ret 1: Result of the formula.
  */
-int lua_formula_bridge::intf_eval_formula(lua_State *L)
+int lua_formula_bridge::intf_eval_formula(lua_State* L)
 {
 	fpointer form = luaW_check_formula(L, 1, true);
 	std::shared_ptr<formula_callable> context, fallback;

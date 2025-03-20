@@ -19,8 +19,8 @@
 #include "map/map.hpp"
 #include "preferences/preferences.hpp"
 #include "recall_list_manager.hpp"
-#include "units/unit.hpp"
 #include "units/animation_component.hpp"
+#include "units/unit.hpp"
 #include "utils/general.hpp"
 
 #include <set>
@@ -334,7 +334,11 @@ bool game_board::change_terrain(
 	return change_terrain(loc, terrain, mode, replace_if_failed);
 }
 
-bool game_board::change_terrain(const map_location &loc, const t_translation::terrain_code &terrain, terrain_type_data::merge_mode& mode, bool replace_if_failed) {
+bool game_board::change_terrain(const map_location& loc,
+	const t_translation::terrain_code& terrain,
+	terrain_type_data::merge_mode& mode,
+	bool replace_if_failed)
+{
 	/*
 	 * When a hex changes from a village terrain to a non-village terrain, and
 	 * a team owned that village it loses that village. When a hex changes from
@@ -459,7 +463,8 @@ temporary_unit_remover::~temporary_unit_remover()
  * the unit is moved (and restored to its previous value upon this object's
  * destruction).
  */
-temporary_unit_mover::temporary_unit_mover(unit_map& m, const map_location& src, const map_location& dst, int new_moves, bool stand)
+temporary_unit_mover::temporary_unit_mover(
+	unit_map& m, const map_location& src, const map_location& dst, int new_moves, bool stand)
 	: m_(m)
 	, src_(src)
 	, dst_(dst)

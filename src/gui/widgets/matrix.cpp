@@ -20,10 +20,10 @@
 #include "gettext.hpp"
 #include "gui/auxiliary/iterator/walker.hpp"
 #include "gui/core/log.hpp"
+#include "gui/core/register_widget.hpp"
 #include "gui/core/widget_definition.hpp"
 #include "gui/core/window_builder.hpp"
 #include "gui/core/window_builder/helper.hpp"
-#include "gui/core/register_widget.hpp"
 #include "wml_exception.hpp"
 
 #define LOG_SCOPE_HEADER get_control_type() + " [" + id() + "] " + __func__
@@ -36,8 +36,8 @@ namespace gui2
 
 REGISTER_WIDGET(matrix)
 
-
-state_default::state_default() : state_(ENABLED)
+state_default::state_default()
+	: state_(ENABLED)
 {
 }
 void state_default::set_active(const bool active)
@@ -58,7 +58,9 @@ unsigned state_default::get_state() const
 }
 
 matrix::matrix(const implementation::builder_matrix& builder)
-	: tbase(builder, "matrix"), content_(), pane_(nullptr)
+	: tbase(builder, "matrix")
+	, content_()
+	, pane_(nullptr)
 {
 	const auto cfg = cast_config_to<matrix_definition>();
 
@@ -87,9 +89,7 @@ matrix::matrix(const implementation::builder_matrix& builder)
 	pane_ = content_.find_widget<pane>("pane", false, true);
 }
 
-unsigned
-matrix::create_item(const widget_data& item_data,
-					 const std::map<std::string, std::string>& tags)
+unsigned matrix::create_item(const widget_data& item_data, const std::map<std::string, std::string>& tags)
 {
 	return pane_->create_item(item_data, tags);
 }
@@ -125,8 +125,7 @@ widget* matrix::find_at(const point& coordinate, const bool must_be_active)
 	return content_.find_at(coordinate, must_be_active);
 }
 
-const widget* matrix::find_at(const point& coordinate,
-								const bool must_be_active) const
+const widget* matrix::find_at(const point& coordinate, const bool must_be_active) const
 {
 	return content_.find_at(coordinate, must_be_active);
 }
@@ -140,8 +139,7 @@ widget* matrix::find(const std::string_view id, const bool must_be_active)
 	}
 }
 
-const widget* matrix::find(const std::string_view id, const bool must_be_active)
-		const
+const widget* matrix::find(const std::string_view id, const bool must_be_active) const
 {
 	if(const widget* result = widget::find(id, must_be_active)) {
 		return result;
@@ -185,8 +183,10 @@ matrix_definition::resolution::resolution(const config& cfg)
 	, content(new builder_grid(VALIDATE_WML_CHILD(cfg, "content", missing_mandatory_wml_tag("matrix", "content"))))
 {
 	// Note the order should be the same as the enum state_t in matrix.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("matrix_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("matrix_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("matrix_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_disabled", missing_mandatory_wml_tag("matrix_definition][resolution", "state_disabled")));
 }
 
 // }---------- BUILDER -----------{
@@ -196,10 +196,8 @@ namespace implementation
 
 builder_matrix::builder_matrix(const config& cfg)
 	: builder_styled_widget(cfg)
-	, vertical_scrollbar_mode(
-			  get_scrollbar_mode(cfg["vertical_scrollbar_mode"]))
-	, horizontal_scrollbar_mode(
-			  get_scrollbar_mode(cfg["horizontal_scrollbar_mode"]))
+	, vertical_scrollbar_mode(get_scrollbar_mode(cfg["vertical_scrollbar_mode"]))
+	, horizontal_scrollbar_mode(get_scrollbar_mode(cfg["horizontal_scrollbar_mode"]))
 	, builder_top(nullptr)
 	, builder_bottom(nullptr)
 	, builder_left(nullptr)

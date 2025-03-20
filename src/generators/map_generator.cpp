@@ -54,9 +54,7 @@ void map_generator::user_config()
 /** Standalone testprogram for the mapgenerator. */
 int main(int argc, char** argv)
 {
-	int x = 50, y = 50, iterations = 50,
-		hill_size = 50, lakes=3,
-	    nvillages = 25, nplayers = 2;
+	int x = 50, y = 50, iterations = 50, hill_size = 50, lakes = 3, nvillages = 25, nplayers = 2;
 	if(argc >= 2) {
 		x = std::stoi(argv[1]);
 	}
@@ -86,7 +84,7 @@ int main(int argc, char** argv)
 	}
 
 	srand(std::time(nullptr));
-	std::cout << generate_map(x,y,iterations,hill_size,lakes,nvillages,nplayers) << "\n";
+	std::cout << generate_map(x, y, iterations, hill_size, lakes, nvillages, nplayers) << "\n";
 }
 
 #endif

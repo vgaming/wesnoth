@@ -15,61 +15,62 @@
 
 #pragma once
 
-#include "random.hpp"
 #include "mt_rng.hpp"
-
+#include "random.hpp"
 
 #include <functional>
 namespace randomness
 {
-	/**
-		This rng is used when the normal synced rng is not available
-		this is currently only he case at the very start of the scenario (random generation of starting units traits).
+/**
+	This rng is used when the normal synced rng is not available
+	this is currently only he case at the very start of the scenario (random generation of starting units traits).
 
-		or during the "Deterministic SP mode"
-	*/
-	class rng_deterministic : public randomness::rng
+	or during the "Deterministic SP mode"
+*/
+class rng_deterministic : public randomness::rng
+{
+public:
+	rng_deterministic(mt_rng& gen);
+	virtual ~rng_deterministic();
+
+protected:
+	virtual uint32_t next_random_impl();
+
+private:
+	mt_rng& generator_;
+};
+
+class rng_proxy : public randomness::rng
+{
+public:
+	using t_impl = std::function<uint32_t()>;
+	rng_proxy(t_impl&& impl)
+		: impl_(std::move(impl))
 	{
-	public:
-		rng_deterministic(mt_rng& gen);
-		virtual ~rng_deterministic();
+	}
+	virtual ~rng_proxy() = default;
 
-	protected:
-		virtual uint32_t next_random_impl();
-	private:
-		mt_rng& generator_;
+protected:
+	virtual uint32_t next_random_impl()
+	{
+		return impl_();
 	};
 
-	class rng_proxy : public randomness::rng
-	{
-	public:
-		using t_impl = std::function<uint32_t()>;
-		rng_proxy(t_impl&& impl)
-			: impl_(std::move(impl))
-		{
-		}
-		virtual ~rng_proxy() = default;
+private:
+	t_impl impl_;
+};
 
-	protected:
-		virtual uint32_t next_random_impl()
-		{
-			return impl_();
-		};
+/**
+	RAII class to use rng_deterministic in the current scope.
+*/
+class set_random_determinstic
+{
+public:
+	set_random_determinstic(mt_rng& rng);
+	~set_random_determinstic();
 
-	private:
-		t_impl impl_;
-	};
-
-	/**
-		RAII class to use rng_deterministic in the current scope.
-	*/
-	class set_random_determinstic
-	{
-	public:
-		set_random_determinstic(mt_rng& rng);
-		~set_random_determinstic();
-	private :
-		rng* old_rng_;
-		rng_deterministic new_rng_;
-	};
-}
+private:
+	rng* old_rng_;
+	rng_deterministic new_rng_;
+};
+} // namespace randomness

@@ -20,8 +20,8 @@
 #include "variable.hpp"
 
 #include "config.hpp"
-#include "log.hpp"
 #include "gettext.hpp"
+#include "log.hpp"
 
 #include <algorithm>
 #include <array>
@@ -31,25 +31,33 @@ static lg::log_domain log_engine("engine");
 #define ERR_NG LOG_STREAM(err, log_engine)
 #define WRN_NG LOG_STREAM(warn, log_engine)
 
-static bool two_dots(char a, char b) { return a == '.' && b == '.'; }
+static bool two_dots(char a, char b)
+{
+	return a == '.' && b == '.';
+}
 
-namespace utils {
+namespace utils
+{
 
-	namespace detail {
-		std::string(* evaluate_formula)(const std::string& formula) = nullptr;
-	}
+namespace detail
+{
+std::string (*evaluate_formula)(const std::string& formula) = nullptr;
+}
 
-template <typename T>
+template<typename T>
 class string_map_variable_set : public variable_set
 {
 public:
-	string_map_variable_set(const std::map<std::string,T>& map) : map_(map) {}
+	string_map_variable_set(const std::map<std::string, T>& map)
+		: map_(map)
+	{
+	}
 
-	virtual config::attribute_value get_variable_const(const std::string &key) const
+	virtual config::attribute_value get_variable_const(const std::string& key) const
 	{
 		config::attribute_value val;
 		const auto itor = map_.find(key);
-		if (itor != map_.end())
+		if(itor != map_.end())
 			val = itor->second;
 		return val;
 	}
@@ -61,13 +69,14 @@ public:
 		}
 		return variable_access_const(varname, *temp_);
 	}
+
 private:
-	const std::map<std::string,T>& map_;
+	const std::map<std::string, T>& map_;
 	mutable std::shared_ptr<config> temp_; // only used if get_variable_access_read called
 };
-}
+} // namespace utils
 
-static std::string do_interpolation(const std::string &str, const variable_set& set)
+static std::string do_interpolation(const std::string& str, const variable_set& set)
 {
 	std::string res = str;
 	// This needs to be able to store negative numbers to check for the while's condition
@@ -87,7 +96,6 @@ static std::string do_interpolation(const std::string &str, const variable_set& 
 		// (not from the same place because sometimes the '$' is not replaced)
 		rfind_dollars_sign_from = static_cast<int>(var_begin_loc) - 1;
 
-
 		const std::string::iterator var_begin = res.begin() + var_begin_loc;
 
 		// The '$' is not part of the variable name.
@@ -100,8 +108,7 @@ static std::string do_interpolation(const std::string &str, const variable_set& 
 		} else if(*var_name_begin == '(') {
 			// The $( ... ) syntax invokes a formula
 			int paren_nesting_level = 0;
-			bool in_string = false,
-				in_comment = false;
+			bool in_string = false, in_comment = false;
 			do {
 				switch(*var_end) {
 				case '(':
@@ -124,7 +131,7 @@ static std::string do_interpolation(const std::string &str, const variable_set& 
 						in_string = !in_string;
 					}
 					break;
-				// TODO: support escape sequences when/if they are allowed in FormulaAI strings
+					// TODO: support escape sequences when/if they are allowed in FormulaAI strings
 				}
 			} while(++var_end != res.end() && paren_nesting_level > 0);
 			if(utils::detail::evaluate_formula == nullptr) {
@@ -134,12 +141,11 @@ static std::string do_interpolation(const std::string &str, const variable_set& 
 			}
 			if(paren_nesting_level > 0) {
 				ERR_NG << "Formula in WML string cannot be evaluated due to "
-					<< "a missing closing parenthesis:\n\t--> \""
-					<< std::string(var_begin, var_end) << "\"";
+					   << "a missing closing parenthesis:\n\t--> \"" << std::string(var_begin, var_end) << "\"";
 				res.replace(var_begin, var_end, "");
 				continue;
 			}
-			res.replace(var_begin, var_end, utils::detail::evaluate_formula(std::string(var_begin+2, var_end-1)));
+			res.replace(var_begin, var_end, utils::detail::evaluate_formula(std::string(var_begin + 2, var_end - 1)));
 			continue;
 		}
 
@@ -148,14 +154,13 @@ static std::string do_interpolation(const std::string &str, const variable_set& 
 			const char c = *var_end;
 			if(c == '[') {
 				++bracket_nesting_level;
-			}
-			else if(c == ']') {
+			} else if(c == ']') {
 				if(--bracket_nesting_level < 0) {
 					break;
 				}
 			}
 			// isascii() breaks on mingw with -std=c++0x
-			else if (!(((c) & ~0x7f) == 0)/*isascii(c)*/ || (!isalnum(c) && c != '.' && c != '_')) {
+			else if(!(((c) & ~0x7f) == 0) /*isascii(c)*/ || (!isalnum(c) && c != '.' && c != '_')) {
 				break;
 			}
 		}
@@ -171,14 +176,15 @@ static std::string do_interpolation(const std::string &str, const variable_set& 
 		// Would need to do it repetitively if there are multiple '.'s at the end,
 		// but don't actually need to do so because the previous check for adjacent '.'s would catch that.
 		// For example, "My score is $score." or "My score is $score..."
-		if(*(var_end-1) == '.'
-		// However, "$array[$i]" by itself does not name a variable,
-		// so if "$array[$i]." is encountered, then best to include the '.',
-		// so that it more closely follows the syntax of a variable (if only to get rid of all of it).
-		// (If it's the script writer's error, they'll have to fix it in either case.)
-		// For example in "$array[$i].$field_name", if field_name does not exist as a variable,
-		// then the result of the expansion should be "", not "." (which it would be if this exception did not exist).
-		&& *(var_end-2) != ']') {
+		if(*(var_end - 1) == '.'
+			// However, "$array[$i]" by itself does not name a variable,
+			// so if "$array[$i]." is encountered, then best to include the '.',
+			// so that it more closely follows the syntax of a variable (if only to get rid of all of it).
+			// (If it's the script writer's error, they'll have to fix it in either case.)
+			// For example in "$array[$i].$field_name", if field_name does not exist as a variable,
+			// then the result of the expansion should be "", not "." (which it would be if this exception did not
+			// exist).
+			&& *(var_end - 2) != ']') {
 			--var_end;
 		}
 
@@ -193,19 +199,15 @@ static std::string do_interpolation(const std::string &str, const variable_set& 
 				++var_end;
 			}
 
-
-			if (var_name.empty()) {
+			if(var_name.empty()) {
 				// Allow for a way to have $s in a string.
 				// $| will be replaced by $.
 				res.replace(var_begin, var_end, "$");
-			}
-			else {
+			} else {
 				// The variable is replaced with its value.
-				res.replace(var_begin, var_end,
-					set.get_variable_const(var_name));
+				res.replace(var_begin, var_end, set.get_variable_const(var_name));
 			}
-		}
-		else {
+		} else {
 			var_end = default_start;
 			while(var_end != res.end() && *var_end != '|') {
 				++var_end;
@@ -214,11 +216,9 @@ static std::string do_interpolation(const std::string &str, const variable_set& 
 			const config::attribute_value& val = set.get_variable_const(var_name);
 			if(var_end == res.end()) {
 				res.replace(var_begin, default_start - 1, val);
-			}
-			else if(!val.empty()) {
+			} else if(!val.empty()) {
 				res.replace(var_begin, var_end + 1, val);
-			}
-			else {
+			} else {
 				res.replace(var_begin, var_end + 1, std::string(default_start, default_end));
 			}
 		}
@@ -227,26 +227,28 @@ static std::string do_interpolation(const std::string &str, const variable_set& 
 	return res;
 }
 
-namespace utils {
+namespace utils
+{
 
-std::string interpolate_variables_into_string(const std::string &str, const string_map * const symbols)
+std::string interpolate_variables_into_string(const std::string& str, const string_map* const symbols)
 {
 	auto set = string_map_variable_set<t_string>(*symbols);
 	return do_interpolation(str, set);
 }
 
-std::string interpolate_variables_into_string(const std::string &str, const std::map<std::string,std::string> * const symbols)
+std::string interpolate_variables_into_string(
+	const std::string& str, const std::map<std::string, std::string>* const symbols)
 {
 	auto set = string_map_variable_set<std::string>(*symbols);
 	return do_interpolation(str, set);
 }
 
-std::string interpolate_variables_into_string(const std::string &str, const variable_set& variables)
+std::string interpolate_variables_into_string(const std::string& str, const variable_set& variables)
 {
 	return do_interpolation(str, variables);
 }
 
-t_string interpolate_variables_into_tstring(const t_string &tstr, const variable_set& variables)
+t_string interpolate_variables_into_tstring(const t_string& tstr, const variable_set& variables)
 {
 	if(!tstr.str().empty()) {
 		std::string interp = utils::interpolate_variables_into_string(tstr.str(), variables);
@@ -257,12 +259,16 @@ t_string interpolate_variables_into_tstring(const t_string &tstr, const variable
 	return tstr;
 }
 
-std::string format_conjunct_list(const t_string& empty, const std::vector<t_string>& elems) {
+std::string format_conjunct_list(const t_string& empty, const std::vector<t_string>& elems)
+{
 	switch(elems.size()) {
-	case 0: return empty;
-	case 1: return elems[0];
+	case 0:
+		return empty;
+	case 1:
+		return elems[0];
 		// TRANSLATORS: Formats a two-element conjunctive list.
-	case 2: return VGETTEXT("conjunct pair^$first and $second", {{"first", elems[0]}, {"second", elems[1]}});
+	case 2:
+		return VGETTEXT("conjunct pair^$first and $second", {{"first", elems[0]}, {"second", elems[1]}});
 	}
 	// TRANSLATORS: Formats the first two elements of a conjunctive list.
 	std::string prefix = VGETTEXT("conjunct start^$first, $second", {{"first", elems[0]}, {"second", elems[1]}});
@@ -275,12 +281,16 @@ std::string format_conjunct_list(const t_string& empty, const std::vector<t_stri
 	return VGETTEXT("conjunct end^$prefix, and $last", {{"prefix", prefix}, {"last", elems.back()}});
 }
 
-std::string format_disjunct_list(const t_string& empty, const std::vector<t_string>& elems) {
+std::string format_disjunct_list(const t_string& empty, const std::vector<t_string>& elems)
+{
 	switch(elems.size()) {
-	case 0: return empty;
-	case 1: return elems[0];
+	case 0:
+		return empty;
+	case 1:
+		return elems[0];
 		// TRANSLATORS: Formats a two-element disjunctive list.
-	case 2: return VGETTEXT("disjunct pair^$first or $second", {{"first", elems[0]}, {"second", elems[1]}});
+	case 2:
+		return VGETTEXT("disjunct pair^$first or $second", {{"first", elems[0]}, {"second", elems[1]}});
 	}
 	// TRANSLATORS: Formats the first two elements of a disjunctive list.
 	std::string prefix = VGETTEXT("disjunct start^$first, $second", {{"first", elems[0]}, {"second", elems[1]}});
@@ -293,22 +303,17 @@ std::string format_disjunct_list(const t_string& empty, const std::vector<t_stri
 	return VGETTEXT("disjunct end^$prefix, or $last", {{"prefix", prefix}, {"last", elems.back()}});
 }
 
-}
+} // namespace utils
 
-std::string vgettext_impl(const char *domain
-		, const char *msgid
-		, const utils::string_map& symbols)
+std::string vgettext_impl(const char* domain, const char* msgid, const utils::string_map& symbols)
 {
 	const std::string orig(translation::dsgettext(domain, msgid));
 	const std::string msg = utils::interpolate_variables_into_string(orig, &symbols);
 	return msg;
 }
 
-std::string vngettext_impl(const char* domain,
-		const char* singular,
-		const char* plural,
-		int count,
-		const utils::string_map& symbols)
+std::string vngettext_impl(
+	const char* domain, const char* singular, const char* plural, int count, const utils::string_map& symbols)
 {
 	const std::string orig(translation::dsngettext(domain, singular, plural, count));
 	const std::string msg = utils::interpolate_variables_into_string(orig, &symbols);

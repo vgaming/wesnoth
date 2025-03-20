@@ -38,13 +38,13 @@ namespace gui2
 {
 namespace
 {
-const color_t color_outdated {255, 127, 0};
+const color_t color_outdated{255, 127, 0};
 
 const unsigned CONTROL_STACK_LAYER_INSTALL = 0;
-const unsigned CONTROL_STACK_LAYER_UPDATE  = 1;
+const unsigned CONTROL_STACK_LAYER_UPDATE = 1;
 const unsigned CONTROL_STACK_LAYER_PUBLISH = 2;
 
-} // end anon namespace
+} // namespace
 
 REGISTER_WIDGET(addon_list)
 
@@ -118,7 +118,8 @@ std::string addon_list::describe_status(const addon_tracking_info& info)
 		break;
 
 	case ADDON_INSTALLED_OUTDATED:
-		tx = info.can_publish ? _("addon_state^Published, outdated on server") : _("addon_state^Installed, outdated on server");
+		tx = info.can_publish ? _("addon_state^Published, outdated on server")
+							  : _("addon_state^Installed, outdated on server");
 		break;
 
 	case ADDON_INSTALLED_BROKEN:
@@ -190,9 +191,8 @@ void addon_list::set_addons(const addons_list& addons)
 
 		// If the addon is upgradable or ourdated on server, we display the two relevant
 		// versions directly in the list for convenience.
-		const bool special_version_display =
-			tracking_info.state == ADDON_INSTALLED_UPGRADABLE ||
-			tracking_info.state == ADDON_INSTALLED_OUTDATED;
+		const bool special_version_display
+			= tracking_info.state == ADDON_INSTALLED_UPGRADABLE || tracking_info.state == ADDON_INSTALLED_OUTDATED;
 
 		std::ostringstream ss;
 		if(special_version_display) {
@@ -237,9 +237,9 @@ void addon_list::set_addons(const addons_list& addons)
 		stacked_widget& install_update_stack = control_grid->find_widget<stacked_widget>("install_update_stack");
 
 		// These three buttons are in the install_update_stack. Only one is shown depending on the addon's state.
-		button& install_button   = control_grid->find_widget<button>("single_install");
-		button& update_button    = control_grid->find_widget<button>("single_update");
-		button& publish_button   = control_grid->find_widget<button>("single_publish");
+		button& install_button = control_grid->find_widget<button>("single_install");
+		button& update_button = control_grid->find_widget<button>("single_update");
+		button& publish_button = control_grid->find_widget<button>("single_publish");
 
 		// This button is always shown.
 		button& uninstall_button = control_grid->find_widget<button>("single_uninstall");
@@ -255,7 +255,8 @@ void addon_list::set_addons(const addons_list& addons)
 
 			if(publish_function_ != nullptr) {
 				connect_signal_mouse_left_click(publish_button,
-					std::bind(&addon_list::addon_action_wrapper, this, publish_function_, std::ref(addon), std::placeholders::_3, std::placeholders::_4));
+					std::bind(&addon_list::addon_action_wrapper, this, publish_function_, std::ref(addon),
+						std::placeholders::_3, std::placeholders::_4));
 
 				install_button.set_tooltip(_("Publish add-on"));
 			}
@@ -266,7 +267,8 @@ void addon_list::set_addons(const addons_list& addons)
 
 			if(update_function_ != nullptr) {
 				connect_signal_mouse_left_click(update_button,
-					std::bind(&addon_list::addon_action_wrapper, this, update_function_, std::ref(addon), std::placeholders::_3, std::placeholders::_4));
+					std::bind(&addon_list::addon_action_wrapper, this, update_function_, std::ref(addon),
+						std::placeholders::_3, std::placeholders::_4));
 			}
 		} else {
 			install_update_stack.select_layer(CONTROL_STACK_LAYER_INSTALL);
@@ -275,7 +277,8 @@ void addon_list::set_addons(const addons_list& addons)
 
 			if(install_function_ != nullptr) {
 				connect_signal_mouse_left_click(install_button,
-					std::bind(&addon_list::addon_action_wrapper, this, install_function_, std::ref(addon), std::placeholders::_3, std::placeholders::_4));
+					std::bind(&addon_list::addon_action_wrapper, this, install_function_, std::ref(addon),
+						std::placeholders::_3, std::placeholders::_4));
 			}
 		}
 
@@ -286,7 +289,8 @@ void addon_list::set_addons(const addons_list& addons)
 
 			if(!is_local && delete_function_ != nullptr) {
 				connect_signal_mouse_left_click(uninstall_button,
-					std::bind(&addon_list::addon_action_wrapper, this, delete_function_, std::ref(addon), std::placeholders::_3, std::placeholders::_4));
+					std::bind(&addon_list::addon_action_wrapper, this, delete_function_, std::ref(addon),
+						std::placeholders::_3, std::placeholders::_4));
 
 				uninstall_button.set_tooltip(_("Delete add-on from server"));
 			}
@@ -296,7 +300,8 @@ void addon_list::set_addons(const addons_list& addons)
 
 			if(is_installed && uninstall_function_ != nullptr) {
 				connect_signal_mouse_left_click(uninstall_button,
-					std::bind(&addon_list::addon_action_wrapper, this, uninstall_function_, std::ref(addon), std::placeholders::_3, std::placeholders::_4));
+					std::bind(&addon_list::addon_action_wrapper, this, uninstall_function_, std::ref(addon),
+						std::placeholders::_3, std::placeholders::_4));
 			}
 		}
 
@@ -332,9 +337,8 @@ void addon_list::select_addon(const std::string& id)
 {
 	listbox& list = get_listbox();
 
-	auto iter = std::find_if(addon_vector_.begin(), addon_vector_.end(),
-		[&id](const addon_info* a) { return a->id == id; }
-	);
+	auto iter
+		= std::find_if(addon_vector_.begin(), addon_vector_.end(), [&id](const addon_info* a) { return a->id == id; });
 
 	// Corner case: if you publish an addon with an out-of-folder .pbl file and
 	// delete it locally before deleting it from the server, the game will try
@@ -375,13 +379,11 @@ void addon_list::finalize_setup()
 {
 	listbox& list = get_listbox();
 
-	list.set_sorters(
-		[this](const std::size_t i) { return t_string(addon_vector_[i]->display_title_full()); },
+	list.set_sorters([this](const std::size_t i) { return t_string(addon_vector_[i]->display_title_full()); },
 		[this](const std::size_t i) { return addon_vector_[i]->author; },
 		[this](const std::size_t i) { return addon_vector_[i]->size; },
 		[this](const std::size_t i) { return addon_vector_[i]->downloads; },
-		[this](const std::size_t i) { return t_string(addon_vector_[i]->display_type()); }
-	);
+		[this](const std::size_t i) { return t_string(addon_vector_[i]->display_type()); });
 
 	list.set_active_sorter("sort_0", sort_order::type::ascending);
 }
@@ -390,10 +392,8 @@ void addon_list::set_addon_order(const addon_sort_func& func)
 {
 	listbox& list = get_listbox();
 
-	generator_base::order_func generator_func = [this, func](unsigned a, unsigned b)
-	{
-		return func(*addon_vector_[a], *addon_vector_[b]);
-	};
+	generator_base::order_func generator_func
+		= [this, func](unsigned a, unsigned b) { return func(*addon_vector_[a], *addon_vector_[b]); };
 
 	list.mark_as_unsorted();
 	list.order_by(generator_func);
@@ -417,7 +417,8 @@ addon_list_definition::addon_list_definition(const config& cfg)
 }
 
 addon_list_definition::resolution::resolution(const config& cfg)
-	: resolution_definition(cfg), grid(nullptr)
+	: resolution_definition(cfg)
+	, grid(nullptr)
 {
 	// Add a dummy state since every widget needs a state.
 	static config dummy("draw");
@@ -463,8 +464,7 @@ std::unique_ptr<widget> builder_addon_list::build() const
 {
 	auto widget = std::make_unique<addon_list>(*this);
 
-	DBG_GUI_G << "Window builder: placed add-on list '" << id <<
-		"' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed add-on list '" << id << "' with definition '" << definition << "'.";
 
 	const auto conf = widget->cast_config_to<addon_list_definition>();
 	assert(conf != nullptr);

@@ -52,7 +52,7 @@ void clean_saves(const std::string& label);
 struct load_game_metadata
 {
 	/** There may be different instances of the index for different directories */
-	std::shared_ptr<save_index_class> manager {};
+	std::shared_ptr<save_index_class> manager{};
 
 	/** Name of the savefile to be loaded (not including the directory). */
 	std::string filename = "";
@@ -70,18 +70,17 @@ struct load_game_metadata
 	bool select_difficulty = false;
 
 	/** Summary config of the save selected in the load game dialog. */
-	config summary {};
+	config summary{};
 
 	/** Config information of the savefile to be loaded. */
-	config load_config {};
+	config load_config{};
 };
 
 /**
-* Exception used to signal that the user has decided to abortt a game,
-* and to load another game instead.
-*/
-class load_game_exception final
-	: public lua_jailbreak_exception, public std::exception
+ * Exception used to signal that the user has decided to abortt a game,
+ * and to load another game instead.
+ */
+class load_game_exception final : public lua_jailbreak_exception, public std::exception
 {
 public:
 	explicit load_game_exception(load_game_metadata&& data)
@@ -91,8 +90,8 @@ public:
 		this->store();
 	}
 	load_game_metadata data_;
-private:
 
+private:
 	IMPLEMENT_LUA_JAILBREAK_EXCEPTION(load_game_exception)
 };
 
@@ -101,7 +100,9 @@ class loadgame
 {
 public:
 	loadgame(const std::shared_ptr<save_index_class>& index, saved_game& gamestate);
-	virtual ~loadgame() {}
+	virtual ~loadgame()
+	{
+	}
 
 	/* In any of the following three function, a bool value of false indicates
 	   some failure or abort of the load process */
@@ -122,7 +123,7 @@ public:
 	}
 
 	/** GUI Dialog sequence which confirms attempts to load saves from previous game versions. */
-	static bool check_version_compatibility(const version_info & version);
+	static bool check_version_compatibility(const version_info& version);
 
 	static bool is_replay_save(const config& cfg)
 	{
@@ -159,9 +160,11 @@ protected:
 	savegame(saved_game& gamestate, const compression::format compress_saves, const std::string& title = "Save");
 
 public:
-	enum DIALOG_TYPE { YES_NO, OK_CANCEL};
+	enum DIALOG_TYPE { YES_NO, OK_CANCEL };
 
-	virtual ~savegame() {}
+	virtual ~savegame()
+	{
+	}
 
 	/** Saves a game without user interaction, unless the file exists and it should be asked
 		to overwrite it. The return value denotes, if the save was successful or not.
@@ -172,10 +175,12 @@ public:
 
 	/** Save a game interactively through the savegame dialog. Used for manual midgame and replay
 		saves. The return value denotes, if the save was successful or not. */
-	bool save_game_interactive(const std::string& message,
-		DIALOG_TYPE dialog_type);
+	bool save_game_interactive(const std::string& message, DIALOG_TYPE dialog_type);
 
-	const std::string& filename() const { return filename_; }
+	const std::string& filename() const
+	{
+		return filename_;
+	}
 
 	/** Build the filename according to the specific savegame's needs. */
 	std::string create_filename() const
@@ -197,16 +202,25 @@ protected:
 	bool check_filename(const std::string& filename);
 
 	/** Customize the standard error message */
-	void set_error_message(const std::string& error_message) { error_message_ = error_message; }
+	void set_error_message(const std::string& error_message)
+	{
+		error_message_ = error_message;
+	}
 
-	const std::string& title() const { return title_; }
-	const saved_game& gamestate() const { return gamestate_; }
+	const std::string& title() const
+	{
+		return title_;
+	}
+	const saved_game& gamestate() const
+	{
+		return gamestate_;
+	}
 
 	/** If there needs to be some data fiddling before saving the game, this is the place to go. */
 	void before_save();
 
 	/** Writing the savegame config to a file. */
-	virtual void write_game(config_writer &out);
+	virtual void write_game(config_writer& out);
 
 	/** Filename of the savegame file on disk */
 	std::string filename_;
@@ -234,11 +248,11 @@ private:
 	void write_game_to_disk(const std::string& filename);
 
 	/** Update the save_index */
-	void finish_save_game(const config_writer &out);
+	void finish_save_game(const config_writer& out);
 	/** Throws game::save_game_failed. */
-	filesystem::scoped_ostream open_save_game(const std::string &label);
+	filesystem::scoped_ostream open_save_game(const std::string& label);
 	friend class save_info;
-	//before_save (write replay data) changes this so it cannot be const
+	// before_save (write replay data) changes this so it cannot be const
 	saved_game& gamestate_;
 
 	std::string error_message_; /** Error message to be displayed if the savefile could not be generated. */
@@ -259,8 +273,7 @@ private:
 	/** Create a filename for automatic saves */
 	virtual std::string create_initial_filename(unsigned int turn_number) const override;
 
-
-	void write_game(config_writer &out) override;
+	void write_game(config_writer& out) override;
 };
 
 /** Class for replay saves (either manually or automatically). */
@@ -273,16 +286,17 @@ private:
 	/** Create a filename for automatic saves */
 	virtual std::string create_initial_filename(unsigned int turn_number) const override;
 
-	void write_game(config_writer &out) override;
+	void write_game(config_writer& out) override;
 };
 
 /** Class for autosaves. */
 class autosave_savegame : public ingame_savegame
 {
 public:
-	autosave_savegame(saved_game &gamestate, const compression::format compress_saves);
+	autosave_savegame(saved_game& gamestate, const compression::format compress_saves);
 
 	void autosave(const bool disable_autosave, const int autosave_max, const int infinite_autosaves);
+
 private:
 	/** Create a filename for automatic saves */
 	virtual std::string create_initial_filename(unsigned int turn_number) const override;
@@ -294,7 +308,10 @@ public:
 	oos_savegame(saved_game& gamestate, bool& ignore);
 
 	/** Customize the dialog's caption. */
-	void set_title(const std::string& val) { title_ = val; }
+	void set_title(const std::string& val)
+	{
+		title_ = val;
+	}
 
 private:
 	/** Display the save game dialog. */
@@ -312,7 +329,7 @@ private:
 	/** Create a filename for automatic saves */
 	virtual std::string create_initial_filename(unsigned int turn_number) const override;
 
-	void write_game(config_writer &out) override;
+	void write_game(config_writer& out) override;
 };
 
-} //end of namespace savegame
+} // end of namespace savegame

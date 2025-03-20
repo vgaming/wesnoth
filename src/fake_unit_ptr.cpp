@@ -19,34 +19,46 @@
 #include "resources.hpp"
 #include "units/unit.hpp"
 
-fake_unit_ptr::fake_unit_ptr() : unit_(), my_manager_(nullptr) {}
-fake_unit_ptr::fake_unit_ptr(const internal_ptr & u) : unit_(u), my_manager_(nullptr) {}
-fake_unit_ptr::fake_unit_ptr(const internal_ptr & u, fake_unit_manager * mgr) : unit_(u), my_manager_(nullptr)
+fake_unit_ptr::fake_unit_ptr()
+	: unit_()
+	, my_manager_(nullptr)
+{
+}
+fake_unit_ptr::fake_unit_ptr(const internal_ptr& u)
+	: unit_(u)
+	, my_manager_(nullptr)
+{
+}
+fake_unit_ptr::fake_unit_ptr(const internal_ptr& u, fake_unit_manager* mgr)
+	: unit_(u)
+	, my_manager_(nullptr)
 {
 	place_on_fake_unit_manager(mgr);
 }
-fake_unit_ptr::fake_unit_ptr(const fake_unit_ptr & ptr)
+fake_unit_ptr::fake_unit_ptr(const fake_unit_ptr& ptr)
 	: unit_(ptr.unit_)
 	, my_manager_(nullptr)
-{}
+{
+}
 
-fake_unit_ptr::fake_unit_ptr(fake_unit_ptr && ptr)
+fake_unit_ptr::fake_unit_ptr(fake_unit_ptr&& ptr)
 	: unit_(std::move(ptr.unit_))
 	, my_manager_(ptr.my_manager_)
 {
 	ptr.my_manager_ = nullptr;
 }
 
-void fake_unit_ptr::swap (fake_unit_ptr & o) {
+void fake_unit_ptr::swap(fake_unit_ptr& o)
+{
 	std::swap(unit_, o.unit_);
 	std::swap(my_manager_, o.my_manager_);
 }
 
-fake_unit_ptr & fake_unit_ptr::operator=(fake_unit_ptr other) {
+fake_unit_ptr& fake_unit_ptr::operator=(fake_unit_ptr other)
+{
 	swap(other);
 	return *this;
 }
-
 
 /**
  * Assignment operator, taking a unit.
@@ -90,14 +102,14 @@ void fake_unit_ptr::reset()
  * The value of my_manager_ is preserved -- the old unit is deregistered,
  * and the new unit is registered with the same manager.
  */
-void fake_unit_ptr::reset(const internal_ptr & ptr)
+void fake_unit_ptr::reset(const internal_ptr& ptr)
 {
-	if (unit_.get() != ptr.get()) {
-		fake_unit_manager * mgr = my_manager_;
+	if(unit_.get() != ptr.get()) {
+		fake_unit_manager* mgr = my_manager_;
 
 		remove_from_fake_unit_manager();
 		unit_ = ptr;
-		if (mgr)
+		if(mgr)
 			place_on_fake_unit_manager(mgr);
 	}
 }
@@ -108,17 +120,19 @@ void fake_unit_ptr::reset(const internal_ptr & ptr)
 fake_unit_ptr::~fake_unit_ptr()
 {
 	try {
-	// The fake_unit class exists for this one line, which removes the
-	// fake_unit from the managers's fake_units_ dequeue in the event of an
-	// exception.
-	if(my_manager_) {
-		//my_manager_ points to resources::fake_units, the next line fixes a bug whre this code would attempt to access a freed fake_unit_manager object, see https://github.com/wesnoth/wesnoth/issues/3008
-		if(resources::fake_units != nullptr) {
-			remove_from_fake_unit_manager();
+		// The fake_unit class exists for this one line, which removes the
+		// fake_unit from the managers's fake_units_ dequeue in the event of an
+		// exception.
+		if(my_manager_) {
+			// my_manager_ points to resources::fake_units, the next line fixes a bug whre this code would attempt to
+			// access a freed fake_unit_manager object, see https://github.com/wesnoth/wesnoth/issues/3008
+			if(resources::fake_units != nullptr) {
+				remove_from_fake_unit_manager();
+			}
 		}
-	}
 
-	} catch (...) {}
+	} catch(...) {
+	}
 }
 
 /**
@@ -126,9 +140,10 @@ fake_unit_ptr::~fake_unit_ptr()
  * This will be added at the end (drawn last, over all other units).
  * Duplicate additions are not allowed.
  */
-void fake_unit_ptr::place_on_fake_unit_manager(fake_unit_manager * manager){
-	assert(my_manager_ == nullptr); //Can only be placed on 1 fake_unit_manager
-	my_manager_=manager;
+void fake_unit_ptr::place_on_fake_unit_manager(fake_unit_manager* manager)
+{
+	assert(my_manager_ == nullptr); // Can only be placed on 1 fake_unit_manager
+	my_manager_ = manager;
 	my_manager_->place_temporary_unit(unit_.get());
 }
 
@@ -137,11 +152,12 @@ void fake_unit_ptr::place_on_fake_unit_manager(fake_unit_manager * manager){
  * @returns the number of fake_units deleted, which should be 0 or 1
  *          (any other number indicates an error).
  */
-int fake_unit_ptr::remove_from_fake_unit_manager(){
+int fake_unit_ptr::remove_from_fake_unit_manager()
+{
 	int ret(0);
-	if(my_manager_ != nullptr){
+	if(my_manager_ != nullptr) {
 		ret = my_manager_->remove_temporary_unit(unit_.get());
-		my_manager_=nullptr;
+		my_manager_ = nullptr;
 	}
 	return ret;
 }

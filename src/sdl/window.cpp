@@ -24,14 +24,13 @@ namespace sdl
 {
 
 window::window(const std::string& title,
-				 const int x,
-				 const int y,
-				 const int w,
-				 const int h,
-				 const uint32_t window_flags,
-				 const uint32_t render_flags)
-	: window_(SDL_CreateWindow(
-		title.c_str(), x, y, w, h, window_flags | SDL_WINDOW_HIDDEN))
+	const int x,
+	const int y,
+	const int w,
+	const int h,
+	const uint32_t window_flags,
+	const uint32_t render_flags)
+	: window_(SDL_CreateWindow(title.c_str(), x, y, w, h, window_flags | SDL_WINDOW_HIDDEN))
 	, pixel_format_(SDL_PIXELFORMAT_UNKNOWN)
 {
 	if(!window_) {
@@ -46,7 +45,8 @@ window::window(const std::string& title,
 	// Suitable options are Direct3D v11+ or OpenGL.
 	// See https://github.com/wesnoth/wesnoth/issues/8038 for details.
 	// Note that SDL_HINT_RENDER_DRIVER implies SDL_HINT_RENDER_BATCHING is
-	// disabled, according to https://discourse.libsdl.org/t/a-couple-of-questions-regarding-batching-in-sdl-2-0-10/26453/2.
+	// disabled, according to
+	// https://discourse.libsdl.org/t/a-couple-of-questions-regarding-batching-in-sdl-2-0-10/26453/2.
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "direct3d11");
 #endif
 
@@ -56,13 +56,11 @@ window::window(const std::string& title,
 
 	SDL_RendererInfo info;
 	if(SDL_GetRendererInfo(*this, &info) != 0) {
-		throw exception("Failed to retrieve the information of the renderer.",
-						 true);
+		throw exception("Failed to retrieve the information of the renderer.", true);
 	}
 
 	if(info.num_texture_formats == 0) {
-		throw exception("The renderer has no texture information available.\n",
-						 false);
+		throw exception("The renderer has no texture information available.\n", false);
 	}
 
 	if((info.flags & SDL_RENDERER_TARGETTEXTURE) == 0) {
@@ -78,7 +76,7 @@ window::window(const std::string& title,
 
 	pixel_format_ = info.texture_formats[0];
 
-	fill(0,0,0);
+	fill(0, 0, 0);
 
 	render();
 
@@ -145,8 +143,7 @@ void window::fill(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
 	SDL_SetRenderDrawColor(*this, r, g, b, a);
 	if(SDL_RenderClear(*this) != 0) {
-		throw exception("Failed to clear the SDL_Renderer object.",
-						 true);
+		throw exception("Failed to clear the SDL_Renderer object.", true);
 	}
 }
 

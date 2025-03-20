@@ -27,7 +27,6 @@
 
 #include <sstream>
 
-
 #include <fontconfig/fontconfig.h>
 
 static lg::log_domain log_font("font");
@@ -69,7 +68,7 @@ struct font_families
 
 font_families families;
 
-} //namespace
+} // namespace
 
 /***
  * Public interface
@@ -79,7 +78,7 @@ bool load_font_config()
 try {
 	auto stream = preprocess_file(filesystem::get_wml_location("hardwired/fonts.cfg").value());
 	const config cfg = read(*stream);
-	families = font_families{ cfg.mandatory_child("fonts") };
+	families = font_families{cfg.mandatory_child("fonts")};
 	return true;
 
 } catch(const utils::bad_optional_access&) {
@@ -110,9 +109,7 @@ const t_string& get_font_families(family_class fclass)
 manager::manager()
 {
 	std::string font_path = game_config::path + "/fonts";
-	if (!FcConfigAppFontAddDir(FcConfigGetCurrent(),
-		reinterpret_cast<const FcChar8 *>(font_path.c_str())))
-	{
+	if(!FcConfigAppFontAddDir(FcConfigGetCurrent(), reinterpret_cast<const FcChar8*>(font_path.c_str()))) {
 		ERR_FT << "Could not load the true type fonts";
 		throw font::error("font config lib failed to add the font path: '" + font_path + "'");
 	}
@@ -125,18 +122,15 @@ manager::manager()
 // fontconfig also does not seem to provide a way to set the cachedir for a specific platform
 // so load the fonts.conf file into memory and only for windows insert the cachedir configuration
 #ifdef _WIN32
-	font_file_contents.insert(font_file_contents.find("</fontconfig>"), "<cachedir>"+filesystem::get_cache_dir()+"</cachedir>\n");
+	font_file_contents.insert(
+		font_file_contents.find("</fontconfig>"), "<cachedir>" + filesystem::get_cache_dir() + "</cachedir>\n");
 #endif
 
-	if(!FcConfigParseAndLoadFromMemory(FcConfigGetCurrent(),
-							 reinterpret_cast<const FcChar8*>(font_file_contents.c_str()),
-							 FcFalse))
-	{
+	if(!FcConfigParseAndLoadFromMemory(
+		   FcConfigGetCurrent(), reinterpret_cast<const FcChar8*>(font_file_contents.c_str()), FcFalse)) {
 		ERR_FT << "Could not load local font configuration";
 		throw font::error("font config lib failed to find font.conf: '" + font_file + "'");
-	}
-	else
-	{
+	} else {
 		LOG_FT << "Local font configuration loaded";
 	}
 }

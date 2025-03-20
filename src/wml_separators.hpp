@@ -15,13 +15,12 @@
 
 #pragma once
 
-char const HELP_STRING_SEPARATOR = '|', DEFAULT_ITEM = '*', COLUMN_SEPARATOR = '=',
-           IMAGE_PREFIX = '&', IMG_TEXT_SEPARATOR = 1, HEADING_PREFIX = 2;
+char const HELP_STRING_SEPARATOR = '|', DEFAULT_ITEM = '*', COLUMN_SEPARATOR = '=', IMAGE_PREFIX = '&',
+		   IMG_TEXT_SEPARATOR = 1, HEADING_PREFIX = 2;
 
 inline bool is_wml_separator(char c)
 {
-	switch(c)
-	{
+	switch(c) {
 	case HELP_STRING_SEPARATOR:
 	case DEFAULT_ITEM:
 	case COLUMN_SEPARATOR:

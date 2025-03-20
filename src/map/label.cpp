@@ -145,15 +145,15 @@ void map_labels::set_team(const team* team)
 }
 
 const terrain_label* map_labels::set_label(const map_location& loc,
-		const t_string& text,
-		const int creator,
-		const std::string& team_name,
-		const color_t color,
-		const bool visible_in_fog,
-		const bool visible_in_shroud,
-		const bool immutable,
-		const std::string& category,
-		const t_string& tooltip)
+	const t_string& text,
+	const int creator,
+	const std::string& team_name,
+	const color_t color,
+	const bool visible_in_fog,
+	const bool visible_in_shroud,
+	const bool immutable,
+	const std::string& category,
+	const t_string& tooltip)
 {
 	terrain_label* res = nullptr;
 
@@ -163,9 +163,8 @@ const terrain_label* map_labels::set_label(const map_location& loc,
 	team_label_map::iterator current_label_map = labels_.find(team_name);
 	label_map::iterator current_label;
 
-	if(current_label_map != labels_.end() &&
-		(current_label = current_label_map->second.find(loc)) != current_label_map->second.end())
-	{
+	if(current_label_map != labels_.end()
+		&& (current_label = current_label_map->second.find(loc)) != current_label_map->second.end()) {
 		// Found old checking if need to erase it
 		if(text.str().empty()) {
 			// Erase the old label.
@@ -186,8 +185,8 @@ const terrain_label* map_labels::set_label(const map_location& loc,
 		terrain_label* global_label = get_label_private(loc, "");
 
 		// Add the new label.
-		res = add_label(
-			*this, text, creator, team_name, loc, color, visible_in_fog, visible_in_shroud, immutable, category, tooltip);
+		res = add_label(*this, text, creator, team_name, loc, color, visible_in_fog, visible_in_shroud, immutable,
+			category, tooltip);
 
 		// Hide the old label.
 		if(global_label != nullptr) {
@@ -314,16 +313,16 @@ const std::vector<std::string>& map_labels::all_categories() const
 
 /** Create a new label. */
 terrain_label::terrain_label(const map_labels& parent,
-		const t_string& text,
-		const int creator,
-		const std::string& team_name,
-		const map_location& loc,
-		const color_t color,
-		const bool visible_in_fog,
-		const bool visible_in_shroud,
-		const bool immutable,
-		const std::string& category,
-		const t_string& tooltip)
+	const t_string& text,
+	const int creator,
+	const std::string& team_name,
+	const map_location& loc,
+	const color_t color,
+	const bool visible_in_fog,
+	const bool visible_in_shroud,
+	const bool immutable,
+	const std::string& category,
+	const t_string& tooltip)
 	: handle_(0)
 	, text_(text)
 	, tooltip_(tooltip)
@@ -444,11 +443,8 @@ void terrain_label::write(config& cfg) const
 	cfg["side"] = creator_ + 1;
 }
 
-void terrain_label::update_info(const t_string& text,
-		const int creator,
-		const t_string& tooltip,
-		const std::string& team_name,
-		const color_t color)
+void terrain_label::update_info(
+	const t_string& text, const int creator, const t_string& tooltip, const std::string& team_name, const color_t color)
 {
 	color_ = color;
 	text_ = text;
@@ -460,14 +456,14 @@ void terrain_label::update_info(const t_string& text,
 }
 
 void terrain_label::update_info(const t_string& text,
-		const int creator,
-		const t_string& tooltip,
-		const std::string& team_name,
-		const color_t color,
-		const bool visible_in_fog,
-		const bool visible_in_shroud,
-		const bool immutable,
-		const std::string& category)
+	const int creator,
+	const t_string& tooltip,
+	const std::string& team_name,
+	const color_t color,
+	const bool visible_in_fog,
+	const bool visible_in_shroud,
+	const bool immutable,
+	const std::string& category)
 {
 	visible_in_fog_ = visible_in_fog;
 	visible_in_shroud_ = visible_in_shroud;
@@ -581,15 +577,13 @@ bool terrain_label::hidden() const
 		return true;
 	}
 
-	if(creator_ >= 0 &&
-		std::find(hidden_categories.begin(), hidden_categories.end(), creator) != hidden_categories.end())
-	{
+	if(creator_ >= 0
+		&& std::find(hidden_categories.begin(), hidden_categories.end(), creator) != hidden_categories.end()) {
 		return true;
 	}
 
-	if(!team_name().empty() &&
-		std::find(hidden_categories.begin(), hidden_categories.end(), "team") != hidden_categories.end())
-	{
+	if(!team_name().empty()
+		&& std::find(hidden_categories.begin(), hidden_categories.end(), "team") != hidden_categories.end()) {
 		return true;
 	}
 

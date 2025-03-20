@@ -79,10 +79,7 @@ point placer_vertical_list::get_origin(const unsigned index) const
 	const unsigned row = index / maximum_columns_;
 	const unsigned column = index % maximum_columns_;
 
-	const int width = column == 0 ? 0
-								  : std::accumulate(columns_.begin(),
-													columns_.begin() + column,
-													0);
+	const int width = column == 0 ? 0 : std::accumulate(columns_.begin(), columns_.begin() + column, 0);
 
 	return point(width, rows_[row].first);
 }

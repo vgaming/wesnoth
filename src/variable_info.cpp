@@ -36,11 +36,9 @@ namespace variable_info_implementation
 template<typename V, typename... T>
 typename V::result_t apply_visitor(typename V::param_t state, T&&... args)
 {
-	static_assert(std::is_base_of<
-		info_visitor_base<
-			typename V::result_t,
-			std::remove_reference_t<typename V::param_t>>,
-		V>::value, "Invalid visitor type.");
+	static_assert(std::is_base_of<info_visitor_base<typename V::result_t, std::remove_reference_t<typename V::param_t>>,
+					  V>::value,
+		"Invalid visitor type.");
 
 	// Create the visitor.
 	V visitor(std::forward<T>(args)...);
@@ -167,7 +165,7 @@ bool variable_info<V>::exists_as_attribute() const
 {
 	throw_on_invalid();
 	return (state_.type_ == state_temporary)
-	   || ((state_.type_ == state_named) && state_.child_->has_attribute(state_.key_));
+		|| ((state_.type_ == state_named) && state_.child_->has_attribute(state_.key_));
 }
 
 template<typename V>

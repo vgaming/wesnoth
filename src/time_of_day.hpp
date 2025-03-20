@@ -24,30 +24,35 @@ class config;
 
 /** Small struct to store and manipulate ToD color adjusts. */
 // This is a color delta, so do not replace with color_t!
-struct tod_color {
+struct tod_color
+{
 	explicit tod_color(int red = 0, int green = 0, int blue = 0)
 		: r(std::clamp(red, -510, 510))
 		, g(std::clamp(green, -510, 510))
 		, b(std::clamp(blue, -510, 510))
-	{}
-	bool operator==(const tod_color& o) const {
+	{
+	}
+	bool operator==(const tod_color& o) const
+	{
 		return r == o.r && g == o.g && b == o.b;
 	}
-	bool is_zero() const {
+	bool is_zero() const
+	{
 		return r == 0 && g == 0 && b == 0;
 	}
-	bool operator!=(const tod_color& o) const {
+	bool operator!=(const tod_color& o) const
+	{
 		return !operator==(o);
 	}
-	tod_color operator+(const tod_color& o) const {
+	tod_color operator+(const tod_color& o) const
+	{
 		return tod_color(r + o.r, g + o.g, b + o.b);
 	}
 
-	int r,g,b;
+	int r, g, b;
 };
 
-std::ostream &operator<<(std::ostream &s, const tod_color& tod);
-
+std::ostream& operator<<(std::ostream& s, const tod_color& tod);
 
 /**
  * Object which defines a time of day
@@ -66,12 +71,10 @@ struct time_of_day
 	/** Construct a time of day from config */
 	explicit time_of_day(const config& cfg);
 
-	bool operator==(const time_of_day& o) const {
-		return lawful_bonus == o.lawful_bonus
-			&& bonus_modified == o.bonus_modified
-			&& image == o.image
-			&& name == o.name
-			&& id == o.id
+	bool operator==(const time_of_day& o) const
+	{
+		return lawful_bonus == o.lawful_bonus && bonus_modified == o.bonus_modified && image == o.image
+			&& name == o.name && id == o.id
 			&& image_mask == o.image_mask
 			//&& color == o.color
 			&& sounds == o.sounds;

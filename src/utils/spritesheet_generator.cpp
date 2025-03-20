@@ -75,16 +75,20 @@ struct sheet_element
 	config to_config() const
 	{
 		return config{
-			"filename", filename,
+			"filename",
+			filename,
 
 			/** Source rect of this image on the final sheet. */
-			"sheet_rect", formatter() << dst.x << ',' << dst.y << ',' << dst.w  << ',' << dst.h,
+			"sheet_rect",
+			formatter() << dst.x << ',' << dst.y << ',' << dst.w << ',' << dst.h,
 
 			/** Offset at which to render this image, equal to the non-transparent offset from origin (0,0 top left). */
-			"draw_offset", formatter() << src.x << ',' << src.y,
+			"draw_offset",
+			formatter() << src.x << ',' << src.y,
 
 			/** Original image size in case we need it. */
-			"original_size", formatter() << surf->w << ',' << surf->h,
+			"original_size",
+			formatter() << surf->w << ',' << surf->h,
 		};
 	}
 };
@@ -102,9 +106,8 @@ void build_sheet_from_images(const std::vector<fs::path>& file_paths)
 
 #ifdef __cpp_lib_ranges_chunk // C++23 feature
 	for(auto span : file_paths | std::views::chunk(num_to_load)) {
-		loaders.push_back(std::async(std::launch::async,
-			[span]() { return std::vector<sheet_element>(span.begin(), span.end()); }
-		));
+		loaders.push_back(
+			std::async(std::launch::async, [span]() { return std::vector<sheet_element>(span.begin(), span.end()); }));
 	}
 #else
 	for(unsigned i = 0; i < num_loaders; ++i) {
@@ -138,8 +141,8 @@ void build_sheet_from_images(const std::vector<fs::path>& file_paths)
 	std::stable_sort(elements.begin(), elements.end(),
 		[](const auto& lhs, const auto& rhs) { return lhs.surf.area() < rhs.surf.area(); });
 
-	const unsigned total_area = std::accumulate(elements.begin(), elements.end(), 0,
-		[](const int val, const auto& s) { return val + s.surf.area(); });
+	const unsigned total_area = std::accumulate(
+		elements.begin(), elements.end(), 0, [](const int val, const auto& s) { return val + s.surf.area(); });
 
 	const unsigned side_length = static_cast<unsigned>(std::sqrt(total_area) * 1.3);
 
@@ -167,7 +170,7 @@ void build_sheet_from_images(const std::vector<fs::path>& file_paths)
 		}
 
 		// Save this element's rect.
-		s.dst = { origin.x, origin.y, s.src.w, s.src.h };
+		s.dst = {origin.x, origin.y, s.src.w, s.src.h};
 
 		// Shift the rect origin for the next element.
 		origin.x += s.src.w;
@@ -225,13 +228,12 @@ void handle_dir_contents(const fs::path& path)
 	}
 }
 
-} // end anon namespace
+} // namespace
 
 void build_spritesheet_from(const std::string& entry_point)
 {
-	const utils::ms_optimer timer([&](const auto& timer) {
-		PLAIN_LOG << "Spritesheet generation of '" << entry_point << "' took: " << timer;
-	});
+	const utils::ms_optimer timer(
+		[&](const auto& timer) { PLAIN_LOG << "Spritesheet generation of '" << entry_point << "' took: " << timer; });
 
 	if(auto path = filesystem::get_binary_file_location("images", entry_point)) {
 		try {

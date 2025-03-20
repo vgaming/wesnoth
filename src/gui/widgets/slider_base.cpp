@@ -20,8 +20,8 @@
 #include "gui/core/log.hpp"
 #include "gui/widgets/window.hpp" // Needed for invalidate_layout()
 
-#include <functional>
 #include "utils/math.hpp"
+#include <functional>
 
 #define LOG_SCOPE_HEADER get_control_type() + " [" + id() + "] " + __func__
 #define LOG_HEADER LOG_SCOPE_HEADER + ':'
@@ -36,7 +36,7 @@ int rounded_division(int value, int new_base, int old_base)
 		return ::rounded_division(value * new_base, old_base);
 	}
 }
-} // end anon namespace
+} // namespace
 
 namespace gui2
 {
@@ -51,10 +51,10 @@ slider_base::slider_base(const implementation::builder_styled_widget& builder, c
 	, positioner_length_(0)
 	, snap_(true)
 {
-	connect_signal<event::MOUSE_ENTER>(
-		std::bind(&slider_base::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
-	connect_signal<event::MOUSE_MOTION>(
-		std::bind(&slider_base::signal_handler_mouse_motion, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5));
+	connect_signal<event::MOUSE_ENTER>(std::bind(&slider_base::signal_handler_mouse_enter, this, std::placeholders::_2,
+		std::placeholders::_3, std::placeholders::_4));
+	connect_signal<event::MOUSE_MOTION>(std::bind(&slider_base::signal_handler_mouse_motion, this,
+		std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5));
 	connect_signal<event::MOUSE_LEAVE>(
 		std::bind(&slider_base::signal_handler_mouse_leave, this, std::placeholders::_2, std::placeholders::_3));
 	connect_signal<event::LEFT_BUTTON_DOWN>(
@@ -214,7 +214,7 @@ void slider_base::signal_handler_mouse_enter(const event::ui_event event, bool& 
 }
 
 void slider_base::signal_handler_mouse_motion(
-		const event::ui_event event, bool& handled, bool& halt, const point& coordinate)
+	const event::ui_event event, bool& handled, bool& halt, const point& coordinate)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << " at " << coordinate << ".";
 

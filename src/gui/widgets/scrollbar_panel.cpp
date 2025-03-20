@@ -23,7 +23,6 @@
 #include "gettext.hpp"
 #include "wml_exception.hpp"
 
-
 namespace gui2
 {
 
@@ -62,11 +61,14 @@ scrollbar_panel_definition::scrollbar_panel_definition(const config& cfg)
 }
 
 scrollbar_panel_definition::resolution::resolution(const config& cfg)
-	: resolution_definition(cfg), grid()
+	: resolution_definition(cfg)
+	, grid()
 {
 	// The panel needs to know the order.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "background", missing_mandatory_wml_tag("scrollbar_panel_definition][resolution", "background")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "foreground", missing_mandatory_wml_tag("scrollbar_panel_definition][resolution", "foreground")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "background", missing_mandatory_wml_tag("scrollbar_panel_definition][resolution", "background")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "foreground", missing_mandatory_wml_tag("scrollbar_panel_definition][resolution", "foreground")));
 
 	auto child = VALIDATE_WML_CHILD(cfg, "grid", missing_mandatory_wml_tag("scrollbar_panel][definition", "grid"));
 	grid = std::make_shared<builder_grid>(child);
@@ -92,8 +94,7 @@ std::unique_ptr<widget> builder_scrollbar_panel::build() const
 {
 	auto panel = std::make_unique<scrollbar_panel>(*this);
 
-	DBG_GUI_G << "Window builder: placed scrollbar_panel '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed scrollbar_panel '" << id << "' with definition '" << definition << "'.";
 
 	const auto conf = panel->cast_config_to<scrollbar_panel_definition>();
 	assert(conf);
@@ -113,18 +114,13 @@ std::unique_ptr<widget> builder_scrollbar_panel::build() const
 	for(unsigned x = 0; x < rows; ++x) {
 		content_grid->set_row_grow_factor(x, grid_->row_grow_factor[x]);
 		for(unsigned y = 0; y < cols; ++y) {
-
 			if(x == 0) {
-				content_grid->set_column_grow_factor(y,
-													 grid_->col_grow_factor[y]);
+				content_grid->set_column_grow_factor(y, grid_->col_grow_factor[y]);
 			}
 
 			auto widget = grid_->widgets[x * cols + y]->build();
-			content_grid->set_child(std::move(widget),
-									x,
-									y,
-									grid_->flags[x * cols + y],
-									grid_->border_size[x * cols + y]);
+			content_grid->set_child(
+				std::move(widget), x, y, grid_->flags[x * cols + y], grid_->border_size[x * cols + y]);
 		}
 	}
 

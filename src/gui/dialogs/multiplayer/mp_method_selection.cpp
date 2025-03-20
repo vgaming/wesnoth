@@ -44,8 +44,8 @@ void mp_method_selection::pre_show()
 	add_to_tab_order(list);
 	add_to_tab_order(user_widget);
 
-	connect_signal_mouse_left_click(find_widget<button>("register"),
-		std::bind(&desktop::open_object, forum_registration_url));
+	connect_signal_mouse_left_click(
+		find_widget<button>("register"), std::bind(&desktop::open_object, forum_registration_url));
 }
 
 void mp_method_selection::post_show()
@@ -64,4 +64,4 @@ mp_method_selection::choice mp_method_selection::get_choice() const
 	return static_cast<choice>(prefs::get().mp_connect_type());
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

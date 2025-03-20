@@ -33,16 +33,9 @@ std::unique_ptr<editor_action> editor_action_label::perform(map_context& mc) con
 
 	const terrain_label* old_label = mc.get_labels().get_label(loc_);
 	if(old_label) {
-		undo = std::make_unique<editor_action_label>(
-			loc_,
-			old_label->text(),
-			old_label->team_name(),
-			old_label->color(),
-			old_label->visible_in_fog(),
-			old_label->visible_in_shroud(),
-			old_label->immutable(),
-			old_label->category()
-		);
+		undo = std::make_unique<editor_action_label>(loc_, old_label->text(), old_label->team_name(),
+			old_label->color(), old_label->visible_in_fog(), old_label->visible_in_shroud(), old_label->immutable(),
+			old_label->category());
 	} else {
 		undo = std::make_unique<editor_action_label_delete>(loc_);
 	}
@@ -67,16 +60,8 @@ std::unique_ptr<editor_action> editor_action_label_delete::perform(map_context& 
 		return nullptr;
 	}
 
-	auto undo = std::make_unique<editor_action_label>(
-		loc_,
-		deleted->text(),
-		deleted->team_name(),
-		deleted->color(),
-		deleted->visible_in_fog(),
-		deleted->visible_in_shroud(),
-		deleted->immutable(),
-		deleted->category()
-	);
+	auto undo = std::make_unique<editor_action_label>(loc_, deleted->text(), deleted->team_name(), deleted->color(),
+		deleted->visible_in_fog(), deleted->visible_in_shroud(), deleted->immutable(), deleted->category());
 
 	perform_without_undo(mc);
 	return undo;

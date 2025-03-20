@@ -25,7 +25,6 @@
 #include "gui/widgets/window.hpp"
 #include "sdl/rect.hpp"
 #include "sound.hpp"
-#include "gettext.hpp"
 #include "utils/math.hpp"
 #include "wml_exception.hpp"
 
@@ -51,12 +50,14 @@ slider::slider(const implementation::builder_slider& builder)
 	, value_label_generator_()
 	, current_item_mouse_position_(0, 0)
 {
-	connect_signal<event::SDL_KEY_DOWN>(std::bind(&slider::signal_handler_sdl_key_down, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_5));
+	connect_signal<event::SDL_KEY_DOWN>(std::bind(&slider::signal_handler_sdl_key_down, this, std::placeholders::_2,
+		std::placeholders::_3, std::placeholders::_5));
 
 	// connect_signal<event::LEFT_BUTTON_DOWN>(
 	//		std::bind(&slider::signal_handler_left_button_down, this, std::placeholders::_2, std::placeholders::_3));
 
-	connect_signal<event::LEFT_BUTTON_UP>(std::bind(&slider::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::LEFT_BUTTON_UP>(
+		std::bind(&slider::signal_handler_left_button_up, this, std::placeholders::_2, std::placeholders::_3));
 }
 
 point slider::calculate_best_size() const
@@ -91,12 +92,9 @@ void slider::set_value(int value)
 
 	if(std::abs(get_value() - value) > (step_size_ / 2)) {
 		ERR_GUI_G << "slider::set_value error:"
-			<< " old_value=" << old_value
-			<< " new_value=" << get_value()
-			<< " desired_value=" << value
-			<< " minimum_value=" << minimum_value_
-			<< " maximum_value=" << get_maximum_value()
-			<< " step_size=" << step_size_;
+				  << " old_value=" << old_value << " new_value=" << get_value() << " desired_value=" << value
+				  << " minimum_value=" << minimum_value_ << " maximum_value=" << get_maximum_value()
+				  << " step_size=" << step_size_;
 		assert(false);
 	}
 
@@ -144,9 +142,7 @@ unsigned slider::offset_after() const
 
 bool slider::on_positioner(const point& coordinate) const
 {
-	rect positioner_rect(
-		get_positioner_offset(), 0, get_positioner_length(), get_height()
-	);
+	rect positioner_rect(get_positioner_offset(), 0, get_positioner_length(), get_height());
 
 	// Note we assume the positioner is over the entire height of the widget.
 	return positioner_rect.contains(coordinate);
@@ -243,9 +239,9 @@ static t_string default_value_label_generator(const std::vector<t_string>& value
 void slider::set_value_labels(const std::vector<t_string>& value_labels)
 {
 	// Don't use std::ref because we want to store value_labels in the closure.
-	set_value_labels(std::bind(&default_value_label_generator, value_labels, std::placeholders::_1, std::placeholders::_2));
+	set_value_labels(
+		std::bind(&default_value_label_generator, value_labels, std::placeholders::_1, std::placeholders::_2));
 }
-
 
 void slider::set_value_range(int min_value, int max_value)
 {
@@ -255,7 +251,7 @@ void slider::set_value_range(int min_value, int max_value)
 	// min and max would tmporarily have invalid values where since the starting max value is 0;
 
 	VALIDATE(min_value <= max_value, "invalid slider data");
-	if (min_value == minimum_value_ && max_value == get_maximum_value()) {
+	if(min_value == minimum_value_ && max_value == get_maximum_value()) {
 		return;
 	}
 
@@ -270,7 +266,6 @@ void slider::set_value_range(int min_value, int max_value)
 
 	assert(min_value == get_minimum_value());
 	assert(max_value == get_maximum_value());
-
 }
 
 void slider::set_step_size(int step_size)
@@ -309,10 +304,14 @@ slider_definition::resolution::resolution(const config& cfg)
 	VALIDATE(positioner_length, missing_mandatory_wml_key("resolution", "minimum_positioner_length"));
 
 	// Note the order should be the same as the enum state_t is slider.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("slider_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("slider_definition][resolution", "state_disabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_pressed", missing_mandatory_wml_tag("slider_definition][resolution", "state_pressed")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_focused", missing_mandatory_wml_tag("slider_definition][resolution", "state_focused")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("slider_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_disabled", missing_mandatory_wml_tag("slider_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_pressed", missing_mandatory_wml_tag("slider_definition][resolution", "state_pressed")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_focused", missing_mandatory_wml_tag("slider_definition][resolution", "state_focused")));
 }
 
 // }---------- BUILDER -----------{
@@ -352,7 +351,7 @@ std::unique_ptr<widget> builder_slider::build() const
 
 	if(!value_labels_.empty()) {
 		VALIDATE(value_labels_.size() == static_cast<std::size_t>(widget->get_item_count()),
-				 _("The number of value_labels and values don’t match."));
+			_("The number of value_labels and values don’t match."));
 
 		widget->set_value_labels(value_labels_);
 

@@ -19,14 +19,14 @@
 
 #include "events.hpp"
 #include "gui/core/event/dispatcher.hpp"
-#include "gui/core/timer.hpp"
 #include "gui/core/log.hpp"
+#include "gui/core/timer.hpp"
 #include "gui/widgets/helper.hpp"
 #include "gui/widgets/widget.hpp"
 #include "gui/widgets/window.hpp"
 #include "hotkey/hotkey_item.hpp"
-#include "video.hpp"
 #include "utils/ranges.hpp"
+#include "video.hpp"
 
 #include <cassert>
 
@@ -46,10 +46,10 @@
  * At some point in the future this event handler should become the main event
  * handler. This switch controls the experimental switch for that change.
  */
-//#define MAIN_EVENT_HANDLER
+// #define MAIN_EVENT_HANDLER
 
 /* Since this code is still very experimental it's not enabled yet. */
-//#define ENABLE
+// #define ENABLE
 
 namespace gui2
 {
@@ -97,12 +97,9 @@ static uint32_t timer_sdl_draw_event(uint32_t, void*)
  */
 static uint32_t timer_sdl_poll_events(uint32_t, void*)
 {
-	try
-	{
+	try {
 		events::pump();
-	}
-	catch(video::quit&)
-	{
+	} catch(video::quit&) {
 		return 0;
 	}
 	return event_poll_interval;
@@ -148,7 +145,10 @@ public:
 	/**
 	 * Returns all dispatchers in the Z order.
 	 */
-	std::vector<dispatcher*>& get_dispatchers() { return dispatchers_; }
+	std::vector<dispatcher*>& get_dispatchers()
+	{
+		return dispatchers_;
+	}
 
 	/** The dispatcher that captured the mouse focus. */
 	dispatcher* mouse_focus;
@@ -165,7 +165,7 @@ private:
 	/***** Handlers *****/
 
 	/** Fires a raw SDL event. */
-	void raw_event(const SDL_Event &event);
+	void raw_event(const SDL_Event& event);
 
 	/**
 	 * Fires a video resize event.
@@ -287,9 +287,7 @@ private:
 	 * @param modifier               The SDL key modifiers used.
 	 * @param unicode                The unicode value for the key pressed.
 	 */
-	void key_down(const SDL_Keycode key,
-				  const SDL_Keymod modifier,
-				  const std::string& unicode);
+	void key_down(const SDL_Keycode key, const SDL_Keymod modifier, const std::string& unicode);
 
 	/**
 	 * Fires a text input event.
@@ -376,143 +374,125 @@ void sdl_event_handler::handle_event(const SDL_Event& event)
 	uint8_t button = event.button.button;
 
 	switch(event.type) {
-		case SDL_MOUSEMOTION:
+	case SDL_MOUSEMOTION:
 #ifdef MOUSE_TOUCH_EMULATION
-			// There's no finger motion when it's not down.
-			if (event.motion.state != 0)
+		// There's no finger motion when it's not down.
+		if(event.motion.state != 0)
 #endif
-			{
-				mouse(SDL_MOUSE_MOTION, {event.motion.x, event.motion.y});
-			}
+		{
+			mouse(SDL_MOUSE_MOTION, {event.motion.x, event.motion.y});
+		}
+		break;
+
+	case SDL_MOUSEBUTTONDOWN: {
+		mouse_button_down({event.button.x, event.button.y}, button);
+	} break;
+
+	case SDL_MOUSEBUTTONUP: {
+		mouse_button_up({event.button.x, event.button.y}, button);
+	} break;
+
+	case SDL_MOUSEWHEEL:
+		mouse_wheel(get_mouse_position(), event.wheel.x, event.wheel.y);
+		break;
+
+	case SHOW_HELPTIP_EVENT:
+		mouse(SHOW_HELPTIP, get_mouse_position());
+		break;
+
+	case HOVER_REMOVE_POPUP_EVENT:
+		// remove_popup();
+		break;
+
+	case TIMER_EVENT:
+		execute_timer(reinterpret_cast<std::size_t>(event.user.data1));
+		break;
+
+	case CLOSE_WINDOW_EVENT:
+		close_window(event.user.code);
+		break;
+
+	case SDL_JOYBUTTONDOWN:
+		button_down(event);
+		break;
+
+	case SDL_JOYBUTTONUP:
+		break;
+
+	case SDL_JOYAXISMOTION:
+		break;
+
+	case SDL_JOYHATMOTION:
+		hat_motion(event);
+		break;
+
+	case SDL_KEYDOWN:
+		key_down(event);
+		break;
+
+	case SDL_WINDOWEVENT:
+		switch(event.window.event) {
+		// Always precedes SDL_WINDOWEVENT_RESIZED, but the latter does not always
+		// happen; in particular when we change the game resolution via
+		// SDL_SetWindowSize() <https://github.com/wesnoth/wesnoth/issues/7436>
+		case SDL_WINDOWEVENT_SIZE_CHANGED:
+			video_resize(video::game_canvas_size());
 			break;
 
-		case SDL_MOUSEBUTTONDOWN:
-			{
-				mouse_button_down({event.button.x, event.button.y}, button);
-			}
+		case SDL_WINDOWEVENT_ENTER:
+		case SDL_WINDOWEVENT_FOCUS_GAINED:
+			activate();
 			break;
+		}
 
-		case SDL_MOUSEBUTTONUP:
-			{
-				mouse_button_up({event.button.x, event.button.y}, button);
-			}
-			break;
+		break;
 
-		case SDL_MOUSEWHEEL:
-			mouse_wheel(get_mouse_position(), event.wheel.x, event.wheel.y);
-			break;
+	case SDL_TEXTINPUT:
+		key_down(event);
+		break;
 
-		case SHOW_HELPTIP_EVENT:
-			mouse(SHOW_HELPTIP, get_mouse_position());
-			break;
+	case SDL_TEXTEDITING:
+		text_editing(event.edit.text, event.edit.start, event.edit.length);
+		break;
 
-		case HOVER_REMOVE_POPUP_EVENT:
-			// remove_popup();
-			break;
+	case SDL_FINGERMOTION: {
+		point c = video::game_canvas_size();
+		touch_motion(
+			point(event.tfinger.x * c.x, event.tfinger.y * c.y), point(event.tfinger.dx * c.x, event.tfinger.dy * c.y));
+	} break;
 
-		case TIMER_EVENT:
-			execute_timer(reinterpret_cast<std::size_t>(event.user.data1));
-			break;
+	case SDL_FINGERUP: {
+		point c = video::game_canvas_size();
+		touch_up(point(event.tfinger.x * c.x, event.tfinger.y * c.y));
+	} break;
 
-		case CLOSE_WINDOW_EVENT:
-			close_window(event.user.code);
-			break;
+	case SDL_FINGERDOWN: {
+		point c = video::game_canvas_size();
+		touch_down(point(event.tfinger.x * c.x, event.tfinger.y * c.y));
+	} break;
 
-		case SDL_JOYBUTTONDOWN:
-			button_down(event);
-			break;
+	case SDL_MULTIGESTURE: {
+		point c = video::game_canvas_size();
+		touch_multi_gesture(point(event.mgesture.x * c.x, event.mgesture.y * c.y), event.mgesture.dTheta,
+			event.mgesture.dDist, event.mgesture.numFingers);
+	} break;
 
-		case SDL_JOYBUTTONUP:
-			break;
-
-		case SDL_JOYAXISMOTION:
-			break;
-
-		case SDL_JOYHATMOTION:
-			hat_motion(event);
-			break;
-
-		case SDL_KEYDOWN:
-			key_down(event);
-			break;
-
-		case SDL_WINDOWEVENT:
-			switch(event.window.event) {
-				// Always precedes SDL_WINDOWEVENT_RESIZED, but the latter does not always
-				// happen; in particular when we change the game resolution via
-				// SDL_SetWindowSize() <https://github.com/wesnoth/wesnoth/issues/7436>
-				case SDL_WINDOWEVENT_SIZE_CHANGED:
-					video_resize(video::game_canvas_size());
-					break;
-
-				case SDL_WINDOWEVENT_ENTER:
-				case SDL_WINDOWEVENT_FOCUS_GAINED:
-					activate();
-					break;
-			}
-
-			break;
-
-		case SDL_TEXTINPUT:
-			key_down(event);
-			break;
-
-		case SDL_TEXTEDITING:
-			text_editing(event.edit.text, event.edit.start, event.edit.length);
-			break;
-
-		case SDL_FINGERMOTION:
-			{
-				point c = video::game_canvas_size();
-				touch_motion(
-					point(event.tfinger.x * c.x, event.tfinger.y * c.y),
-					point(event.tfinger.dx * c.x, event.tfinger.dy * c.y)
-				);
-			}
-			break;
-
-		case SDL_FINGERUP:
-			{
-				point c = video::game_canvas_size();
-				touch_up(point(event.tfinger.x * c.x, event.tfinger.y * c.y));
-			}
-			break;
-
-		case SDL_FINGERDOWN:
-			{
-				point c = video::game_canvas_size();
-				touch_down(point(event.tfinger.x * c.x, event.tfinger.y * c.y));
-			}
-			break;
-
-		case SDL_MULTIGESTURE:
-			{
-				point c = video::game_canvas_size();
-				touch_multi_gesture(
-					point(event.mgesture.x * c.x, event.mgesture.y * c.y),
-					event.mgesture.dTheta, event.mgesture.dDist,
-					event.mgesture.numFingers
-				);
-			}
-			break;
-
-#if(defined(_X11) && !defined(__APPLE__)) || defined(_WIN32)
-		case SDL_SYSWMEVENT:
-			/* DO NOTHING */
-			break;
+#if (defined(_X11) && !defined(__APPLE__)) || defined(_WIN32)
+	case SDL_SYSWMEVENT:
+		/* DO NOTHING */
+		break;
 #endif
 
-		// Silently ignored events.
-		case SDL_KEYUP:
-		case DOUBLE_CLICK_EVENT:
-			break;
+	// Silently ignored events.
+	case SDL_KEYUP:
+	case DOUBLE_CLICK_EVENT:
+		break;
 
-		default:
+	default:
 #ifdef GUI2_SHOW_UNHANDLED_EVENT_WARNINGS
-			WRN_GUI_E << "Unhandled event " << static_cast<uint32_t>(event.type)
-			          << ".";
+		WRN_GUI_E << "Unhandled event " << static_cast<uint32_t>(event.type) << ".";
 #endif
-			break;
+		break;
 	}
 
 	raw_event(event);
@@ -525,8 +505,7 @@ void sdl_event_handler::handle_window_event(const SDL_Event& event)
 
 void sdl_event_handler::connect(dispatcher* dispatcher)
 {
-	assert(std::find(dispatchers_.begin(), dispatchers_.end(), dispatcher)
-		   == dispatchers_.end());
+	assert(std::find(dispatchers_.begin(), dispatchers_.end(), dispatcher) == dispatchers_.end());
 
 	DBG_GUI_E << "adding dispatcher " << static_cast<void*>(dispatcher);
 
@@ -558,11 +537,10 @@ void sdl_event_handler::disconnect(dispatcher* disp)
 	}
 
 	// TODO: draw_manager - Why TF was this "activate"ing on "disconnect"? Seriously WTF?
-	//activate();
+	// activate();
 
 	/***** Validate post conditions. *****/
-	assert(std::find(dispatchers_.begin(), dispatchers_.end(), disp)
-		   == dispatchers_.end());
+	assert(std::find(dispatchers_.begin(), dispatchers_.end(), disp) == dispatchers_.end());
 
 	if(dispatchers_.empty()) {
 		LOG_GUI_E << "deleting unused dispatcher event context";
@@ -573,8 +551,7 @@ void sdl_event_handler::disconnect(dispatcher* disp)
 
 void sdl_event_handler::activate()
 {
-	for(auto dispatcher : dispatchers_)
-	{
+	for(auto dispatcher : dispatchers_) {
 		dispatcher->fire(SDL_ACTIVATE, dynamic_cast<widget&>(*dispatcher), nullptr);
 	}
 }
@@ -583,17 +560,16 @@ void sdl_event_handler::video_resize(const point& new_size)
 {
 	DBG_GUI_E << "Firing: " << SDL_VIDEO_RESIZE << ".";
 
-	for(auto dispatcher : dispatchers_)
-	{
+	for(auto dispatcher : dispatchers_) {
 		dispatcher->fire(SDL_VIDEO_RESIZE, dynamic_cast<widget&>(*dispatcher), new_size);
 	}
 }
 
-void sdl_event_handler::raw_event(const SDL_Event& event) {
+void sdl_event_handler::raw_event(const SDL_Event& event)
+{
 	DBG_GUI_E << "Firing raw event";
 
-	for(auto dispatcher : dispatchers_)
-	{
+	for(auto dispatcher : dispatchers_) {
 		dispatcher->fire(SDL_RAW_EVENT, dynamic_cast<widget&>(*dispatcher), event);
 	}
 }
@@ -627,42 +603,40 @@ void sdl_event_handler::mouse(const ui_event event, const point& position)
 void sdl_event_handler::mouse_button_up(const point& position, const uint8_t button)
 {
 	switch(button) {
-		case SDL_BUTTON_LEFT:
-			mouse(SDL_LEFT_BUTTON_UP, position);
-			break;
-		case SDL_BUTTON_MIDDLE:
-			mouse(SDL_MIDDLE_BUTTON_UP, position);
-			break;
-		case SDL_BUTTON_RIGHT:
-			mouse(SDL_RIGHT_BUTTON_UP, position);
-			break;
-		default:
+	case SDL_BUTTON_LEFT:
+		mouse(SDL_LEFT_BUTTON_UP, position);
+		break;
+	case SDL_BUTTON_MIDDLE:
+		mouse(SDL_MIDDLE_BUTTON_UP, position);
+		break;
+	case SDL_BUTTON_RIGHT:
+		mouse(SDL_RIGHT_BUTTON_UP, position);
+		break;
+	default:
 #ifdef GUI2_SHOW_UNHANDLED_EVENT_WARNINGS
-			WRN_GUI_E << "Unhandled 'mouse button up' event for button "
-					  << static_cast<uint32_t>(button) << ".";
+		WRN_GUI_E << "Unhandled 'mouse button up' event for button " << static_cast<uint32_t>(button) << ".";
 #endif
-			break;
+		break;
 	}
 }
 
 void sdl_event_handler::mouse_button_down(const point& position, const uint8_t button)
 {
 	switch(button) {
-		case SDL_BUTTON_LEFT:
-			mouse(SDL_LEFT_BUTTON_DOWN, position);
-			break;
-		case SDL_BUTTON_MIDDLE:
-			mouse(SDL_MIDDLE_BUTTON_DOWN, position);
-			break;
-		case SDL_BUTTON_RIGHT:
-			mouse(SDL_RIGHT_BUTTON_DOWN, position);
-			break;
-		default:
+	case SDL_BUTTON_LEFT:
+		mouse(SDL_LEFT_BUTTON_DOWN, position);
+		break;
+	case SDL_BUTTON_MIDDLE:
+		mouse(SDL_MIDDLE_BUTTON_DOWN, position);
+		break;
+	case SDL_BUTTON_RIGHT:
+		mouse(SDL_RIGHT_BUTTON_DOWN, position);
+		break;
+	default:
 #ifdef GUI2_SHOW_UNHANDLED_EVENT_WARNINGS
-			WRN_GUI_E << "Unhandled 'mouse button down' event for button "
-					  << static_cast<uint32_t>(button) << ".";
+		WRN_GUI_E << "Unhandled 'mouse button down' event for button " << static_cast<uint32_t>(button) << ".";
 #endif
-			break;
+		break;
 	}
 }
 
@@ -699,7 +673,7 @@ dispatcher* sdl_event_handler::keyboard_dispatcher()
 void sdl_event_handler::touch_motion(const point& position, const point& distance)
 {
 	for(auto& dispatcher : dispatchers_ | utils::views::reverse) {
-		dispatcher->fire(SDL_TOUCH_MOTION , dynamic_cast<widget&>(*dispatcher), position, distance);
+		dispatcher->fire(SDL_TOUCH_MOTION, dynamic_cast<widget&>(*dispatcher), position, distance);
 	}
 }
 
@@ -720,7 +694,8 @@ void sdl_event_handler::touch_down(const point& position)
 void sdl_event_handler::touch_multi_gesture(const point& center, float dTheta, float dDist, uint8_t numFingers)
 {
 	for(auto& dispatcher : dispatchers_ | utils::views::reverse) {
-		dispatcher->fire(SDL_TOUCH_MULTI_GESTURE, dynamic_cast<widget&>(*dispatcher), center, dTheta, dDist, numFingers);
+		dispatcher->fire(
+			SDL_TOUCH_MULTI_GESTURE, dynamic_cast<widget&>(*dispatcher), center, dTheta, dDist, numFingers);
 	}
 }
 
@@ -771,18 +746,14 @@ void sdl_event_handler::text_input(const std::string& unicode)
 	key_down(SDLK_UNKNOWN, static_cast<SDL_Keymod>(0), unicode);
 
 	if(dispatcher* dispatcher = keyboard_dispatcher()) {
-		dispatcher->fire(SDL_TEXT_INPUT,
-			dynamic_cast<widget&>(*dispatcher),
-			unicode, -1, -1);
+		dispatcher->fire(SDL_TEXT_INPUT, dynamic_cast<widget&>(*dispatcher), unicode, -1, -1);
 	}
 }
 
 void sdl_event_handler::text_editing(const std::string& unicode, int32_t start, int32_t len)
 {
 	if(dispatcher* dispatcher = keyboard_dispatcher()) {
-		dispatcher->fire(SDL_TEXT_EDITING,
-			dynamic_cast<widget&>(*dispatcher),
-			unicode, start, len);
+		dispatcher->fire(SDL_TEXT_EDITING, dynamic_cast<widget&>(*dispatcher), unicode, start, len);
 	}
 }
 
@@ -795,18 +766,12 @@ bool sdl_event_handler::hotkey_pressed(const hotkey::hotkey_ptr& key)
 	return false;
 }
 
-void sdl_event_handler::key_down(const SDL_Keycode key,
-						const SDL_Keymod modifier,
-						const std::string& unicode)
+void sdl_event_handler::key_down(const SDL_Keycode key, const SDL_Keymod modifier, const std::string& unicode)
 {
 	DBG_GUI_E << "Firing: " << SDL_KEY_DOWN << ".";
 
 	if(dispatcher* dispatcher = keyboard_dispatcher()) {
-		dispatcher->fire(SDL_KEY_DOWN,
-						 dynamic_cast<widget&>(*dispatcher),
-						 key,
-						 modifier,
-						 unicode);
+		dispatcher->fire(SDL_KEY_DOWN, dynamic_cast<widget&>(*dispatcher), key, modifier, unicode);
 	}
 }
 
@@ -917,151 +882,151 @@ void capture_keyboard(dispatcher* dispatcher)
 std::ostream& operator<<(std::ostream& stream, const ui_event event)
 {
 	switch(event) {
-		case DRAW:
-			stream << "draw";
-			break;
-		case CLOSE_WINDOW:
-			stream << "close window";
-			break;
-		case SDL_VIDEO_RESIZE:
-			stream << "SDL video resize";
-			break;
-		case SDL_MOUSE_MOTION:
-			stream << "SDL mouse motion";
-			break;
-		case MOUSE_ENTER:
-			stream << "mouse enter";
-			break;
-		case MOUSE_LEAVE:
-			stream << "mouse leave";
-			break;
-		case MOUSE_MOTION:
-			stream << "mouse motion";
-			break;
-		case SDL_LEFT_BUTTON_DOWN:
-			stream << "SDL left button down";
-			break;
-		case SDL_LEFT_BUTTON_UP:
-			stream << "SDL left button up";
-			break;
-		case LEFT_BUTTON_DOWN:
-			stream << "left button down";
-			break;
-		case LEFT_BUTTON_UP:
-			stream << "left button up";
-			break;
-		case LEFT_BUTTON_CLICK:
-			stream << "left button click";
-			break;
-		case LEFT_BUTTON_DOUBLE_CLICK:
-			stream << "left button double click";
-			break;
-		case SDL_MIDDLE_BUTTON_DOWN:
-			stream << "SDL middle button down";
-			break;
-		case SDL_MIDDLE_BUTTON_UP:
-			stream << "SDL middle button up";
-			break;
-		case MIDDLE_BUTTON_DOWN:
-			stream << "middle button down";
-			break;
-		case MIDDLE_BUTTON_UP:
-			stream << "middle button up";
-			break;
-		case MIDDLE_BUTTON_CLICK:
-			stream << "middle button click";
-			break;
-		case MIDDLE_BUTTON_DOUBLE_CLICK:
-			stream << "middle button double click";
-			break;
-		case SDL_RIGHT_BUTTON_DOWN:
-			stream << "SDL right button down";
-			break;
-		case SDL_RIGHT_BUTTON_UP:
-			stream << "SDL right button up";
-			break;
-		case RIGHT_BUTTON_DOWN:
-			stream << "right button down";
-			break;
-		case RIGHT_BUTTON_UP:
-			stream << "right button up";
-			break;
-		case RIGHT_BUTTON_CLICK:
-			stream << "right button click";
-			break;
-		case RIGHT_BUTTON_DOUBLE_CLICK:
-			stream << "right button double click";
-			break;
-		case SDL_WHEEL_LEFT:
-			stream << "SDL wheel left";
-			break;
-		case SDL_WHEEL_RIGHT:
-			stream << "SDL wheel right";
-			break;
-		case SDL_WHEEL_UP:
-			stream << "SDL wheel up";
-			break;
-		case SDL_WHEEL_DOWN:
-			stream << "SDL wheel down";
-			break;
-		case SDL_KEY_DOWN:
-			stream << "SDL key down";
-			break;
-		case SDL_TEXT_INPUT:
-			stream << "SDL text input";
-			break;
-		case SDL_TEXT_EDITING:
-			stream << "SDL text editing";
-			break;
+	case DRAW:
+		stream << "draw";
+		break;
+	case CLOSE_WINDOW:
+		stream << "close window";
+		break;
+	case SDL_VIDEO_RESIZE:
+		stream << "SDL video resize";
+		break;
+	case SDL_MOUSE_MOTION:
+		stream << "SDL mouse motion";
+		break;
+	case MOUSE_ENTER:
+		stream << "mouse enter";
+		break;
+	case MOUSE_LEAVE:
+		stream << "mouse leave";
+		break;
+	case MOUSE_MOTION:
+		stream << "mouse motion";
+		break;
+	case SDL_LEFT_BUTTON_DOWN:
+		stream << "SDL left button down";
+		break;
+	case SDL_LEFT_BUTTON_UP:
+		stream << "SDL left button up";
+		break;
+	case LEFT_BUTTON_DOWN:
+		stream << "left button down";
+		break;
+	case LEFT_BUTTON_UP:
+		stream << "left button up";
+		break;
+	case LEFT_BUTTON_CLICK:
+		stream << "left button click";
+		break;
+	case LEFT_BUTTON_DOUBLE_CLICK:
+		stream << "left button double click";
+		break;
+	case SDL_MIDDLE_BUTTON_DOWN:
+		stream << "SDL middle button down";
+		break;
+	case SDL_MIDDLE_BUTTON_UP:
+		stream << "SDL middle button up";
+		break;
+	case MIDDLE_BUTTON_DOWN:
+		stream << "middle button down";
+		break;
+	case MIDDLE_BUTTON_UP:
+		stream << "middle button up";
+		break;
+	case MIDDLE_BUTTON_CLICK:
+		stream << "middle button click";
+		break;
+	case MIDDLE_BUTTON_DOUBLE_CLICK:
+		stream << "middle button double click";
+		break;
+	case SDL_RIGHT_BUTTON_DOWN:
+		stream << "SDL right button down";
+		break;
+	case SDL_RIGHT_BUTTON_UP:
+		stream << "SDL right button up";
+		break;
+	case RIGHT_BUTTON_DOWN:
+		stream << "right button down";
+		break;
+	case RIGHT_BUTTON_UP:
+		stream << "right button up";
+		break;
+	case RIGHT_BUTTON_CLICK:
+		stream << "right button click";
+		break;
+	case RIGHT_BUTTON_DOUBLE_CLICK:
+		stream << "right button double click";
+		break;
+	case SDL_WHEEL_LEFT:
+		stream << "SDL wheel left";
+		break;
+	case SDL_WHEEL_RIGHT:
+		stream << "SDL wheel right";
+		break;
+	case SDL_WHEEL_UP:
+		stream << "SDL wheel up";
+		break;
+	case SDL_WHEEL_DOWN:
+		stream << "SDL wheel down";
+		break;
+	case SDL_KEY_DOWN:
+		stream << "SDL key down";
+		break;
+	case SDL_TEXT_INPUT:
+		stream << "SDL text input";
+		break;
+	case SDL_TEXT_EDITING:
+		stream << "SDL text editing";
+		break;
 
-		case NOTIFY_REMOVAL:
-			stream << "notify removal";
-			break;
-		case NOTIFY_MODIFIED:
-			stream << "notify modified";
-			break;
-		case RECEIVE_KEYBOARD_FOCUS:
-			stream << "receive keyboard focus";
-			break;
-		case LOSE_KEYBOARD_FOCUS:
-			stream << "lose keyboard focus";
-			break;
-		case SHOW_TOOLTIP:
-			stream << "show tooltip";
-			break;
-		case NOTIFY_REMOVE_TOOLTIP:
-			stream << "notify remove tooltip";
-			break;
-		case SDL_ACTIVATE:
-			stream << "SDL activate";
-			break;
-		case MESSAGE_SHOW_TOOLTIP:
-			stream << "message show tooltip";
-			break;
-		case SHOW_HELPTIP:
-			stream << "show helptip";
-			break;
-		case MESSAGE_SHOW_HELPTIP:
-			stream << "message show helptip";
-			break;
-		case REQUEST_PLACEMENT:
-			stream << "request placement";
-			break;
-		case SDL_TOUCH_MOTION:
-			stream << "SDL touch motion";
-			break;
-		case SDL_TOUCH_UP:
-			stream << "SDL touch up";
-			break;
-		case SDL_TOUCH_DOWN:
-			stream << "SDL touch down";
-			break;
-		case SDL_TOUCH_MULTI_GESTURE:
-			stream << "SDL multi-touch gesture";
-			break;
-		case SDL_RAW_EVENT:
-			stream << "SDL raw event";
-			break;
+	case NOTIFY_REMOVAL:
+		stream << "notify removal";
+		break;
+	case NOTIFY_MODIFIED:
+		stream << "notify modified";
+		break;
+	case RECEIVE_KEYBOARD_FOCUS:
+		stream << "receive keyboard focus";
+		break;
+	case LOSE_KEYBOARD_FOCUS:
+		stream << "lose keyboard focus";
+		break;
+	case SHOW_TOOLTIP:
+		stream << "show tooltip";
+		break;
+	case NOTIFY_REMOVE_TOOLTIP:
+		stream << "notify remove tooltip";
+		break;
+	case SDL_ACTIVATE:
+		stream << "SDL activate";
+		break;
+	case MESSAGE_SHOW_TOOLTIP:
+		stream << "message show tooltip";
+		break;
+	case SHOW_HELPTIP:
+		stream << "show helptip";
+		break;
+	case MESSAGE_SHOW_HELPTIP:
+		stream << "message show helptip";
+		break;
+	case REQUEST_PLACEMENT:
+		stream << "request placement";
+		break;
+	case SDL_TOUCH_MOTION:
+		stream << "SDL touch motion";
+		break;
+	case SDL_TOUCH_UP:
+		stream << "SDL touch up";
+		break;
+	case SDL_TOUCH_DOWN:
+		stream << "SDL touch down";
+		break;
+	case SDL_TOUCH_MULTI_GESTURE:
+		stream << "SDL multi-touch gesture";
+		break;
+	case SDL_RAW_EVENT:
+		stream << "SDL raw event";
+		break;
 	}
 
 	return stream;

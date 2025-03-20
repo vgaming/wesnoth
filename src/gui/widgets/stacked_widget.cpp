@@ -17,10 +17,10 @@
 
 #include "gui/widgets/stacked_widget.hpp"
 
-#include "gui/core/register_widget.hpp"
-#include "gui/widgets/widget_helpers.hpp"
-#include "gui/widgets/generator.hpp"
 #include "gettext.hpp"
+#include "gui/core/register_widget.hpp"
+#include "gui/widgets/generator.hpp"
+#include "gui/widgets/widget_helpers.hpp"
 #include "utils/const_clone.hpp"
 #include "wml_exception.hpp"
 
@@ -39,9 +39,8 @@ REGISTER_WIDGET(stacked_widget)
 struct stacked_widget_implementation
 {
 	template<typename W>
-	static W* find(utils::const_clone_ref<stacked_widget, W> stack,
-			const std::string_view id,
-			const bool must_be_active)
+	static W* find(
+		utils::const_clone_ref<stacked_widget, W> stack, const std::string_view id, const bool must_be_active)
 	{
 		// Use base method if find-in-all-layer isn't set.
 		if(!stack.find_in_all_layers_) {
@@ -161,18 +160,14 @@ void stacked_widget::select_layer(const int layer)
 {
 	update_selected_layer_index(layer);
 
-	select_layer_impl([this](unsigned int i)
-	{
-		return i == static_cast<unsigned int>(selected_layer_);
-	});
+	select_layer_impl([this](unsigned int i) { return i == static_cast<unsigned int>(selected_layer_); });
 }
 
 void stacked_widget::select_layers(const boost::dynamic_bitset<>& mask)
 {
 	assert(mask.size() == get_layer_count());
 
-	select_layer_impl([&](unsigned int i)
-	{
+	select_layer_impl([&](unsigned int i) {
 		if(mask[i]) {
 			update_selected_layer_index(i);
 		}
@@ -219,7 +214,8 @@ stacked_widget_definition::stacked_widget_definition(const config& cfg)
 }
 
 stacked_widget_definition::resolution::resolution(const config& cfg)
-	: resolution_definition(cfg), grid(nullptr)
+	: resolution_definition(cfg)
+	, grid(nullptr)
 {
 	// Add a dummy state since every widget needs a state.
 	static config dummy("draw");
@@ -237,11 +233,11 @@ namespace implementation
 {
 
 builder_stacked_widget::builder_stacked_widget(const config& cfg)
-	: builder_styled_widget(cfg), stack()
+	: builder_styled_widget(cfg)
+	, stack()
 {
 	VALIDATE(cfg.has_child("layer"), _("No stack layers defined."));
-	for(const auto & layer : cfg.child_range("layer"))
-	{
+	for(const auto& layer : cfg.child_range("layer")) {
 		stack.emplace_back(layer);
 	}
 }

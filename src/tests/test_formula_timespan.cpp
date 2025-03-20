@@ -18,35 +18,36 @@
 #include "formula/format_timespan.hpp"
 #include "serialization/chrono.hpp"
 
-BOOST_AUTO_TEST_SUITE( formula_timespan )
+BOOST_AUTO_TEST_SUITE(formula_timespan)
 
-BOOST_AUTO_TEST_CASE( test_formula_timespan )
+BOOST_AUTO_TEST_CASE(test_formula_timespan)
 {
 	using namespace std::chrono_literals;
 
-	BOOST_CHECK_EQUAL("1 second",  utils::format_timespan(std::chrono::seconds{1}, true));
+	BOOST_CHECK_EQUAL("1 second", utils::format_timespan(std::chrono::seconds{1}, true));
 	BOOST_CHECK_EQUAL("2 seconds", utils::format_timespan(std::chrono::seconds{2}, true));
-	BOOST_CHECK_EQUAL("1 minute",  utils::format_timespan(std::chrono::minutes{1}, true));
+	BOOST_CHECK_EQUAL("1 minute", utils::format_timespan(std::chrono::minutes{1}, true));
 	BOOST_CHECK_EQUAL("2 minutes", utils::format_timespan(std::chrono::minutes{2}, true));
-	BOOST_CHECK_EQUAL("1 hour",    utils::format_timespan(std::chrono::hours{1}, true));
-	BOOST_CHECK_EQUAL("2 hours",   utils::format_timespan(std::chrono::hours{2}, true));
-	BOOST_CHECK_EQUAL("1 day",     utils::format_timespan(chrono::days{1}, true));
-	BOOST_CHECK_EQUAL("2 days",    utils::format_timespan(chrono::days{2}, true));
-	BOOST_CHECK_EQUAL("1 week",    utils::format_timespan(chrono::weeks{1}, true));
-	BOOST_CHECK_EQUAL("2 weeks",   utils::format_timespan(chrono::weeks{2}, true));
-	BOOST_CHECK_EQUAL("1 year",    utils::format_timespan(chrono::years{1}, true));
-	BOOST_CHECK_EQUAL("2 years",   utils::format_timespan(chrono::years{2}, true));
+	BOOST_CHECK_EQUAL("1 hour", utils::format_timespan(std::chrono::hours{1}, true));
+	BOOST_CHECK_EQUAL("2 hours", utils::format_timespan(std::chrono::hours{2}, true));
+	BOOST_CHECK_EQUAL("1 day", utils::format_timespan(chrono::days{1}, true));
+	BOOST_CHECK_EQUAL("2 days", utils::format_timespan(chrono::days{2}, true));
+	BOOST_CHECK_EQUAL("1 week", utils::format_timespan(chrono::weeks{1}, true));
+	BOOST_CHECK_EQUAL("2 weeks", utils::format_timespan(chrono::weeks{2}, true));
+	BOOST_CHECK_EQUAL("1 year", utils::format_timespan(chrono::years{1}, true));
+	BOOST_CHECK_EQUAL("2 years", utils::format_timespan(chrono::years{2}, true));
 
-	BOOST_CHECK_EQUAL(utils::format_timespan(0s),       utils::format_timespan(0min));
+	BOOST_CHECK_EQUAL(utils::format_timespan(0s), utils::format_timespan(0min));
 	BOOST_CHECK_EQUAL(utils::format_timespan(0s, true), utils::format_timespan(0min));
-	BOOST_CHECK_EQUAL(utils::format_timespan(0s),       utils::format_timespan(-10000min));
+	BOOST_CHECK_EQUAL(utils::format_timespan(0s), utils::format_timespan(-10000min));
 	BOOST_CHECK_EQUAL(utils::format_timespan(0s, true), utils::format_timespan(-10000min));
 
 	{
-		constexpr auto time = chrono::years{2} + chrono::months{5} + chrono::weeks{2} + chrono::days{3} +
-			std::chrono::hours{23} + std::chrono::minutes{1} + std::chrono::seconds{12};
+		constexpr auto time = chrono::years{2} + chrono::months{5} + chrono::weeks{2} + chrono::days{3}
+			+ std::chrono::hours{23} + std::chrono::minutes{1} + std::chrono::seconds{12};
 
-		BOOST_CHECK_EQUAL("2 years, 5 months, 2 weeks, 3 days, 23 hours, 1 minute, and 12 seconds", utils::format_timespan(time, true));
+		BOOST_CHECK_EQUAL("2 years, 5 months, 2 weeks, 3 days, 23 hours, 1 minute, and 12 seconds",
+			utils::format_timespan(time, true));
 		BOOST_CHECK_EQUAL("2 years", utils::format_timespan(time));
 	}
 

@@ -25,8 +25,8 @@
 #include "level_result.hpp"
 #include "lua_jailbreak_exception.hpp"
 
-#include <string>
 #include <exception>
+#include <string>
 
 class config;
 
@@ -37,32 +37,35 @@ class config;
 class return_to_play_side_exception final : public lua_jailbreak_exception, public std::exception
 {
 public:
-
 	return_to_play_side_exception()
 		: lua_jailbreak_exception()
 		, std::exception()
 	{
 		this->store();
 	}
-	const char * what() const noexcept { return "return_to_play_side_exception"; }
-private:
+	const char* what() const noexcept
+	{
+		return "return_to_play_side_exception";
+	}
 
+private:
 	IMPLEMENT_LUA_JAILBREAK_EXCEPTION(return_to_play_side_exception)
 };
 
-class quit_game_exception final
-	: public lua_jailbreak_exception
-	, public std::exception
+class quit_game_exception final : public lua_jailbreak_exception, public std::exception
 {
 public:
-
 	quit_game_exception()
 		: lua_jailbreak_exception()
 		, std::exception()
 	{
 		this->store();
 	}
-	const char * what() const noexcept { return "quit_game_exception"; }
+	const char* what() const noexcept
+	{
+		return "quit_game_exception";
+	}
+
 private:
 	IMPLEMENT_LUA_JAILBREAK_EXCEPTION(quit_game_exception)
 };
@@ -70,13 +73,13 @@ private:
 /**
  * The non-persistent part of end_level_data
  */
-struct transient_end_level{
-
+struct transient_end_level
+{
 	transient_end_level();
 
-	bool carryover_report;             /**< Should a summary of the scenario outcome be displayed? */
-	bool linger_mode;                  /**< Should linger mode be invoked? */
-	bool reveal_map;                   /**< Should we reveal map when game is ended? (Multiplayer only) */
+	bool carryover_report; /**< Should a summary of the scenario outcome be displayed? */
+	bool linger_mode;      /**< Should linger mode be invoked? */
+	bool reveal_map;       /**< Should we reveal map when game is ended? (Multiplayer only) */
 
 	void write(config& cfg) const;
 };
@@ -88,12 +91,12 @@ struct end_level_data
 {
 	end_level_data();
 
-
-	bool prescenario_save;             /**< Should a prescenario be created the next game? */
-	bool replay_save;                  /**< Should a replay save be made? */
-	bool proceed_to_next_level;        /**< whether to proceed to the next scenario, equals is_victory in sp. We need to save this in saves during linger mode. > */
+	bool prescenario_save;      /**< Should a prescenario be created the next game? */
+	bool replay_save;           /**< Should a replay save be made? */
+	bool proceed_to_next_level; /**< whether to proceed to the next scenario, equals is_victory in sp. We need to save
+								   this in saves during linger mode. > */
 	bool is_victory;
-	std::string test_result;           /**< result to use if this is a unit test */
+	std::string test_result; /**< result to use if this is a unit test */
 	transient_end_level transient;
 	void write(config& cfg) const;
 

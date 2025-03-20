@@ -15,12 +15,10 @@
 
 #include "gui/dialogs/multiplayer/synced_choice_wait.hpp"
 
-#include "gui/widgets/label.hpp"
 #include "gui/widgets/button.hpp"
+#include "gui/widgets/label.hpp"
 #include "gui/widgets/window.hpp"
 #include "quit_confirmation.hpp"
-
-
 
 #include <functional>
 
@@ -48,8 +46,7 @@ void synched_choice_wait::pre_show()
 
 	button& quit_button = find_widget<button>("btn_quit_game");
 
-	connect_signal_mouse_left_click(quit_button,
-		std::bind(&quit_confirmation::quit_to_title));
+	connect_signal_mouse_left_click(quit_button, std::bind(&quit_confirmation::quit_to_title));
 
 	message_->set_label(mgr_.wait_message());
 	if(mgr_.finished() || !mgr_.waiting()) {
@@ -67,4 +64,4 @@ void synched_choice_wait::handle_generic_event(const std::string& event_name)
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

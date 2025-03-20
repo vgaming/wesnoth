@@ -89,7 +89,7 @@ public:
 	/** Returns an instance for managing saves in filesystem::get_saves_dir() */
 	static std::shared_ptr<save_index_class> default_saves_dir();
 
-	std::vector<save_info> get_saves_list(const std::string* filter=nullptr);
+	std::vector<save_info> get_saves_list(const std::string* filter = nullptr);
 
 	/** Delete a savegame, including deleting the underlying file. */
 	void delete_game(const std::string& name);

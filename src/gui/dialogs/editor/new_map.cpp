@@ -17,7 +17,6 @@
 
 #include "gui/dialogs/editor/new_map.hpp"
 
-
 namespace gui2::dialogs
 {
 
@@ -32,4 +31,4 @@ editor_new_map::editor_new_map(const t_string& title, int& width, int& height)
 	register_integer("height", true, height);
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

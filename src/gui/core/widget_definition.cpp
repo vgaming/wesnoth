@@ -27,7 +27,8 @@ namespace gui2
 
 state_definition::state_definition(const config& cfg)
 	: canvas_cfg_(VALIDATE_WML_CHILD(cfg, "draw", _("No draw section defined for state.")))
-{}
+{
+}
 
 resolution_definition::resolution_definition(const config& cfg)
 	: window_width(cfg["window_width"].to_unsigned())
@@ -52,11 +53,12 @@ resolution_definition::resolution_definition(const config& cfg)
 }
 
 styled_widget_definition::styled_widget_definition(const config& cfg)
-	: id(cfg["id"]), description(cfg["description"].t_str()), resolutions()
+	: id(cfg["id"])
+	, description(cfg["description"].t_str())
+	, resolutions()
 {
 	VALIDATE(!id.empty(), missing_mandatory_wml_key("styled_widget", "id"));
-	VALIDATE(!description.empty(),
-			 missing_mandatory_wml_key("styled_widget", "description"));
+	VALIDATE(!description.empty(), missing_mandatory_wml_key("styled_widget", "description"));
 
 	/*
 	 * Do this validation here instead of in load_resolutions so the

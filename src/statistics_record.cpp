@@ -22,7 +22,6 @@
 #include "serialization/binary_or_text.hpp"
 #include "serialization/string_utils.hpp"
 
-
 static lg::log_domain log_engine("engine");
 #define DBG_NG LOG_STREAM(debug, log_engine)
 #define ERR_NG LOG_STREAM(err, log_engine)
@@ -182,7 +181,6 @@ static void merge_cth_map(stats_t::hitrate_map& a, const stats_t::hitrate_map& b
 		a[i.first].strikes += i.second.strikes;
 	}
 }
-
 
 stats_t::stats_t()
 	: recruits()
@@ -420,7 +418,6 @@ void stats_t::merge_with(const stats_t& b)
 	a.turn_by_cth_inflicted = b.turn_by_cth_inflicted;
 	a.turn_by_cth_taken = b.turn_by_cth_taken;
 }
-
 
 scenario_stats_t::scenario_stats_t(const config& cfg)
 	: team_stats()

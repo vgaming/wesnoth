@@ -22,8 +22,9 @@
 
 // Put these here to ensure that there's only
 // one instance of the current_ticks variable
-namespace {
-	std::chrono::steady_clock::time_point current_ticks;
+namespace
+{
+std::chrono::steady_clock::time_point current_ticks;
 }
 
 void new_animation_frame()

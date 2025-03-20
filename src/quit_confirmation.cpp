@@ -15,20 +15,19 @@
 #include "quit_confirmation.hpp"
 #include "game_end_exceptions.hpp"
 #include "gettext.hpp"
-#include "video.hpp" // only for video::quit
-#include "resources.hpp"
-#include "playmp_controller.hpp"
-#include "gui/dialogs/surrender_quit.hpp"
 #include "gui/dialogs/message.hpp"
+#include "gui/dialogs/surrender_quit.hpp"
 #include "gui/widgets/retval.hpp"
+#include "playmp_controller.hpp"
+#include "resources.hpp"
 #include "utils/ranges.hpp"
+#include "video.hpp" // only for video::quit
 
 bool quit_confirmation::quit()
 {
 	if(!open_) {
 		open_ = true;
-		for(quit_confirmation* blocker : blockers_ | utils::views::reverse)
-		{
+		for(quit_confirmation* blocker : blockers_ | utils::views::reverse) {
 			if(!blocker->prompt_()) {
 				open_ = false;
 				return false;
@@ -42,18 +41,21 @@ bool quit_confirmation::quit()
 
 void quit_confirmation::quit_to_title()
 {
-	if(quit()) { throw_quit_game_exception(); }
+	if(quit()) {
+		throw_quit_game_exception();
+	}
 }
 
 void quit_confirmation::quit_to_desktop()
 {
-	if(quit()) { throw video::quit(); }
+	if(quit()) {
+		throw video::quit();
+	}
 }
 
 bool quit_confirmation::show_prompt(const std::string& message)
 {
-	return gui2::show_message(_("Quit"), message,
-		gui2::dialogs::message::yes_no_buttons) != gui2::retval::CANCEL;
+	return gui2::show_message(_("Quit"), message, gui2::dialogs::message::yes_no_buttons) != gui2::retval::CANCEL;
 }
 
 bool quit_confirmation::default_prompt()
@@ -73,17 +75,12 @@ bool quit_confirmation::default_prompt()
 		gui2::dialogs::surrender_quit sq;
 		sq.show();
 		int retval = sq.get_retval();
-		if(retval == 1)
-		{
+		if(retval == 1) {
 			pmc->surrender(display::get_singleton()->viewing_team_index());
 			return true;
-		}
-		else if(retval == 2)
-		{
+		} else if(retval == 2) {
 			return true;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	} else {

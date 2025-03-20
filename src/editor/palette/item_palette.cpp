@@ -21,16 +21,17 @@
 
 #include "editor/palette/item_palette.hpp"
 #include "formula/string_utils.hpp"
-#include "gettext.hpp"
 #include "game_config_view.hpp"
+#include "gettext.hpp"
 
 #include <string>
 
-namespace editor {
+namespace editor
+{
 
 std::string item_palette::get_help_string() const
 {
-	return VGETTEXT("Left-click: Place item $item | Right-click to remove", {{ "item", selected_fg_item().name }});
+	return VGETTEXT("Left-click: Place item $item | Right-click to remove", {{"item", selected_fg_item().name}});
 }
 
 void item_palette::setup(const game_config_view& cfg)
@@ -58,10 +59,7 @@ void item_palette::setup(const game_config_view& cfg)
 }
 
 void item_palette::setup_item(
-	const overlay& item,
-	texture& base_image,
-	texture& /*overlay_image*/,
-	std::stringstream& tooltip_text)
+	const overlay& item, texture& base_image, texture& /*overlay_image*/, std::stringstream& tooltip_text)
 {
 	std::stringstream filename;
 	filename << item.image;
@@ -83,9 +81,9 @@ void item_palette::setup_item(
 	tooltip_text << item.name;
 }
 
-item_palette::item_palette(editor_display &gui, editor_toolkit &toolkit)
-//TODO avoid magic numbers
-	:	editor_palette<overlay>(gui, 36, 4, toolkit)
+item_palette::item_palette(editor_display& gui, editor_toolkit& toolkit)
+	// TODO avoid magic numbers
+	: editor_palette<overlay>(gui, 36, 4, toolkit)
 {
 }
 
@@ -94,4 +92,4 @@ const std::string& item_palette::get_id(const overlay& item)
 	return item.id;
 }
 
-}
+} // namespace editor

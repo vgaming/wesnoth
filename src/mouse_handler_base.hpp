@@ -89,15 +89,16 @@ public:
 	 * implementation, possibly using mouse_motion_default().
 	 */
 	virtual void mouse_motion(
-			int x, int y, const bool browse, bool update = false, map_location new_loc = map_location::null_location())
-			= 0;
+		int x, int y, const bool browse, bool update = false, map_location new_loc = map_location::null_location())
+		= 0;
 
 	virtual void touch_motion(
-			int x, int y, const bool browse, bool update = false, map_location new_loc = map_location::null_location())
-			= 0;
+		int x, int y, const bool browse, bool update = false, map_location new_loc = map_location::null_location())
+		= 0;
 
 	virtual void mouse_press(const SDL_MouseButtonEvent& event, const bool browse);
-	virtual bool mouse_button_event(const SDL_MouseButtonEvent& event, uint8_t button, map_location loc, bool click = false);
+	virtual bool mouse_button_event(
+		const SDL_MouseButtonEvent& event, uint8_t button, map_location loc, bool click = false);
 	bool is_left_click(const SDL_MouseButtonEvent& event) const;
 	bool is_middle_click(const SDL_MouseButtonEvent& event) const;
 	bool is_right_click(const SDL_MouseButtonEvent& event) const;

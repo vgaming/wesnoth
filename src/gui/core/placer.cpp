@@ -27,12 +27,12 @@ namespace gui2
 placer_base* placer_base::build(const grow_direction::type grow_dir, const unsigned parallel_items)
 {
 	switch(grow_dir) {
-		case grow_direction::type::horizontal:
-			return new implementation::placer_horizontal_list(parallel_items);
-		case grow_direction::type::vertical:
-			return new implementation::placer_vertical_list(parallel_items);
-		default:
-			throw std::runtime_error("UNREACHABLE CODE REACHED");
+	case grow_direction::type::horizontal:
+		return new implementation::placer_horizontal_list(parallel_items);
+	case grow_direction::type::vertical:
+		return new implementation::placer_vertical_list(parallel_items);
+	default:
+		throw std::runtime_error("UNREACHABLE CODE REACHED");
 	};
 }
 

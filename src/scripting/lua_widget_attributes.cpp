@@ -13,11 +13,11 @@
 	See the COPYING file for more details.
 */
 
+#include "scripting/lua_widget_attributes.hpp"
 #include "gui/auxiliary/iterator/iterator.hpp"
 #include "gui/widgets/clickable_item.hpp"
-#include "gui/widgets/helper.hpp"
-#include "gui/widgets/styled_widget.hpp"
 #include "gui/widgets/combobox.hpp"
+#include "gui/widgets/helper.hpp"
 #include "gui/widgets/label.hpp"
 #include "gui/widgets/listbox.hpp"
 #include "gui/widgets/multi_page.hpp"
@@ -28,6 +28,7 @@
 #include "gui/widgets/selectable_item.hpp"
 #include "gui/widgets/slider.hpp"
 #include "gui/widgets/stacked_widget.hpp"
+#include "gui/widgets/styled_widget.hpp"
 #include "gui/widgets/text_box.hpp"
 #include "gui/widgets/tree_view.hpp"
 #include "gui/widgets/tree_view_node.hpp"
@@ -35,14 +36,13 @@
 #include "gui/widgets/widget.hpp"
 #include "gui/widgets/window.hpp"
 #include "log.hpp"
+#include "scripting/lua_attributes.hpp"
 #include "scripting/lua_common.hpp"
 #include "scripting/lua_kernel_base.hpp"
 #include "scripting/lua_unit.hpp"
 #include "scripting/lua_unit_type.hpp"
-#include "scripting/push_check.hpp"
 #include "scripting/lua_widget.hpp"
-#include "scripting/lua_attributes.hpp"
-#include "scripting/lua_widget_attributes.hpp"
+#include "scripting/push_check.hpp"
 #include "serialization/string_utils.hpp"
 
 #include <functional>
@@ -129,7 +129,8 @@ void register_widget_attribute(const char* name)
 			map = &setters;
 			fcn = [action = action_type()](lua_State* L, int idx, gui2::widget& w, bool nop) {
 				if(widget_type* pw = dynamic_cast<widget_type*>(&w)) {
-					if(!nop) action.set(L, *pw, lua_check<value_type>(L, idx));
+					if(!nop)
+						action.set(L, *pw, lua_check<value_type>(L, idx));
 					return true;
 				}
 				return false;
@@ -138,7 +139,8 @@ void register_widget_attribute(const char* name)
 			map = &getters;
 			fcn = [action = action_type()](lua_State* L, gui2::widget& w, bool nop) {
 				if(widget_type* pw = dynamic_cast<widget_type*>(&w)) {
-					if(!nop) lua_push(L, action.get(L, *pw));
+					if(!nop)
+						lua_push(L, action.get(L, *pw));
 					return true;
 				}
 				return false;
@@ -149,33 +151,37 @@ void register_widget_attribute(const char* name)
 	});
 }
 
-#define WIDGET_GETTER4(name, value_type, widgt_type, id) \
-struct BOOST_PP_CAT(getter_, id) : public lua_getter<widgt_type, value_type> { \
-	value_type get(lua_State* L, const widgt_type& w) const override; \
-}; \
-struct BOOST_PP_CAT(getter_adder_, id) { \
-	BOOST_PP_CAT(getter_adder_, id) () \
-	{ \
-		register_widget_attribute<widgt_type, value_type, BOOST_PP_CAT(getter_, id), false>(name); \
-	} \
-}; \
-static BOOST_PP_CAT(getter_adder_, id) BOOST_PP_CAT(getter_adder_instance_, id) ; \
-value_type BOOST_PP_CAT(getter_, id)::get([[maybe_unused]] lua_State* L, const widgt_type& w) const
+#define WIDGET_GETTER4(name, value_type, widgt_type, id)                                                               \
+	struct BOOST_PP_CAT(getter_, id)                                                                                   \
+		: public lua_getter<widgt_type, value_type>                                                                    \
+	{                                                                                                                  \
+		value_type get(lua_State* L, const widgt_type& w) const override;                                              \
+	};                                                                                                                 \
+	struct BOOST_PP_CAT(getter_adder_, id)                                                                             \
+	{                                                                                                                  \
+		BOOST_PP_CAT(getter_adder_, id)()                                                                              \
+		{                                                                                                              \
+			register_widget_attribute<widgt_type, value_type, BOOST_PP_CAT(getter_, id), false>(name);                 \
+		}                                                                                                              \
+	};                                                                                                                 \
+	static BOOST_PP_CAT(getter_adder_, id) BOOST_PP_CAT(getter_adder_instance_, id);                                   \
+	value_type BOOST_PP_CAT(getter_, id)::get([[maybe_unused]] lua_State* L, const widgt_type& w) const
 
-
-#define WIDGET_SETTER4(name, value_type, widgt_type, id) \
-struct BOOST_PP_CAT(setter_, id) : public lua_setter<widgt_type, value_type> { \
-	void set(lua_State* L, widgt_type& w, const value_type& value) const override; \
-}; \
-struct BOOST_PP_CAT(setter_adder_, id) { \
-	BOOST_PP_CAT(setter_adder_, id) ()\
-	{ \
-		register_widget_attribute<widgt_type, value_type, BOOST_PP_CAT(setter_, id), true>(name); \
-	} \
-}; \
-static BOOST_PP_CAT(setter_adder_, id) BOOST_PP_CAT(setter_adder_instance_, id); \
-void BOOST_PP_CAT(setter_, id)::set([[maybe_unused]] lua_State* L, widgt_type& w, const value_type& value) const
-
+#define WIDGET_SETTER4(name, value_type, widgt_type, id)                                                               \
+	struct BOOST_PP_CAT(setter_, id)                                                                                   \
+		: public lua_setter<widgt_type, value_type>                                                                    \
+	{                                                                                                                  \
+		void set(lua_State* L, widgt_type& w, const value_type& value) const override;                                 \
+	};                                                                                                                 \
+	struct BOOST_PP_CAT(setter_adder_, id)                                                                             \
+	{                                                                                                                  \
+		BOOST_PP_CAT(setter_adder_, id)()                                                                              \
+		{                                                                                                              \
+			register_widget_attribute<widgt_type, value_type, BOOST_PP_CAT(setter_, id), true>(name);                  \
+		}                                                                                                              \
+	};                                                                                                                 \
+	static BOOST_PP_CAT(setter_adder_, id) BOOST_PP_CAT(setter_adder_instance_, id);                                   \
+	void BOOST_PP_CAT(setter_, id)::set([[maybe_unused]] lua_State* L, widgt_type& w, const value_type& value) const
 
 /**
  * @param name: string  comma seperated list
@@ -185,7 +191,6 @@ void BOOST_PP_CAT(setter_, id)::set([[maybe_unused]] lua_State* L, widgt_type& w
 #define WIDGET_GETTER(name, value_type, widgt_type) WIDGET_GETTER4(name, value_type, widgt_type, __LINE__)
 
 #define WIDGET_SETTER(name, value_type, widgt_type) WIDGET_SETTER4(name, value_type, widgt_type, __LINE__)
-
 
 /// CLASSIC
 
@@ -206,7 +211,7 @@ WIDGET_GETTER("value_compat,selected_index", int, gui2::multi_page)
 
 WIDGET_SETTER("value_compat,selected_index", int, gui2::multi_page)
 {
-	w.select_page(value -1);
+	w.select_page(value - 1);
 }
 
 WIDGET_GETTER("value_compat,selected_index", int, gui2::stacked_widget)
@@ -333,14 +338,18 @@ WIDGET_SETTER("value_compat,percentage", int, gui2::progress_bar)
 WIDGET_GETTER("value_compat,selected_item_path", std::vector<int>, gui2::tree_view)
 {
 	auto res = w.selected_item()->describe_path();
-	for(int& a : res) { ++a;}
+	for(int& a : res) {
+		++a;
+	}
 	return res;
 }
 
 WIDGET_GETTER("path", std::vector<int>, gui2::tree_view_node)
 {
 	auto res = w.describe_path();
-	for(int& a : res) { ++a;}
+	for(int& a : res) {
+		++a;
+	}
 	return res;
 }
 
@@ -424,10 +433,10 @@ WIDGET_SETTER("use_markup", bool, gui2::styled_widget)
 	w.set_use_markup(value);
 }
 
-//TODO: while i think this shortcut is useful, i'm not that happy about
-//      the name since  it changes 'label' and not 'text', the first one
-//      is the label that is part of most widgets (like checkboxes), the
-//      later is specific to input textboxes.
+// TODO: while i think this shortcut is useful, i'm not that happy about
+//       the name since  it changes 'label' and not 'text', the first one
+//       is the label that is part of most widgets (like checkboxes), the
+//       later is specific to input textboxes.
 WIDGET_SETTER("marked_up_text", t_string, gui2::styled_widget)
 {
 	w.set_use_markup(true);
@@ -712,49 +721,43 @@ WIDGET_GETTER("visible", std::string, gui2::styled_widget)
 {
 	std::string s;
 	switch(w.get_visible()) {
-		case gui2::styled_widget::visibility::visible:
-			s = "visible";
-			break;
-		case gui2::styled_widget::visibility::hidden:
-			s = "hidden";
-			break;
-		case gui2::styled_widget::visibility::invisible:
-			s = "invisible";
+	case gui2::styled_widget::visibility::visible:
+		s = "visible";
+		break;
+	case gui2::styled_widget::visibility::hidden:
+		s = "hidden";
+		break;
+	case gui2::styled_widget::visibility::invisible:
+		s = "invisible";
 	}
 
 	return s;
 }
 
-
 WIDGET_SETTER("visible", lua_index_raw, gui2::styled_widget)
 {
-
 	typedef gui2::styled_widget::visibility visibility;
 
 	visibility flag = visibility::visible;
 
 	switch(lua_type(L, value.index)) {
-		case LUA_TBOOLEAN:
-			flag = luaW_toboolean(L, value.index)
-					? visibility::visible
-					: visibility::invisible;
-			break;
-		case LUA_TSTRING:
-			{
-				const std::string& str = lua_tostring(L, value.index);
-				if(str == "visible") {
-					flag = visibility::visible;
-				} else if(str == "hidden") {
-					flag = visibility::hidden;
-				} else if(str == "invisible") {
-					flag = visibility::invisible;
-				} else {
-					luaL_argerror(L, value.index, "string must be one of: visible, hidden, invisible");
-				}
-			}
-			break;
-		default:
-			luaW_type_error(L, value.index, "boolean or string");
+	case LUA_TBOOLEAN:
+		flag = luaW_toboolean(L, value.index) ? visibility::visible : visibility::invisible;
+		break;
+	case LUA_TSTRING: {
+		const std::string& str = lua_tostring(L, value.index);
+		if(str == "visible") {
+			flag = visibility::visible;
+		} else if(str == "hidden") {
+			flag = visibility::hidden;
+		} else if(str == "invisible") {
+			flag = visibility::invisible;
+		} else {
+			luaL_argerror(L, value.index, "string must be one of: visible, hidden, invisible");
+		}
+	} break;
+	default:
+		luaW_type_error(L, value.index, "boolean or string");
 	}
 
 	w.set_visible(flag);
@@ -774,7 +777,7 @@ WIDGET_GETTER("value_compat,label", t_string, gui2::styled_widget)
 	return w.get_label();
 }
 
-//must be last
+// must be last
 WIDGET_SETTER("value_compat,label", t_string, gui2::styled_widget)
 {
 	gui2::window* window = w.get_window();
@@ -788,14 +791,11 @@ WIDGET_GETTER("type", std::string, gui2::widget)
 {
 	if(const gui2::styled_widget* sw = dynamic_cast<const gui2::styled_widget*>(&w)) {
 		return sw->get_control_type();
-	}
-	else if(dynamic_cast<const gui2::tree_view_node*>(&w)) {
+	} else if(dynamic_cast<const gui2::tree_view_node*>(&w)) {
 		return "tree_view_node";
-	}
-	else if(dynamic_cast<const gui2::grid*>(&w)) {
+	} else if(dynamic_cast<const gui2::grid*>(&w)) {
 		return "grid";
-	}
-	else {
+	} else {
 		return "";
 	}
 }
@@ -803,7 +803,8 @@ WIDGET_GETTER("type", std::string, gui2::widget)
 ///////////////////////////////////////////////////////
 ////////////////////// CALLBACKS //////////////////////
 ///////////////////////////////////////////////////////
-namespace {
+namespace
+{
 
 void dialog_callback(lua_State* L, lua_ptr<gui2::widget>& wp, const std::string& id)
 {
@@ -846,7 +847,7 @@ WIDGET_SETTER("on_modified", lua_index_raw, gui2::widget)
 		throw std::invalid_argument("the widget has no window assigned");
 	}
 	lua_pushvalue(L, value.index);
-	if (!luaW_setwidgetcallback(L, &w, wd, "on_modified")) {
+	if(!luaW_setwidgetcallback(L, &w, wd, "on_modified")) {
 		connect_signal_notify_modified(w, std::bind(&dialog_callback, L, lua_ptr<gui2::widget>(w), "on_modified"));
 	}
 }
@@ -859,7 +860,7 @@ WIDGET_SETTER("on_link_click", lua_index_raw, gui2::rich_label)
 	}
 
 	lua_pushvalue(L, value.index);
-	if (!luaW_setwidgetcallback(L, &w, wd, "on_link_click")) {
+	if(!luaW_setwidgetcallback(L, &w, wd, "on_link_click")) {
 		w.register_link_callback(
 			std::bind(&link_callback, L, lua_ptr<gui2::widget>(w), "on_link_click", std::placeholders::_1));
 	}
@@ -872,7 +873,7 @@ WIDGET_SETTER("on_left_click", lua_index_raw, gui2::widget)
 		throw std::invalid_argument("the widget has no window assigned");
 	}
 	lua_pushvalue(L, value.index);
-	if (!luaW_setwidgetcallback(L, &w, wd, "on_left_click")) {
+	if(!luaW_setwidgetcallback(L, &w, wd, "on_left_click")) {
 		connect_signal_mouse_left_click(w, std::bind(&dialog_callback, L, lua_ptr<gui2::widget>(w), "on_left_click"));
 	}
 }
@@ -889,25 +890,24 @@ WIDGET_SETTER("on_button_click", lua_index_raw, gui2::widget)
 		throw std::invalid_argument("unsupported widget");
 	}
 	lua_pushvalue(L, value.index);
-	if (!luaW_setwidgetcallback(L, &w, wd, "on_button_click")) {
+	if(!luaW_setwidgetcallback(L, &w, wd, "on_button_click")) {
 		cl->connect_click_handler(std::bind(&dialog_callback, L, lua_ptr<gui2::widget>(w), "on_button_click"));
 	}
 }
 
-}
+} // namespace
 
-namespace lua_widget {
+namespace lua_widget
+{
 
 int impl_widget_get(lua_State* L)
 {
 	gui2::widget& w = luaW_checkwidget(L, 1);
 	if(lua_isinteger(L, 2)) {
-
 		if(auto pwidget = find_child_by_index(w, luaL_checkinteger(L, 2))) {
 			luaW_pushwidget(L, *pwidget);
 			return 1;
 		}
-
 	}
 	std::string_view str = lua_check<std::string_view>(L, 2);
 
@@ -926,7 +926,7 @@ int impl_widget_get(lua_State* L)
 		luaW_pushwidget(L, *pwidget);
 		return 1;
 	}
-	ERR_LUA << "invalid property of '" <<  typeid(w).name()<< "' widget :" << str;
+	ERR_LUA << "invalid property of '" << typeid(w).name() << "' widget :" << str;
 	std::string err = "invalid property of widget: ";
 	err += str;
 	return luaL_argerror(L, 2, err.c_str());
@@ -937,7 +937,6 @@ int impl_widget_set(lua_State* L)
 	gui2::widget& w = luaW_checkwidget(L, 1);
 	std::string_view str = lua_check<std::string_view>(L, 2);
 
-
 	tsetters::iterator it = setters.find(std::string(str));
 	if(it != setters.end()) {
 		for(const auto& func : it->second) {
@@ -945,13 +944,11 @@ int impl_widget_set(lua_State* L)
 				return 0;
 			}
 		}
-		ERR_LUA << "none of "<< it->second.size() << " setters matched";
+		ERR_LUA << "none of " << it->second.size() << " setters matched";
+	} else {
+		ERR_LUA << "unknown property id : " << str << " #known properties=" << setters.size();
 	}
-	else {
-		ERR_LUA << "unknown property id : " << str << " #known properties="  << setters.size();
-
-	}
-	ERR_LUA << "invalid modifiable property of '" <<  typeid(w).name()<< "' widget:" << str;
+	ERR_LUA << "invalid modifiable property of '" << typeid(w).name() << "' widget:" << str;
 	std::string err = "invalid modifiable property of widget: ";
 	err += str;
 	return luaL_argerror(L, 2, err.c_str());
@@ -963,9 +960,10 @@ int impl_widget_dir(lua_State* L)
 	std::vector<std::string> keys;
 	// Add any readable keys
 	for(const auto& [key, funcs] : getters) {
-		if(key == "value_compat") continue;
+		if(key == "value_compat")
+			continue;
 		for(const auto& func : funcs) {
-			if(func(L, w, true)){
+			if(func(L, w, true)) {
 				keys.push_back(key);
 				break;
 			}
@@ -973,10 +971,12 @@ int impl_widget_dir(lua_State* L)
 	}
 	// Add any writable keys
 	for(const auto& [key, funcs] : setters) {
-		if(key == "value_compat") continue;
-		if(key == "callback") continue;
+		if(key == "value_compat")
+			continue;
+		if(key == "callback")
+			continue;
 		for(const auto& func : funcs) {
-			if(func(L, 0, w, true)){
+			if(func(L, 0, w, true)) {
 				keys.push_back(key);
 				break;
 			}
@@ -997,4 +997,4 @@ int impl_widget_dir(lua_State* L)
 	lua_push(L, keys);
 	return 1;
 }
-}
+} // namespace lua_widget

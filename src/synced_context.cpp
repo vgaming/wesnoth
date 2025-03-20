@@ -203,11 +203,10 @@ bool synced_context::undo_blocked()
 	// if the game has ended, undoing is blocked.
 	// if the turn has ended undoing is blocked.
 
-	// Important: once this function returned true, it has to return true for the rest of the duration of the current action
-	// otherwise OOS happens, so the following code in particular relies on the inability to revoke a [end_turn]/[endlevel]
-	return is_undo_blocked_
-	    || resources::controller->is_regular_game_end()
-	    || resources::gamedata->end_turn_forced();
+	// Important: once this function returned true, it has to return true for the rest of the duration of the current
+	// action otherwise OOS happens, so the following code in particular relies on the inability to revoke a
+	// [end_turn]/[endlevel]
+	return is_undo_blocked_ || resources::controller->is_regular_game_end() || resources::gamedata->end_turn_forced();
 }
 
 int synced_context::get_unit_id_diff()
@@ -234,7 +233,7 @@ std::shared_ptr<randomness::rng> synced_context::get_rng_for_action()
 	const std::string& mode = resources::classification->random_mode;
 	if(mode == "deterministic" || mode == "biased") {
 		auto get_rng = []() {
-			//rnd is nonundoable, even when the deterministic rng is used.
+			// rnd is nonundoable, even when the deterministic rng is used.
 			synced_context::block_undo(true, false);
 			return resources::gamedata->rng().get_next_random();
 		};
@@ -251,10 +250,13 @@ int synced_context::server_choice::request_id() const
 
 void synced_context::server_choice::send_request() const
 {
-	resources::controller->send_to_wesnothd(config {
-		"request_choice", config {
-			"request_id", request_id(),
-			name(), request(),
+	resources::controller->send_to_wesnothd(config{
+		"request_choice",
+		config{
+			"request_id",
+			request_id(),
+			name(),
+			request(),
 		},
 	});
 }
@@ -323,7 +325,7 @@ config synced_context::ask_server_choice(const server_choice& sch)
 
 			if(!action->has_child(sch.name())) {
 				replay::process_error("[" + std::string(sch.name()) + "] expected but none found, found instead:\n "
-									  + action->debug() + "\n");
+					+ action->debug() + "\n");
 
 				resources::recorder->revert_action();
 				return sch.local_choice();
@@ -337,7 +339,7 @@ config synced_context::ask_server_choice(const server_choice& sch)
 
 			config res = action->mandatory_child(sch.name());
 			if(res["request_id"].to_int() != sch.request_id()) {
-				WRN_REPLAY << "Unexpected request_id: " << res["request_id"] << " expected: " <<  sch.request_id();
+				WRN_REPLAY << "Unexpected request_id: " << res["request_id"] << " expected: " << sch.request_id();
 			}
 			return res;
 		}
@@ -417,9 +419,11 @@ void set_scontext_synced::do_final_checkup(bool dont_throw)
 	assert(!did_final_checkup_);
 	std::stringstream msg;
 	config co;
-	config cn {
-		"random_calls", new_rng_->get_random_calls(),
-		"next_unit_id", resources::gameboard->unit_id_manager().get_save_id() + 1,
+	config cn{
+		"random_calls",
+		new_rng_->get_random_calls(),
+		"next_unit_id",
+		resources::gameboard->unit_id_manager().get_save_id() + 1,
 	};
 
 	if(checkup_instance->local_checkup(cn, co)) {

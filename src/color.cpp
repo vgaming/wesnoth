@@ -33,12 +33,9 @@ color_t color_t::from_rgba_string(std::string_view c)
 		throw std::invalid_argument("Wrong number of components for RGBA color");
 	}
 
-	return {
-		*utils::from_chars<uint8_t>(fields[0]),
-		*utils::from_chars<uint8_t>(fields[1]),
+	return {*utils::from_chars<uint8_t>(fields[0]), *utils::from_chars<uint8_t>(fields[1]),
 		*utils::from_chars<uint8_t>(fields[2]),
-		fields.size() == 4 ? *utils::from_chars<uint8_t>(fields[3]) : ALPHA_OPAQUE
-	};
+		fields.size() == 4 ? *utils::from_chars<uint8_t>(fields[3]) : ALPHA_OPAQUE};
 }
 
 color_t color_t::from_rgb_string(std::string_view c)
@@ -53,12 +50,8 @@ color_t color_t::from_rgb_string(std::string_view c)
 		throw std::invalid_argument("Wrong number of components for RGB color");
 	}
 
-	return {
-		*utils::from_chars<uint8_t>(fields[0]),
-		*utils::from_chars<uint8_t>(fields[1]),
-		*utils::from_chars<uint8_t>(fields[2]),
-		ALPHA_OPAQUE
-	};
+	return {*utils::from_chars<uint8_t>(fields[0]), *utils::from_chars<uint8_t>(fields[1]),
+		*utils::from_chars<uint8_t>(fields[2]), ALPHA_OPAQUE};
 }
 
 color_t color_t::from_hex_string(std::string_view c)
@@ -77,23 +70,16 @@ color_t color_t::from_hex_string(std::string_view c)
 
 	auto temp_c = *utils::from_chars<uint32_t>(c, 16);
 
-	return {
-		static_cast<uint8_t>((0x00FFFFFF & temp_c) >> 16),
-		static_cast<uint8_t>((0x00FFFFFF & temp_c) >> 8),
-		static_cast<uint8_t>((0x00FFFFFF & temp_c)),
-		ALPHA_OPAQUE
-	};
+	return {static_cast<uint8_t>((0x00FFFFFF & temp_c) >> 16), static_cast<uint8_t>((0x00FFFFFF & temp_c) >> 8),
+		static_cast<uint8_t>((0x00FFFFFF & temp_c)), ALPHA_OPAQUE};
 }
 
 std::string color_t::to_hex_string() const
 {
 	std::ostringstream h;
 
-	h << "#"
-	  << std::hex << std::setfill('0')
-	  << std::setw(2) << static_cast<int>(r)
-	  << std::setw(2) << static_cast<int>(g)
-	  << std::setw(2) << static_cast<int>(b);
+	h << "#" << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(r) << std::setw(2)
+	  << static_cast<int>(g) << std::setw(2) << static_cast<int>(b);
 
 	if(a != ALPHA_OPAQUE) {
 		h << std::setw(2) << static_cast<int>(a);
@@ -106,10 +92,8 @@ std::string color_t::to_rgba_string() const
 {
 	std::ostringstream color;
 
-	color << static_cast<int>(r) << ','
-	      << static_cast<int>(g) << ','
-	      << static_cast<int>(b) << ','
-	      << static_cast<int>(a);
+	color << static_cast<int>(r) << ',' << static_cast<int>(g) << ',' << static_cast<int>(b) << ','
+		  << static_cast<int>(a);
 
 	return color.str();
 }
@@ -118,9 +102,7 @@ std::string color_t::to_rgb_string() const
 {
 	std::ostringstream color;
 
-	color << static_cast<int>(r) << ','
-	      << static_cast<int>(g) << ','
-	      << static_cast<int>(b);
+	color << static_cast<int>(r) << ',' << static_cast<int>(g) << ',' << static_cast<int>(b);
 
 	return color.str();
 }

@@ -31,16 +31,19 @@ class tod_manager;
 class game_data;
 class game_lua_kernel;
 
-class filter_context {
+class filter_context
+{
 public:
 	// accessors
 
-	virtual const display_context & get_disp_context() const = 0;
-	virtual const tod_manager & get_tod_man() const = 0;
-	virtual const game_data * get_game_data() const = 0;
-	virtual game_lua_kernel * get_lua_kernel() const = 0;
+	virtual const display_context& get_disp_context() const = 0;
+	virtual const tod_manager& get_tod_man() const = 0;
+	virtual const game_data* get_game_data() const = 0;
+	virtual game_lua_kernel* get_lua_kernel() const = 0;
 
 	// Dtor
 
-	virtual ~filter_context() {}
+	virtual ~filter_context()
+	{
+	}
 };

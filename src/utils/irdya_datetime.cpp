@@ -17,7 +17,6 @@
 #include "formula/string_utils.hpp"
 #include "tstring.hpp"
 
-
 using namespace utils;
 
 irdya_date irdya_date::read_date(const std::string& date)
@@ -44,7 +43,8 @@ irdya_date irdya_date::read_date(const std::string& date)
 		date_result.epoch = wesnoth_epoch::type::wesnoth;
 	} else {
 		std::size_t epoch_end = date.find_first_of(' ', epoch_start);
-		date_result.epoch = wesnoth_epoch::get_enum(date.substr(epoch_start, epoch_end - epoch_start)).value_or(wesnoth_epoch::type::wesnoth);
+		date_result.epoch = wesnoth_epoch::get_enum(date.substr(epoch_start, epoch_end - epoch_start))
+								.value_or(wesnoth_epoch::type::wesnoth);
 	}
 
 	return date_result;
@@ -52,7 +52,7 @@ irdya_date irdya_date::read_date(const std::string& date)
 
 std::string irdya_date::to_string() const
 {
-	utils::string_map args {{"year", std::to_string(year)}};
+	utils::string_map args{{"year", std::to_string(year)}};
 
 	switch(epoch) {
 	case wesnoth_epoch::type::before_wesnoth:

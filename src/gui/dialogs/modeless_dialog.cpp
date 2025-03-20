@@ -46,4 +46,4 @@ void modeless_dialog::show(const bool allow_interaction, const unsigned /*auto_c
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

@@ -21,10 +21,10 @@
 #include <unordered_map>
 #include <vector>
 
-//These macros interfere with MS VC++
+// These macros interfere with MS VC++
 #ifdef _MSC_VER
-	#undef max
-	#undef min
+#undef max
+#undef min
 #endif
 
 using color_range_map = std::unordered_map<color_t, color_t>;
@@ -49,29 +49,31 @@ class color_range
 {
 public:
 	/**
-	* Constructor, which expects four reference RGB colors.
-	* @param mid Average color shade.
-	* @param max Maximum (highlight) color shade
-	* @param min Minimum color shade
-	* @param rep High-contrast reference color
-	*/
+	 * Constructor, which expects four reference RGB colors.
+	 * @param mid Average color shade.
+	 * @param max Maximum (highlight) color shade
+	 * @param min Minimum color shade
+	 * @param rep High-contrast reference color
+	 */
 	color_range(color_t mid, color_t max = {255, 255, 255}, color_t min = {0, 0, 0}, color_t rep = {128, 128, 128})
 		: mid_(mid)
 		, max_(max)
 		, min_(min)
 		, rep_(rep)
-	{}
+	{
+	}
 
 	/**
-	* Constructor, which expects four reference RGB colors.
-	* @param v STL vector with the four reference colors in order.
-	*/
+	 * Constructor, which expects four reference RGB colors.
+	 * @param v STL vector with the four reference colors in order.
+	 */
 	color_range(const std::vector<color_t>& v)
-		: mid_(v.size()     ? v[0] : color_t(128, 128, 128))
+		: mid_(v.size() ? v[0] : color_t(128, 128, 128))
 		, max_(v.size() > 1 ? v[1] : color_t(255, 255, 255))
-		, min_(v.size() > 2 ? v[2] : color_t(0  , 0  , 0  ))
+		, min_(v.size() > 2 ? v[2] : color_t(0, 0, 0))
 		, rep_(v.size() > 3 ? v[3] : mid_)
-	{}
+	{
+	}
 
 	/** Default constructor. */
 	color_range()
@@ -79,19 +81,32 @@ public:
 		, max_(255, 255, 255)
 		, min_()
 		, rep_(128, 128, 128)
-	{}
+	{
+	}
 
 	/** Average color shade. */
-	color_t mid() const { return mid_; }
+	color_t mid() const
+	{
+		return mid_;
+	}
 
 	/** Maximum color shade. */
-	color_t max() const { return max_; }
+	color_t max() const
+	{
+		return max_;
+	}
 
 	/** Minimum color shade. */
-	color_t min() const { return min_; }
+	color_t min() const
+	{
+		return min_;
+	}
 
 	/** High-contrast shade, intended for the minimap markers. */
-	color_t rep() const { return rep_; }
+	color_t rep() const
+	{
+		return rep_;
+	}
 
 	bool operator==(const color_range& b) const
 	{
@@ -100,9 +115,15 @@ public:
 
 	bool operator<(const color_range& b) const
 	{
-		if(mid_ != b.mid()) { return mid_.to_rgba_bytes() < b.mid().to_rgba_bytes(); }
-		if(max_ != b.max()) { return max_.to_rgba_bytes() < b.max().to_rgba_bytes(); }
-		if(min_ != b.min()) { return min_.to_rgba_bytes() < b.min().to_rgba_bytes(); }
+		if(mid_ != b.mid()) {
+			return mid_.to_rgba_bytes() < b.mid().to_rgba_bytes();
+		}
+		if(max_ != b.max()) {
+			return max_.to_rgba_bytes() < b.max().to_rgba_bytes();
+		}
+		if(min_ != b.min()) {
+			return min_.to_rgba_bytes() < b.min().to_rgba_bytes();
+		}
 
 		return rep_.to_rgba_bytes() < b.rep().to_rgba_bytes();
 	}
@@ -111,7 +132,7 @@ public:
 	std::string debug() const;
 
 private:
-	color_t mid_ , max_ , min_ , rep_;
+	color_t mid_, max_, min_, rep_;
 };
 
 /**
@@ -122,7 +143,7 @@ std::vector<color_t> palette(const color_range& cr);
 /**
  * Converts a source palette using the specified color_range object.
  * This holds the main interface for range-based team coloring. The output is used with the recolor_image()
-*  method to do the actual recoloring.
+ *  method to do the actual recoloring.
  *
  * @param        new_rgb Specifies parameters for the conversion.
  * @param        old_rgb Source palette.

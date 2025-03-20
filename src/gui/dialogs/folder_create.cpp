@@ -40,4 +40,4 @@ void folder_create::pre_show()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

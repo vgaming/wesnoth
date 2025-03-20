@@ -17,12 +17,12 @@
 
 #include "gui/widgets/toggle_panel.hpp"
 
+#include "gettext.hpp"
+#include "gui/core/log.hpp"
 #include "gui/core/register_widget.hpp"
+#include "gui/core/window_builder/helper.hpp"
 #include "gui/widgets/settings.hpp"
 #include "gui/widgets/window.hpp"
-#include "gui/core/log.hpp"
-#include "gui/core/window_builder/helper.hpp"
-#include "gettext.hpp"
 #include "sound.hpp"
 #include "wml_exception.hpp"
 
@@ -46,10 +46,10 @@ toggle_panel::toggle_panel(const implementation::builder_toggle_panel& builder)
 {
 	set_wants_mouse_left_double_click();
 
-	connect_signal<event::MOUSE_ENTER>(std::bind(
-			&toggle_panel::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
-	connect_signal<event::MOUSE_LEAVE>(std::bind(
-			&toggle_panel::signal_handler_mouse_leave, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::MOUSE_ENTER>(
+		std::bind(&toggle_panel::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::MOUSE_LEAVE>(
+		std::bind(&toggle_panel::signal_handler_mouse_leave, this, std::placeholders::_2, std::placeholders::_3));
 #if 0
 	connect_signal<event::LEFT_BUTTON_CLICK>(
 			std::bind(&toggle_panel::signal_handler_pre_left_button_click,
@@ -57,25 +57,16 @@ toggle_panel::toggle_panel(const implementation::builder_toggle_panel& builder)
 						std::placeholders::_2),
 			event::dispatcher::back_pre_child);
 #endif
-	connect_signal<event::LEFT_BUTTON_CLICK>(std::bind(
-			&toggle_panel::signal_handler_left_button_click, this, std::placeholders::_2, std::placeholders::_3));
 	connect_signal<event::LEFT_BUTTON_CLICK>(
-			std::bind(&toggle_panel::signal_handler_left_button_click,
-						this,
-						std::placeholders::_2,
-						std::placeholders::_3),
-			event::dispatcher::back_post_child);
-	connect_signal<event::LEFT_BUTTON_DOUBLE_CLICK>(
-			std::bind(&toggle_panel::signal_handler_left_button_double_click,
-						this,
-						std::placeholders::_2,
-						std::placeholders::_3));
-	connect_signal<event::LEFT_BUTTON_DOUBLE_CLICK>(
-			std::bind(&toggle_panel::signal_handler_left_button_double_click,
-						this,
-						std::placeholders::_2,
-						std::placeholders::_3),
-			event::dispatcher::back_post_child);
+		std::bind(&toggle_panel::signal_handler_left_button_click, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::LEFT_BUTTON_CLICK>(
+		std::bind(&toggle_panel::signal_handler_left_button_click, this, std::placeholders::_2, std::placeholders::_3),
+		event::dispatcher::back_post_child);
+	connect_signal<event::LEFT_BUTTON_DOUBLE_CLICK>(std::bind(
+		&toggle_panel::signal_handler_left_button_double_click, this, std::placeholders::_2, std::placeholders::_3));
+	connect_signal<event::LEFT_BUTTON_DOUBLE_CLICK>(std::bind(&toggle_panel::signal_handler_left_button_double_click,
+														this, std::placeholders::_2, std::placeholders::_3),
+		event::dispatcher::back_post_child);
 }
 
 unsigned toggle_panel::num_states() const
@@ -88,16 +79,14 @@ unsigned toggle_panel::num_states() const
 
 void toggle_panel::set_child_members(const widget_data& data)
 {
-	for(const auto & item : data)
-	{
+	for(const auto& item : data) {
 		styled_widget* control = dynamic_cast<styled_widget*>(find(item.first, false));
 		if(control) {
 			control->set_members(item.second);
 		}
 	}
 }
-widget* toggle_panel::find_at(const point& coordinate,
-								const bool must_be_active)
+widget* toggle_panel::find_at(const point& coordinate, const bool must_be_active)
 {
 	/**
 	 * @todo since there is no mouse event nesting (or event nesting at all)
@@ -111,8 +100,7 @@ widget* toggle_panel::find_at(const point& coordinate,
 	return result ? result : styled_widget::find_at(coordinate, must_be_active);
 }
 
-const widget* toggle_panel::find_at(const point& coordinate,
-									  const bool must_be_active) const
+const widget* toggle_panel::find_at(const point& coordinate, const bool must_be_active) const
 {
 	const widget* result = container_base::find_at(coordinate, must_be_active);
 	return result ? result : styled_widget::find_at(coordinate, must_be_active);
@@ -207,8 +195,7 @@ bool toggle_panel::impl_draw_foreground()
 	return styled_widget::impl_draw_foreground();
 }
 
-void toggle_panel::signal_handler_mouse_enter(const event::ui_event event,
-											   bool& handled)
+void toggle_panel::signal_handler_mouse_enter(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -216,8 +203,7 @@ void toggle_panel::signal_handler_mouse_enter(const event::ui_event event,
 	handled = true;
 }
 
-void toggle_panel::signal_handler_mouse_leave(const event::ui_event event,
-											   bool& handled)
+void toggle_panel::signal_handler_mouse_leave(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -225,8 +211,7 @@ void toggle_panel::signal_handler_mouse_leave(const event::ui_event event,
 	handled = true;
 }
 
-void
-toggle_panel::signal_handler_pre_left_button_click(const event::ui_event event)
+void toggle_panel::signal_handler_pre_left_button_click(const event::ui_event event)
 {
 	DBG_GUI_E << get_control_type() << "[" << id() << "]: " << event << ".";
 
@@ -252,8 +237,7 @@ toggle_panel::signal_handler_pre_left_button_click(const event::ui_event event)
 #endif
 }
 
-void toggle_panel::signal_handler_left_button_click(const event::ui_event event,
-													 bool& handled)
+void toggle_panel::signal_handler_left_button_click(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -264,8 +248,7 @@ void toggle_panel::signal_handler_left_button_click(const event::ui_event event,
 	handled = true;
 }
 
-void toggle_panel::signal_handler_left_button_double_click(
-		const event::ui_event event, bool& handled)
+void toggle_panel::signal_handler_left_button_double_click(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -297,11 +280,13 @@ toggle_panel_definition::resolution::resolution(const config& cfg)
 	, right_border(cfg["right_border"].to_unsigned())
 {
 	// Note the order should be the same as the enum state_t in toggle_panel.hpp.
-	for(const auto& c : cfg.child_range("state"))
-	{
-		state.emplace_back(VALIDATE_WML_CHILD(c, "enabled", missing_mandatory_wml_tag("toggle_panel_definition][resolution][state", "enabled")));
-		state.emplace_back(VALIDATE_WML_CHILD(c, "disabled", missing_mandatory_wml_tag("toggle_panel_definition][resolution][state", "disabled")));
-		state.emplace_back(VALIDATE_WML_CHILD(c, "focused", missing_mandatory_wml_tag("toggle_panel_definition][resolution][state", "focused")));
+	for(const auto& c : cfg.child_range("state")) {
+		state.emplace_back(VALIDATE_WML_CHILD(
+			c, "enabled", missing_mandatory_wml_tag("toggle_panel_definition][resolution][state", "enabled")));
+		state.emplace_back(VALIDATE_WML_CHILD(
+			c, "disabled", missing_mandatory_wml_tag("toggle_panel_definition][resolution][state", "disabled")));
+		state.emplace_back(VALIDATE_WML_CHILD(
+			c, "focused", missing_mandatory_wml_tag("toggle_panel_definition][resolution][state", "focused")));
 	}
 }
 
@@ -329,8 +314,7 @@ std::unique_ptr<widget> builder_toggle_panel::build() const
 
 	widget->set_retval(get_retval(retval_id_, retval_, id));
 
-	DBG_GUI_G << "Window builder: placed toggle panel '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed toggle panel '" << id << "' with definition '" << definition << "'.";
 
 	widget->init_grid(*grid);
 	return widget;

@@ -20,9 +20,9 @@
 #include "gui/widgets/text_box.hpp"
 #include "gui/widgets/window.hpp"
 
-#include "preferences/preferences.hpp"
 #include "game_initialization/multiplayer.hpp"
 #include "gettext.hpp"
+#include "preferences/preferences.hpp"
 
 #include <functional>
 
@@ -31,9 +31,7 @@ namespace gui2::dialogs
 
 REGISTER_DIALOG(lobby_player_info)
 
-lobby_player_info::lobby_player_info(events::chat_handler& chat,
-									   const mp::user_info& info,
-									   const mp::lobby_info& li)
+lobby_player_info::lobby_player_info(events::chat_handler& chat, const mp::user_info& info, const mp::lobby_info& li)
 	: modal_dialog(window_id())
 	, chat_(chat)
 	, info_(info)
@@ -58,43 +56,34 @@ void lobby_player_info::pre_show()
 
 	button& whisper = find_widget<button>("start_whisper");
 	if(info_.get_relation() != mp::user_info::user_relation::ME) {
-		connect_signal_mouse_left_click(whisper,
-			std::bind(&lobby_player_info::start_whisper_button_callback, this));
+		connect_signal_mouse_left_click(whisper, std::bind(&lobby_player_info::start_whisper_button_callback, this));
 	} else {
 		whisper.set_active(false);
 	}
 
 	add_to_friends_ = find_widget<button>("add_to_friends", false, true);
 	connect_signal_mouse_left_click(
-			*add_to_friends_,
-			std::bind(&lobby_player_info::add_to_friends_button_callback, this));
+		*add_to_friends_, std::bind(&lobby_player_info::add_to_friends_button_callback, this));
 
 	add_to_ignores_ = find_widget<button>("add_to_ignores", false, true);
 	connect_signal_mouse_left_click(
-			*add_to_ignores_,
-			std::bind(&lobby_player_info::add_to_ignores_button_callback, this));
+		*add_to_ignores_, std::bind(&lobby_player_info::add_to_ignores_button_callback, this));
 
-	remove_from_list_
-			= find_widget<button>("remove_from_list", false, true);
+	remove_from_list_ = find_widget<button>("remove_from_list", false, true);
 	connect_signal_mouse_left_click(
-			*remove_from_list_,
-			std::bind(&lobby_player_info::remove_from_list_button_callback, this));
+		*remove_from_list_, std::bind(&lobby_player_info::remove_from_list_button_callback, this));
 
 	connect_signal_mouse_left_click(
-			find_widget<button>("check_status"),
-			std::bind(&lobby_player_info::check_status_button_callback, this));
+		find_widget<button>("check_status"), std::bind(&lobby_player_info::check_status_button_callback, this));
 
 	connect_signal_mouse_left_click(
-			find_widget<button>("kick"),
-			std::bind(&lobby_player_info::kick_button_callback, this));
+		find_widget<button>("kick"), std::bind(&lobby_player_info::kick_button_callback, this));
 
 	connect_signal_mouse_left_click(
-			find_widget<button>("kick_ban"),
-			std::bind(&lobby_player_info::kick_ban_button_callback, this));
+		find_widget<button>("kick_ban"), std::bind(&lobby_player_info::kick_ban_button_callback, this));
 
 	connect_signal_mouse_left_click(
-			find_widget<button>("stopgame"),
-			std::bind(&lobby_player_info::stopgame_button_callback, this));
+		find_widget<button>("stopgame"), std::bind(&lobby_player_info::stopgame_button_callback, this));
 
 	find_widget<label>("player_name").set_label(info_.name);
 
@@ -136,26 +125,26 @@ void lobby_player_info::update_relation()
 	add_to_ignores_->set_active(false);
 	remove_from_list_->set_active(false);
 	switch(info_.get_relation()) {
-		case mp::user_info::user_relation::FRIEND:
-			relation_->set_label(_("On friends list"));
-			add_to_ignores_->set_active(true);
-			remove_from_list_->set_active(true);
-			break;
-		case mp::user_info::user_relation::IGNORED:
-			relation_->set_label(_("On ignores list"));
-			add_to_friends_->set_active(true);
-			remove_from_list_->set_active(true);
-			break;
-		case mp::user_info::user_relation::NEUTRAL:
-			relation_->set_label(_("Neither a friend nor ignored"));
-			add_to_friends_->set_active(true);
-			add_to_ignores_->set_active(true);
-			break;
-		case mp::user_info::user_relation::ME:
-			relation_->set_label(_("You"));
-			break;
-		default:
-			relation_->set_label(_("Error"));
+	case mp::user_info::user_relation::FRIEND:
+		relation_->set_label(_("On friends list"));
+		add_to_ignores_->set_active(true);
+		remove_from_list_->set_active(true);
+		break;
+	case mp::user_info::user_relation::IGNORED:
+		relation_->set_label(_("On ignores list"));
+		add_to_friends_->set_active(true);
+		remove_from_list_->set_active(true);
+		break;
+	case mp::user_info::user_relation::NEUTRAL:
+		relation_->set_label(_("Neither a friend nor ignored"));
+		add_to_friends_->set_active(true);
+		add_to_ignores_->set_active(true);
+		break;
+	case mp::user_info::user_relation::ME:
+		relation_->set_label(_("You"));
+		break;
+	default:
+		relation_->set_label(_("Error"));
 	}
 }
 
@@ -232,4 +221,4 @@ void lobby_player_info::do_kick_ban(bool ban)
 	chat_.send_command("query", ss.str());
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

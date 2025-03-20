@@ -19,8 +19,8 @@
 
 #include "formula/string_utils.hpp"
 #include "gettext.hpp"
-#include "gui/core/log.hpp"
 #include "gui/core/gui_definition.hpp"
+#include "gui/core/log.hpp"
 #include "gui/core/static_registry.hpp"
 #include "gui/core/window_builder/helper.hpp"
 #include "gui/core/window_builder/instance.hpp"
@@ -198,9 +198,8 @@ builder_grid::builder_grid(const config& cfg)
 		}
 
 		if(col == 0) {
-			const t_string msg = VGETTEXT("Grid ‘$grid’ row $row must have at least one column.", {
-				{"grid", id}, {"row", std::to_string(rows)}
-			});
+			const t_string msg = VGETTEXT(
+				"Grid ‘$grid’ row $row must have at least one column.", {{"grid", id}, {"row", std::to_string(rows)}});
 
 			FAIL(msg);
 		}
@@ -210,9 +209,10 @@ builder_grid::builder_grid(const config& cfg)
 		if(rows == 1) {
 			cols = col;
 		} else if(col != cols) {
-			const t_string msg = VGETTEXT("Grid ‘$grid’ row $row has a differing number of columns ($found found, $expected expected)", {
-				{"grid", id}, {"row", std::to_string(rows)}, {"found", std::to_string(col)}, {"expected", std::to_string(cols)}
-			});
+			const t_string msg
+				= VGETTEXT("Grid ‘$grid’ row $row has a differing number of columns ($found found, $expected expected)",
+					{{"grid", id}, {"row", std::to_string(rows)}, {"found", std::to_string(col)},
+						{"expected", std::to_string(cols)}});
 
 			FAIL(msg);
 		}

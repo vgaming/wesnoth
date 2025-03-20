@@ -17,50 +17,50 @@
 #include "addon/manager.hpp"
 
 #include "filesystem.hpp"
+#include "game_version.hpp"
 #include "log.hpp"
 #include "serialization/parser.hpp"
 #include "serialization/schema_validator.hpp"
 #include "utils/general.hpp"
-#include "game_version.hpp"
 #include "wml_exception.hpp"
 
 #include <boost/algorithm/string.hpp>
 
 static lg::log_domain log_config("config");
-#define ERR_CFG LOG_STREAM(err , log_config)
+#define ERR_CFG LOG_STREAM(err, log_config)
 #define LOG_CFG LOG_STREAM(info, log_config)
 #define WRN_CFG LOG_STREAM(warn, log_config)
 
 static lg::log_domain log_filesystem("filesystem");
-#define ERR_FS  LOG_STREAM(err , log_filesystem)
+#define ERR_FS LOG_STREAM(err, log_filesystem)
 
 static lg::log_domain log_network("network");
-#define ERR_NET LOG_STREAM(err , log_network)
+#define ERR_NET LOG_STREAM(err, log_network)
 #define LOG_NET LOG_STREAM(info, log_network)
 
-namespace {
-	std::string get_pbl_file_path(const std::string& addon_name)
-	{
-		const std::string& parentd = filesystem::get_addons_dir();
-		// Allow .pbl files directly in the addon dir
-		const std::string exterior = parentd + "/" + addon_name + ".pbl";
-		const std::string interior = parentd + "/" + addon_name + "/_server.pbl";
-		return filesystem::file_exists(exterior) ? exterior : interior;
-	}
-
-	inline std::string get_info_file_path(const std::string& addon_name)
-	{
-		return filesystem::get_addons_dir() + "/" + addon_name + "/_info.cfg";
-	}
+namespace
+{
+std::string get_pbl_file_path(const std::string& addon_name)
+{
+	const std::string& parentd = filesystem::get_addons_dir();
+	// Allow .pbl files directly in the addon dir
+	const std::string exterior = parentd + "/" + addon_name + ".pbl";
+	const std::string interior = parentd + "/" + addon_name + "/_server.pbl";
+	return filesystem::file_exists(exterior) ? exterior : interior;
 }
+
+inline std::string get_info_file_path(const std::string& addon_name)
+{
+	return filesystem::get_addons_dir() + "/" + addon_name + "/_info.cfg";
+}
+} // namespace
 
 bool have_addon_in_vcs_tree(const std::string& addon_name)
 {
 	static const std::string parentd = filesystem::get_addons_dir();
-	return
-		filesystem::file_exists(parentd+"/"+addon_name+"/.svn") ||
-		filesystem::file_exists(parentd+"/"+addon_name+"/.git") ||
-		filesystem::file_exists(parentd+"/"+addon_name+"/.hg");
+	return filesystem::file_exists(parentd + "/" + addon_name + "/.svn")
+		|| filesystem::file_exists(parentd + "/" + addon_name + "/.git")
+		|| filesystem::file_exists(parentd + "/" + addon_name + "/.hg");
 }
 
 bool have_addon_pbl_info(const std::string& addon_name)
@@ -76,7 +76,8 @@ config get_addon_pbl_info(const std::string& addon_name, bool do_validate)
 		filesystem::scoped_istream stream = filesystem::istream_file(pbl_path);
 		std::unique_ptr<schema_validation::schema_validator> validator;
 		if(do_validate) {
-			validator = std::make_unique<schema_validation::schema_validator>(filesystem::get_wml_location("schema/pbl.cfg").value());
+			validator = std::make_unique<schema_validation::schema_validator>(
+				filesystem::get_wml_location("schema/pbl.cfg").value());
 			validator->set_create_exceptions(true);
 		}
 		read(cfg, *stream, validator.get());
@@ -118,8 +119,8 @@ void get_addon_install_info(const std::string& addon_name, config& cfg)
 			cfg = std::move(*info);
 		}
 	} catch(const config::error& e) {
-		ERR_CFG << "Failed to read add-on installation information for '"
-				<< addon_name << "' from " << info_path << ":\n"
+		ERR_CFG << "Failed to read add-on installation information for '" << addon_name << "' from " << info_path
+				<< ":\n"
 				<< e.message;
 	}
 }
@@ -155,10 +156,10 @@ bool remove_local_addon(const std::string& addon)
 	return true;
 }
 
-namespace {
-
-enum ADDON_ENUM_CRITERIA
+namespace
 {
+
+enum ADDON_ENUM_CRITERIA {
 	ADDON_ANY,
 	ADDON_HAS_PBL,
 };
@@ -172,9 +173,8 @@ std::vector<std::string> enumerate_addons_internal(ADDON_ENUM_CRITERIA filter)
 	filesystem::get_files_in_dir(addons_root, nullptr, &addon_dirnames);
 
 	for(const auto& addon_name : addon_dirnames) {
-		if(filesystem::file_exists(addons_root + "/" + addon_name + "/_main.cfg") &&
-		   (filter != ADDON_HAS_PBL || have_addon_pbl_info(addon_name)))
-		{
+		if(filesystem::file_exists(addons_root + "/" + addon_name + "/_main.cfg")
+			&& (filter != ADDON_HAS_PBL || have_addon_pbl_info(addon_name))) {
 			res.emplace_back(addon_name);
 		}
 	}
@@ -182,7 +182,7 @@ std::vector<std::string> enumerate_addons_internal(ADDON_ENUM_CRITERIA filter)
 	return res;
 }
 
-}
+} // namespace
 
 std::vector<std::string> available_addons()
 {
@@ -243,20 +243,21 @@ static filesystem::blacklist_pattern_list read_ignore_patterns(const std::string
 
 	filesystem::blacklist_pattern_list patterns;
 	LOG_CFG << "searching for .ign file for '" << addon_name << "'...";
-	if (!filesystem::file_exists(ign_file)) {
+	if(!filesystem::file_exists(ign_file)) {
 		LOG_CFG << "no .ign file found for '" << addon_name << "'\n"
-		        << "using default ignore patterns...";
+				<< "using default ignore patterns...";
 		return filesystem::default_blacklist;
 	}
 	LOG_CFG << "found .ign file: " << ign_file;
 	auto stream = filesystem::istream_file(ign_file);
 	std::string line;
-	while (std::getline(*stream, line)) {
+	while(std::getline(*stream, line)) {
 		boost::trim(line);
 		const std::size_t l = line.size();
 		// .gitignore & WML like comments
-		if (l == 0 || !line.compare(0,2,"# ")) continue;
-		if (line[l - 1] == '/') { // directory; we strip the last /
+		if(l == 0 || !line.compare(0, 2, "# "))
+			continue;
+		if(line[l - 1] == '/') { // directory; we strip the last /
 			patterns.add_directory_pattern(line.substr(0, l - 1));
 		} else { // file
 			patterns.add_file_pattern(line);
@@ -271,24 +272,27 @@ static void archive_file(const std::string& path, const std::string& fname, conf
 	cfg["contents"] = encode_binary(strip_cr(filesystem::read_file(path + '/' + fname), filesystem::is_cfg(fname)));
 }
 
-static void archive_dir(const std::string& path, const std::string& dirname, config& cfg, const filesystem::blacklist_pattern_list& ignore_patterns)
+static void archive_dir(const std::string& path,
+	const std::string& dirname,
+	config& cfg,
+	const filesystem::blacklist_pattern_list& ignore_patterns)
 {
 	cfg["name"] = dirname;
 	const std::string dir = path + '/' + dirname;
 
 	std::vector<std::string> files, dirs;
-	filesystem::get_files_in_dir(dir,&files,&dirs);
+	filesystem::get_files_in_dir(dir, &files, &dirs);
 	for(const std::string& name : files) {
 		bool valid = !filesystem::looks_like_pbl(name) && !ignore_patterns.match_file(name);
-		if (valid) {
-			archive_file(dir,name,cfg.add_child("file"));
+		if(valid) {
+			archive_file(dir, name, cfg.add_child("file"));
 		}
 	}
 
 	for(const std::string& name : dirs) {
 		bool valid = !ignore_patterns.match_dir(name);
-		if (valid) {
-			archive_dir(dir,name,cfg.add_child("dir"),ignore_patterns);
+		if(valid) {
+			archive_dir(dir, name, cfg.add_child("dir"), ignore_patterns);
 		}
 	}
 }
@@ -309,18 +313,18 @@ static void unarchive_file(const std::string& path, const config& cfg)
 static void unarchive_dir(const std::string& path, const config& cfg, const std::function<void()>& file_callback = {})
 {
 	std::string dir;
-	if (cfg["name"].empty())
+	if(cfg["name"].empty())
 		dir = path;
 	else
 		dir = path + '/' + cfg["name"].str();
 
 	filesystem::make_directory(dir);
 
-	for(const config &d : cfg.child_range("dir")) {
+	for(const config& d : cfg.child_range("dir")) {
 		unarchive_dir(dir, d, file_callback);
 	}
 
-	for(const config &f : cfg.child_range("file")) {
+	for(const config& f : cfg.child_range("file")) {
 		unarchive_file(dir, f);
 		if(file_callback) {
 			file_callback();
@@ -343,9 +347,8 @@ void unarchive_addon(const config& cfg, std::function<void(unsigned)> progress_c
 {
 	const std::string parentd = filesystem::get_addons_dir();
 	unsigned file_count = progress_callback ? count_pack_files(cfg) : 0, done = 0;
-	auto file_callback = progress_callback
-		? [&]() { progress_callback(++done * 100.0 / file_count); }
-		: std::function<void()>{};
+	auto file_callback
+		= progress_callback ? [&]() { progress_callback(++done * 100.0 / file_count); } : std::function<void()>{};
 	unarchive_dir(parentd, cfg, file_callback);
 }
 
@@ -380,9 +383,10 @@ void purge_addon(const config& removelist)
 	purge_dir(parentd, removelist);
 }
 
-namespace {
-	std::map< std::string, version_info > version_info_cache;
-} // end unnamed namespace 5
+namespace
+{
+std::map<std::string, version_info> version_info_cache;
+} // namespace
 
 void refresh_addon_version_info_cache()
 {
@@ -397,8 +401,7 @@ void refresh_addon_version_info_cache()
 
 	std::vector<std::string> addon_info_files(addons.size());
 
-	std::transform(addons.begin(), addons.end(),
-	               addon_info_files.begin(), get_info_file_path);
+	std::transform(addons.begin(), addons.end(), addon_info_files.begin(), get_info_file_path);
 
 	for(std::size_t i = 0; i < addon_info_files.size(); ++i) {
 		assert(i < addons.size());
@@ -418,7 +421,7 @@ void refresh_addon_version_info_cache()
 			LOG_CFG << "cached add-on version: " << addon << " [" << version << "]";
 
 			version_info_cache[addon] = version;
-		} else if (!have_addon_pbl_info(addon) && !have_addon_in_vcs_tree(addon)) {
+		} else if(!have_addon_pbl_info(addon) && !have_addon_in_vcs_tree(addon)) {
 			// Don't print the warning if the user is clearly the author
 			WRN_CFG << "add-on '" << addon << "' has no _info.cfg; cannot read version info";
 		}
@@ -428,6 +431,6 @@ void refresh_addon_version_info_cache()
 version_info get_addon_version_info(const std::string& addon)
 {
 	static const version_info nil;
-	std::map< std::string, version_info >::iterator entry = version_info_cache.find(addon);
+	std::map<std::string, version_info>::iterator entry = version_info_cache.find(addon);
 	return entry != version_info_cache.end() ? entry->second : nil;
 }

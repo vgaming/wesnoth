@@ -57,8 +57,8 @@ static int impl_preferences_dir(lua_State* L)
 		all_prefs.push_back(attr);
 	}
 
-	// This will result in some duplicates since the advanced preferences' values are stored in the same file as the regular preferences
-	// but dir() automatically strips those out so who cares
+	// This will result in some duplicates since the advanced preferences' values are stored in the same file as the
+	// regular preferences but dir() automatically strips those out so who cares
 	for(const auto& pref : prefs::get().get_advanced_preferences()) {
 		all_prefs.push_back(pref.field);
 	}
@@ -68,32 +68,32 @@ static int impl_preferences_dir(lua_State* L)
 
 namespace lua_preferences
 {
-	std::string register_table(lua_State* L)
-	{
-		// Push the wesnoth table to the stack
-		lua_getglobal(L, "wesnoth");
+std::string register_table(lua_State* L)
+{
+	// Push the wesnoth table to the stack
+	lua_getglobal(L, "wesnoth");
 
-		// Create the preferences table
-		lua_newtable(L);
-		lua_pushcfunction(L, impl_preferences_get);
-		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, impl_preferences_set);
-		lua_setfield(L, -2, "__newindex");
-		lua_pushcfunction(L, impl_preferences_dir);
-		lua_setfield(L, -2, "__dir");
-		lua_pushstring(L, "preferences");
-		lua_setfield(L, -2, "__metatable");
+	// Create the preferences table
+	lua_newtable(L);
+	lua_pushcfunction(L, impl_preferences_get);
+	lua_setfield(L, -2, "__index");
+	lua_pushcfunction(L, impl_preferences_set);
+	lua_setfield(L, -2, "__newindex");
+	lua_pushcfunction(L, impl_preferences_dir);
+	lua_setfield(L, -2, "__dir");
+	lua_pushstring(L, "preferences");
+	lua_setfield(L, -2, "__metatable");
 
-		// Set the table as its own metatable
-		lua_pushvalue(L, -1);
-		lua_setmetatable(L, -2);
+	// Set the table as its own metatable
+	lua_pushvalue(L, -1);
+	lua_setmetatable(L, -2);
 
-		// Assign the table to wesnoth.preferences
-		lua_setfield(L, -2, "preferences");
+	// Assign the table to wesnoth.preferences
+	lua_setfield(L, -2, "preferences");
 
-		// Pop the wesnoth table from the stack
-		lua_pop(L, 1);
+	// Pop the wesnoth table from the stack
+	lua_pop(L, 1);
 
-		return "Adding preferences table...\n";
-	}
+	return "Adding preferences table...\n";
 }
+} // namespace lua_preferences

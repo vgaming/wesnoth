@@ -38,7 +38,7 @@ static_assert(count_leading_zeros(static_cast<unsigned int>(0)) == bit_width<uns
 static_assert(count_leading_zeros(static_cast<unsigned long int>(0)) == bit_width<unsigned long int>());
 static_assert(count_leading_zeros(static_cast<unsigned long long int>(0)) == bit_width<unsigned long long int>());
 static_assert(count_leading_zeros(static_cast<uint16_t>(12345)) == 2); // 12345 == 0x3039
-static_assert(count_leading_zeros(static_cast<int16_t>(12345)) == 2); // 12345 == 0x3039
+static_assert(count_leading_zeros(static_cast<int16_t>(12345)) == 2);  // 12345 == 0x3039
 static_assert(count_leading_zeros(uint8_t{0xff}) == 0);
 static_assert(count_leading_zeros('\0') == bit_width<char>());
 static_assert(count_leading_zeros('\b') == bit_width<char>() - 4);

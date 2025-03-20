@@ -15,8 +15,8 @@
 
 #pragma once
 
-#include "random.hpp"
 #include "mt_rng.hpp"
+#include "random.hpp"
 
 #include <functional>
 
@@ -25,20 +25,21 @@ todo: use a boost::random based solution.
 */
 namespace randomness
 {
-	class synced_rng : public randomness::rng
-	{
-	public:
-		synced_rng(std::function<std::string()> seed_generator);
-		virtual ~synced_rng();
+class synced_rng : public randomness::rng
+{
+public:
+	synced_rng(std::function<std::string()> seed_generator);
+	virtual ~synced_rng();
 
-		virtual bool is_networked() const;
+	virtual bool is_networked() const;
 
-	protected:
-		virtual uint32_t next_random_impl();
-	private:
-		void initialize();
-		bool has_valid_seed_;
-		std::function<std::string()> seed_generator_;
-		mt_rng gen_;
-	};
-}
+protected:
+	virtual uint32_t next_random_impl();
+
+private:
+	void initialize();
+	bool has_valid_seed_;
+	std::function<std::string()> seed_generator_;
+	mt_rng gen_;
+};
+} // namespace randomness

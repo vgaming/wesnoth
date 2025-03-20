@@ -36,8 +36,8 @@ bool select_campaign(saved_game& state, jump_to_campaign_info jump_to_campaign)
 		ng::create_engine create_eng(state);
 		create_eng.set_current_level_type(level_type::type::sp_campaign);
 
-		const std::vector<ng::create_engine::level_ptr> campaigns =
-			create_eng.get_levels_by_type_unfiltered(level_type::type::sp_campaign);
+		const std::vector<ng::create_engine::level_ptr> campaigns
+			= create_eng.get_levels_by_type_unfiltered(level_type::type::sp_campaign);
 
 		if(campaigns.empty()) {
 			gui2::show_error_message(_("No campaigns are available."));
@@ -59,19 +59,19 @@ bool select_campaign(saved_game& state, jump_to_campaign_info jump_to_campaign)
 
 			if(dlg.get_retval() == gui2::retval::OK) {
 				switch(dlg.get_rng_mode()) {
-					case gui2::dialogs::campaign_selection::RNG_DEFAULT:
-						random_mode = "";
-						break;
-					case gui2::dialogs::campaign_selection::RNG_SAVE_SEED:
-						random_mode = "deterministic";
-						break;
-					case gui2::dialogs::campaign_selection::RNG_BIASED:
-						random_mode = "biased";
-						break;
+				case gui2::dialogs::campaign_selection::RNG_DEFAULT:
+					random_mode = "";
+					break;
+				case gui2::dialogs::campaign_selection::RNG_SAVE_SEED:
+					random_mode = "deterministic";
+					break;
+				case gui2::dialogs::campaign_selection::RNG_BIASED:
+					random_mode = "biased";
+					break;
 				}
 				difficulty = dlg.get_difficulty();
 			} else {
-				if (dlg.get_retval() == gui2::dialogs::campaign_selection::OPEN_ADDON_MANAGER) {
+				if(dlg.get_retval() == gui2::dialogs::campaign_selection::OPEN_ADDON_MANAGER) {
 					manage_addons();
 				}
 				return false;
@@ -82,9 +82,10 @@ bool select_campaign(saved_game& state, jump_to_campaign_info jump_to_campaign)
 			// if we should quit the game or return to the main menu
 
 			// Checking for valid campaign name
-			const auto campaign = std::find_if(campaigns.begin(), campaigns.end(), [&jump_to_campaign](const ng::create_engine::level_ptr& level) {
-				return level->data()["id"] == jump_to_campaign.campaign_id;
-			});
+			const auto campaign = std::find_if(
+				campaigns.begin(), campaigns.end(), [&jump_to_campaign](const ng::create_engine::level_ptr& level) {
+					return level->data()["id"] == jump_to_campaign.campaign_id;
+				});
 
 			// Didn't find a campaign with that id
 			if(campaign == campaigns.end()) {
@@ -99,7 +100,8 @@ bool select_campaign(saved_game& state, jump_to_campaign_info jump_to_campaign)
 
 		const auto selected_difficulty = difficulty;
 
-		if(selected_difficulty == "FAIL") return false;
+		if(selected_difficulty == "FAIL")
+			return false;
 		if(selected_difficulty == "CANCEL") {
 			if(!jump_to_campaign.campaign_id.empty()) {
 				jump_to_campaign.campaign_id = "";
@@ -113,9 +115,7 @@ bool select_campaign(saved_game& state, jump_to_campaign_info jump_to_campaign)
 		create_eng.prepare_for_campaign(selected_difficulty);
 
 		if(!jump_to_campaign.scenario_id.empty()) {
-			state.set_carryover_sides_start(
-				config {"next_scenario", jump_to_campaign.scenario_id}
-			);
+			state.set_carryover_sides_start(config{"next_scenario", jump_to_campaign.scenario_id});
 		}
 
 		if(!state.valid()) {

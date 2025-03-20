@@ -55,24 +55,26 @@ text_box_base::text_box_base(const implementation::builder_styled_widget& builde
 #ifdef __unix__
 	// pastes on UNIX systems.
 	connect_signal<event::MIDDLE_BUTTON_CLICK>(std::bind(
-			&text_box_base::signal_handler_middle_button_click, this, std::placeholders::_2, std::placeholders::_3));
+		&text_box_base::signal_handler_middle_button_click, this, std::placeholders::_2, std::placeholders::_3));
 
 #endif
 
-	connect_signal<event::SDL_KEY_DOWN>(std::bind(
-			&text_box_base::signal_handler_sdl_key_down, this, std::placeholders::_2, std::placeholders::_3, std::placeholders::_5, std::placeholders::_6));
-	connect_signal<event::SDL_TEXT_INPUT>(std::bind(&text_box_base::handle_commit, this, std::placeholders::_3, std::placeholders::_5));
-	connect_signal<event::SDL_TEXT_EDITING>(std::bind(&text_box_base::handle_editing, this, std::placeholders::_3, std::placeholders::_5, std::placeholders::_6, std::placeholders::_7));
+	connect_signal<event::SDL_KEY_DOWN>(std::bind(&text_box_base::signal_handler_sdl_key_down, this,
+		std::placeholders::_2, std::placeholders::_3, std::placeholders::_5, std::placeholders::_6));
+	connect_signal<event::SDL_TEXT_INPUT>(
+		std::bind(&text_box_base::handle_commit, this, std::placeholders::_3, std::placeholders::_5));
+	connect_signal<event::SDL_TEXT_EDITING>(std::bind(&text_box_base::handle_editing, this, std::placeholders::_3,
+		std::placeholders::_5, std::placeholders::_6, std::placeholders::_7));
 
-	connect_signal<event::RECEIVE_KEYBOARD_FOCUS>(std::bind(
-			&text_box_base::signal_handler_receive_keyboard_focus, this, std::placeholders::_2));
+	connect_signal<event::RECEIVE_KEYBOARD_FOCUS>(
+		std::bind(&text_box_base::signal_handler_receive_keyboard_focus, this, std::placeholders::_2));
 	connect_signal<event::LOSE_KEYBOARD_FOCUS>(
-			std::bind(&text_box_base::signal_handler_lose_keyboard_focus, this, std::placeholders::_2));
+		std::bind(&text_box_base::signal_handler_lose_keyboard_focus, this, std::placeholders::_2));
 
 	connect_signal<event::MOUSE_ENTER>(
-			std::bind(&text_box_base::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
+		std::bind(&text_box_base::signal_handler_mouse_enter, this, std::placeholders::_2, std::placeholders::_3));
 	connect_signal<event::MOUSE_LEAVE>(
-			std::bind(&text_box_base::signal_handler_mouse_leave, this, std::placeholders::_2, std::placeholders::_3));
+		std::bind(&text_box_base::signal_handler_mouse_leave, this, std::placeholders::_2, std::placeholders::_3));
 
 	toggle_cursor_timer(true);
 }
@@ -159,8 +161,7 @@ void text_box_base::set_cursor(const std::size_t offset, const bool select)
 
 void text_box_base::insert_char(const std::string& unicode)
 {
-	if(!editable_)
-	{
+	if(!editable_) {
 		return;
 	}
 
@@ -170,7 +171,7 @@ void text_box_base::insert_char(const std::string& unicode)
 		// Update status
 		size_t plain_text_len = utf8::size(plain_text());
 		size_t cursor_pos = selection_start_ + utf8::size(unicode);
-		if (get_use_markup() && (selection_start_ + utf8::size(unicode) > plain_text_len + 1)) {
+		if(get_use_markup() && (selection_start_ + utf8::size(unicode) > plain_text_len + 1)) {
 			cursor_pos = plain_text_len;
 		}
 		set_cursor(cursor_pos, false);
@@ -224,8 +225,7 @@ void text_box_base::copy_selection()
 
 void text_box_base::paste_selection()
 {
-	if(!editable_)
-	{
+	if(!editable_) {
 		return;
 	}
 
@@ -309,30 +309,29 @@ void text_box_base::toggle_cursor_timer(bool enable)
 		remove_timer(cursor_timer_);
 	}
 
-	cursor_timer_ = enable
-			? add_timer(cursor_blink_rate_, std::bind(&text_box_base::cursor_timer_callback, this), true)
-			: 0;
+	cursor_timer_
+		= enable ? add_timer(cursor_blink_rate_, std::bind(&text_box_base::cursor_timer_callback, this), true) : 0;
 }
 
 void text_box_base::cursor_timer_callback()
 {
 	unsigned was_alpha = cursor_alpha_;
 	switch(state_) {
-		case DISABLED:
+	case DISABLED:
+		cursor_alpha_ = 0;
+		return;
+	case ENABLED:
+		cursor_alpha_ = 255;
+		return;
+	default:
+		// FIXME: very hacky way to check if the widget's owner is the top window
+		// back() on an empty vector is UB and was causing a crash when run on Wayland (see #7104 on github)
+		const auto& dispatchers = event::get_all_dispatchers();
+		if(!dispatchers.empty() && static_cast<event::dispatcher*>(get_window()) != dispatchers.back()) {
 			cursor_alpha_ = 0;
-			return;
-		case ENABLED:
-			cursor_alpha_ = 255;
-			return;
-		default:
-			// FIXME: very hacky way to check if the widget's owner is the top window
-			// back() on an empty vector is UB and was causing a crash when run on Wayland (see #7104 on github)
-			const auto& dispatchers = event::get_all_dispatchers();
-			if(!dispatchers.empty() && static_cast<event::dispatcher*>(get_window()) != dispatchers.back()) {
-				cursor_alpha_ = 0;
-			} else {
-				cursor_alpha_ = (~cursor_alpha_) & 0xFF;
-			}
+		} else {
+			cursor_alpha_ = (~cursor_alpha_) & 0xFF;
+		}
 	}
 
 	if(was_alpha == cursor_alpha_) {
@@ -513,8 +512,7 @@ void text_box_base::handle_editing(bool& handled, const std::string& unicode, in
 	}
 }
 
-void text_box_base::signal_handler_middle_button_click(const event::ui_event event,
-												bool& handled)
+void text_box_base::signal_handler_middle_button_click(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -523,12 +521,9 @@ void text_box_base::signal_handler_middle_button_click(const event::ui_event eve
 	handled = true;
 }
 
-void text_box_base::signal_handler_sdl_key_down(const event::ui_event event,
-										 bool& handled,
-										 const SDL_Keycode key,
-										 SDL_Keymod modifier)
+void text_box_base::signal_handler_sdl_key_down(
+	const event::ui_event event, bool& handled, const SDL_Keycode key, SDL_Keymod modifier)
 {
-
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
 /*
@@ -549,132 +544,129 @@ void text_box_base::signal_handler_sdl_key_down(const event::ui_event event,
 #endif
 
 	switch(key) {
+	case SDLK_LEFT:
+		handle_key_left_arrow(modifier, handled);
+		break;
 
-		case SDLK_LEFT:
-			handle_key_left_arrow(modifier, handled);
-			break;
+	case SDLK_RIGHT:
+		handle_key_right_arrow(modifier, handled);
+		break;
 
-		case SDLK_RIGHT:
-			handle_key_right_arrow(modifier, handled);
-			break;
+	case SDLK_UP:
+		handle_key_up_arrow(modifier, handled);
+		break;
 
-		case SDLK_UP:
-			handle_key_up_arrow(modifier, handled);
-			break;
+	case SDLK_DOWN:
+		handle_key_down_arrow(modifier, handled);
+		break;
 
-		case SDLK_DOWN:
-			handle_key_down_arrow(modifier, handled);
-			break;
+	case SDLK_PAGEUP:
+		handle_key_page_up(modifier, handled);
+		break;
 
-		case SDLK_PAGEUP:
-			handle_key_page_up(modifier, handled);
-			break;
+	case SDLK_PAGEDOWN:
+		handle_key_page_down(modifier, handled);
+		break;
 
-		case SDLK_PAGEDOWN:
-			handle_key_page_down(modifier, handled);
-			break;
-
-		case SDLK_a:
-			if(!(modifier & modifier_key)) {
-				return;
-			}
-
-			select_all();
-			break;
-
-		case SDLK_HOME:
-			handle_key_home(modifier, handled);
-			break;
-
-		case SDLK_END:
-			handle_key_end(modifier, handled);
-			break;
-
-		case SDLK_BACKSPACE:
-			if (!is_editable())
-			{
-				return;
-			}
-
-			handle_key_backspace(modifier, handled);
-			break;
-
-		case SDLK_u:
-			if( !(modifier & KMOD_CTRL) || !is_editable() ) {
-				return;
-			}
-
-			handle_key_clear_line(modifier, handled);
-			break;
-
-		case SDLK_DELETE:
-			if (!is_editable())
-			{
-				return;
-			}
-
-			handle_key_delete(modifier, handled);
-			break;
-
-		case SDLK_c:
-			if(!(modifier & modifier_key)) {
-				return;
-			}
-
-			// atm we don't care whether there is something to copy or paste
-			// if nothing is there we still don't want to be chained.
-			copy_selection();
-			handled = true;
-			break;
-
-		case SDLK_x:
-			if( !(modifier & modifier_key) ) {
-				return;
-			}
-
-			copy_selection();
-
-			if ( is_editable() ) {
-				delete_selection();
-			}
-			handled = true;
-			break;
-
-		case SDLK_v:
-			if( !(modifier & modifier_key) || !is_editable() ) {
-				return;
-			}
-
-			paste_selection();
-			handled = true;
-			break;
-
-		case SDLK_RETURN:
-		case SDLK_KP_ENTER:
-
-//	TODO: check if removing the following check causes any side effects
-//	To be removed if there aren't any text rendering problems.
-//			if(!is_composing()) {
-//				return;
-//			}
-
-			handle_key_enter(modifier, handled);
-			break;
-
-		case SDLK_ESCAPE:
-			if(!is_composing() || (modifier & (KMOD_CTRL | KMOD_ALT | KMOD_GUI | KMOD_SHIFT))) {
-				return;
-			}
-			interrupt_composition();
-			handled = true;
-			break;
-
-		case SDLK_TAB:
-			handle_key_tab(modifier, handled);
-			break;
-
-		default:
+	case SDLK_a:
+		if(!(modifier & modifier_key)) {
 			return;
+		}
+
+		select_all();
+		break;
+
+	case SDLK_HOME:
+		handle_key_home(modifier, handled);
+		break;
+
+	case SDLK_END:
+		handle_key_end(modifier, handled);
+		break;
+
+	case SDLK_BACKSPACE:
+		if(!is_editable()) {
+			return;
+		}
+
+		handle_key_backspace(modifier, handled);
+		break;
+
+	case SDLK_u:
+		if(!(modifier & KMOD_CTRL) || !is_editable()) {
+			return;
+		}
+
+		handle_key_clear_line(modifier, handled);
+		break;
+
+	case SDLK_DELETE:
+		if(!is_editable()) {
+			return;
+		}
+
+		handle_key_delete(modifier, handled);
+		break;
+
+	case SDLK_c:
+		if(!(modifier & modifier_key)) {
+			return;
+		}
+
+		// atm we don't care whether there is something to copy or paste
+		// if nothing is there we still don't want to be chained.
+		copy_selection();
+		handled = true;
+		break;
+
+	case SDLK_x:
+		if(!(modifier & modifier_key)) {
+			return;
+		}
+
+		copy_selection();
+
+		if(is_editable()) {
+			delete_selection();
+		}
+		handled = true;
+		break;
+
+	case SDLK_v:
+		if(!(modifier & modifier_key) || !is_editable()) {
+			return;
+		}
+
+		paste_selection();
+		handled = true;
+		break;
+
+	case SDLK_RETURN:
+	case SDLK_KP_ENTER:
+
+		//	TODO: check if removing the following check causes any side effects
+		//	To be removed if there aren't any text rendering problems.
+		//			if(!is_composing()) {
+		//				return;
+		//			}
+
+		handle_key_enter(modifier, handled);
+		break;
+
+	case SDLK_ESCAPE:
+		if(!is_composing() || (modifier & (KMOD_CTRL | KMOD_ALT | KMOD_GUI | KMOD_SHIFT))) {
+			return;
+		}
+		interrupt_composition();
+		handled = true;
+		break;
+
+	case SDLK_TAB:
+		handle_key_tab(modifier, handled);
+		break;
+
+	default:
+		return;
 	}
 }
 
@@ -692,8 +684,7 @@ void text_box_base::signal_handler_lose_keyboard_focus(const event::ui_event eve
 	set_state(ENABLED);
 }
 
-void text_box_base::signal_handler_mouse_enter(const event::ui_event event,
-											   bool& handled)
+void text_box_base::signal_handler_mouse_enter(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -706,8 +697,7 @@ void text_box_base::signal_handler_mouse_enter(const event::ui_event event,
 	handled = true;
 }
 
-void text_box_base::signal_handler_mouse_leave(const event::ui_event event,
-											   bool& handled)
+void text_box_base::signal_handler_mouse_leave(const event::ui_event event, bool& handled)
 {
 	DBG_GUI_E << LOG_HEADER << ' ' << event << ".";
 
@@ -732,6 +722,5 @@ void text_box_base::update_mouse_cursor(bool enable)
 		cursor::set(cursor::NORMAL);
 	}
 }
-
 
 } // namespace gui2

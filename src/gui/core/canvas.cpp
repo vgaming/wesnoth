@@ -25,21 +25,21 @@
 
 #include "draw.hpp"
 #include "draw_manager.hpp"
+#include "font/font_config.hpp"
+#include "font/standard_colors.hpp"
 #include "font/text.hpp"
 #include "formatter.hpp"
 #include "gettext.hpp"
 #include "gui/auxiliary/typed_formula.hpp"
 #include "gui/core/log.hpp"
 #include "gui/widgets/helper.hpp"
-#include "font/font_config.hpp"
-#include "font/standard_colors.hpp"
 #include "picture.hpp"
 #include "sdl/point.hpp"
 #include "sdl/rect.hpp"
 #include "sdl/surface.hpp"
 #include "sdl/texture.hpp"
 #include "sdl/utils.hpp" // blur_surface
-#include "video.hpp" // read_pixels_low_res, only used for blurring
+#include "video.hpp"     // read_pixels_low_res, only used for blurring
 #include "wml_exception.hpp"
 
 namespace gui2
@@ -103,12 +103,7 @@ rectangle_shape::rectangle_shape(const config& cfg)
 
 void rectangle_shape::draw(wfl::map_formula_callable& variables)
 {
-	const rect area {
-		x_(variables),
-		y_(variables),
-		w_(variables),
-		h_(variables)
-	};
+	const rect area{x_(variables), y_(variables), w_(variables), h_(variables)};
 
 	const color_t fill_color = fill_color_(variables);
 
@@ -165,13 +160,13 @@ void round_rectangle_shape::draw(wfl::map_formula_callable& variables)
 	if(!fill_color.null() && w && h) {
 		draw::set_color(fill_color);
 
-		draw::fill(rect{x + r,                 y + border_thickness_, w - r                 * 2, r - border_thickness_ + 1});
-		draw::fill(rect{x + border_thickness_, y + r + 1,             w - border_thickness_ * 2, h - r * 2});
-		draw::fill(rect{x + r,                 y - r + h + 1,         w - r                 * 2, r - border_thickness_});
+		draw::fill(rect{x + r, y + border_thickness_, w - r * 2, r - border_thickness_ + 1});
+		draw::fill(rect{x + border_thickness_, y + r + 1, w - border_thickness_ * 2, h - r * 2});
+		draw::fill(rect{x + r, y - r + h + 1, w - r * 2, r - border_thickness_});
 
-		draw::disc(x + r,     y + r,     r, 0xc0);
-		draw::disc(x + w - r, y + r,     r, 0x03);
-		draw::disc(x + r,     y + h - r, r, 0x30);
+		draw::disc(x + r, y + r, r, 0xc0);
+		draw::disc(x + w - r, y + r, r, 0x03);
+		draw::disc(x + r, y + h - r, r, 0x30);
 		draw::disc(x + w - r, y + h - r, r, 0x0c);
 	}
 
@@ -181,15 +176,15 @@ void round_rectangle_shape::draw(wfl::map_formula_callable& variables)
 	draw::set_color(border_color);
 
 	for(int i = 0; i < border_thickness_; ++i) {
-		draw::line(x + r, y + i,     x + w - r, y + i);
+		draw::line(x + r, y + i, x + w - r, y + i);
 		draw::line(x + r, y + h - i, x + w - r, y + h - i);
 
-		draw::line(x + i,     y + r, x + i,     y + h - r);
+		draw::line(x + i, y + r, x + i, y + h - r);
 		draw::line(x + w - i, y + r, x + w - i, y + h - r);
 
-		draw::circle(x + r,     y + r,     r - i, 0xc0);
-		draw::circle(x + w - r, y + r,     r - i, 0x03);
-		draw::circle(x + r,     y + h - r, r - i, 0x30);
+		draw::circle(x + r, y + r, r - i, 0xc0);
+		draw::circle(x + w - r, y + r, r - i, 0x03);
+		draw::circle(x + r, y + h - r, r - i, 0x30);
 		draw::circle(x + w - r, y + h - r, r - i, 0x0c);
 	}
 }
@@ -222,7 +217,7 @@ void circle_shape::draw(wfl::map_formula_callable& variables)
 	const int y = y_(variables);
 	const unsigned radius = radius_(variables);
 	const color_t fill_color = fill_color_(variables);
-	if (!fill_color.null()) {
+	if(!fill_color.null()) {
 		draw::cairo_disc(x, y, radius, fill_color);
 	}
 
@@ -256,8 +251,7 @@ void image_shape::dimension_validation(unsigned value, const std::string& name, 
 	const int as_int = static_cast<int>(value);
 
 	VALIDATE_WITH_DEV_MESSAGE(as_int >= 0, _("Image doesn’t fit on canvas."),
-		formatter() << "Image '" << name << "', " << key << " = " << as_int << "."
-	);
+		formatter() << "Image '" << name << "', " << key << " = " << as_int << ".");
 }
 
 void image_shape::draw(wfl::map_formula_callable& variables)
@@ -279,9 +273,7 @@ void image_shape::draw(wfl::map_formula_callable& variables)
 	// Texture filtering mode must be set on texture creation,
 	// so check whether we need smooth scaling or not here.
 	image::scale_quality scale_quality = image::scale_quality::nearest;
-	if (resize_mode_ == resize_mode::stretch
-		|| resize_mode_ == resize_mode::scale)
-	{
+	if(resize_mode_ == resize_mode::stretch || resize_mode_ == resize_mode::scale) {
 		scale_quality = image::scale_quality::linear;
 	}
 	texture tex = image::get_texture(image::locator(name), scale_quality);
@@ -311,7 +303,7 @@ void image_shape::draw(wfl::map_formula_callable& variables)
 	local_variables.add("clip_x", wfl::variant(x));
 	local_variables.add("clip_y", wfl::variant(y));
 
-	if (variables.has_key("fake_draw") && variables.query_value("fake_draw").as_bool()) {
+	if(variables.has_key("fake_draw") && variables.query_value("fake_draw").as_bool()) {
 		variables.add("image_original_width", wfl::variant(tex.w()));
 		variables.add("image_original_height", wfl::variant(tex.h()));
 		variables.add("image_width", wfl::variant(w ? w : tex.w()));
@@ -323,10 +315,14 @@ void image_shape::draw(wfl::map_formula_callable& variables)
 	wfl::variant(variables.fake_ptr()).execute_variant(actions_formula_.evaluate(local_variables));
 
 	// If w or h is 0, assume it means the whole image.
-	if (!w) { w = tex.w(); }
-	if (!h) { h = tex.h(); }
+	if(!w) {
+		w = tex.w();
+	}
+	if(!h) {
+		h = tex.h();
+	}
 
-	const SDL_Rect dst_rect { x, y, w, h };
+	const SDL_Rect dst_rect{x, y, w, h};
 
 	// What to do with the image depends on whether we need to tile it or not.
 	switch(resize_mode_) {
@@ -408,23 +404,25 @@ auto parse_attributes(const config::const_child_itors& range)
 		const unsigned start = attr["start"].to_int(0);
 		const unsigned end = attr["end"].to_int(/* text.size() */); // TODO: do we need to restore this default?
 
-		if (name == "color" || name == "fgcolor" || name == "foreground") {
-			add_attribute_fg_color(text_attributes, start, end, attr["value"].empty() ? font::NORMAL_COLOR : font::string_to_color(attr["value"]));
-		} else if (name == "bgcolor" || name == "background") {
-			add_attribute_bg_color(text_attributes, start, end, attr["value"].empty() ? font::GOOD_COLOR : font::string_to_color(attr["value"]));
-		} else if (name == "font_size" || name == "size") {
+		if(name == "color" || name == "fgcolor" || name == "foreground") {
+			add_attribute_fg_color(text_attributes, start, end,
+				attr["value"].empty() ? font::NORMAL_COLOR : font::string_to_color(attr["value"]));
+		} else if(name == "bgcolor" || name == "background") {
+			add_attribute_bg_color(text_attributes, start, end,
+				attr["value"].empty() ? font::GOOD_COLOR : font::string_to_color(attr["value"]));
+		} else if(name == "font_size" || name == "size") {
 			add_attribute_size(text_attributes, start, end, attr["value"].to_int(font::SIZE_NORMAL));
-		} else if (name == "font_family" || name == "face") {
+		} else if(name == "font_family" || name == "face") {
 			add_attribute_font_family(text_attributes, start, end, font::decode_family_class(attr["value"]));
-		} else if (name == "weight") {
+		} else if(name == "weight") {
 			add_attribute_weight(text_attributes, start, end, decode_text_weight(attr["value"]));
-		} else if (name == "style") {
+		} else if(name == "style") {
 			add_attribute_style(text_attributes, start, end, decode_text_style(attr["value"]));
-		} else if (name == "bold" || name == "b") {
+		} else if(name == "bold" || name == "b") {
 			add_attribute_weight(text_attributes, start, end, PANGO_WEIGHT_BOLD);
-		} else if (name == "italic" || name == "i") {
+		} else if(name == "italic" || name == "i") {
 			add_attribute_style(text_attributes, start, end, PANGO_STYLE_ITALIC);
-		} else if (name == "underline" || name == "u") {
+		} else if(name == "underline" || name == "u") {
 			add_attribute_underline(text_attributes, start, end, PANGO_UNDERLINE_SINGLE);
 		} else {
 			// Unsupported formatting or normal text
@@ -436,7 +434,7 @@ auto parse_attributes(const config::const_child_itors& range)
 	return text_attributes;
 }
 
-} // anon namespace
+} // namespace
 
 text_shape::text_shape(const config& cfg, wfl::action_function_symbol_table& functions)
 	: rect_bounded_shape(cfg)
@@ -473,9 +471,7 @@ void text_shape::draw(wfl::map_formula_callable& variables)
 	// We first need to determine the size of the text which need the rendered
 	// text. So resolve and render the text first and then start to resolve
 	// the other formulas.
-	const auto text = parse_text_as_formula_
-		? typed_formula<t_string>{text_}(variables)
-		: text_.t_str();
+	const auto text = parse_text_as_formula_ ? typed_formula<t_string>{text_}(variables) : text_.t_str();
 
 	if(text.empty()) {
 		DBG_GUI_D << "Text: no text to render, leave.";
@@ -495,8 +491,7 @@ void text_shape::draw(wfl::map_formula_callable& variables)
 	font::pango_text& text_renderer = font::get_text_renderer();
 	text_renderer.clear_attributes();
 
-	text_renderer
-		.set_link_aware(link_aware_(variables))
+	text_renderer.set_link_aware(link_aware_(variables))
 		.set_link_color(link_color_(variables))
 		.set_text(text, text_markup_(variables));
 
@@ -523,7 +518,7 @@ void text_shape::draw(wfl::map_formula_callable& variables)
 	local_variables.add("text_width", wfl::variant(tw));
 	local_variables.add("text_height", wfl::variant(th));
 
-	if (variables.has_key("fake_draw") && variables.query_value("fake_draw").as_bool()) {
+	if(variables.has_key("fake_draw") && variables.query_value("fake_draw").as_bool()) {
 		variables.add("text_width", wfl::variant(tw));
 		variables.add("text_height", wfl::variant(th));
 		return;
@@ -575,8 +570,7 @@ bool canvas::update_blur(const rect& screen_region, bool force)
 	}
 
 	if(screen_region != blur_region_) {
-		DBG_GUI_D << "blur region changed from " << blur_region_
-			<< " to " << screen_region;
+		DBG_GUI_D << "blur region changed from " << blur_region_ << " to " << screen_region;
 		// something has changed. regenerate the texture.
 		blur_texture_.reset();
 		blur_region_ = screen_region;
@@ -659,8 +653,7 @@ void canvas::parse_cfg(const config& cfg)
 {
 	log_scope2(log_gui_parse, "Canvas: parsing config.");
 
-	for(const auto [type, data] : cfg.all_children_view())
-	{
+	for(const auto [type, data] : cfg.all_children_view()) {
 		DBG_GUI_P << "Canvas: found shape of the type " << type << ".";
 
 		if(type == "line") {
@@ -676,10 +669,8 @@ void canvas::parse_cfg(const config& cfg)
 		} else if(type == "text") {
 			shapes_.emplace_back(std::make_unique<text_shape>(data, functions_));
 		} else if(type == "pre_commit") {
-
 			/* note this should get split if more preprocessing is used. */
-			for(const auto [func_key, func_cfg] : data.all_children_view())
-			{
+			for(const auto [func_key, func_cfg] : data.all_children_view()) {
 				if(func_key == "blur") {
 					blur_depth_ = func_cfg["depth"].to_unsigned();
 				} else {
@@ -689,8 +680,7 @@ void canvas::parse_cfg(const config& cfg)
 			}
 
 		} else {
-			ERR_GUI_P << "Canvas: found a shape of an invalid type " << type
-					  << ".";
+			ERR_GUI_P << "Canvas: found a shape of an invalid type " << type << ".";
 		}
 	}
 }

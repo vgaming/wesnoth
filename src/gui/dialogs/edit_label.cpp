@@ -17,7 +17,6 @@
 
 #include "gui/dialogs/edit_label.hpp"
 
-
 namespace gui2::dialogs
 {
 
@@ -29,4 +28,4 @@ edit_label::edit_label(std::string& label, bool& team_only)
 	register_text("label", true, label, true);
 	register_bool("team_only_toggle", true, team_only);
 }
-} // namespace dialogs
+} // namespace gui2::dialogs

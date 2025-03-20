@@ -48,11 +48,31 @@ bool is_legal_user_file_name(const std::string& name, bool allow_whitespace)
 	// Reserved DOS device names on Windows.
 	static const std::set<std::string> dos_device_names = {
 		// Hardware devices
-		"NUL", "CON", "AUX", "PRN",
-		"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
-		"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+		"NUL",
+		"CON",
+		"AUX",
+		"PRN",
+		"COM1",
+		"COM2",
+		"COM3",
+		"COM4",
+		"COM5",
+		"COM6",
+		"COM7",
+		"COM8",
+		"COM9",
+		"LPT1",
+		"LPT2",
+		"LPT3",
+		"LPT4",
+		"LPT5",
+		"LPT6",
+		"LPT7",
+		"LPT8",
+		"LPT9",
 		// Console API pseudo-devices
-		"CONIN$", "CONOUT$",
+		"CONIN$",
+		"CONOUT$",
 	};
 
 	// We can't use filesystem::base_name() here, because it returns the
@@ -64,44 +84,43 @@ bool is_legal_user_file_name(const std::string& name, bool allow_whitespace)
 	// being that is valid to refer to DOS device names with a trailing colon
 	// (e.g. "CON:" is synonymous with "CON").
 
-	const auto& first_name =
-		boost::algorithm::to_upper_copy(name.substr(0, name.find('.')), std::locale::classic());
+	const auto& first_name = boost::algorithm::to_upper_copy(name.substr(0, name.find('.')), std::locale::classic());
 
 	if(dos_device_names.count(first_name)) {
 		return false;
 	}
 
 	const auto& name_ucs4 = unicode_cast<std::u32string>(name);
-	if(name != unicode_cast<std::string>(name_ucs4)){
+	if(name != unicode_cast<std::string>(name_ucs4)) {
 		return false; // name is an invalid UTF-8 sequence
 	}
 
-	return name_ucs4.end() == std::find_if(name_ucs4.begin(), name_ucs4.end(), [=](char32_t c)
-	{
+	return name_ucs4.end() == std::find_if(name_ucs4.begin(), name_ucs4.end(), [=](char32_t c) {
 		switch(c) {
-			case ' ':
-				return !allow_whitespace;
-			case '"':
-			case '*':
-			case '/':
-			case ':':
-			case '<':
-			case '>':
-			case '?':
-			case '\\':
-			case '|':
-			case '~':
-			case 0x7F: // DEL
-				return true;
-			default:
-				return c < 0x20 ||                  // C0 control characters
-					   (c >= 0x80 && c < 0xA0) ||   // C1 control characters
-					   (c >= 0xD800 && c < 0xE000); // surrogate pairs
+		case ' ':
+			return !allow_whitespace;
+		case '"':
+		case '*':
+		case '/':
+		case ':':
+		case '<':
+		case '>':
+		case '?':
+		case '\\':
+		case '|':
+		case '~':
+		case 0x7F: // DEL
+			return true;
+		default:
+			return c < 0x20 ||               // C0 control characters
+				(c >= 0x80 && c < 0xA0) ||   // C1 control characters
+				(c >= 0xD800 && c < 0xE000); // surrogate pairs
 		}
 	});
 }
 
-void blacklist_pattern_list::remove_blacklisted_files_and_dirs(std::vector<std::string>& files, std::vector<std::string>& directories) const
+void blacklist_pattern_list::remove_blacklisted_files_and_dirs(
+	std::vector<std::string>& files, std::vector<std::string>& directories) const
 {
 	utils::erase_if(files, [this](const std::string& name) { return match_file(name); });
 	utils::erase_if(directories, [this](const std::string& name) { return match_dir(name); });
@@ -110,13 +129,13 @@ void blacklist_pattern_list::remove_blacklisted_files_and_dirs(std::vector<std::
 bool blacklist_pattern_list::match_file(const std::string& name) const
 {
 	return std::any_of(file_patterns_.begin(), file_patterns_.end(),
-					   std::bind(&utils::wildcard_string_match, std::ref(name), std::placeholders::_1));
+		std::bind(&utils::wildcard_string_match, std::ref(name), std::placeholders::_1));
 }
 
 bool blacklist_pattern_list::match_dir(const std::string& name) const
 {
 	return std::any_of(directory_patterns_.begin(), directory_patterns_.end(),
-					   std::bind(&utils::wildcard_string_match, std::ref(name), std::placeholders::_1));
+		std::bind(&utils::wildcard_string_match, std::ref(name), std::placeholders::_1));
 }
 
 std::string autodetect_game_data_dir(std::string exe_dir)
@@ -265,13 +284,16 @@ bool looks_like_pbl(const std::string& file)
 }
 
 file_tree_checksum::file_tree_checksum()
-	: nfiles(0), sum_size(0), modified(0)
-{}
+	: nfiles(0)
+	, sum_size(0)
+	, modified(0)
+{
+}
 
-file_tree_checksum::file_tree_checksum(const config& cfg) :
-	nfiles	(cfg["nfiles"].to_size_t()),
-	sum_size(cfg["size"].to_size_t()),
-	modified(cfg["modified"].to_time_t())
+file_tree_checksum::file_tree_checksum(const config& cfg)
+	: nfiles(cfg["nfiles"].to_size_t())
+	, sum_size(cfg["size"].to_size_t())
+	, modified(cfg["modified"].to_time_t())
 {
 }
 
@@ -282,10 +304,9 @@ void file_tree_checksum::write(config& cfg) const
 	cfg["modified"] = modified;
 }
 
-bool file_tree_checksum::operator==(const file_tree_checksum &rhs) const
+bool file_tree_checksum::operator==(const file_tree_checksum& rhs) const
 {
-	return nfiles == rhs.nfiles && sum_size == rhs.sum_size &&
-		modified == rhs.modified;
+	return nfiles == rhs.nfiles && sum_size == rhs.sum_size && modified == rhs.modified;
 }
 
 std::string read_map(const std::string& name)
@@ -328,29 +349,27 @@ std::string read_scenario(const std::string& name)
 
 static void get_file_tree_checksum_internal(const std::string& path, file_tree_checksum& res)
 {
-
 	std::vector<std::string> dirs;
-	get_files_in_dir(path,nullptr,&dirs, name_mode::ENTIRE_FILE_PATH, filter_mode::SKIP_MEDIA_DIR, reorder_mode::DONT_REORDER, &res);
+	get_files_in_dir(path, nullptr, &dirs, name_mode::ENTIRE_FILE_PATH, filter_mode::SKIP_MEDIA_DIR,
+		reorder_mode::DONT_REORDER, &res);
 
 	for(std::vector<std::string>::const_iterator j = dirs.begin(); j != dirs.end(); ++j) {
-		get_file_tree_checksum_internal(*j,res);
+		get_file_tree_checksum_internal(*j, res);
 	}
 }
 
 const file_tree_checksum& data_tree_checksum(bool reset)
 {
 	static file_tree_checksum checksum;
-	if (reset)
+	if(reset)
 		checksum.reset();
 	if(checksum.nfiles == 0) {
-		get_file_tree_checksum_internal("data/",checksum);
-		get_file_tree_checksum_internal(get_user_data_dir() + "/data/",checksum);
-		LOG_FS << "calculated data tree checksum: "
-			   << checksum.nfiles << " files; "
-			   << checksum.sum_size << " bytes";
+		get_file_tree_checksum_internal("data/", checksum);
+		get_file_tree_checksum_internal(get_user_data_dir() + "/data/", checksum);
+		LOG_FS << "calculated data tree checksum: " << checksum.nfiles << " files; " << checksum.sum_size << " bytes";
 	}
 
 	return checksum;
 }
 
-}
+} // namespace filesystem

@@ -24,14 +24,15 @@ class unit_map;
 struct map_location;
 struct rect;
 
-namespace image {
+namespace image
+{
 /**
- * Prepares the minimap texture and returns a function which will render it to the current rendering target when invoked.
+ * Prepares the minimap texture and returns a function which will render it to the current rendering target when
+ * invoked.
  */
-std::function<rect(rect)> prep_minimap_for_rendering(
-	const gamemap& map,
+std::function<rect(rect)> prep_minimap_for_rendering(const gamemap& map,
 	const team* vw = nullptr,
 	const unit_map* units = nullptr,
 	const std::map<map_location, unsigned int>* reach_map = nullptr,
 	bool ignore_terrain_disabled = false);
-}
+} // namespace image

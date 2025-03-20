@@ -17,9 +17,9 @@
 
 #include "color_range.hpp"
 #include "config.hpp"
+#include "game_version.hpp"
 #include "gettext.hpp"
 #include "log.hpp"
-#include "game_version.hpp"
 #include "serialization/chrono.hpp"
 #include "serialization/string_utils.hpp"
 
@@ -37,14 +37,14 @@ namespace game_config
 //
 // Gameplay constants
 //
-int base_income      = 2;
-int village_income   = 1;
-int village_support  = 1;
-int recall_cost      = 20;
-int kill_experience  = 8;
-int combat_experience  = 1;
+int base_income = 2;
+int village_income = 1;
+int village_support = 1;
+int recall_cost = 20;
+int kill_experience = 8;
+int combat_experience = 1;
 
-int poison_amount    = 8;
+int poison_amount = 8;
 int rest_heal_amount = 2;
 
 const int gold_carryover_percentage = 80;
@@ -57,19 +57,19 @@ unsigned int tile_size = 72;
 std::string default_terrain;
 std::string shroud_prefix, fog_prefix, reach_map_prefix;
 
-std::vector<unsigned int> zoom_levels {36, 72, 144};
+std::vector<unsigned int> zoom_levels{36, 72, 144};
 
 //
 // Display scale constants
 //
-double hp_bar_scaling  = 0.666;
-double xp_bar_scaling  = 0.5;
+double hp_bar_scaling = 0.666;
+double xp_bar_scaling = 0.5;
 
 //
 // Misc
 //
-std::chrono::milliseconds lobby_network_timer  = 100ms;
-std::chrono::milliseconds lobby_refresh        = 4000ms;
+std::chrono::milliseconds lobby_network_timer = 100ms;
+std::chrono::milliseconds lobby_refresh = 4000ms;
 
 const std::size_t max_loop = 65536;
 
@@ -81,33 +81,26 @@ bool addon_server_info = false;
 //
 // Gamestate flags
 //
-bool
-	debug_impl           = false,
-	debug_lua            = false,
-	strict_lua           = false,
-	editor               = false,
-	ignore_replay_errors = false,
-	mp_debug             = false,
-	exit_at_end          = false,
-	disable_autosave     = false,
-	no_addons            = false;
+bool debug_impl = false, debug_lua = false, strict_lua = false, editor = false, ignore_replay_errors = false,
+	 mp_debug = false, exit_at_end = false, disable_autosave = false, no_addons = false;
 
 const bool& debug = debug_impl;
 
-void set_debug(bool new_debug) {
-    // TODO: remove severity static casts and fix issue #7894
+void set_debug(bool new_debug)
+{
+	// TODO: remove severity static casts and fix issue #7894
 	if(debug_impl && !new_debug) {
 		// Turning debug mode off; decrease deprecation severity
 		lg::severity severity;
 		if(lg::get_log_domain_severity("deprecation", severity)) {
-            int severityInt = static_cast<int>(severity);
+			int severityInt = static_cast<int>(severity);
 			lg::set_log_domain_severity("deprecation", static_cast<lg::severity>(severityInt - 2));
 		}
 	} else if(!debug_impl && new_debug) {
 		// Turning debug mode on; increase deprecation severity
-        lg::severity severity;
+		lg::severity severity;
 		if(lg::get_log_domain_severity("deprecation", severity)) {
-            int severityInt = static_cast<int>(severity);
+			int severityInt = static_cast<int>(severity);
 			lg::set_log_domain_severity("deprecation", static_cast<lg::severity>(severityInt + 2));
 		}
 	}
@@ -179,91 +172,53 @@ std::vector<std::string> foot_speed_prefix;
 std::string foot_teleport_enter;
 std::string foot_teleport_exit;
 
-namespace images {
+namespace images
+{
 
-std::string
-	game_title,
-	game_title_background,
-	game_logo,
-	game_logo_background,
-	victory_laurel,
-	victory_laurel_hardest,
+std::string game_title, game_title_background, game_logo, game_logo_background, victory_laurel, victory_laurel_hardest,
 	victory_laurel_easy,
 	// orbs and hp/xp bar
-	orb,
-	orb_two_color,
-	energy,
+	orb, orb_two_color, energy,
 	// top bar icons
-	battery_icon,
-	time_icon,
+	battery_icon, time_icon,
 	// flags
-	flag,
-	flag_icon,
+	flag, flag_icon,
 	// hex overlay
-	terrain_mask,
-	grid_top,
-	grid_bottom,
-	mouseover,
-	selected,
-	editor_brush,
-	linger,
+	terrain_mask, grid_top, grid_bottom, mouseover, selected, editor_brush, linger,
 	// GUI elements
-	observer,
-	tod_bright,
-	tod_dark,
+	observer, tod_bright, tod_dark,
 	// TODO: de-hardcode this
-	selected_menu   = "buttons/radiobox-pressed.png",
-	deselected_menu = "buttons/radiobox.png",
-	checked_menu    = "buttons/checkbox-pressed.png",
-	unchecked_menu  = "buttons/checkbox.png",
-	wml_menu        = "buttons/WML-custom.png",
-	level,
-	ellipsis,
-	missing,
-	blank,
+	selected_menu = "buttons/radiobox-pressed.png", deselected_menu = "buttons/radiobox.png",
+	checked_menu = "buttons/checkbox-pressed.png", unchecked_menu = "buttons/checkbox.png",
+	wml_menu = "buttons/WML-custom.png", level, ellipsis, missing, blank,
 	// notifications icon
 	app_icon = "images/icons/icon-game.png";
 
-} //images
+} // namespace images
 
 //
 // Sound constants
 //
-namespace sounds {
+namespace sounds
+{
 
-std::string
-	turn_bell        = "bell.wav",
-	timer_bell       = "timer.wav",
-	public_message   = "chat-[1~3].ogg",
-	private_message  = "chat-highlight.ogg",
-	friend_message   = "chat-friend.ogg",
-	server_message   = "receive.wav",
-	player_joins     = "arrive.wav",
-	player_leaves    = "leave.wav",
-	game_user_arrive = "join.wav",
-	game_user_leave  = "leave.wav",
-	ready_for_start  = "bell.wav",
-	game_has_begun   = "gamestart.ogg",
-	game_created	 = "join.wav";
+std::string turn_bell = "bell.wav", timer_bell = "timer.wav", public_message = "chat-[1~3].ogg",
+			private_message = "chat-highlight.ogg", friend_message = "chat-friend.ogg", server_message = "receive.wav",
+			player_joins = "arrive.wav", player_leaves = "leave.wav", game_user_arrive = "join.wav",
+			game_user_leave = "leave.wav", ready_for_start = "bell.wav", game_has_begun = "gamestart.ogg",
+			game_created = "join.wav";
 
-const std::string
-	button_press     = "button.wav",
-	checkbox_release = "checkbox.wav",
-	slider_adjust    = "slider.wav",
-	menu_expand      = "expand.wav",
-	menu_contract    = "contract.wav",
-	menu_select      = "select.wav";
+const std::string button_press = "button.wav", checkbox_release = "checkbox.wav", slider_adjust = "slider.wav",
+				  menu_expand = "expand.wav", menu_contract = "contract.wav", menu_select = "select.wav";
 
-namespace status {
+namespace status
+{
 
-std::string
-	poisoned  = "poison.ogg",
-	slowed    = "slowed.wav",
-	petrified = "petrified.ogg";
+std::string poisoned = "poison.ogg", slowed = "slowed.wav", petrified = "petrified.ogg";
 
-} // status
+} // namespace status
 
-} // sounds
+} // namespace sounds
 
 static void add_color_info(const game_config_view& v, bool build_defaults);
 void add_color_info(const game_config_view& v)
@@ -271,121 +226,123 @@ void add_color_info(const game_config_view& v)
 	add_color_info(v, false);
 }
 
-void load_config(const config &v)
+void load_config(const config& v)
 {
-	base_income      = v["base_income"].to_int(2);
-	village_income   = v["village_income"].to_int(1);
-	village_support  = v["village_support"].to_int(1);
-	poison_amount    = v["poison_amount"].to_int(8);
+	base_income = v["base_income"].to_int(2);
+	village_income = v["village_income"].to_int(1);
+	village_support = v["village_support"].to_int(1);
+	poison_amount = v["poison_amount"].to_int(8);
 	rest_heal_amount = v["rest_heal_amount"].to_int(2);
-	recall_cost      = v["recall_cost"].to_int(20);
-	kill_experience  = v["kill_experience"].to_int(8);
-	combat_experience= v["combat_experience"].to_int(1);
-	lobby_refresh    = chrono::parse_duration(v["lobby_refresh"], 2000ms);
-	default_terrain  = v["default_terrain"].str();
-	tile_size        = v["tile_size"].to_int(72);
+	recall_cost = v["recall_cost"].to_int(20);
+	kill_experience = v["kill_experience"].to_int(8);
+	combat_experience = v["combat_experience"].to_int(1);
+	lobby_refresh = chrono::parse_duration(v["lobby_refresh"], 2000ms);
+	default_terrain = v["default_terrain"].str();
+	tile_size = v["tile_size"].to_int(72);
 
 	std::vector<std::string> zoom_levels_str = utils::split(v["zoom_levels"]);
 	if(!zoom_levels_str.empty()) {
 		zoom_levels.clear();
-		std::transform(zoom_levels_str.begin(), zoom_levels_str.end(), std::back_inserter(zoom_levels), [](const std::string& zoom) {
-			int z = std::stoi(zoom);
-			if((z / 4) * 4 != z) {
-				ERR_NG << "zoom level " << z << " is not divisible by 4."
-					<< " This will cause graphical glitches!";
-			}
-			return z;
-		});
+		std::transform(zoom_levels_str.begin(), zoom_levels_str.end(), std::back_inserter(zoom_levels),
+			[](const std::string& zoom) {
+				int z = std::stoi(zoom);
+				if((z / 4) * 4 != z) {
+					ERR_NG << "zoom level " << z << " is not divisible by 4."
+						   << " This will cause graphical glitches!";
+				}
+				return z;
+			});
 	}
 
-	title_music           = v["title_music"].str();
-	lobby_music           = v["lobby_music"].str();
+	title_music = v["title_music"].str();
+	lobby_music = v["lobby_music"].str();
 
 	default_victory_music = utils::split(v["default_victory_music"].str());
-	default_defeat_music  = utils::split(v["default_defeat_music"].str());
+	default_defeat_music = utils::split(v["default_defeat_music"].str());
 
-	if(auto i = v.optional_child("colors")){
+	if(auto i = v.optional_child("colors")) {
 		using namespace game_config::colors;
 
-		moved_orb_color       = i["moved_orb_color"].str();
-		unmoved_orb_color     = i["unmoved_orb_color"].str();
-		partial_orb_color     = i["partial_orb_color"].str();
-		enemy_orb_color       = i["enemy_orb_color"].str();
-		ally_orb_color        = i["ally_orb_color"].str();
-		reach_map_color       = i["reach_map_color"].str();
+		moved_orb_color = i["moved_orb_color"].str();
+		unmoved_orb_color = i["unmoved_orb_color"].str();
+		partial_orb_color = i["partial_orb_color"].str();
+		enemy_orb_color = i["enemy_orb_color"].str();
+		ally_orb_color = i["ally_orb_color"].str();
+		reach_map_color = i["reach_map_color"].str();
 		reach_map_enemy_color = i["reach_map_enemy_color"].str();
 	} // colors
 
-	show_ally_orb     = v["show_ally_orb"].to_bool(true);
-	show_enemy_orb    = v["show_enemy_orb"].to_bool(false);
-	show_moved_orb    = v["show_moved_orb"].to_bool(true);
-	show_partial_orb  = v["show_partial_orb"].to_bool(true);
+	show_ally_orb = v["show_ally_orb"].to_bool(true);
+	show_enemy_orb = v["show_enemy_orb"].to_bool(false);
+	show_moved_orb = v["show_moved_orb"].to_bool(true);
+	show_partial_orb = v["show_partial_orb"].to_bool(true);
 	show_status_on_ally_orb = v["show_status_on_ally_orb"].to_bool(true);
-	show_unmoved_orb  = v["show_unmoved_orb"].to_bool(true);
+	show_unmoved_orb = v["show_unmoved_orb"].to_bool(true);
 	show_disengaged_orb = v["show_disengaged_orb"].to_bool(true);
 
-	if(auto i = v.optional_child("images")){
+	if(auto i = v.optional_child("images")) {
 		using namespace game_config::images;
 
-		if (!i["game_title_background"].blank()) {
+		if(!i["game_title_background"].blank()) {
 			// Select a background at random
 			const auto backgrounds = utils::split(i["game_title_background"].str());
-			if (backgrounds.size() > 1) {
+			if(backgrounds.size() > 1) {
 				int r = rand() % (backgrounds.size());
 				game_title_background = backgrounds.at(r);
-			} else if (backgrounds.size() == 1) {
+			} else if(backgrounds.size() == 1) {
 				game_title_background = backgrounds.at(0);
 			}
 		}
 
 		// Allow game_title to be empty
-		game_title            = i["game_title"].str();
-		game_logo             = i["game_logo"].str();
-		game_logo_background  = i["game_logo_background"].str();
+		game_title = i["game_title"].str();
+		game_logo = i["game_logo"].str();
+		game_logo_background = i["game_logo_background"].str();
 
 		victory_laurel = i["victory_laurel"].str();
 		victory_laurel_hardest = i["victory_laurel_hardest"].str();
 		victory_laurel_easy = i["victory_laurel_easy"].str();
 
-		orb    = i["orb"].str();
+		orb = i["orb"].str();
 		orb_two_color = i["orb_two_color"].str();
 		energy = i["energy"].str();
 
 		battery_icon = i["battery_icon"].str();
 		time_icon = i["time_icon"].str();
 
-		flag      = i["flag"].str();
+		flag = i["flag"].str();
 		flag_icon = i["flag_icon"].str();
 
 		terrain_mask = i["terrain_mask"].str();
-		grid_top     = i["grid_top"].str();
-		grid_bottom  = i["grid_bottom"].str();
-		mouseover    = i["mouseover"].str();
-		selected     = i["selected"].str();
+		grid_top = i["grid_top"].str();
+		grid_bottom = i["grid_bottom"].str();
+		mouseover = i["mouseover"].str();
+		selected = i["selected"].str();
 		editor_brush = i["editor_brush"].str();
-		linger       = i["linger"].str();
+		linger = i["linger"].str();
 
-		observer   = i["observer"].str();
+		observer = i["observer"].str();
 		tod_bright = i["tod_bright"].str();
-		tod_dark   = i["tod_dark"].str();
-		level      = i["level"].str();
-		ellipsis   = i["ellipsis"].str();
-		missing    = i["missing"].str();
-		blank      = i["blank"].str();
+		tod_dark = i["tod_dark"].str();
+		level = i["level"].str();
+		ellipsis = i["ellipsis"].str();
+		missing = i["missing"].str();
+		blank = i["blank"].str();
 	} // images
 
-	hp_bar_scaling  = v["hp_bar_scaling"].to_double(0.666);
-	xp_bar_scaling  = v["xp_bar_scaling"].to_double(0.5);
+	hp_bar_scaling = v["hp_bar_scaling"].to_double(0.666);
+	xp_bar_scaling = v["xp_bar_scaling"].to_double(0.5);
 
-	foot_speed_prefix   = utils::split(v["footprint_prefix"]);
+	foot_speed_prefix = utils::split(v["footprint_prefix"]);
 	foot_teleport_enter = v["footprint_teleport_enter"].str();
-	foot_teleport_exit  = v["footprint_teleport_exit"].str();
+	foot_teleport_exit = v["footprint_teleport_exit"].str();
 
 	shroud_prefix = v["shroud_prefix"].str();
-	fog_prefix    = v["fog_prefix"].str();
-	reach_map_prefix 	= v["reach_map_prefix"].str();
+	fog_prefix = v["fog_prefix"].str();
+	reach_map_prefix = v["reach_map_prefix"].str();
 	reach_map_border_opacity = v["reach_map_border_opacity"].to_int(100);
-	reach_map_tint_opacity   = v["reach_map_tint_opacity"].to_int(50);//tint is at 50% by default instead of 100% to allow players to make it more opaque than normal
+	reach_map_tint_opacity = v["reach_map_tint_opacity"].to_int(
+		50); // tint is at 50% by default instead of 100% to allow players to make it more opaque than normal
 
 	add_color_info(game_config_view::wrap(v), true);
 
@@ -397,10 +354,7 @@ void load_config(const config &v)
 		unit_rgb = a->str();
 	}
 
-	const auto parse_config_color_list = [&](
-			const std::string& key,
-			const color_t fallback)->std::vector<color_t>
-	{
+	const auto parse_config_color_list = [&](const std::string& key, const color_t fallback) -> std::vector<color_t> {
 		std::vector<color_t> color_vec;
 
 		for(const auto& s : utils::split(v[key].str())) {
@@ -415,10 +369,10 @@ void load_config(const config &v)
 		return color_vec;
 	};
 
-	red_green_scale       = parse_config_color_list("red_green_scale",       {255, 255, 255});
-	red_green_scale_text  = parse_config_color_list("red_green_scale_text",  {255, 255, 255});
-	blue_white_scale      = parse_config_color_list("blue_white_scale",      {0  , 0  , 255});
-	blue_white_scale_text = parse_config_color_list("blue_white_scale_text", {0  , 0  , 255});
+	red_green_scale = parse_config_color_list("red_green_scale", {255, 255, 255});
+	red_green_scale_text = parse_config_color_list("red_green_scale_text", {255, 255, 255});
+	blue_white_scale = parse_config_color_list("blue_white_scale", {0, 0, 255});
+	blue_white_scale_text = parse_config_color_list("blue_white_scale_text", {0, 0, 255});
 
 	server_list.clear();
 
@@ -438,25 +392,25 @@ void load_config(const config &v)
 			}
 		};
 
-		load_attribute(*s, "turn_bell",        turn_bell);
-		load_attribute(*s, "timer_bell",       timer_bell);
-		load_attribute(*s, "public_message",   public_message);
-		load_attribute(*s, "private_message",  private_message);
-		load_attribute(*s, "friend_message",   friend_message);
-		load_attribute(*s, "server_message",   server_message);
-		load_attribute(*s, "player_joins",     player_joins);
-		load_attribute(*s, "player_leaves",    player_leaves);
-		load_attribute(*s, "game_created",     game_created);
+		load_attribute(*s, "turn_bell", turn_bell);
+		load_attribute(*s, "timer_bell", timer_bell);
+		load_attribute(*s, "public_message", public_message);
+		load_attribute(*s, "private_message", private_message);
+		load_attribute(*s, "friend_message", friend_message);
+		load_attribute(*s, "server_message", server_message);
+		load_attribute(*s, "player_joins", player_joins);
+		load_attribute(*s, "player_leaves", player_leaves);
+		load_attribute(*s, "game_created", game_created);
 		load_attribute(*s, "game_user_arrive", game_user_arrive);
-		load_attribute(*s, "game_user_leave",  game_user_leave);
-		load_attribute(*s, "ready_for_start",  ready_for_start);
-		load_attribute(*s, "game_has_begun",   game_has_begun);
+		load_attribute(*s, "game_user_leave", game_user_leave);
+		load_attribute(*s, "ready_for_start", ready_for_start);
+		load_attribute(*s, "game_has_begun", game_has_begun);
 
 		if(auto ss = s->optional_child("status")) {
 			using namespace game_config::sounds::status;
 
-			load_attribute(*ss, "poisoned",  poisoned);
-			load_attribute(*ss, "slowed",    slowed);
+			load_attribute(*ss, "poisoned", poisoned);
+			load_attribute(*ss, "slowed", slowed);
 			load_attribute(*ss, "petrified", petrified);
 		}
 	}
@@ -469,7 +423,7 @@ void add_color_info(const game_config_view& v, bool build_defaults)
 	}
 
 	for(const config& teamC : v.child_range("color_range")) {
-		const config::attribute_value* a1 = teamC.get("id"), *a2 = teamC.get("rgb");
+		const config::attribute_value *a1 = teamC.get("id"), *a2 = teamC.get("rgb");
 		if(!a1 || !a2) {
 			continue;
 		}
@@ -500,7 +454,7 @@ void add_color_info(const game_config_view& v, bool build_defaults)
 		}
 	}
 
-	for(const config &cp : v.child_range("color_palette")) {
+	for(const config& cp : v.child_range("color_palette")) {
 		for(const auto& [key, value] : cp.attribute_range()) {
 			std::vector<color_t> temp;
 			for(const auto& s : utils::split(value)) {
@@ -593,4 +547,4 @@ std::string get_default_title_string()
 	return ret;
 }
 
-} // game_config
+} // namespace game_config

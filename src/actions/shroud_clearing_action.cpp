@@ -15,11 +15,12 @@
 #include "actions/shroud_clearing_action.hpp"
 
 #include "actions/move.hpp" //get_village
-#include "resources.hpp"
-#include "team.hpp"
 #include "game_board.hpp"
 #include "map/map.hpp"
 #include "play_controller.hpp"
+#include "resources.hpp"
+#include "team.hpp"
 
-namespace actions {
+namespace actions
+{
 }

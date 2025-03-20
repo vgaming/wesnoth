@@ -40,7 +40,7 @@ void cleanup_texture(SDL_Texture* t)
 texture::texture(SDL_Texture* txt)
 	: texture_(txt, &cleanup_texture)
 {
-	if (txt) {
+	if(txt) {
 		SDL_QueryTexture(txt, nullptr, nullptr, &size_.x, &size_.y);
 		finalize();
 	}
@@ -49,11 +49,11 @@ texture::texture(SDL_Texture* txt)
 texture::texture(const surface& surf, bool linear_interpolation)
 	: texture()
 {
-	if (!surf) {
+	if(!surf) {
 		return;
 	}
 
-	if (surf->w == 0 && surf->h == 0) {
+	if(surf->w == 0 && surf->h == 0) {
 		return;
 	}
 
@@ -105,15 +105,11 @@ void texture::set_src(const rect& r)
 {
 	rect dsrc = r.intersect(rect{{0, 0}, size_});
 	point rsize = get_raw_size();
-	if (draw_size() == rsize) {
+	if(draw_size() == rsize) {
 		src_ = dsrc;
 	} else {
-		src_ = rect {
-			(dsrc.x * rsize.x) / size_.x,
-			(dsrc.y * rsize.y) / size_.y,
-			(dsrc.w * rsize.x) / size_.x,
-			(dsrc.h * rsize.y) / size_.y
-		};
+		src_ = rect{(dsrc.x * rsize.x) / size_.x, (dsrc.y * rsize.y) / size_.y, (dsrc.w * rsize.x) / size_.x,
+			(dsrc.h * rsize.y) / size_.y};
 	}
 	has_src_ = true;
 }
@@ -127,14 +123,14 @@ void texture::set_src_raw(const rect& r)
 
 void texture::set_alpha_mod(uint8_t alpha)
 {
-	if (texture_) {
+	if(texture_) {
 		SDL_SetTextureAlphaMod(texture_.get(), alpha);
 	}
 }
 
 uint8_t texture::get_alpha_mod() const
 {
-	if (!texture_) {
+	if(!texture_) {
 		return 0;
 	}
 	uint8_t a;
@@ -149,15 +145,15 @@ void texture::set_color_mod(const color_t& c)
 
 void texture::set_color_mod(uint8_t r, uint8_t g, uint8_t b)
 {
-	if (texture_) {
+	if(texture_) {
 		SDL_SetTextureColorMod(texture_.get(), r, g, b);
 	}
 }
 
 color_t texture::get_color_mod() const
 {
-	if (!texture_) {
-		return {0,0,0};
+	if(!texture_) {
+		return {0, 0, 0};
 	}
 	color_t c;
 	SDL_GetTextureColorMod(texture_.get(), &c.r, &c.g, &c.b);
@@ -166,14 +162,14 @@ color_t texture::get_color_mod() const
 
 void texture::set_blend_mode(SDL_BlendMode b)
 {
-	if (texture_) {
+	if(texture_) {
 		SDL_SetTextureBlendMode(texture_.get(), b);
 	}
 }
 
 SDL_BlendMode texture::get_blend_mode() const
 {
-	if (!texture_) {
+	if(!texture_) {
 		return SDL_BLENDMODE_NONE;
 	}
 	SDL_BlendMode b;
@@ -224,7 +220,7 @@ texture::info::info(SDL_Texture* t)
 	, access(-1)
 	, size(0, 0)
 {
-	if (t) {
+	if(t) {
 		SDL_QueryTexture(t, &format, &access, &size.x, &size.y);
 	}
 }

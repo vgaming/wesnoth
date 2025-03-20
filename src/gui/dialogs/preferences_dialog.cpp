@@ -37,20 +37,20 @@
 #include "gui/dialogs/hotkey_bind.hpp"
 #include "gui/dialogs/log_settings.hpp"
 #include "gui/dialogs/multiplayer/mp_alerts_options.hpp"
-#include "gui/dialogs/select_orb_colors.hpp"
 #include "gui/dialogs/reachmap_options.hpp"
+#include "gui/dialogs/select_orb_colors.hpp"
 #include "gui/dialogs/title_screen.hpp"
 
 #include "gui/dialogs/game_version_dialog.hpp"
 #include "gui/dialogs/message.hpp"
 #include "gui/dialogs/transient_message.hpp"
 #include "gui/widgets/button.hpp"
-#include "gui/widgets/menu_button.hpp"
-#include "gui/widgets/multimenu_button.hpp"
 #include "gui/widgets/grid.hpp"
 #include "gui/widgets/image.hpp"
 #include "gui/widgets/label.hpp"
 #include "gui/widgets/listbox.hpp"
+#include "gui/widgets/menu_button.hpp"
+#include "gui/widgets/multimenu_button.hpp"
 #include "gui/widgets/slider.hpp"
 #include "gui/widgets/stacked_widget.hpp"
 #include "gui/widgets/status_label_helper.hpp"
@@ -88,7 +88,7 @@ int index_in_pager_range(const int first, const stacked_widget& pager)
 }
 
 // Helper to make it easier to immediately apply sound toggles immediately.
-template<bool(*fptr)(bool)>
+template<bool (*fptr)(bool)>
 void sound_toggle_on_change(window& window, const std::string& id_to_toggle, widget& w)
 {
 	std::invoke(fptr, dynamic_cast<selectable_item&>(w).get_value_bool());
@@ -98,20 +98,20 @@ void sound_toggle_on_change(window& window, const std::string& id_to_toggle, wid
 }
 
 // Helper to make it easier to immediately apply volume (music, etc) setings on change.
-template<void(*fptr)(int)>
+template<void (*fptr)(int)>
 void volume_setter_on_change(widget& w)
 {
 	std::invoke(fptr, dynamic_cast<integer_selector&>(w).get_value());
 }
 
-} // end anon namespace
+} // namespace
 
 REGISTER_DIALOG(preferences_dialog)
 
 preferences_dialog::preferences_dialog(const pref_constants::PREFERENCE_VIEW initial_view)
 	: modal_dialog(window_id())
 	, resolutions_() // should be populated by set_resolution_list before use
-	, themes_() // populated by set_theme_list
+	, themes_()      // populated by set_theme_list
 	, gui2_themes_() // populated by set_gui2_theme_list
 	, last_selected_item_(0)
 	, current_gui_theme_(0)
@@ -145,8 +145,8 @@ void preferences_dialog::set_resolution_list(menu_button& res_list)
 		options.push_back(std::move(option));
 	}
 
-	const unsigned current_res = std::distance(resolutions_.begin(), std::find(
-		resolutions_.begin(), resolutions_.end(), video::current_resolution()));
+	const unsigned current_res = std::distance(
+		resolutions_.begin(), std::find(resolutions_.begin(), resolutions_.end(), video::current_resolution()));
 
 	res_list.set_values(options, current_res);
 }
@@ -177,11 +177,11 @@ void preferences_dialog::set_gui2_theme_list(menu_button& theme_list)
 	for(auto& gui : guis) {
 		gui2_themes_.emplace_back(gui.first);
 		options.emplace_back("label", gui.second.description());
-		if (current_gui_theme_name == gui.first) {
+		if(current_gui_theme_name == gui.first) {
 			current_gui_theme_ = i;
 			theme_found = true;
 		}
-		if (!theme_found) {
+		if(!theme_found) {
 			i++;
 		}
 	}
@@ -266,7 +266,7 @@ void preferences_dialog::add_friend_list_entry(const bool is_friend, text_box& t
 		username = username.substr(0, pos);
 	}
 
-	auto [entry, added_new] = prefs::get().add_acquaintance(username, (is_friend ? "friend": "ignore"), reason);
+	auto [entry, added_new] = prefs::get().add_acquaintance(username, (is_friend ? "friend" : "ignore"), reason);
 
 	if(!entry) {
 		gui2::show_transient_message(_("Error"), _("Invalid username"));
@@ -335,8 +335,7 @@ void preferences_dialog::apply_pixel_scale()
 	prefs::get().set_pixel_scale(ps_slider.get_value());
 
 	// Update auto pixel scale preference.
-	toggle_button& auto_ps_toggle =
-		find_widget<toggle_button>("auto_pixel_scale");
+	toggle_button& auto_ps_toggle = find_widget<toggle_button>("auto_pixel_scale");
 	prefs::get().set_auto_pixel_scale(auto_ps_toggle.get_value_bool());
 
 	// Update draw buffers, taking these into account.
@@ -351,7 +350,7 @@ void preferences_dialog::apply_pixel_scale()
 	events::raise_resize_event();
 }
 
-template<bool(*toggle_getter)(), bool(*toggle_setter)(bool), int(*vol_getter)(), void(*vol_setter)(int)>
+template<bool (*toggle_getter)(), bool (*toggle_setter)(bool), int (*vol_getter)(), void (*vol_setter)(int)>
 void preferences_dialog::initialize_sound_option_group(const std::string& id_suffix)
 {
 	const std::string toggle_widget_id = "sound_toggle_" + id_suffix;
@@ -363,7 +362,8 @@ void preferences_dialog::initialize_sound_option_group(const std::string& id_suf
 	// class could possibly use some reworking to make this less redundant, but for now it
 	// works well enough.
 	register_bool(toggle_widget_id, true, toggle_getter, std::bind(toggle_setter, std::placeholders::_1),
-		std::bind(sound_toggle_on_change<toggle_setter>, std::ref(*this), volume_widget_id, std::placeholders::_1), true);
+		std::bind(sound_toggle_on_change<toggle_setter>, std::ref(*this), volume_widget_id, std::placeholders::_1),
+		true);
 
 	// Set up the volume slider. integer_field doesn't have a callback-on-changed mechanism.
 	// To add one would either mean adding it to the base field class or make it a proper
@@ -371,33 +371,81 @@ void preferences_dialog::initialize_sound_option_group(const std::string& id_suf
 	register_integer(volume_widget_id, true, vol_getter, vol_setter);
 
 	// Callback to actually immediately apply the volume effect.
-	connect_signal_notify_modified(find_widget<slider>(volume_widget_id),
-		std::bind(volume_setter_on_change<vol_setter>, std::placeholders::_1));
+	connect_signal_notify_modified(
+		find_widget<slider>(volume_widget_id), std::bind(volume_setter_on_change<vol_setter>, std::placeholders::_1));
 }
 
 /* SOUND FX wrappers for template */
-static bool sound(){return prefs::get().sound();}
-static bool set_sound(bool v){return prefs::get().set_sound(v);}
-static int sound_volume(){return prefs::get().sound_volume();}
-static void set_sound_volume(int v){prefs::get().set_sound_volume(v);}
+static bool sound()
+{
+	return prefs::get().sound();
+}
+static bool set_sound(bool v)
+{
+	return prefs::get().set_sound(v);
+}
+static int sound_volume()
+{
+	return prefs::get().sound_volume();
+}
+static void set_sound_volume(int v)
+{
+	prefs::get().set_sound_volume(v);
+}
 
 /* MUSIC wrappers for template */
-static bool music_on(){return prefs::get().music_on();}
-static bool set_music(bool v){return prefs::get().set_music(v);}
-static int music_volume(){return prefs::get().music_volume();}
-static void set_music_volume(int v){prefs::get().set_music_volume(v);}
+static bool music_on()
+{
+	return prefs::get().music_on();
+}
+static bool set_music(bool v)
+{
+	return prefs::get().set_music(v);
+}
+static int music_volume()
+{
+	return prefs::get().music_volume();
+}
+static void set_music_volume(int v)
+{
+	prefs::get().set_music_volume(v);
+}
 
 /* TURN BELL wrappers for template */
-static bool turn_bell(){return prefs::get().turn_bell();}
-static bool set_turn_bell(bool v){return prefs::get().set_turn_bell(v);}
-static int bell_volume(){return prefs::get().bell_volume();}
-static void set_bell_volume(int v){prefs::get().set_bell_volume(v);}
+static bool turn_bell()
+{
+	return prefs::get().turn_bell();
+}
+static bool set_turn_bell(bool v)
+{
+	return prefs::get().set_turn_bell(v);
+}
+static int bell_volume()
+{
+	return prefs::get().bell_volume();
+}
+static void set_bell_volume(int v)
+{
+	prefs::get().set_bell_volume(v);
+}
 
 /* UI FX wrappers for template */
-static bool ui_sound_on(){return prefs::get().ui_sound_on();}
-static bool set_ui_sound(bool v){return prefs::get().set_ui_sound(v);}
-static int ui_volume(){return prefs::get().ui_volume();}
-static void set_ui_volume(int v){prefs::get().set_ui_volume(v);}
+static bool ui_sound_on()
+{
+	return prefs::get().ui_sound_on();
+}
+static bool set_ui_sound(bool v)
+{
+	return prefs::get().set_ui_sound(v);
+}
+static int ui_volume()
+{
+	return prefs::get().ui_volume();
+}
+static void set_ui_volume(int v)
+{
+	prefs::get().set_ui_volume(v);
+}
 
 /**
  * Sets up states and callbacks for each of the widgets
@@ -409,93 +457,89 @@ void preferences_dialog::initialize_callbacks()
 	//
 
 	/* SCROLL SPEED */
-	register_integer("scroll_speed", true,
-		[]() {return prefs::get().scroll_speed();},
-		[](int v) {prefs::get().set_scroll_speed(v);});
+	register_integer(
+		"scroll_speed", true, []() { return prefs::get().scroll_speed(); },
+		[](int v) { prefs::get().set_scroll_speed(v); });
 
 	/* ACCELERATED SPEED */
-	register_bool("turbo_toggle", true,
-		[]() {return prefs::get().turbo();},
-		[](bool v) {prefs::get().set_turbo(v);});
+	register_bool(
+		"turbo_toggle", true, []() { return prefs::get().turbo(); }, [](bool v) { prefs::get().set_turbo(v); });
 
-	const auto accl_load = [this]()->int {
-		return std::distance(accl_speeds_.begin(), std::find(accl_speeds_.begin(), accl_speeds_.end(), prefs::get().turbo_speed()));
+	const auto accl_load = [this]() -> int {
+		return std::distance(
+			accl_speeds_.begin(), std::find(accl_speeds_.begin(), accl_speeds_.end(), prefs::get().turbo_speed()));
 	};
 
-	const auto accl_save = [this](int i) {
-		prefs::get().set_turbo_speed(accl_speeds_[i]);
-	};
+	const auto accl_save = [this](int i) { prefs::get().set_turbo_speed(accl_speeds_[i]); };
 
-	register_integer("turbo_slider", true,
-		accl_load, accl_save);
+	register_integer("turbo_slider", true, accl_load, accl_save);
 
 	// Set the value label transform function.
-	find_widget<slider>("turbo_slider").set_value_labels(
-		[this](int pos, int /*max*/)->t_string { return lexical_cast<std::string>(accl_speeds_[pos]); }
-	);
+	find_widget<slider>("turbo_slider").set_value_labels([this](int pos, int /*max*/) -> t_string {
+		return lexical_cast<std::string>(accl_speeds_[pos]);
+	});
 
 	/* SKIP AI MOVES */
-	register_bool("skip_ai_moves", true,
-		[]() {return prefs::get().skip_ai_moves();},
-		[](bool v) {prefs::get().set_skip_ai_moves(v);});
+	register_bool(
+		"skip_ai_moves", true, []() { return prefs::get().skip_ai_moves(); },
+		[](bool v) { prefs::get().set_skip_ai_moves(v); });
 
 	/* DISABLE AUTO MOVES */
-	register_bool("disable_auto_moves", true,
-		[]() {return prefs::get().disable_auto_moves();},
-		[](bool v) {prefs::get().set_disable_auto_moves(v);});
+	register_bool(
+		"disable_auto_moves", true, []() { return prefs::get().disable_auto_moves(); },
+		[](bool v) { prefs::get().set_disable_auto_moves(v); });
 
 	/* TURN DIALOG */
-	register_bool("show_turn_dialog", true,
-		[]() {return prefs::get().turn_dialog();},
-		[](bool v) {prefs::get().set_turn_dialog(v);});
+	register_bool(
+		"show_turn_dialog", true, []() { return prefs::get().turn_dialog(); },
+		[](bool v) { prefs::get().set_turn_dialog(v); });
 
 	/* ENABLE PLANNING MODE */
-	register_bool("whiteboard_on_start", true,
-		[]() {return prefs::get().enable_planning_mode_on_start();},
-		[](bool v) {prefs::get().set_enable_planning_mode_on_start(v);});
+	register_bool(
+		"whiteboard_on_start", true, []() { return prefs::get().enable_planning_mode_on_start(); },
+		[](bool v) { prefs::get().set_enable_planning_mode_on_start(v); });
 
 	/* HIDE ALLY PLANS */
-	register_bool("whiteboard_hide_allies", true,
-		[]() {return prefs::get().hide_whiteboard();},
-		[](bool v) {prefs::get().set_hide_whiteboard(v);});
+	register_bool(
+		"whiteboard_hide_allies", true, []() { return prefs::get().hide_whiteboard(); },
+		[](bool v) { prefs::get().set_hide_whiteboard(v); });
 
 	/* INTERRUPT ON SIGHTING */
-	register_bool("interrupt_move_when_ally_sighted", true,
-		[]() {return prefs::get().ally_sighted_interrupts();},
-		[](bool v) {prefs::get().set_ally_sighted_interrupts(v);});
+	register_bool(
+		"interrupt_move_when_ally_sighted", true, []() { return prefs::get().ally_sighted_interrupts(); },
+		[](bool v) { prefs::get().set_ally_sighted_interrupts(v); });
 
 	/* SAVE REPLAYS */
-	register_bool("save_replays", true,
-		[]() {return prefs::get().save_replays();},
-		[](bool v) {prefs::get().set_save_replays(v);});
+	register_bool(
+		"save_replays", true, []() { return prefs::get().save_replays(); },
+		[](bool v) { prefs::get().set_save_replays(v); });
 
 	/* DELETE AUTOSAVES */
-	register_bool("delete_saves", true,
-		[]() {return prefs::get().delete_saves();},
-		[](bool v) {prefs::get().set_delete_saves(v);});
+	register_bool(
+		"delete_saves", true, []() { return prefs::get().delete_saves(); },
+		[](bool v) { prefs::get().set_delete_saves(v); });
 
 	/* MAX AUTO SAVES */
-	register_integer("max_saves_slider", true,
-		[]() {return prefs::get().auto_save_max();},
-		[](int v) {prefs::get().set_auto_save_max(v);});
+	register_integer(
+		"max_saves_slider", true, []() { return prefs::get().auto_save_max(); },
+		[](int v) { prefs::get().set_auto_save_max(v); });
 
 	/* CACHE MANAGE */
-	connect_signal_mouse_left_click(find_widget<button>("cachemg"),
-			std::bind(&gui2::dialogs::game_cache_options::display<>));
+	connect_signal_mouse_left_click(
+		find_widget<button>("cachemg"), std::bind(&gui2::dialogs::game_cache_options::display<>));
 
 	//
 	// DISPLAY PANEL
 	//
 
 	/* FULLSCREEN TOGGLE */
-	toggle_button& toggle_fullscreen =
-			find_widget<toggle_button>("fullscreen");
+	toggle_button& toggle_fullscreen = find_widget<toggle_button>("fullscreen");
 
 	toggle_fullscreen.set_value(prefs::get().fullscreen());
 
 	// We bind a special callback function, so setup_single_toggle() is not used
-	connect_signal_mouse_left_click(toggle_fullscreen, std::bind(
-			&preferences_dialog::fullscreen_toggle_callback, this));
+	connect_signal_mouse_left_click(
+		toggle_fullscreen, std::bind(&preferences_dialog::fullscreen_toggle_callback, this));
 
 	/* SET RESOLUTION */
 	menu_button& res_list = find_widget<menu_button>("resolution_set");
@@ -505,35 +549,31 @@ void preferences_dialog::initialize_callbacks()
 
 	set_resolution_list(res_list);
 
-	connect_signal_notify_modified(res_list,
-		std::bind(&preferences_dialog::handle_res_select, this));
+	connect_signal_notify_modified(res_list, std::bind(&preferences_dialog::handle_res_select, this));
 
-	connect_signal<event::SDL_VIDEO_RESIZE>(std::bind(&preferences_dialog::set_resolution_list, this, std::ref(res_list)));
+	connect_signal<event::SDL_VIDEO_RESIZE>(
+		std::bind(&preferences_dialog::set_resolution_list, this, std::ref(res_list)));
 
 	/* PIXEL SCALE */
-	register_integer("pixel_scale_slider", true,
-		[]() {return prefs::get().pixel_scale();},
-		[](int v) {prefs::get().set_pixel_scale(v);});
+	register_integer(
+		"pixel_scale_slider", true, []() { return prefs::get().pixel_scale(); },
+		[](int v) { prefs::get().set_pixel_scale(v); });
 
-	slider& ps_slider =
-		find_widget<slider>("pixel_scale_slider");
-	connect_signal_mouse_left_release(ps_slider,
-		std::bind(&preferences_dialog::apply_pixel_scale, this));
+	slider& ps_slider = find_widget<slider>("pixel_scale_slider");
+	connect_signal_mouse_left_release(ps_slider, std::bind(&preferences_dialog::apply_pixel_scale, this));
 
 	/* AUTOMATIC PIXEL SCALE */
-	register_bool("auto_pixel_scale", true,
-		[]() {return prefs::get().auto_pixel_scale();},
-		[](bool v) {prefs::get().set_auto_pixel_scale(v);},
+	register_bool(
+		"auto_pixel_scale", true, []() { return prefs::get().auto_pixel_scale(); },
+		[](bool v) { prefs::get().set_auto_pixel_scale(v); },
 		[&](widget& w) { disable_widget_on_toggle_inverted<slider>(*this, w, "pixel_scale_slider"); }, true);
 
-	toggle_button& auto_ps_toggle =
-		find_widget<toggle_button>("auto_pixel_scale");
-	connect_signal_mouse_left_click(auto_ps_toggle,
-		std::bind(&preferences_dialog::apply_pixel_scale, this));
+	toggle_button& auto_ps_toggle = find_widget<toggle_button>("auto_pixel_scale");
+	connect_signal_mouse_left_click(auto_ps_toggle, std::bind(&preferences_dialog::apply_pixel_scale, this));
 
 	/* SHOW TIPS PANEL ON TITLESCREEN */
-	register_bool("show_tips", true,
-		[]() {return prefs::get().show_tips();},
+	register_bool(
+		"show_tips", true, []() { return prefs::get().show_tips(); },
 		[&](bool v) {
 			// if changed once: different value, reload
 			// if changed twice: double toggle, same value, don't reload
@@ -542,60 +582,55 @@ void preferences_dialog::initialize_callbacks()
 		});
 
 	/* SHOW FLOATING LABELS */
-	register_bool("show_floating_labels", true,
-		[]() {return prefs::get().floating_labels();},
-		[](bool v) {prefs::get().set_floating_labels(v);});
+	register_bool(
+		"show_floating_labels", true, []() { return prefs::get().floating_labels(); },
+		[](bool v) { prefs::get().set_floating_labels(v); });
 
 	/* SHOW TEAM COLORS */
-	register_bool("show_ellipses", true,
-		[]() {return prefs::get().show_side_colors();},
-		[](bool v) {prefs::get().set_show_side_colors(v);});
+	register_bool(
+		"show_ellipses", true, []() { return prefs::get().show_side_colors(); },
+		[](bool v) { prefs::get().set_show_side_colors(v); });
 
 	/* SHOW GRID */
-	register_bool("show_grid", true,
-		[]() {return prefs::get().grid();},
-		[](bool v) {prefs::get().set_grid(v);});
+	register_bool("show_grid", true, []() { return prefs::get().grid(); }, [](bool v) { prefs::get().set_grid(v); });
 
 	/* ANIMATE MAP */
-	register_bool("animate_terrains", true,
-		[]() {return prefs::get().animate_map();},
-		[](bool v) {prefs::get().set_animate_map(v);},
+	register_bool(
+		"animate_terrains", true, []() { return prefs::get().animate_map(); },
+		[](bool v) { prefs::get().set_animate_map(v); },
 		[&](widget& w) { disable_widget_on_toggle<toggle_button>(*this, w, "animate_water"); }, true);
 
 	/* ANIMATE WATER */
-	register_bool("animate_water", true,
-		[]() {return prefs::get().animate_water();},
-		[](bool v) {prefs::get().set_animate_water(v);});
+	register_bool(
+		"animate_water", true, []() { return prefs::get().animate_water(); },
+		[](bool v) { prefs::get().set_animate_water(v); });
 
 	/* SHOW UNIT STANDING ANIMS */
-	register_bool("animate_units_standing", true,
-		[]() {return prefs::get().show_standing_animations();},
-		[](bool v) {prefs::get().set_show_standing_animations(v);});
+	register_bool(
+		"animate_units_standing", true, []() { return prefs::get().show_standing_animations(); },
+		[](bool v) { prefs::get().set_show_standing_animations(v); });
 
 	/* SHOW UNIT IDLE ANIMS */
-	register_bool("animate_units_idle", true,
-		[]() {return prefs::get().idle_anim();},
-		[](bool v) {prefs::get().set_idle_anim(v);},
+	register_bool(
+		"animate_units_idle", true, []() { return prefs::get().idle_anim(); },
+		[](bool v) { prefs::get().set_idle_anim(v); },
 		[&](widget& w) { disable_widget_on_toggle<slider>(*this, w, "idle_anim_frequency"); }, true);
 
-	register_integer("idle_anim_frequency", true,
-		[]() {return prefs::get().idle_anim_rate();},
-		[](int v) {prefs::get().set_idle_anim_rate(v);});
+	register_integer(
+		"idle_anim_frequency", true, []() { return prefs::get().idle_anim_rate(); },
+		[](int v) { prefs::get().set_idle_anim_rate(v); });
 
 	/* FONT SCALING */
-	//register_integer("scaling_slider", true,
+	// register_integer("scaling_slider", true,
 	//	font_scaling, set_font_scaling);
 
 	/* VSYNC */
-	register_bool("vsync", true,
-		[]() {return prefs::get().vsync();},
-		[](bool v) {prefs::get().set_vsync(v);});
+	register_bool("vsync", true, []() { return prefs::get().vsync(); }, [](bool v) { prefs::get().set_vsync(v); });
 
 	/* SELECT THEME */
 	menu_button& theme_list = find_widget<menu_button>("choose_theme");
 	set_theme_list(theme_list);
-	connect_signal_notify_modified(theme_list,
-		std::bind(&preferences_dialog::handle_theme_select, this));
+	connect_signal_notify_modified(theme_list, std::bind(&preferences_dialog::handle_theme_select, this));
 
 	/* SELECT GUI2 THEME */
 	menu_button& gui2_theme_list = find_widget<menu_button>("choose_gui2_theme");
@@ -603,8 +638,7 @@ void preferences_dialog::initialize_callbacks()
 	set_gui2_theme_list(gui2_theme_list);
 	connect_signal_notify_modified(gui2_theme_list, [&](auto&&...) { apply_btn.set_active(true); });
 	apply_btn.set_active(false);
-	connect_signal_mouse_left_click(apply_btn,
-		std::bind(&preferences_dialog::handle_gui2_theme_select, this));
+	connect_signal_mouse_left_click(apply_btn, std::bind(&preferences_dialog::handle_gui2_theme_select, this));
 
 	//
 	// SOUND PANEL
@@ -616,9 +650,9 @@ void preferences_dialog::initialize_callbacks()
 	/* MUSIC */
 	initialize_sound_option_group<music_on, set_music, music_volume, set_music_volume>("music");
 
-	register_bool("sound_toggle_stop_music_in_background", true,
-		[]() {return prefs::get().stop_music_in_background();},
-		[](bool v) {prefs::get().set_stop_music_in_background(v);});
+	register_bool(
+		"sound_toggle_stop_music_in_background", true, []() { return prefs::get().stop_music_in_background(); },
+		[](bool v) { prefs::get().set_stop_music_in_background(v); });
 
 	/* TURN BELL */
 	initialize_sound_option_group<turn_bell, set_turn_bell, bell_volume, set_bell_volume>("bell");
@@ -631,35 +665,36 @@ void preferences_dialog::initialize_callbacks()
 	//
 
 	/* CHAT LINES */
-	register_integer("chat_lines", true,
-		[]() {return prefs::get().chat_lines();},
-		[](int v) {prefs::get().set_chat_lines(v);});
+	register_integer(
+		"chat_lines", true, []() { return prefs::get().chat_lines(); }, [](int v) { prefs::get().set_chat_lines(v); });
 
 	/* CHAT TIMESTAMPPING */
-	register_bool("chat_timestamps", true,
-		[]() {return prefs::get().chat_timestamp();},
-		[](bool v) {prefs::get().set_chat_timestamp(v);});
+	register_bool(
+		"chat_timestamps", true, []() { return prefs::get().chat_timestamp(); },
+		[](bool v) { prefs::get().set_chat_timestamp(v); });
 
 	/* SAVE PASSWORD */
-	register_bool("remember_password", true,
-		[]() {return prefs::get().remember_password();},
-		[](bool v) {prefs::get().set_remember_password(v);});
+	register_bool(
+		"remember_password", true, []() { return prefs::get().remember_password(); },
+		[](bool v) { prefs::get().set_remember_password(v); });
 
 	/* WHISPERS FROM FRIENDS ONLY */
-	register_bool("lobby_whisper_friends_only", true,
-		[]() {return prefs::get().lobby_whisper_friends_only();},
-		[](bool v) {prefs::get().set_lobby_whisper_friends_only(v);});
+	register_bool(
+		"lobby_whisper_friends_only", true, []() { return prefs::get().lobby_whisper_friends_only(); },
+		[](bool v) { prefs::get().set_lobby_whisper_friends_only(v); });
 
 	/* LOBBY JOIN NOTIFICATIONS */
-	lobby_joins_group.add_member(find_widget<toggle_button>("lobby_joins_none", false, true), pref_constants::lobby_joins::show_none);
-	lobby_joins_group.add_member(find_widget<toggle_button>("lobby_joins_friends", false, true), pref_constants::lobby_joins::show_friends);
-	lobby_joins_group.add_member(find_widget<toggle_button>("lobby_joins_all", false, true), pref_constants::lobby_joins::show_all);
+	lobby_joins_group.add_member(
+		find_widget<toggle_button>("lobby_joins_none", false, true), pref_constants::lobby_joins::show_none);
+	lobby_joins_group.add_member(
+		find_widget<toggle_button>("lobby_joins_friends", false, true), pref_constants::lobby_joins::show_friends);
+	lobby_joins_group.add_member(
+		find_widget<toggle_button>("lobby_joins_all", false, true), pref_constants::lobby_joins::show_all);
 
 	lobby_joins_group.set_member_states(prefs::get().get_lobby_joins());
 
-	lobby_joins_group.on_modified([&](widget&, const pref_constants::lobby_joins val) {
-		prefs::get().set_lobby_joins(val);
-	});
+	lobby_joins_group.on_modified(
+		[&](widget&, const pref_constants::lobby_joins val) { prefs::get().set_lobby_joins(val); });
 
 	/* FRIENDS LIST */
 	listbox& friends_list = find_widget<listbox>("friends_list");
@@ -674,40 +709,25 @@ void preferences_dialog::initialize_callbacks()
 
 	text_box& textbox = find_widget<text_box>("friend_name_box");
 
-	connect_signal_mouse_left_click(
-		find_widget<button>("add_friend"), std::bind(
-			&preferences_dialog::add_friend_list_entry,
-			this, true,
-			std::ref(textbox)));
+	connect_signal_mouse_left_click(find_widget<button>("add_friend"),
+		std::bind(&preferences_dialog::add_friend_list_entry, this, true, std::ref(textbox)));
 
-	connect_signal_mouse_left_click(
-		find_widget<button>("add_ignored"), std::bind(
-			&preferences_dialog::add_friend_list_entry,
-			this, false,
-			std::ref(textbox)));
+	connect_signal_mouse_left_click(find_widget<button>("add_ignored"),
+		std::bind(&preferences_dialog::add_friend_list_entry, this, false, std::ref(textbox)));
 
-	connect_signal_mouse_left_click(
-		find_widget<button>("remove"), std::bind(
-			&preferences_dialog::remove_friend_list_entry,
-			this,
-			std::ref(friends_list),
-			std::ref(textbox)));
+	connect_signal_mouse_left_click(find_widget<button>("remove"),
+		std::bind(&preferences_dialog::remove_friend_list_entry, this, std::ref(friends_list), std::ref(textbox)));
 
-	connect_signal_notify_modified(friends_list, std::bind(
-			&preferences_dialog::on_friends_list_select,
-			this,
-			std::ref(friends_list),
-			std::ref(textbox)));
+	connect_signal_notify_modified(friends_list,
+		std::bind(&preferences_dialog::on_friends_list_select, this, std::ref(friends_list), std::ref(textbox)));
 
 	/* ALERTS */
 	connect_signal_mouse_left_click(
-			find_widget<button>("mp_alerts"),
-			std::bind(&gui2::dialogs::mp_alerts_options::display<>));
+		find_widget<button>("mp_alerts"), std::bind(&gui2::dialogs::mp_alerts_options::display<>));
 
 	/* SET WESNOTHD PATH */
 	connect_signal_mouse_left_click(
-			find_widget<button>("mp_wesnothd"), [](auto&&...) { return prefs::get().show_wesnothd_server_search(); });
-
+		find_widget<button>("mp_wesnothd"), [](auto&&...) { return prefs::get().show_wesnothd_server_search(); });
 
 	//
 	// ADVANCED PANEL
@@ -735,104 +755,102 @@ void preferences_dialog::initialize_callbacks()
 		}
 
 		switch(option.type) {
-			case preferences::option::avd_type::TOGGLE: {
+		case preferences::option::avd_type::TOGGLE: {
+			toggle_box.set_visible(widget::visibility::visible);
+			toggle_box.set_value(preferences_dialog_friend::get(pref_name, option.cfg["default"].to_bool()));
 
-				toggle_box.set_visible(widget::visibility::visible);
-				toggle_box.set_value(preferences_dialog_friend::get(pref_name, option.cfg["default"].to_bool()));
+			// A lambda alone would be more verbose because it'd need to specify all the parameters.
+			connect_signal_mouse_left_click(toggle_box, std::bind([&, pref_name]() {
+				preferences_dialog_friend::set(pref_name, toggle_box.get_value_bool());
+			}));
 
-				// A lambda alone would be more verbose because it'd need to specify all the parameters.
-				connect_signal_mouse_left_click(toggle_box, std::bind(
-					[&, pref_name]() { preferences_dialog_friend::set(pref_name, toggle_box.get_value_bool()); }
-				));
+			gui2::bind_status_label<toggle_button>(
+				main_grid, "value_toggle", default_status_value_getter<toggle_button>, "value");
 
-				gui2::bind_status_label<toggle_button>(
-					main_grid, "value_toggle", default_status_value_getter<toggle_button>, "value");
+			break;
+		}
 
-				break;
-			}
+		case preferences::option::avd_type::SLIDER: {
+			auto setter_widget = build_single_widget_instance<slider>(config{"definition", "minimal"});
+			setter_widget->set_id("setter");
+			// Maximum must be set first or this will assert
+			setter_widget->set_value_range(option.cfg["min"].to_int(), option.cfg["max"].to_int());
+			setter_widget->set_step_size(option.cfg["step"].to_int(1));
 
-			case preferences::option::avd_type::SLIDER: {
-				auto setter_widget = build_single_widget_instance<slider>(config {"definition", "minimal"});
-				setter_widget->set_id("setter");
-				// Maximum must be set first or this will assert
-				setter_widget->set_value_range(option.cfg["min"].to_int(), option.cfg["max"].to_int());
-				setter_widget->set_step_size(option.cfg["step"].to_int(1));
+			details_grid.swap_child("setter", std::move(setter_widget), true);
 
-				details_grid.swap_child("setter", std::move(setter_widget), true);
+			slider& slide = details_grid.find_widget<slider>("setter");
 
-				slider& slide = details_grid.find_widget<slider>("setter");
+			slide.set_value(preferences_dialog_friend::get(pref_name, option.cfg["default"].to_int()));
 
-				slide.set_value(preferences_dialog_friend::get(pref_name, option.cfg["default"].to_int()));
+			// A lambda alone would be more verbose because it'd need to specify all the parameters.
+			connect_signal_notify_modified(
+				slide, std::bind([&, pref_name]() { preferences_dialog_friend::set(pref_name, slide.get_value()); }));
 
-				// A lambda alone would be more verbose because it'd need to specify all the parameters.
-				connect_signal_notify_modified(slide, std::bind(
-					[&, pref_name]() { preferences_dialog_friend::set(pref_name, slide.get_value()); }
-				));
+			gui2::bind_status_label<slider>(main_grid, "setter", default_status_value_getter<slider>, "value");
 
-				gui2::bind_status_label<slider>(main_grid, "setter", default_status_value_getter<slider>, "value");
+			break;
+		}
 
-				break;
-			}
+		case preferences::option::avd_type::COMBO: {
+			std::vector<config> menu_data;
+			std::vector<std::string> option_ids;
 
-			case preferences::option::avd_type::COMBO: {
-				std::vector<config> menu_data;
-				std::vector<std::string> option_ids;
-
-				for(const config& choice : option.cfg.child_range("option")) {
-					config menu_item;
-					menu_item["label"] = choice["name"];
-					if(choice.has_attribute("description")) {
-						menu_item["details"] = markup::span_color("#777", choice["description"]);
-					}
-					menu_data.push_back(menu_item);
-					option_ids.push_back(choice["id"]);
+			for(const config& choice : option.cfg.child_range("option")) {
+				config menu_item;
+				menu_item["label"] = choice["name"];
+				if(choice.has_attribute("description")) {
+					menu_item["details"] = markup::span_color("#777", choice["description"]);
 				}
-
-				// Attempt to find an initial selection
-				int selected = std::distance(option_ids.begin(), std::find(option_ids.begin(), option_ids.end(),
-					preferences_dialog_friend::get(pref_name, option.cfg["default"].str())
-				));
-
-				// If the saved option value was invalid, reset selection to 0.
-				if(selected < 0 || selected >= static_cast<int>(option_ids.size())) {
-					selected = 0;
-				}
-
-				auto setter_widget = build_single_widget_instance<menu_button>();
-				setter_widget->set_id("setter");
-
-				details_grid.swap_child("setter", std::move(setter_widget), true);
-
-				menu_button& menu = details_grid.find_widget<menu_button>("setter");
-
-				menu.set_use_markup(true);
-				menu.set_values(menu_data, selected);
-
-				connect_signal_notify_modified(menu,
-					[=](widget& w, auto&&...) { preferences_dialog_friend::set(pref_name, option_ids[dynamic_cast<menu_button&>(w).get_value()]); });
-
-				gui2::bind_status_label<menu_button>(main_grid, "setter", default_status_value_getter<menu_button>, "value");
-
-				break;
+				menu_data.push_back(menu_item);
+				option_ids.push_back(choice["id"]);
 			}
 
-			case preferences::option::avd_type::SPECIAL: {
-				//main_grid->remove_child("setter");
+			// Attempt to find an initial selection
+			int selected = std::distance(option_ids.begin(),
+				std::find(option_ids.begin(), option_ids.end(),
+					preferences_dialog_friend::get(pref_name, option.cfg["default"].str())));
 
-				auto value_widget = build_single_widget_instance<image>();
-				value_widget->set_label("icons/arrows/arrows_blank_right_25.png~CROP(3,3,18,18)");
-
-				main_grid->swap_child("value", std::move(value_widget), true);
-
-				break;
+			// If the saved option value was invalid, reset selection to 0.
+			if(selected < 0 || selected >= static_cast<int>(option_ids.size())) {
+				selected = 0;
 			}
+
+			auto setter_widget = build_single_widget_instance<menu_button>();
+			setter_widget->set_id("setter");
+
+			details_grid.swap_child("setter", std::move(setter_widget), true);
+
+			menu_button& menu = details_grid.find_widget<menu_button>("setter");
+
+			menu.set_use_markup(true);
+			menu.set_values(menu_data, selected);
+
+			connect_signal_notify_modified(menu, [=](widget& w, auto&&...) {
+				preferences_dialog_friend::set(pref_name, option_ids[dynamic_cast<menu_button&>(w).get_value()]);
+			});
+
+			gui2::bind_status_label<menu_button>(
+				main_grid, "setter", default_status_value_getter<menu_button>, "value");
+
+			break;
+		}
+
+		case preferences::option::avd_type::SPECIAL: {
+			// main_grid->remove_child("setter");
+
+			auto value_widget = build_single_widget_instance<image>();
+			value_widget->set_label("icons/arrows/arrows_blank_right_25.png~CROP(3,3,18,18)");
+
+			main_grid->swap_child("value", std::move(value_widget), true);
+
+			break;
+		}
 		}
 	}
 
-	connect_signal_notify_modified(advanced, std::bind(
-		&preferences_dialog::on_advanced_prefs_list_select,
-		this,
-		std::ref(advanced)));
+	connect_signal_notify_modified(
+		advanced, std::bind(&preferences_dialog::on_advanced_prefs_list_select, this, std::ref(advanced)));
 
 	on_advanced_prefs_list_select(advanced);
 
@@ -841,8 +859,7 @@ void preferences_dialog::initialize_callbacks()
 	//
 
 	multimenu_button& hotkey_menu = find_widget<multimenu_button>("hotkey_category_menu");
-	connect_signal_notify_modified(hotkey_menu,
-		std::bind(&preferences_dialog::hotkey_filter_callback, this));
+	connect_signal_notify_modified(hotkey_menu, std::bind(&preferences_dialog::hotkey_filter_callback, this));
 
 	listbox& hotkey_list = setup_hotkey_list();
 
@@ -859,40 +876,31 @@ void preferences_dialog::initialize_callbacks()
 		// Scope columns
 		[this](const std::size_t i) { return !visible_hotkeys_[i]->scope[hotkey::SCOPE_GAME]; },
 		[this](const std::size_t i) { return !visible_hotkeys_[i]->scope[hotkey::SCOPE_EDITOR]; },
-		[this](const std::size_t i) { return !visible_hotkeys_[i]->scope[hotkey::SCOPE_MAIN_MENU]; }
-	);
+		[this](const std::size_t i) { return !visible_hotkeys_[i]->scope[hotkey::SCOPE_MAIN_MENU]; });
 
 	hotkey_list.set_active_sorter("sort_0", sort_order::type::ascending, true);
 
-	connect_signal_mouse_left_click(
-		find_widget<button>("btn_add_hotkey"), std::bind(
-			&preferences_dialog::add_hotkey_callback,
-			this,
-			std::ref(hotkey_list)));
+	connect_signal_mouse_left_click(find_widget<button>("btn_add_hotkey"),
+		std::bind(&preferences_dialog::add_hotkey_callback, this, std::ref(hotkey_list)));
+
+	connect_signal_mouse_left_click(find_widget<button>("btn_clear_hotkey"),
+		std::bind(&preferences_dialog::remove_hotkey_callback, this, std::ref(hotkey_list)));
 
 	connect_signal_mouse_left_click(
-		find_widget<button>("btn_clear_hotkey"), std::bind(
-			&preferences_dialog::remove_hotkey_callback,
-			this,
-			std::ref(hotkey_list)));
-
-	connect_signal_mouse_left_click(
-		find_widget<button>("btn_reset_hotkeys"), std::bind(
-			&preferences_dialog::default_hotkey_callback,
-			this));
+		find_widget<button>("btn_reset_hotkeys"), std::bind(&preferences_dialog::default_hotkey_callback, this));
 }
 
 listbox& preferences_dialog::setup_hotkey_list()
 {
 	widget_data row_data;
 
-	t_string& row_icon   = row_data["img_icon"]["label"];
+	t_string& row_icon = row_data["img_icon"]["label"];
 	t_string& row_action = row_data["lbl_desc"]["label"];
 	t_string& row_hotkey = row_data["lbl_hotkey"]["label"];
 
-	t_string& row_is_g   = row_data["lbl_is_game"]["label"];
-	t_string& row_is_e   = row_data["lbl_is_editor"]["label"];
-	t_string& row_is_m   = row_data["lbl_is_mainmenu"]["label"];
+	t_string& row_is_g = row_data["lbl_is_game"]["label"];
+	t_string& row_is_e = row_data["lbl_is_editor"]["label"];
+	t_string& row_is_m = row_data["lbl_is_mainmenu"]["label"];
 
 	listbox& hotkey_list = find_widget<listbox>("list_hotkeys");
 
@@ -926,8 +934,8 @@ listbox& preferences_dialog::setup_hotkey_list()
 		row_action = hotkey_item.description;
 		row_hotkey = hotkey::get_names(hotkey_item.id);
 
-		row_is_g = hotkey_item.scope[hotkey::SCOPE_GAME]      ? gh : "";
-		row_is_e = hotkey_item.scope[hotkey::SCOPE_EDITOR]    ? eh : "";
+		row_is_g = hotkey_item.scope[hotkey::SCOPE_GAME] ? gh : "";
+		row_is_e = hotkey_item.scope[hotkey::SCOPE_EDITOR] ? eh : "";
 		row_is_m = hotkey_item.scope[hotkey::SCOPE_MAIN_MENU] ? mh : "";
 
 		hotkey_list.add_row(row_data);
@@ -979,11 +987,11 @@ void preferences_dialog::add_hotkey_callback(listbox& hotkeys)
 	}
 
 	if(oldhk && oldhk->get_command() != "null") {
-		const std::string text = VGETTEXT("“<b>$hotkey_sequence|</b>” is in use by “<b>$old_hotkey_action|</b>”.\nDo you wish to reassign it to “<b>$new_hotkey_action|</b>”?", {
-			{"hotkey_sequence",   oldhk->get_name()},
-			{"old_hotkey_action", hotkey::get_hotkey_command(oldhk->get_command()).description},
-			{"new_hotkey_action", hotkey::get_hotkey_command(newhk->get_command()).description}
-		});
+		const std::string text = VGETTEXT("“<b>$hotkey_sequence|</b>” is in use by “<b>$old_hotkey_action|</b>”.\nDo "
+										  "you wish to reassign it to “<b>$new_hotkey_action|</b>”?",
+			{{"hotkey_sequence", oldhk->get_name()},
+				{"old_hotkey_action", hotkey::get_hotkey_command(oldhk->get_command()).description},
+				{"new_hotkey_action", hotkey::get_hotkey_command(newhk->get_command()).description}});
 
 		const int res = gui2::show_message(_("Reassign Hotkey"), text, gui2::dialogs::message::yes_no_buttons, true);
 		if(res != gui2::retval::OK) {
@@ -1098,13 +1106,17 @@ void preferences_dialog::on_advanced_prefs_list_select(listbox& list)
 
 	const bool has_description = !pref.description.empty();
 
-	if(has_description || (pref.type != preferences::option::avd_type::SPECIAL && pref.type != preferences::option::avd_type::TOGGLE)) {
-		list.get_row_grid(selected_row)->find_widget<widget>("prefs_setter_grid")
+	if(has_description
+		|| (pref.type != preferences::option::avd_type::SPECIAL
+			&& pref.type != preferences::option::avd_type::TOGGLE)) {
+		list.get_row_grid(selected_row)
+			->find_widget<widget>("prefs_setter_grid")
 			.set_visible(widget::visibility::visible);
 	}
 
 	if(last_selected_item_ != selected_row) {
-		list.get_row_grid(last_selected_item_)->find_widget<widget>("prefs_setter_grid")
+		list.get_row_grid(last_selected_item_)
+			->find_widget<widget>("prefs_setter_grid")
 			.set_visible(widget::visibility::invisible);
 
 		last_selected_item_ = selected_row;
@@ -1116,8 +1128,7 @@ void preferences_dialog::initialize_tabs(listbox& selector)
 	//
 	// MULTIPLAYER TABS
 	//
-	connect_signal_notify_modified(selector,
-		std::bind(&preferences_dialog::on_tab_select, this));
+	connect_signal_notify_modified(selector, std::bind(&preferences_dialog::on_tab_select, this));
 }
 
 void preferences_dialog::pre_show()
@@ -1136,17 +1147,16 @@ void preferences_dialog::pre_show()
 	gui2::bind_status_label<slider>(this, "turbo_slider");
 	gui2::bind_status_label<slider>(this, "pixel_scale_slider");
 
-	//gui2::bind_status_label<slider>("scaling_slider",   [](slider& s)->std::string {
+	// gui2::bind_status_label<slider>("scaling_slider",   [](slider& s)->std::string {
 	//	return s.get_value_label() + "%";
-	//});
+	// });
 
 	listbox& selector = find_widget<listbox>("selector");
 	stacked_widget& pager = find_widget<stacked_widget>("pager");
 
 	pager.set_find_in_all_layers(true);
 
-	connect_signal_notify_modified(selector,
-		std::bind(&preferences_dialog::on_page_select, this));
+	connect_signal_notify_modified(selector, std::bind(&preferences_dialog::on_page_select, this));
 
 	keyboard_capture(&selector);
 
@@ -1219,14 +1229,13 @@ void preferences_dialog::handle_theme_select()
 	if(display && resources::gamedata && resources::gamedata->get_theme().empty()) {
 		display->set_theme(theme.id);
 	}
-
 }
 
 void preferences_dialog::handle_gui2_theme_select()
 {
 	menu_button& gui2_theme_list = find_widget<menu_button>("choose_gui2_theme");
 	unsigned selected_theme = gui2_theme_list.get_value();
-	if (selected_theme != current_gui_theme_) {
+	if(selected_theme != current_gui_theme_) {
 		current_gui_theme_ = selected_theme;
 		prefs::get().set_gui2_theme(gui2_themes_.at(selected_theme));
 		set_retval(gui2::dialogs::title_screen::RELOAD_UI);
@@ -1235,15 +1244,13 @@ void preferences_dialog::handle_gui2_theme_select()
 
 void preferences_dialog::on_page_select()
 {
-	const int selected_row =
-		std::max(0, find_widget<listbox>("selector").get_selected_row());
+	const int selected_row = std::max(0, find_widget<listbox>("selector").get_selected_row());
 	set_visible_page(static_cast<unsigned int>(selected_row), "pager");
 }
 
 void preferences_dialog::on_tab_select()
 {
-	const int selected_row =
-		std::max(0, find_widget<listbox>("tab_selector").get_selected_row());
+	const int selected_row = std::max(0, find_widget<listbox>("tab_selector").get_selected_row());
 	set_visible_page(static_cast<unsigned int>(selected_row), "tab_pager");
 }
 
@@ -1256,9 +1263,9 @@ void preferences_dialog::post_show()
 	prefs::get().write_preferences();
 
 	// Needed for applying changes to tip panel visiblity on dialog close
-	if (is_reload_needed_) {
+	if(is_reload_needed_) {
 		set_retval(gui2::dialogs::title_screen::RELOAD_UI);
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

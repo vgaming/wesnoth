@@ -54,9 +54,7 @@ gui_definition::gui_definition(const config& cfg)
 	for(const auto& [type_id, widget_parser] : registered_widget_types()) {
 		auto& def_map = widget_types[type_id];
 
-		const std::string key =	widget_parser.key
-			? widget_parser.key
-			: type_id + "_definition";
+		const std::string key = widget_parser.key ? widget_parser.key : type_id + "_definition";
 
 		bool found_default_def = false;
 
@@ -97,9 +95,9 @@ gui_definition::gui_definition(const config& cfg)
 		// The default gui needs to define all window types since we're the
 		// fallback in case another gui doesn't define the window type.
 		for(const auto& window_type : registered_window_types()) {
-			const std::string error_msg(
-				"Window not defined in WML: '" + window_type + "'."
-				"Perhaps a mismatch between data and source versions. Try --data-dir <trunk-dir>");
+			const std::string error_msg("Window not defined in WML: '" + window_type
+				+ "'."
+				  "Perhaps a mismatch between data and source versions. Try --data-dir <trunk-dir>");
 
 			VALIDATE(window_types.find(window_type) != window_types.end(), error_msg);
 		}
@@ -118,11 +116,9 @@ gui_definition::settings_helper::settings_helper(const config& cfg)
 	, sound_slider_adjust(cfg["sound_slider_adjust"])
 	, has_helptip_message(cfg["has_helptip_message"].t_str())
 {
-	VALIDATE(double_click_time > 0ms,
-		missing_mandatory_wml_key("settings", "double_click_time"));
+	VALIDATE(double_click_time > 0ms, missing_mandatory_wml_key("settings", "double_click_time"));
 
-	VALIDATE(!has_helptip_message.empty(),
-		missing_mandatory_wml_key("settings", "has_helptip_message"));
+	VALIDATE(!has_helptip_message.empty(), missing_mandatory_wml_key("settings", "has_helptip_message"));
 }
 
 void gui_definition::activate() const
@@ -185,9 +181,8 @@ resolution_definition_ptr get_control(const std::string& control_type, const std
 	const auto& current_types = current_gui->second.widget_types;
 	const auto& default_types = default_gui->second.widget_types;
 
-	const auto find_definition =
-		[&](const auto& widget_types) -> utils::optional<gui_definition::widget_definition_map_t::const_iterator>
-	{
+	const auto find_definition
+		= [&](const auto& widget_types) -> utils::optional<gui_definition::widget_definition_map_t::const_iterator> {
 		// Get all possible definitions for the given widget type.
 		const auto widget_definitions = widget_types.find(control_type);
 
@@ -229,10 +224,7 @@ resolution_definition_ptr get_control(const std::string& control_type, const std
 		formatter() << "Control: type '" << control_type << "' definition '" << definition << "' has no resolutions.");
 
 	return get_best_resolution(resolutions, [&](const resolution_definition_ptr& ptr) {
-		return point(
-			static_cast<int>(ptr->window_width),
-			static_cast<int>(ptr->window_height)
-		);
+		return point(static_cast<int>(ptr->window_width), static_cast<int>(ptr->window_height));
 	});
 }
 
@@ -264,10 +256,7 @@ const builder_window::window_resolution& get_window_builder(const std::string& t
 	VALIDATE(!resolutions.empty(), formatter() << "Window '" << type << "' has no resolutions.\n");
 
 	return get_best_resolution(resolutions, [&](const builder_window::window_resolution& res) {
-		return point(
-			static_cast<int>(res.window_width),
-			static_cast<int>(res.window_height)
-		);
+		return point(static_cast<int>(res.window_width), static_cast<int>(res.window_height));
 	});
 }
 

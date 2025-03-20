@@ -31,4 +31,4 @@ void do_console_redirect();
  */
 bool using_own_console();
 
-}
+} // namespace lg

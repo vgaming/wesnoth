@@ -19,9 +19,11 @@
 #include "gettext.hpp"
 #include "preferences/preferences.hpp"
 
-namespace utils {
+namespace utils
+{
 
-std::string format_time_summary(std::time_t t) {
+std::string format_time_summary(std::time_t t)
+{
 	std::time_t curtime = std::time(nullptr);
 	const std::tm* timeptr = std::localtime(&curtime);
 	if(timeptr == nullptr) {
@@ -46,8 +48,7 @@ std::string format_time_summary(std::time_t t) {
 			if(prefs::get().use_twelve_hour_clock_format() == false) {
 				// TRANSLATORS: 24-hour time, eg '13:59'
 				format_string = _("%H:%M");
-			}
-			else {
+			} else {
 				// TRANSLATORS: 12-hour time, eg '1:59 PM'
 				format_string = _("%I:%M %p");
 			}
@@ -56,8 +57,7 @@ std::string format_time_summary(std::time_t t) {
 			if(prefs::get().use_twelve_hour_clock_format() == false) {
 				// TRANSLATORS: Day of week + 24-hour time, eg 'Sunday, 13:59'
 				format_string = _("%A, %H:%M");
-			}
-			else {
+			} else {
 				// TRANSLATORS: Day of week + 12-hour time, eg 'Sunday, 1:59 PM'
 				format_string = _("%A, %I:%M %p");
 			}
@@ -76,4 +76,4 @@ std::string format_time_summary(std::time_t t) {
 	return translation::strftime(format_string, &save_time);
 }
 
-}
+} // namespace utils

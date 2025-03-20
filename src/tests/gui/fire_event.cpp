@@ -26,35 +26,25 @@
 
 #include <sstream>
 
-
-static void print(std::stringstream& sstr
-		, const std::string& queue
-		, const std::string& id)
+static void print(std::stringstream& sstr, const std::string& queue, const std::string& id)
 {
 	sstr << queue << ':' << id << '\n';
 }
 
 template<gui2::event::ui_event E>
-void connect_queue(
-		  std::stringstream& sstr
-		, gui2::widget& widget)
+void connect_queue(std::stringstream& sstr, gui2::widget& widget)
 {
 	widget.connect_signal<E>(
-			  std::bind(print, std::ref(sstr), "pre", widget.id())
-			, gui2::event::dispatcher::back_pre_child);
+		std::bind(print, std::ref(sstr), "pre", widget.id()), gui2::event::dispatcher::back_pre_child);
 
 	widget.connect_signal<E>(
-			  std::bind(print, std::ref(sstr), "child", widget.id())
-			, gui2::event::dispatcher::back_child);
+		std::bind(print, std::ref(sstr), "child", widget.id()), gui2::event::dispatcher::back_child);
 
 	widget.connect_signal<E>(
-			  std::bind(print, std::ref(sstr), "post", widget.id())
-			, gui2::event::dispatcher::back_post_child);
+		std::bind(print, std::ref(sstr), "post", widget.id()), gui2::event::dispatcher::back_post_child);
 }
 
-static void connect_signals(
-		  std::stringstream& sstr
-		, gui2::widget& widget)
+static void connect_signals(std::stringstream& sstr, gui2::widget& widget)
 {
 	/** @todo Add the rest of the events. */
 	connect_queue<gui2::event::DRAW>(sstr, widget);
@@ -75,33 +65,28 @@ static void connect_signals(
 	connect_queue<gui2::event::RIGHT_BUTTON_DOUBLE_CLICK>(sstr, widget);
 }
 
-static void add_widget(gui2::grid& grid
-		, std::unique_ptr<gui2::widget> widget
-		, const std::string& id
-		, const unsigned row
-		, const unsigned column)
+static void add_widget(gui2::grid& grid,
+	std::unique_ptr<gui2::widget> widget,
+	const std::string& id,
+	const unsigned row,
+	const unsigned column)
 {
 	BOOST_REQUIRE_NE(widget.get(), static_cast<gui2::widget*>(nullptr));
 
 	widget->set_id(id);
-	grid.set_child(std::move(widget)
-			, row
-			, column
-			, gui2::grid::VERTICAL_GROW_SEND_TO_CLIENT
-				| gui2::grid::HORIZONTAL_GROW_SEND_TO_CLIENT
-			, 0);
+	grid.set_child(std::move(widget), row, column,
+		gui2::grid::VERTICAL_GROW_SEND_TO_CLIENT | gui2::grid::HORIZONTAL_GROW_SEND_TO_CLIENT, 0);
 }
 
 static std::string set_event_order()
 {
-	return
-		"pre:root\n"
-		"pre:level 1\n"
-		"pre:level 2\n"
-		"child:level 2\n"
-		"post:level 2\n"
-		"post:level 1\n"
-		"post:root\n";
+	return "pre:root\n"
+		   "pre:level 1\n"
+		   "pre:level 2\n"
+		   "child:level 2\n"
+		   "post:level 2\n"
+		   "post:level 1\n"
+		   "post:root\n";
 }
 
 /** @todo Add the rest of the events. */

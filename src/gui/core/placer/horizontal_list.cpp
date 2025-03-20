@@ -79,9 +79,7 @@ point placer_horizontal_list::get_origin(const unsigned index) const
 	const unsigned row = index % maximum_rows_;
 	const unsigned column = index / maximum_rows_;
 
-	const int height
-			= row == 0 ? 0
-					   : std::accumulate(rows_.begin(), rows_.begin() + row, 0);
+	const int height = row == 0 ? 0 : std::accumulate(rows_.begin(), rows_.begin() + row, 0);
 
 	return point(columns_[column].first, height);
 }

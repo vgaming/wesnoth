@@ -50,8 +50,7 @@ std::string format_file_list(const std::vector<std::string>& files_original)
 	const std::string& addons_path = filesystem::get_addons_dir();
 	std::vector<std::string> files(files_original);
 
-	for(std::string & file : files)
-	{
+	for(std::string& file : files) {
 		std::string base;
 		std::string filename = filesystem::base_name(file);
 		std::string parent_path;
@@ -92,7 +91,6 @@ std::string format_file_list(const std::vector<std::string>& files_original)
 		//
 
 		if(!is_main_cfg) {
-
 			if(base.size() > filesystem::wml_extension.size()) {
 				const std::size_t suffix_pos = base.size() - filesystem::wml_extension.size();
 				if(base.substr(suffix_pos) == filesystem::wml_extension) {
@@ -124,7 +122,7 @@ std::string format_file_list(const std::vector<std::string>& files_original)
 
 	return utils::bullet_list(files);
 }
-}
+} // namespace
 
 namespace gui2::dialogs
 {
@@ -132,9 +130,9 @@ namespace gui2::dialogs
 REGISTER_DIALOG(wml_error)
 
 wml_error::wml_error(const std::string& summary,
-					   const std::string& post_summary,
-					   const std::vector<std::string>& files,
-					   const std::string& details)
+	const std::string& post_summary,
+	const std::vector<std::string>& files,
+	const std::string& details)
 	: modal_dialog(window_id())
 	, have_files_(!files.empty())
 	, have_post_summary_(!post_summary.empty())
@@ -173,15 +171,13 @@ void wml_error::pre_show()
 	}
 
 	if(!have_post_summary_) {
-		styled_widget& post_summary
-				= find_widget<styled_widget>("post_summary");
+		styled_widget& post_summary = find_widget<styled_widget>("post_summary");
 		post_summary.set_visible(widget::visibility::invisible);
 	}
 
 	button& copy_button = find_widget<button>("copy");
 
-	connect_signal_mouse_left_click(
-			copy_button, std::bind(&wml_error::copy_report_callback, this));
+	connect_signal_mouse_left_click(copy_button, std::bind(&wml_error::copy_report_callback, this));
 }
 
 void wml_error::copy_report_callback()
@@ -189,4 +185,4 @@ void wml_error::copy_report_callback()
 	desktop::clipboard::copy_to_clipboard(report_);
 }
 
-} // end namespace dialogs
+} // namespace gui2::dialogs

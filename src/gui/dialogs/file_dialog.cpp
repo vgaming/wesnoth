@@ -18,10 +18,11 @@
 #include "gui/dialogs/file_dialog.hpp"
 
 #include "cursor.hpp"
-#include "desktop/paths.hpp"
 #include "desktop/open.hpp"
+#include "desktop/paths.hpp"
 #include "filesystem.hpp"
 #include "formula/string_utils.hpp"
+#include "gettext.hpp"
 #include "gui/dialogs/folder_create.hpp"
 #include "gui/dialogs/message.hpp"
 #include "gui/dialogs/transient_message.hpp"
@@ -30,7 +31,6 @@
 #include "gui/widgets/text_box.hpp"
 #include "gui/widgets/toggle_panel.hpp"
 #include "gui/widgets/window.hpp"
-#include "gettext.hpp"
 #include "log.hpp"
 #include "serialization/unicode.hpp"
 
@@ -38,10 +38,10 @@
 #include <functional>
 
 static lg::log_domain log_filedlg{"gui/dialogs/file_dialog"};
-#define ERR_FILEDLG   LOG_STREAM(err,   log_filedlg)
-#define WRN_FILEDLG   LOG_STREAM(warn,  log_filedlg)
-#define LOG_FILEDLG   LOG_STREAM(info,  log_filedlg)
-#define DBG_FILEDLG   LOG_STREAM(debug, log_filedlg)
+#define ERR_FILEDLG LOG_STREAM(err, log_filedlg)
+#define WRN_FILEDLG LOG_STREAM(warn, log_filedlg)
+#define LOG_FILEDLG LOG_STREAM(info, log_filedlg)
+#define DBG_FILEDLG LOG_STREAM(debug, log_filedlg)
 
 namespace fs = filesystem;
 
@@ -90,7 +90,7 @@ inline void isort_dir_entries(std::vector<std::string>& entries)
 	// isn't ideal. No, we don't really need to worry about it. It's just a
 	// cosmetic procedure anyway.
 	std::sort(entries.begin(), entries.end(),
-			  [](const std::string& a, const std::string& b) { return translation::icompare(a, b) < 0; });
+		[](const std::string& a, const std::string& b) { return translation::icompare(a, b) < 0; });
 }
 
 } // unnamed namespace
@@ -161,7 +161,8 @@ file_dialog& file_dialog::set_filename(const std::string& value)
 	return *this;
 }
 
-void file_dialog::check_filename() {
+void file_dialog::check_filename()
+{
 	if(!save_mode_) {
 		return;
 	}
@@ -173,18 +174,18 @@ void file_dialog::check_filename() {
 	const std::string& filename = file_textbox.get_value();
 	styled_widget& validation_msg = find_widget<styled_widget>("validation_msg");
 
-	bool stat_invalid = filename.empty() || (filename.substr(0,1) == ".");
+	bool stat_invalid = filename.empty() || (filename.substr(0, 1) == ".");
 	bool wrong_ext = false;
 
-	if (stat_invalid) {
+	if(stat_invalid) {
 		validation_msg.set_label(_("<span color='#00dcff' size='small'>please enter a filename</span>"));
 		save_btn.set_active(false);
 	} else {
 		// wrong extension check
-		for (const auto& extension : extensions_) {
-			if (filename.size() >= extension.size()) {
-				std::string ext = filename.substr(filename.size()-extension.size());
-				if (ext == extension) {
+		for(const auto& extension : extensions_) {
+			if(filename.size() >= extension.size()) {
+				std::string ext = filename.substr(filename.size() - extension.size());
+				if(ext == extension) {
 					wrong_ext = false;
 					break;
 				} else {
@@ -196,13 +197,16 @@ void file_dialog::check_filename() {
 			}
 		}
 
-		if (wrong_ext) {
+		if(wrong_ext) {
 			utils::string_map i18n_strings;
 			i18n_strings["extensions"] = utils::join(extensions_, ", ");
-			validation_msg.set_label(VGETTEXT("<span color='red'><span face='DejaVuSans'>✘</span> <span size='small'>wrong extension, use $extensions</span></span>", i18n_strings));
+			validation_msg.set_label(VGETTEXT("<span color='red'><span face='DejaVuSans'>✘</span> <span "
+											  "size='small'>wrong extension, use $extensions</span></span>",
+				i18n_strings));
 			save_btn.set_active(false);
-		} else if (std::find_if(filename.begin(), filename.end(), isspace) != filename.end()) {
-			validation_msg.set_label(_("<span color='red'><span face='DejaVuSans'>✘</span> <span size='small'>whitespace is not allowed in filename</span></span>"));
+		} else if(std::find_if(filename.begin(), filename.end(), isspace) != filename.end()) {
+			validation_msg.set_label(_("<span color='red'><span face='DejaVuSans'>✘</span> <span "
+									   "size='small'>whitespace is not allowed in filename</span></span>"));
 			save_btn.set_active(false);
 		} else {
 			validation_msg.set_label("");
@@ -243,7 +247,8 @@ void file_dialog::pre_show()
 	extra_paths_.emplace(desktop::GAME_CORE_DATA_DIR);
 	extra_paths_.emplace(desktop::GAME_USER_DATA_DIR);
 	std::vector<desktop::path_info> bookmarks = desktop::game_paths(extra_paths_);
-	const auto& sys_paths = desktop::system_paths({desktop::SYSTEM_ALL_DRIVES, desktop::SYSTEM_USER_PROFILE, desktop::SYSTEM_ROOTFS});
+	const auto& sys_paths
+		= desktop::system_paths({desktop::SYSTEM_ALL_DRIVES, desktop::SYSTEM_USER_PROFILE, desktop::SYSTEM_ROOTFS});
 	bookmarks.insert(bookmarks.end(), sys_paths.begin(), sys_paths.end());
 
 	bookmark_paths_.clear();
@@ -278,12 +283,9 @@ void file_dialog::pre_show()
 	listbox& filelist = find_widget<listbox>("filelist");
 	text_box& file_textbox = find_widget<text_box>("filename");
 
-	connect_signal_notify_modified(filelist,
-			std::bind(&file_dialog::on_row_selected, this));
-	connect_signal_notify_modified(bookmarks_bar,
-			std::bind(&file_dialog::on_bookmark_selected, this));
-	connect_signal_notify_modified(file_textbox,
-			std::bind(&file_dialog::check_filename, this));
+	connect_signal_notify_modified(filelist, std::bind(&file_dialog::on_row_selected, this));
+	connect_signal_notify_modified(bookmarks_bar, std::bind(&file_dialog::on_bookmark_selected, this));
+	connect_signal_notify_modified(file_textbox, std::bind(&file_dialog::check_filename, this));
 
 	check_filename();
 
@@ -293,18 +295,13 @@ void file_dialog::pre_show()
 	button& bookmark_del_button = find_widget<button>("remove_bookmark");
 	button& open_ext_button = find_widget<button>("open_ext");
 
-	connect_signal_mouse_left_click(mkdir_button,
-			std::bind(&file_dialog::on_dir_create_cmd, this));
-	connect_signal_mouse_left_click(rm_button,
-			std::bind(&file_dialog::on_file_delete_cmd, this));
-	connect_signal_mouse_left_click(bookmark_add_button,
-			std::bind(&file_dialog::on_bookmark_add_cmd, this));
-	connect_signal_mouse_left_click(bookmark_del_button,
-			std::bind(&file_dialog::on_bookmark_del_cmd, this));
+	connect_signal_mouse_left_click(mkdir_button, std::bind(&file_dialog::on_dir_create_cmd, this));
+	connect_signal_mouse_left_click(rm_button, std::bind(&file_dialog::on_file_delete_cmd, this));
+	connect_signal_mouse_left_click(bookmark_add_button, std::bind(&file_dialog::on_bookmark_add_cmd, this));
+	connect_signal_mouse_left_click(bookmark_del_button, std::bind(&file_dialog::on_bookmark_del_cmd, this));
 
-	if (desktop::open_object_is_supported()) {
-		connect_signal_mouse_left_click(open_ext_button,
-			[this](auto&&...) { desktop::open_object(path()); });
+	if(desktop::open_object_is_supported()) {
+		connect_signal_mouse_left_click(open_ext_button, [this](auto&&...) { desktop::open_object(path()); });
 	} else {
 		open_ext_button.set_active(false);
 		open_ext_button.set_tooltip(_("Opening files is not supported, contact your packager"));
@@ -320,7 +317,7 @@ void file_dialog::pre_show()
 
 	refresh_fileview();
 
-	//window.keyboard_capture(find_widget<text_box>("filename", false, true));
+	// window.keyboard_capture(find_widget<text_box>("filename", false, true));
 	keyboard_capture(&file_textbox);
 	add_to_keyboard_chain(&filelist);
 	set_exit_hook(window::exit_hook::always, [this] { return on_exit(); });
@@ -351,9 +348,7 @@ bool file_dialog::on_exit()
 bool file_dialog::is_selection_type_acceptable(file_dialog::SELECTION_TYPE stype) const
 {
 	// TODO: Adapt for implementing directory selection mode.
-	return save_mode_
-			? stype != SELECTION_IS_DIR && stype != SELECTION_PARENT_NOT_FOUND
-			: stype == SELECTION_IS_FILE;
+	return save_mode_ ? stype != SELECTION_IS_DIR && stype != SELECTION_PARENT_NOT_FOUND : stype == SELECTION_IS_FILE;
 }
 
 bool file_dialog::confirm_overwrite(file_dialog::SELECTION_TYPE stype)
@@ -363,8 +358,7 @@ bool file_dialog::confirm_overwrite(file_dialog::SELECTION_TYPE stype)
 		return true;
 	}
 
-	const std::string& message
-			= _("The file already exists. Do you wish to overwrite it?");
+	const std::string& message = _("The file already exists. Do you wish to overwrite it?");
 	return gui2::show_message(_("Confirm"), message, message::yes_no_buttons) != gui2::retval::CANCEL;
 }
 
@@ -372,34 +366,34 @@ bool file_dialog::process_submit_common(const std::string& name)
 {
 	const auto stype = register_new_selection(name);
 
-	//DBG_FILEDLG << "current_dir_=" << current_dir_ << "  current_entry_=" << current_entry_;
+	// DBG_FILEDLG << "current_dir_=" << current_dir_ << "  current_entry_=" << current_entry_;
 
 	if(is_selection_type_acceptable(stype)) {
 		return save_mode_ ? confirm_overwrite(stype) : true;
 	}
 
 	switch(stype) {
-		case SELECTION_IS_DIR:
-			// TODO: Adapt for implementing directory selection mode.
-			sync_bookmarks_bar();
-			refresh_fileview();
+	case SELECTION_IS_DIR:
+		// TODO: Adapt for implementing directory selection mode.
+		sync_bookmarks_bar();
+		refresh_fileview();
+		break;
+	case SELECTION_PARENT_NOT_FOUND:
+		// We get here in save mode or not. Use the file creation language only in
+		// save mode.
+		if(save_mode_) {
+			show_transient_error_message(VGETTEXT("The file or folder $path cannot be created.", {{"path", name}}));
 			break;
-		case SELECTION_PARENT_NOT_FOUND:
-			// We get here in save mode or not. Use the file creation language only in
-			// save mode.
-			if(save_mode_) {
-				show_transient_error_message(VGETTEXT("The file or folder $path cannot be created.", {{"path", name}}));
-				break;
-			}
-			[[fallthrough]];
-		case SELECTION_NOT_FOUND:
-			// We only get here if we aren't in save mode.
-			show_transient_error_message(VGETTEXT("The file or folder $path does not exist.", {{"path", name}}));
-			break;
-		case SELECTION_IS_FILE:
-			// TODO: Adapt for implementing directory selection mode.
-		default:
-			assert(false && "Unimplemented selection mode or semantics");
+		}
+		[[fallthrough]];
+	case SELECTION_NOT_FOUND:
+		// We only get here if we aren't in save mode.
+		show_transient_error_message(VGETTEXT("The file or folder $path does not exist.", {{"path", name}}));
+		break;
+	case SELECTION_IS_FILE:
+		// TODO: Adapt for implementing directory selection mode.
+	default:
+		assert(false && "Unimplemented selection mode or semantics");
 	}
 
 	return false;
@@ -487,7 +481,8 @@ file_dialog::SELECTION_TYPE file_dialog::register_new_selection(const std::strin
 		} else if(fs::file_exists(new_path)) {
 			// FIXME: Perhaps redundant since the three-params call to normalize_path()
 			//        above necessarily validates existence.
-			DBG_FILEDLG << "register_new_selection(): new selection '" << name << "' is a file, symbolic link, or special: " << new_path;
+			DBG_FILEDLG << "register_new_selection(): new selection '" << name
+						<< "' is a file, symbolic link, or special: " << new_path;
 			current_dir_ = fs::directory_name(new_path);
 			current_entry_ = fs::base_name(new_path);
 			return SELECTION_IS_FILE;
@@ -499,7 +494,8 @@ file_dialog::SELECTION_TYPE file_dialog::register_new_selection(const std::strin
 	// exists).
 	const std::string& absolute_parent = fs::normalize_path(new_parent, true, true);
 	if(!absolute_parent.empty()) {
-		DBG_FILEDLG << "register_new_selection(): new selection '" << name << "' does not exist or is not accessible, but parent exists";
+		DBG_FILEDLG << "register_new_selection(): new selection '" << name
+					<< "' does not exist or is not accessible, but parent exists";
 		current_dir_ = absolute_parent;
 		current_entry_ = fs::base_name(name);
 		return SELECTION_NOT_FOUND;
@@ -589,7 +585,8 @@ void file_dialog::refresh_fileview()
 	on_row_selected();
 }
 
-void file_dialog::push_fileview_row(listbox& filelist, const std::string& name, const std::string& icon, bool check_selection)
+void file_dialog::push_fileview_row(
+	listbox& filelist, const std::string& name, const std::string& icon, bool check_selection)
 {
 	// TODO: Hopefully some day GUI2 will allow us to make labels be ellipsized
 	//       dynamically at layout/rendering time.
@@ -607,9 +604,7 @@ void file_dialog::push_fileview_row(listbox& filelist, const std::string& name, 
 	// events for all rows using the GUI2 listbox API. Assign a special retval to
 	// each row that triggers a special check during dialog exit.
 	//
-	last_grid
-		.find_widget<toggle_panel>("item_panel")
-		.set_retval(FILE_DIALOG_ITEM_RETVAL);
+	last_grid.find_widget<toggle_panel>("item_panel").set_retval(FILE_DIALOG_ITEM_RETVAL);
 
 	if(check_selection && name == current_entry_) {
 		filelist.select_last_row(true);
@@ -707,8 +702,7 @@ void file_dialog::on_bookmark_selected()
 
 	// Update bookmark edit controls.
 	button& del_button = find_widget<button>("remove_bookmark");
-	del_button.set_active(user_bookmarks_begin_ >= 0
-						  && current_bookmark_ >= user_bookmarks_begin_);
+	del_button.set_active(user_bookmarks_begin_ >= 0 && current_bookmark_ >= user_bookmarks_begin_);
 }
 
 void file_dialog::on_bookmark_add_cmd()
@@ -747,10 +741,8 @@ void file_dialog::on_bookmark_add_cmd()
 
 void file_dialog::on_bookmark_del_cmd()
 {
-	assert(user_bookmarks_begin_ >= 0
-		   && current_bookmark_ >= 0
-		   && current_bookmark_ >= user_bookmarks_begin_
-		   && current_bookmark_ < static_cast<int>(bookmark_paths_.size()));
+	assert(user_bookmarks_begin_ >= 0 && current_bookmark_ >= 0 && current_bookmark_ >= user_bookmarks_begin_
+		&& current_bookmark_ < static_cast<int>(bookmark_paths_.size()));
 
 	listbox& bookmarks_bar = find_widget<listbox>("bookmarks");
 	desktop::remove_user_bookmark(current_bookmark_ - user_bookmarks_begin_);
@@ -770,9 +762,9 @@ void file_dialog::on_dir_create_cmd()
 		const std::string& new_path = concat_path(current_dir_, new_dir_name);
 
 		if(!fs::make_directory(new_path)) {
-			show_transient_error_message(
-					VGETTEXT("Could not create a new folder at $path|. Make sure you have the appropriate permissions to write to this location.",
-					{{"path", new_path}}));
+			show_transient_error_message(VGETTEXT("Could not create a new folder at $path|. Make sure you have the "
+												  "appropriate permissions to write to this location.",
+				{{"path", new_path}}));
 		} else {
 			refresh_fileview();
 		}
@@ -788,26 +780,23 @@ void file_dialog::on_file_delete_cmd()
 	const std::string& selection = concat_path(current_dir_, current_entry_);
 	const bool is_dir = fs::is_directory(selection);
 
-	const std::string& message = (is_dir
-			? _("The following folder and its contents will be permanently deleted:")
-			: _("The following file will be permanently deleted:"))
-			+ "\n\n" + selection + "\n\n" + _("Do you wish to continue?");
+	const std::string& message = (is_dir ? _("The following folder and its contents will be permanently deleted:")
+										 : _("The following file will be permanently deleted:"))
+		+ "\n\n" + selection + "\n\n" + _("Do you wish to continue?");
 
 	if(gui2::show_message(_("Confirm"), message, message::yes_no_buttons) == gui2::retval::CANCEL) {
 		return;
 	}
 
-	const bool result = is_dir
-			? fs::delete_directory(selection)
-			: fs::delete_file(selection);
+	const bool result = is_dir ? fs::delete_directory(selection) : fs::delete_file(selection);
 
 	if(!result) {
-		show_transient_error_message(
-				VGETTEXT("Could not delete $path|. Make sure you have the appropriate permissions to write to this location.",
-						 {{"path", selection}}));
+		show_transient_error_message(VGETTEXT(
+			"Could not delete $path|. Make sure you have the appropriate permissions to write to this location.",
+			{{"path", selection}}));
 	} else {
 		refresh_fileview();
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

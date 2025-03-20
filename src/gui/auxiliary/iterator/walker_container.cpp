@@ -23,7 +23,9 @@ namespace gui2::iteration
 {
 
 container::container(gui2::container_base& container)
-	: container_(container), widget_(&container), itor_(container.begin())
+	: container_(container)
+	, widget_(&container)
+	, itor_(container.begin())
 {
 }
 
@@ -34,30 +36,30 @@ walker_base::state_t container::next(const level level)
 	}
 
 	switch(level) {
-		case self:
-			if(widget_) {
-				widget_ = nullptr;
-				return invalid;
-			}
-			assert(false);
-			return fail;
-		case internal:
-			if(!entered_grid) {
-				entered_grid = true;
-				in_grid = true;
-				return valid;
-			}
-			if(in_grid) {
-				in_grid = false;
-				return invalid;
-			}
-			assert(false);
-			return fail;
-		case child:
-			if(itor_ != container_.end()) {
-				++itor_;
-				return itor_ == container_.end() ? invalid : valid;
-			}
+	case self:
+		if(widget_) {
+			widget_ = nullptr;
+			return invalid;
+		}
+		assert(false);
+		return fail;
+	case internal:
+		if(!entered_grid) {
+			entered_grid = true;
+			in_grid = true;
+			return valid;
+		}
+		if(in_grid) {
+			in_grid = false;
+			return invalid;
+		}
+		assert(false);
+		return fail;
+	case child:
+		if(itor_ != container_.end()) {
+			++itor_;
+			return itor_ == container_.end() ? invalid : valid;
+		}
 	}
 
 	assert(false);
@@ -67,12 +69,12 @@ walker_base::state_t container::next(const level level)
 bool container::at_end(const level level) const
 {
 	switch(level) {
-		case self:
-			return widget_ == nullptr;
-		case internal:
-			return entered_grid && !in_grid;
-		case child:
-			return (itor_ == container_.end());
+	case self:
+		return widget_ == nullptr;
+	case internal:
+		return entered_grid && !in_grid;
+	case child:
+		return (itor_ == container_.end());
 	}
 
 	assert(false);
@@ -82,16 +84,16 @@ bool container::at_end(const level level) const
 gui2::widget* container::get(const level level)
 {
 	switch(level) {
-		case self:
-			return widget_;
-		case internal:
-			return &container_.get_grid();
-		case child:
-			if(itor_ == container_.end()) {
-				return nullptr;
-			} else {
-				return *itor_;
-			}
+	case self:
+		return widget_;
+	case internal:
+		return &container_.get_grid();
+	case child:
+		if(itor_ == container_.end()) {
+			return nullptr;
+		} else {
+			return *itor_;
+		}
 	}
 
 	assert(false);

@@ -20,8 +20,8 @@
 #include "config_cache.hpp"
 #include "filesystem.hpp"
 #include "gettext.hpp"
-#include "gui/core/log.hpp"
 #include "gui/core/gui_definition.hpp"
+#include "gui/core/log.hpp"
 #include "gui/widgets/settings.hpp"
 #include "serialization/parser.hpp"
 #include "serialization/preprocessor.hpp"
@@ -63,7 +63,8 @@ try {
 auto register_theme(const config& def) -> utils::optional<gui_theme_map_t::iterator>
 try {
 	auto [iter, is_unique] = guis.try_emplace(def["id"], def);
-	if(is_unique) return iter;
+	if(is_unique)
+		return iter;
 
 	ERR_GUI_P << "UI Theme '" << def["id"] << "' already exists.";
 	return utils::nullopt;
@@ -96,7 +97,8 @@ void parse(const std::string& full_path, bool is_core)
 		}
 
 		const auto iter = register_theme(def);
-		if(!iter) continue;
+		if(!iter)
+			continue;
 
 		if(is_default && is_core) {
 			default_gui = *iter;
@@ -153,8 +155,8 @@ void switch_theme(const std::string& theme_id)
 	if(theme_id.empty() || theme_id == "default") {
 		current_gui = default_gui;
 	} else {
-		current_gui = std::find_if(guis.begin(), guis.end(),
-			[&](const auto& theme) { return theme.first == theme_id; });
+		current_gui
+			= std::find_if(guis.begin(), guis.end(), [&](const auto& theme) { return theme.first == theme_id; });
 
 		if(current_gui == guis.end()) {
 			ERR_GUI_P << "Missing [gui] definition for '" << theme_id << "'";

@@ -28,9 +28,10 @@
 #include <cstdint>
 #include <string>
 
-namespace seed_rng {
+namespace seed_rng
+{
 
 uint32_t next_seed();
 std::string next_seed_str();
 
-} // ends seed_rng namespace
+} // namespace seed_rng

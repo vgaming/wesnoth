@@ -44,7 +44,10 @@ void migrate_version_selection::execute()
 	if(mig.versions_.size() > 0) {
 		mig.show();
 	} else {
-		gui2::show_message(_("No Other Version Found"), _("This would import settings from a previous version of Wesnoth, but no other version was found on this device"), gui2::dialogs::message::button_style::auto_close);
+		gui2::show_message(_("No Other Version Found"),
+			_("This would import settings from a previous version of Wesnoth, but no other version was found on this "
+			  "device"),
+			gui2::dialogs::message::button_style::auto_close);
 	}
 }
 
@@ -108,7 +111,8 @@ void migrate_version_selection::post_show()
 			filesystem::get_files_in_dir(migrate_addons_dir, nullptr, &old_addons);
 			filesystem::get_files_in_dir(filesystem::get_addons_dir(), nullptr, &current_addons);
 
-			std::set_difference(old_addons.begin(), old_addons.end(), current_addons.begin(), current_addons.end(), std::back_inserter(migrate_addons));
+			std::set_difference(old_addons.begin(), old_addons.end(), current_addons.begin(), current_addons.end(),
+				std::back_inserter(migrate_addons));
 
 			if(migrate_addons.size() > 0) {
 				ad_hoc_addon_fetch_session(migrate_addons);
@@ -146,8 +150,8 @@ void migrate_version_selection::post_show()
 }
 
 /**
- * Prior to 1.19 linux installs would usually store the credentials and preferences file under XDG_CONFIG_HOME with no version separation.
- * That special handling has been removed, but still needs to be accounted for when migrating
+ * Prior to 1.19 linux installs would usually store the credentials and preferences file under XDG_CONFIG_HOME with no
+ * version separation. That special handling has been removed, but still needs to be accounted for when migrating
  */
 std::string migrate_version_selection::old_config_dir()
 {
@@ -174,7 +178,9 @@ std::string migrate_version_selection::old_config_dir()
 void migrate_version_selection::migrate_credentials(const std::string& migrate_credentials_file)
 {
 	// don't touch the credentials file on migrator re-run if it already exists
-	if(migrate_credentials_file != filesystem::get_credentials_file() && filesystem::file_exists(migrate_credentials_file) && !filesystem::file_exists(filesystem::get_credentials_file())) {
+	if(migrate_credentials_file != filesystem::get_credentials_file()
+		&& filesystem::file_exists(migrate_credentials_file)
+		&& !filesystem::file_exists(filesystem::get_credentials_file())) {
 		filesystem::copy_file(migrate_credentials_file, filesystem::get_credentials_file());
 	}
 }

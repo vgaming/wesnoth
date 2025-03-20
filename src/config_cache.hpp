@@ -49,7 +49,9 @@ public:
 	 * @param name name of preproc define to add.
 	 * @param add true if we should add this.
 	 */
-	scoped_preproc_define_internal(const std::string& name, bool add = true) : name_(name), add_(add)
+	scoped_preproc_define_internal(const std::string& name, bool add = true)
+		: name_(name)
+		, add_(add)
 	{
 		if(add_) {
 			T::instance().add_define(name_);
@@ -73,7 +75,6 @@ protected:
 
 	std::string name_;
 	bool add_;
-
 };
 
 class config_cache;
@@ -165,7 +166,8 @@ private:
 
 	void read_cache(const std::string& path, config& cfg, abstract_validator* validator = nullptr);
 
-	void read_configs(const std::string& path, config& cfg, preproc_map& defines, abstract_validator* validator = nullptr);
+	void read_configs(
+		const std::string& path, config& cfg, preproc_map& defines, abstract_validator* validator = nullptr);
 	void load_configs(const std::string& path, config& cfg, abstract_validator* validator = nullptr);
 	void read_defines_queue();
 	void read_defines_file(const std::string& path);
@@ -173,8 +175,7 @@ private:
 	preproc_map& make_copy_map();
 	void add_defines_map_diff(preproc_map&);
 
-	bool delete_cache_files(const std::vector<std::string>& paths,
-							const std::string& exclude_pattern = "");
+	bool delete_cache_files(const std::vector<std::string>& paths, const std::string& exclude_pattern = "");
 
 protected:
 	//
@@ -213,13 +214,7 @@ public:
 	 */
 	void insert_to_active(const preproc_map::value_type& def);
 
-	enum state
-	{
-		FREE,
-		NEW,
-		ACTIVE,
-		LOCKED
-	};
+	enum state { FREE, NEW, ACTIVE, LOCKED };
 
 private:
 	friend class config_cache;
@@ -269,7 +264,8 @@ class fake_transaction
 	typedef std::unique_ptr<config_cache_transaction> value_type;
 	value_type trans_;
 
-	fake_transaction() : trans_()
+	fake_transaction()
+		: trans_()
 	{
 		if(!config_cache_transaction::is_active()) {
 			trans_.reset(new config_cache_transaction());
@@ -277,4 +273,4 @@ class fake_transaction
 	}
 };
 
-}
+} // namespace game_config

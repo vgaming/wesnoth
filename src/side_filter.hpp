@@ -25,34 +25,37 @@ class filter_context;
 class unit_filter;
 class team;
 
-//side_filter: a class that implements the Standard Side Filter
-class side_filter {
+// side_filter: a class that implements the Standard Side Filter
+class side_filter
+{
 public:
-
 	~side_filter();
 
-	side_filter(const std::string &side_string, const filter_context * fc, bool flat_tod = false);
-	side_filter(const vconfig &cfg, const filter_context * fc, bool flat_tod = false);
+	side_filter(const std::string& side_string, const filter_context* fc, bool flat_tod = false);
+	side_filter(const vconfig& cfg, const filter_context* fc, bool flat_tod = false);
 
-	//match: returns true if and only if the given team matches this filter
+	// match: returns true if and only if the given team matches this filter
 	bool match(const team& t) const;
 	bool match(const int side) const;
 	std::vector<int> get_teams() const;
-	const config& get_config() const {return cfg_.get_config();}
+	const config& get_config() const
+	{
+		return cfg_.get_config();
+	}
 
 private:
-	side_filter(const side_filter &other);
-	side_filter& operator=(const side_filter &other);
+	side_filter(const side_filter& other);
+	side_filter& operator=(const side_filter& other);
 
 	bool match_internal(const team& t) const;
 
-	const vconfig cfg_; //config contains WML for a Standard Side Filter
+	const vconfig cfg_; // config contains WML for a Standard Side Filter
 
 	bool flat_;
 	std::string side_string_;
 
 	/** The filter context for this filter. It should be a pointer because otherwise the default ctor doesn't work */
-	const filter_context * fc_;
+	const filter_context* fc_;
 
 	mutable std::unique_ptr<unit_filter> ufilter_;
 	mutable std::unique_ptr<side_filter> allied_filter_;

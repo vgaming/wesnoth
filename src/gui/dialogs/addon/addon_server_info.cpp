@@ -35,38 +35,30 @@ addon_server_info::addon_server_info(addons_client& client, const std::string& a
 	, needs_refresh_(needs_refresh)
 {
 	connect_signal_mouse_left_click(
-		find_widget<button>("downloads_by_version"),
-		std::bind(&addon_server_info::downloads_by_version, this));
+		find_widget<button>("downloads_by_version"), std::bind(&addon_server_info::downloads_by_version, this));
 
-	connect_signal_mouse_left_click(
-		find_widget<button>("addon_count_by_forum_auth"),
+	connect_signal_mouse_left_click(find_widget<button>("addon_count_by_forum_auth"),
 		std::bind(&addon_server_info::addon_count_by_forum_auth, this));
 
 	connect_signal_mouse_left_click(
-		find_widget<button>("admin_delete_addon"),
-		std::bind(&addon_server_info::admin_delete_addon, this));
+		find_widget<button>("admin_delete_addon"), std::bind(&addon_server_info::admin_delete_addon, this));
 
 	connect_signal_mouse_left_click(
-		find_widget<button>("admin_hide_addon"),
-		std::bind(&addon_server_info::admin_hide_addon, this));
+		find_widget<button>("admin_hide_addon"), std::bind(&addon_server_info::admin_hide_addon, this));
 
 	connect_signal_mouse_left_click(
-		find_widget<button>("admin_unhide_addon"),
-		std::bind(&addon_server_info::admin_unhide_addon, this));
+		find_widget<button>("admin_unhide_addon"), std::bind(&addon_server_info::admin_unhide_addon, this));
 
 	connect_signal_mouse_left_click(
-		find_widget<button>("admin_list_hidden"),
-		std::bind(&addon_server_info::admin_list_hidden, this));
+		find_widget<button>("admin_list_hidden"), std::bind(&addon_server_info::admin_list_hidden, this));
 }
 
 void addon_server_info::pre_show()
 {
-
 }
 
 void addon_server_info::post_show()
 {
-
 }
 
 void addon_server_info::downloads_by_version()
@@ -171,4 +163,4 @@ void addon_server_info::admin_list_hidden()
 	PLAIN_LOG << client_.get_hidden_addons(cfg["uploader"].str(), cfg["passphrase"].str());
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

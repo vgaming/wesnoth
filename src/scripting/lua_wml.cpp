@@ -14,26 +14,28 @@
 */
 
 #include "scripting/lua_wml.hpp"
-#include "scripting/lua_kernel_base.hpp"
 #include "scripting/lua_common.hpp"
+#include "scripting/lua_kernel_base.hpp"
 
-#include "serialization/schema_validator.hpp"
 #include "serialization/parser.hpp"
 #include "serialization/preprocessor.hpp"
+#include "serialization/schema_validator.hpp"
 #include "variable.hpp" // for config_variable_set
 
 #include <fstream>
 
 #include "lua/wrapper_lauxlib.h"
 
-namespace lua_wml {
+namespace lua_wml
+{
 
 /**
-* Dumps a wml table or userdata wml object into a pretty string.
-* - Arg 1: wml table or vconfig userdata
-* - Ret 1: string
-*/
-static int intf_wml_tostring(lua_State* L) {
+ * Dumps a wml table or userdata wml object into a pretty string.
+ * - Arg 1: wml table or vconfig userdata
+ * - Ret 1: string
+ */
+static int intf_wml_tostring(lua_State* L)
+{
 	const config& arg = luaW_checkconfig(L, 1);
 	std::ostringstream stream;
 	write(stream, arg);
@@ -133,10 +135,10 @@ static int intf_clone_wml(lua_State* L)
 }
 
 /**
-* Interpolates variables into a WML table, including [insert_tag]
-* Arg 1: WML table to interpolate into
-* Arg 2: WML table of variables
-*/
+ * Interpolates variables into a WML table, including [insert_tag]
+ * Arg 1: WML table to interpolate into
+ * Arg 2: WML table of variables
+ */
 static int intf_wml_interpolate(lua_State* L)
 {
 	config cfg = luaW_checkconfig(L, 1), vars_cfg = luaW_checkconfig(L, 2);
@@ -147,10 +149,10 @@ static int intf_wml_interpolate(lua_State* L)
 }
 
 /**
-* Tests if a WML table matches a filter
-* Arg 1: table to test
-* Arg 2: filter
-*/
+ * Tests if a WML table matches a filter
+ * Arg 1: table to test
+ * Arg 2: filter
+ */
 static int intf_wml_matches_filter(lua_State* L)
 {
 	config cfg = luaW_checkconfig(L, 1);
@@ -160,10 +162,10 @@ static int intf_wml_matches_filter(lua_State* L)
 }
 
 /**
-* Merges two WML tables
-* Arg 1: base table
-* Arg 2: table to merge in
-*/
+ * Merges two WML tables
+ * Arg 1: base table
+ * Arg 2: table to merge in
+ */
 static int intf_wml_merge(lua_State* L)
 {
 	config base = luaW_checkconfig(L, 1);
@@ -187,10 +189,10 @@ static int intf_wml_merge(lua_State* L)
 }
 
 /**
-* Computes a diff of two WML tables
-* Arg 1: left table
-* Arg 2: right table
-*/
+ * Computes a diff of two WML tables
+ * Arg 1: left table
+ * Arg 2: right table
+ */
 static int intf_wml_diff(lua_State* L)
 {
 	config lhs = luaW_checkconfig(L, 1);
@@ -200,10 +202,10 @@ static int intf_wml_diff(lua_State* L)
 }
 
 /**
-* Applies a diff to a WML table
-* Arg 1: base table
-* Arg 2: WML diff
-*/
+ * Applies a diff to a WML table
+ * Arg 1: base table
+ * Arg 2: WML diff
+ */
 static int intf_wml_patch(lua_State* L)
 {
 	config base = luaW_checkconfig(L, 1);
@@ -214,10 +216,10 @@ static int intf_wml_patch(lua_State* L)
 }
 
 /**
-* Tests if two WML tables are equal (have the same keys and values, same tags, recursively)
-* Arg 1: left table
-* Arg 2: right table
-*/
+ * Tests if two WML tables are equal (have the same keys and values, same tags, recursively)
+ * Arg 1: left table
+ * Arg 2: right table
+ */
 static int intf_wml_equal(lua_State* L)
 {
 	config left = luaW_checkconfig(L, 1);
@@ -227,39 +229,42 @@ static int intf_wml_equal(lua_State* L)
 }
 
 /**
-* Tests if a table represents a valid WML table
-* Arg 1: table
-*/
+ * Tests if a table represents a valid WML table
+ * Arg 1: table
+ */
 static int intf_wml_valid(lua_State* L)
 {
 	config test;
 	if(luaW_toconfig(L, 1, test)) {
-		// The validate_wml call is PROBABLY redundant, but included just in case validation changes and toconfig isn't updated to match
+		// The validate_wml call is PROBABLY redundant, but included just in case validation changes and toconfig isn't
+		// updated to match
 		lua_pushboolean(L, test.validate_wml());
-	} else lua_pushboolean(L, false);
+	} else
+		lua_pushboolean(L, false);
 	return 1;
 }
 
-int luaW_open(lua_State* L) {
+int luaW_open(lua_State* L)
+{
 	auto& lk = lua_kernel_base::get_lua_kernel<lua_kernel_base>(L);
 	lk.add_log("Adding wml module...\n");
-	static luaL_Reg const wml_callbacks[]= {
-		{ "load",      &intf_load_wml},
-		{ "parse",     &intf_parse_wml},
-		{ "clone",     &intf_clone_wml},
-		{ "merge",     &intf_wml_merge},
-		{ "diff",     &intf_wml_diff},
-		{ "patch",     &intf_wml_patch},
-		{ "equal",     &intf_wml_equal},
-		{ "valid",     &intf_wml_valid},
-		{ "matches_filter", &intf_wml_matches_filter},
-		{ "tostring",       &intf_wml_tostring},
-		{ "interpolate",    &intf_wml_interpolate},
-		{ nullptr, nullptr },
+	static luaL_Reg const wml_callbacks[] = {
+		{"load", &intf_load_wml},
+		{"parse", &intf_parse_wml},
+		{"clone", &intf_clone_wml},
+		{"merge", &intf_wml_merge},
+		{"diff", &intf_wml_diff},
+		{"patch", &intf_wml_patch},
+		{"equal", &intf_wml_equal},
+		{"valid", &intf_wml_valid},
+		{"matches_filter", &intf_wml_matches_filter},
+		{"tostring", &intf_wml_tostring},
+		{"interpolate", &intf_wml_interpolate},
+		{nullptr, nullptr},
 	};
 	lua_newtable(L);
 	luaL_setfuncs(L, wml_callbacks, 0);
 	return 1;
 }
 
-}
+} // namespace lua_wml

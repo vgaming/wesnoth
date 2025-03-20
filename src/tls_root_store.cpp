@@ -31,18 +31,17 @@ static lg::log_domain log_network("network");
 namespace network_asio
 {
 
-void load_tls_root_certs(boost::asio::ssl::context &ctx)
+void load_tls_root_certs(boost::asio::ssl::context& ctx)
 {
 #ifdef _WIN32
 	HCERTSTORE hStore = CertOpenSystemStore(0, TEXT("ROOT"));
 	assert(hStore != NULL);
 
-	X509_STORE *store = X509_STORE_new();
+	X509_STORE* store = X509_STORE_new();
 	PCCERT_CONTEXT pContext = NULL;
-	while ((pContext = CertEnumCertificatesInStore(hStore, pContext)) != NULL) {
-		X509 *x509 = d2i_X509(NULL,
-			const_cast<const unsigned char**>(&pContext->pbCertEncoded),
-			pContext->cbCertEncoded);
+	while((pContext = CertEnumCertificatesInStore(hStore, pContext)) != NULL) {
+		X509* x509
+			= d2i_X509(NULL, const_cast<const unsigned char**>(&pContext->pbCertEncoded), pContext->cbCertEncoded);
 		if(x509 != NULL) {
 			X509_STORE_add_cert(store, x509);
 			X509_free(x509);
@@ -54,7 +53,7 @@ void load_tls_root_certs(boost::asio::ssl::context &ctx)
 
 	SSL_CTX_set_cert_store(ctx.native_handle(), store);
 #elif defined(__APPLE__)
-	X509_STORE *store = X509_STORE_new();
+	X509_STORE* store = X509_STORE_new();
 	CFArrayRef certs = NULL;
 	// copy all system certs
 	OSStatus os_status = SecTrustCopyAnchorCertificates(&certs);
@@ -63,7 +62,7 @@ void load_tls_root_certs(boost::asio::ssl::context &ctx)
 	if(os_status != 0) {
 		ERR_NW << "Error enumerating certificates.";
 
-		if (certs != NULL) {
+		if(certs != NULL) {
 			CFRelease(certs);
 		}
 		return;
@@ -104,4 +103,4 @@ void load_tls_root_certs(boost::asio::ssl::context &ctx)
 #endif
 }
 
-}
+} // namespace network_asio

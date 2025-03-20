@@ -19,10 +19,11 @@
  * @file
  */
 
-#include "ai/manager.hpp"
 #include "ai/gamestate_observer.hpp"
+#include "ai/manager.hpp"
 
-namespace ai {
+namespace ai
+{
 // =======================================================================
 
 gamestate_observer::gamestate_observer()
@@ -31,29 +32,25 @@ gamestate_observer::gamestate_observer()
 	ai::manager::get_singleton().add_gamestate_observer(this);
 }
 
-
 gamestate_observer::~gamestate_observer()
 {
 	ai::manager::get_singleton().remove_gamestate_observer(this);
 }
 
-
-void gamestate_observer::handle_generic_event(const std::string &/*event_name*/)
+void gamestate_observer::handle_generic_event(const std::string& /*event_name*/)
 {
 	++gamestate_change_counter_;
 }
 
-
 bool gamestate_observer::is_gamestate_changed()
 {
-	return (gamestate_change_counter_>0);
+	return (gamestate_change_counter_ > 0);
 }
-
 
 void gamestate_observer::reset()
 {
-	gamestate_change_counter_=0;
+	gamestate_change_counter_ = 0;
 }
 
 // =======================================================================
-} //end of namespace ai
+} // end of namespace ai

@@ -18,9 +18,8 @@
 
 #include "ai/configuration.hpp"
 #include "chat_log.hpp"
-#include "formula/string_utils.hpp"
-#include "serialization/markup.hpp"
 #include "formatter.hpp"
+#include "formula/string_utils.hpp"
 #include "game_config.hpp"
 #include "gettext.hpp"
 #include "gui/dialogs/multiplayer/faction_select.hpp"
@@ -34,9 +33,10 @@
 #include "gui/widgets/slider.hpp"
 #include "gui/widgets/tree_view.hpp"
 #include "gui/widgets/tree_view_node.hpp"
-#include "hotkey/hotkey_item.hpp"
 #include "hotkey/hotkey_command.hpp"
+#include "hotkey/hotkey_item.hpp"
 #include "mp_ui_alerts.hpp"
+#include "serialization/markup.hpp"
 #include "units/types.hpp"
 #include "wesnothd_connection.hpp"
 
@@ -77,16 +77,17 @@ void mp_staging::pre_show()
 	// Ctrl+G triggers 'I'm Ready' (ok) button's functionality
 	register_hotkey(hotkey::HOTKEY_MP_START_GAME, std::bind(&mp_staging::start_game, this));
 	std::stringstream tooltip;
-	tooltip
-		<< vgettext_impl("wesnoth", "Hotkey(s): ",  {{}})
-		<< hotkey::get_names(hotkey::hotkey_command::get_command_by_command(hotkey::HOTKEY_MP_START_GAME).id);
+	tooltip << vgettext_impl("wesnoth", "Hotkey(s): ", {{}})
+			<< hotkey::get_names(hotkey::hotkey_command::get_command_by_command(hotkey::HOTKEY_MP_START_GAME).id);
 	find_widget<button>("ok").set_tooltip(tooltip.str());
 
 	//
 	// Set title and status widget states
 	//
 	label& title = find_widget<label>("title");
-	title.set_label((formatter() << connect_engine_.params().name << " " << font::unicode_em_dash << " " << connect_engine_.scenario()["name"].t_str()).str());
+	title.set_label((formatter() << connect_engine_.params().name << " " << font::unicode_em_dash << " "
+								 << connect_engine_.scenario()["name"].t_str())
+			.str());
 
 	update_status_label_and_buttons();
 
@@ -95,7 +96,8 @@ void mp_staging::pre_show()
 	//
 	for(const auto& side : connect_engine_.side_engines()) {
 		if(side->allow_player() || game_config::debug) {
-			add_side_node(side);;
+			add_side_node(side);
+			;
 		}
 	}
 
@@ -124,8 +126,9 @@ void mp_staging::pre_show()
 	plugins_context_.reset(new plugins_context("Multiplayer Staging"));
 
 	plugins_context_->set_callback("launch", [this](const config&) { set_retval(retval::OK); }, false);
-	plugins_context_->set_callback("quit",   [this](const config&) { set_retval(retval::CANCEL); }, false);
-	plugins_context_->set_callback("chat",   [&chat](const config& cfg) { chat.send_chat_message(cfg["message"], false); }, true);
+	plugins_context_->set_callback("quit", [this](const config&) { set_retval(retval::CANCEL); }, false);
+	plugins_context_->set_callback(
+		"chat", [&chat](const config& cfg) { chat.send_chat_message(cfg["message"], false); }, true);
 }
 
 int mp_staging::get_side_node_position(const ng::side_engine_ptr& side) const
@@ -195,10 +198,10 @@ void mp_staging::add_side_node(const ng::side_engine_ptr& side)
 	const bool fls = connect_engine_.force_lock_settings();
 	const bool ums = connect_engine_.params().use_map_settings;
 
-	const bool lock_gold   = side->cfg()["gold_lock"].to_bool(fls);
+	const bool lock_gold = side->cfg()["gold_lock"].to_bool(fls);
 	const bool lock_income = side->cfg()["income_lock"].to_bool(fls);
-	const bool lock_team   = side->cfg()["team_lock"].to_bool(fls);
-	const bool lock_color  = side->cfg()["color_lock"].to_bool(fls);
+	const bool lock_team = side->cfg()["team_lock"].to_bool(fls);
+	const bool lock_color = side->cfg()["color_lock"].to_bool(fls);
 
 	const bool saved_game = connect_engine_.params().saved_game == saved_game_mode::type::midgame;
 
@@ -227,8 +230,8 @@ void mp_staging::add_side_node(const ng::side_engine_ptr& side)
 
 	ai_selection.set_values(ai_options, selection);
 
-	connect_signal_notify_modified(ai_selection,
-		std::bind(&mp_staging::on_ai_select, this, side, std::ref(ai_selection), saved_game));
+	connect_signal_notify_modified(
+		ai_selection, std::bind(&mp_staging::on_ai_select, this, side, std::ref(ai_selection), saved_game));
 
 	on_ai_select(side, ai_selection, saved_game);
 	//
@@ -244,8 +247,8 @@ void mp_staging::add_side_node(const ng::side_engine_ptr& side)
 	controller_selection.set_values(controller_names, side->current_controller_index());
 	controller_selection.set_active(controller_names.size() > 1);
 
-	connect_signal_notify_modified(controller_selection,
-		std::bind(&mp_staging::on_controller_select, this, side, std::ref(row_grid)));
+	connect_signal_notify_modified(
+		controller_selection, std::bind(&mp_staging::on_controller_select, this, side, std::ref(row_grid)));
 
 	on_controller_select(side, row_grid);
 
@@ -254,11 +257,11 @@ void mp_staging::add_side_node(const ng::side_engine_ptr& side)
 	//
 	button& leader_select = row_grid.find_widget<button>("select_leader");
 
-	//todo: shouldn't this also be disabled when the flg settings are locked.
+	// todo: shouldn't this also be disabled when the flg settings are locked.
 	leader_select.set_active(!saved_game);
 
-	connect_signal_mouse_left_click(leader_select,
-		std::bind(&mp_staging::select_leader_callback, this, side, std::ref(row_grid)));
+	connect_signal_mouse_left_click(
+		leader_select, std::bind(&mp_staging::select_leader_callback, this, side, std::ref(row_grid)));
 
 	//
 	// Team
@@ -294,11 +297,11 @@ void mp_staging::add_side_node(const ng::side_engine_ptr& side)
 	menu_button& team_selection = row_grid.find_widget<menu_button>("side_team");
 
 	team_selection.set_values(team_names, initial_team_selection);
-	//todo: shouldn't this also be disabled when team settings are locked.
+	// todo: shouldn't this also be disabled when team settings are locked.
 	team_selection.set_active(!saved_game);
 
-	connect_signal_notify_modified(team_selection,
-		std::bind(&mp_staging::on_team_select, this, side, std::ref(team_selection)));
+	connect_signal_notify_modified(
+		team_selection, std::bind(&mp_staging::on_team_select, this, side, std::ref(team_selection)));
 
 	//
 	// Colors
@@ -309,14 +312,12 @@ void mp_staging::add_side_node(const ng::side_engine_ptr& side)
 		auto color = game_config::team_rgb_colors.find(color_opt);
 		auto team_color = _("Invalid Color");
 
-		if (name != game_config::team_rgb_name.end() && color != game_config::team_rgb_colors.end()) {
+		if(name != game_config::team_rgb_name.end() && color != game_config::team_rgb_colors.end()) {
 			team_color = markup::span_color(color->second[0], name->second);
 		}
 
 		color_options.emplace_back(
-			"label", team_color,
-			"icon", (formatter() << "misc/status.png~RC(magenta>" << color_opt << ")").str()
-		);
+			"label", team_color, "icon", (formatter() << "misc/status.png~RC(magenta>" << color_opt << ")").str());
 	}
 
 	menu_button& color_selection = row_grid.find_widget<menu_button>("side_color");
@@ -325,8 +326,8 @@ void mp_staging::add_side_node(const ng::side_engine_ptr& side)
 	color_selection.set_active(!saved_game);
 	color_selection.set_use_markup(true);
 
-	connect_signal_notify_modified(color_selection,
-		std::bind(&mp_staging::on_color_select, this, side, std::ref(row_grid)));
+	connect_signal_notify_modified(
+		color_selection, std::bind(&mp_staging::on_color_select, this, side, std::ref(row_grid)));
 
 	//
 	// Gold and Income
@@ -336,9 +337,7 @@ void mp_staging::add_side_node(const ng::side_engine_ptr& side)
 		// the dialog WML. However, if a side specifies a value out of that range,
 		// we adjust the bounds to accommodate it.
 		slider.set_value_range(
-			std::min(value, slider.get_minimum_value()),
-			std::max(value, slider.get_maximum_value())
-		);
+			std::min(value, slider.get_minimum_value()), std::max(value, slider.get_maximum_value()));
 
 		slider.set_value(value);
 	};
@@ -346,14 +345,15 @@ void mp_staging::add_side_node(const ng::side_engine_ptr& side)
 	slider& slider_gold = row_grid.find_widget<slider>("side_gold_slider");
 	slider_setup_helper(slider_gold, side->gold());
 
-	connect_signal_notify_modified(slider_gold, std::bind(
-		&mp_staging::on_side_slider_change<&ng::side_engine::set_gold>, this, side, std::ref(slider_gold)));
+	connect_signal_notify_modified(slider_gold,
+		std::bind(&mp_staging::on_side_slider_change<&ng::side_engine::set_gold>, this, side, std::ref(slider_gold)));
 
 	slider& slider_income = row_grid.find_widget<slider>("side_income_slider");
 	slider_setup_helper(slider_income, side->income());
 
-	connect_signal_notify_modified(slider_income, std::bind(
-		&mp_staging::on_side_slider_change<&ng::side_engine::set_income>, this, side, std::ref(slider_income)));
+	connect_signal_notify_modified(slider_income,
+		std::bind(
+			&mp_staging::on_side_slider_change<&ng::side_engine::set_income>, this, side, std::ref(slider_income)));
 
 	// TODO: maybe display the saved values
 	if(saved_game) {
@@ -375,11 +375,12 @@ void mp_staging::add_side_node(const ng::side_engine_ptr& side)
 
 void mp_staging::on_controller_select(const ng::side_engine_ptr& side, grid& row_grid)
 {
-	menu_button& ai_selection         = row_grid.find_widget<menu_button>("ai_controller");
+	menu_button& ai_selection = row_grid.find_widget<menu_button>("ai_controller");
 	menu_button& controller_selection = row_grid.find_widget<menu_button>("controller");
 
 	if(side->controller_changed(controller_selection.get_value())) {
-		ai_selection.set_visible(side->controller() == ng::CNTR_COMPUTER ? widget::visibility::visible : widget::visibility::hidden);
+		ai_selection.set_visible(
+			side->controller() == ng::CNTR_COMPUTER ? widget::visibility::visible : widget::visibility::hidden);
 
 		set_state_changed();
 	}
@@ -460,7 +461,7 @@ void mp_staging::select_leader_callback(const ng::side_engine_ptr& side, grid& r
 	}
 }
 
-template<void(ng::side_engine::*fptr)(int)>
+template<void (ng::side_engine::*fptr)(int)>
 void mp_staging::on_side_slider_change(const ng::side_engine_ptr& side, slider& slider)
 {
 	std::invoke(fptr, side, slider.get_value());
@@ -471,8 +472,10 @@ void mp_staging::on_side_slider_change(const ng::side_engine_ptr& side, slider& 
 void mp_staging::update_leader_display(const ng::side_engine_ptr& side, grid& row_grid)
 {
 	// BIG FAT TODO: get rid of this shitty "null" string value in the FLG manager
-	std::string current_leader = side->flg().current_leader() != "null" ? side->flg().current_leader() : font::unicode_em_dash;
-	const std::string current_gender = side->flg().current_gender() != "null" ? side->flg().current_gender() : font::unicode_em_dash;
+	std::string current_leader
+		= side->flg().current_leader() != "null" ? side->flg().current_leader() : font::unicode_em_dash;
+	const std::string current_gender
+		= side->flg().current_gender() != "null" ? side->flg().current_gender() : font::unicode_em_dash;
 
 	// Sprite
 	std::string new_image;
@@ -511,11 +514,10 @@ void mp_staging::update_leader_display(const ng::side_engine_ptr& side, grid& ro
 
 void mp_staging::update_status_label_and_buttons()
 {
-	find_widget<label>("status_label").set_label(
-		connect_engine_.can_start_game() ? "" : connect_engine_.sides_available()
-			? _("Waiting for players to join...")
-			: _("Waiting for players to choose factions...")
-	);
+	find_widget<label>("status_label")
+		.set_label(connect_engine_.can_start_game() ? ""
+				: connect_engine_.sides_available() ? _("Waiting for players to join...")
+													: _("Waiting for players to choose factions..."));
 
 	find_widget<button>("ok").set_active(connect_engine_.can_start_game());
 }
@@ -595,4 +597,4 @@ void mp_staging::post_show()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

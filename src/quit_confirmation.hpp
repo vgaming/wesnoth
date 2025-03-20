@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 
 #include <functional>
 
@@ -29,9 +29,15 @@ class quit_confirmation
 {
 public:
 	explicit quit_confirmation(const std::function<bool()>& prompt = &quit_confirmation::default_prompt)
-		: prompt_(prompt) { blockers_.push_back(this); }
+		: prompt_(prompt)
+	{
+		blockers_.push_back(this);
+	}
 
-	~quit_confirmation() { blockers_.pop_back(); }
+	~quit_confirmation()
+	{
+		blockers_.pop_back();
+	}
 
 	/**
 	 * Shows the quit confirmation if needed.
@@ -51,7 +57,7 @@ private:
 	quit_confirmation(const quit_confirmation&) = delete;
 	const quit_confirmation& operator=(const quit_confirmation&) = delete;
 
-	static inline std::vector<quit_confirmation*> blockers_ {};
+	static inline std::vector<quit_confirmation*> blockers_{};
 	static inline bool open_ = false;
 
 	std::function<bool()> prompt_;

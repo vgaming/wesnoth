@@ -25,14 +25,13 @@ namespace gui2::dialogs
 
 REGISTER_DIALOG(editor_edit_scenario)
 
-editor_edit_scenario::editor_edit_scenario(
-		std::string& id,
-		std::string& name,
-		std::string& description,
-		int& turns,
-		int& experience_modifier,
-		bool& victory_when_enemies_defeated,
-		bool& random_start_time)
+editor_edit_scenario::editor_edit_scenario(std::string& id,
+	std::string& name,
+	std::string& description,
+	int& turns,
+	int& experience_modifier,
+	bool& victory_when_enemies_defeated,
+	bool& random_start_time)
 	: modal_dialog(window_id())
 {
 	register_text("id", true, id, true);
@@ -40,9 +39,7 @@ editor_edit_scenario::editor_edit_scenario(
 	register_text("description", true, description, false);
 	register_integer("turns", true, turns);
 	register_integer("experience_modifier", true, experience_modifier);
-	register_bool("victory_when_enemies_defeated",
-				  true,
-				  victory_when_enemies_defeated);
+	register_bool("victory_when_enemies_defeated", true, victory_when_enemies_defeated);
 	register_bool("random_start_time", true, random_start_time);
 }
 
@@ -53,4 +50,4 @@ void editor_edit_scenario::pre_show()
 	add_to_tab_order(find_widget<text_box>("description", false, true));
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

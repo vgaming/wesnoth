@@ -34,16 +34,16 @@
 #include "apple_version.hpp"
 #include "serialization/string_utils.hpp"
 
-#include <map>
 #include <boost/algorithm/string/trim.hpp>
+#include <map>
 
 #elif defined(_X11)
 
 #include "serialization/string_utils.hpp"
 
+#include <boost/algorithm/string/trim.hpp>
 #include <cerrno>
 #include <map>
-#include <boost/algorithm/string/trim.hpp>
 
 #endif
 
@@ -96,9 +96,11 @@ std::string windows_release_id()
 	char buf[256]{""};
 	DWORD size = sizeof(buf);
 
-	auto res = RegGetValueA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion", RRF_RT_REG_SZ, nullptr, buf, &size);
+	auto res = RegGetValueA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion",
+		RRF_RT_REG_SZ, nullptr, buf, &size);
 	if(res != ERROR_SUCCESS) {
-		res = RegGetValueA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ReleaseId", RRF_RT_REG_SZ, nullptr, buf, &size);
+		res = RegGetValueA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ReleaseId",
+			RRF_RT_REG_SZ, nullptr, buf, &size);
 	}
 
 	return std::string{res == ERROR_SUCCESS ? buf : ""};
@@ -111,18 +113,18 @@ std::string windows_runtime_arch()
 	GetNativeSystemInfo(&si);
 
 	switch(si.wProcessorArchitecture) {
-		case PROCESSOR_ARCHITECTURE_INTEL:
-			return "x86";
-		case PROCESSOR_ARCHITECTURE_AMD64:
-			return "x86_64";
-		case PROCESSOR_ARCHITECTURE_ARM:
-			return "arm";
-		case PROCESSOR_ARCHITECTURE_ARM64:
-			return "arm64";
-		case PROCESSOR_ARCHITECTURE_IA64:
-			return "ia64";
-		default:
-			return _("cpu_architecture^<unknown>");
+	case PROCESSOR_ARCHITECTURE_INTEL:
+		return "x86";
+	case PROCESSOR_ARCHITECTURE_AMD64:
+		return "x86_64";
+	case PROCESSOR_ARCHITECTURE_ARM:
+		return "arm";
+	case PROCESSOR_ARCHITECTURE_ARM64:
+		return "arm64";
+	case PROCESSOR_ARCHITECTURE_IA64:
+		return "ia64";
+	default:
+		return _("cpu_architecture^<unknown>");
 	}
 }
 
@@ -134,7 +136,12 @@ std::string windows_runtime_arch()
  */
 struct posix_pipe_release_policy
 {
-	void operator()(std::FILE* f) const { if(f != nullptr) { pclose(f); } }
+	void operator()(std::FILE* f) const
+	{
+		if(f != nullptr) {
+			pclose(f);
+		}
+	}
 };
 
 /**
@@ -286,10 +293,7 @@ std::string os_version()
 	// POSIX uname version fallback.
 	//
 
-	return formatter() << u.sysname << ' '
-						<< u.release << ' '
-						<< u.version << ' '
-						<< u.machine;
+	return formatter() << u.sysname << ' ' << u.release << ' ' << u.version << ' ' << u.machine;
 
 #elif defined(_WIN32)
 
@@ -297,8 +301,7 @@ std::string os_version()
 	// Windows version.
 	//
 
-	static const std::string base
-			= !on_wine() ? "Microsoft Windows" : "Wine/Microsoft Windows";
+	static const std::string base = !on_wine() ? "Microsoft Windows" : "Wine/Microsoft Windows";
 
 	OSVERSIONINFOEX v;
 
@@ -310,7 +313,7 @@ std::string os_version()
 // See https://msdn.microsoft.com/en-us/library/windows/desktop/ms724451(v=vs.85).aspx
 // for more info.
 #pragma warning(push)
-#pragma warning(disable:4996)
+#pragma warning(disable : 4996)
 #endif
 	if(!GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&v))) {
 		ERR_DU << "os_version: GetVersionEx error (" << GetLastError() << ')';
@@ -323,61 +326,60 @@ std::string os_version()
 	const DWORD vnum = v.dwMajorVersion * 100 + v.dwMinorVersion;
 	std::string version;
 
-	switch(vnum)
-	{
-		case 500:
-			version = "2000";
-			break;
-		case 501:
-			version = "XP";
-			break;
-		case 502:
-			// This will misidentify XP x64 but who really cares?
-			version = "Server 2003";
-			break;
-		case 600:
-			if(v.wProductType == VER_NT_WORKSTATION) {
-				version = "Vista";
-			} else {
-				version = "Server 2008";
+	switch(vnum) {
+	case 500:
+		version = "2000";
+		break;
+	case 501:
+		version = "XP";
+		break;
+	case 502:
+		// This will misidentify XP x64 but who really cares?
+		version = "Server 2003";
+		break;
+	case 600:
+		if(v.wProductType == VER_NT_WORKSTATION) {
+			version = "Vista";
+		} else {
+			version = "Server 2008";
+		}
+		break;
+	case 601:
+		if(v.wProductType == VER_NT_WORKSTATION) {
+			version = "7";
+		} else {
+			version = "Server 2008 R2";
+		}
+		break;
+	case 602:
+		if(v.wProductType == VER_NT_WORKSTATION) {
+			version = "8";
+		} else {
+			version = "Server 2012";
+		}
+		break;
+	case 603:
+		if(v.wProductType == VER_NT_WORKSTATION) {
+			version = "8.1";
+		} else {
+			version = "Server 2012 R2";
+		}
+		break;
+	case 1000:
+		if(v.wProductType == VER_NT_WORKSTATION) {
+			version = v.dwBuildNumber < 22000 ? "10" : "11";
+			const auto& release_id = windows_release_id();
+			if(!release_id.empty()) {
+				version += ' ';
+				version += release_id;
 			}
 			break;
-		case 601:
-			if(v.wProductType == VER_NT_WORKSTATION) {
-				version = "7";
-			} else {
-				version = "Server 2008 R2";
-			}
-			break;
-		case 602:
-			if(v.wProductType == VER_NT_WORKSTATION) {
-				version = "8";
-			} else {
-				version = "Server 2012";
-			}
-			break;
-		case 603:
-			if(v.wProductType == VER_NT_WORKSTATION) {
-				version = "8.1";
-			} else {
-				version = "Server 2012 R2";
-			}
-			break;
-		case 1000:
-			if(v.wProductType == VER_NT_WORKSTATION) {
-				version = v.dwBuildNumber < 22000 ? "10" : "11";
-				const auto& release_id = windows_release_id();
-				if(!release_id.empty()) {
-					version += ' ';
-					version += release_id;
-				}
-				break;
-			} // else fallback to default
-			[[fallthrough]];
-		default:
-			if(v.wProductType != VER_NT_WORKSTATION) {
-				version = "Server";
-			}
+		} // else fallback to default
+		[[fallthrough]];
+	default:
+		if(v.wProductType != VER_NT_WORKSTATION) {
+			version = "Server";
+		}
 	}
 
 	if(*v.szCSDVersion) {
@@ -387,10 +389,7 @@ std::string os_version()
 
 	version += " (";
 	// Add internal version numbers.
-	version += formatter()
-			<< v.dwMajorVersion << '.'
-			<< v.dwMinorVersion << '.'
-			<< v.dwBuildNumber;
+	version += formatter() << v.dwMajorVersion << '.' << v.dwMinorVersion << '.' << v.dwBuildNumber;
 	version += ")";
 
 	return base + " " + version + " " + windows_runtime_arch();

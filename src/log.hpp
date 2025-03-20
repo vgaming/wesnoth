@@ -46,22 +46,23 @@
 #pragma once
 
 #ifndef __func__
- #ifdef __FUNCTION__
-  #define __func__ __FUNCTION__
- #endif
+#ifdef __FUNCTION__
+#define __func__ __FUNCTION__
+#endif
 #endif
 
-#include <iosfwd> // needed else all files including log.hpp need to do it.
 #include "utils/optional_fwd.hpp"
+#include <chrono>
+#include <cstdint>
+#include <ctime>
+#include <iosfwd> // needed else all files including log.hpp need to do it.
 #include <string>
 #include <utility>
-#include <chrono>
-#include <ctime>
-#include <cstdint>
 
 #include "formatter.hpp"
 
-namespace lg {
+namespace lg
+{
 
 // Prefix and extension for log files.
 // This is used to find old files to delete.
@@ -75,18 +76,11 @@ const std::string out_log_file_suffix = ".out" + log_file_suffix;
 // double for Windows due to the separate .log and .out.log files
 const unsigned max_logs = 8
 #ifdef _WIN32
-*2
+	* 2
 #endif
-;
+	;
 
-enum class severity
-{
-    LG_NONE=-1,
-	LG_ERROR=0,
-	LG_WARN=1,
-	LG_INFO=2,
-	LG_DEBUG=3
-};
+enum class severity { LG_NONE = -1, LG_ERROR = 0, LG_WARN = 1, LG_INFO = 2, LG_DEBUG = 3 };
 std::ostringstream& operator<<(std::ostringstream& oss, lg::severity severity);
 
 /**
@@ -98,7 +92,6 @@ std::ostringstream& operator<<(std::ostringstream& oss, lg::severity severity);
 class redirect_output_setter
 {
 public:
-
 	/**
 	 * Constructor.
 	 *
@@ -109,7 +102,6 @@ public:
 	~redirect_output_setter();
 
 private:
-
 	/**
 	 * The previously set redirection.
 	 *
@@ -122,20 +114,22 @@ class logger;
 
 typedef std::pair<const std::string, severity> logd;
 
-class log_domain {
-	logd *domain_;
+class log_domain
+{
+	logd* domain_;
+
 public:
-	explicit log_domain(char const *name, severity severity = severity::LG_WARN);
+	explicit log_domain(char const* name, severity severity = severity::LG_WARN);
 	friend class logger;
 };
 
 bool set_log_domain_severity(const std::string& name, severity severity);
-bool set_log_domain_severity(const std::string& name, const logger &lg);
-bool get_log_domain_severity(const std::string& name, severity &severity);
+bool set_log_domain_severity(const std::string& name, const logger& lg);
+bool get_log_domain_severity(const std::string& name, severity& severity);
 std::string list_log_domains(const std::string& filter);
 
 void set_strict_severity(severity severity);
-void set_strict_severity(const logger &lg);
+void set_strict_severity(const logger& lg);
 bool broke_strict();
 
 /** toggle log sanitization */
@@ -189,12 +183,14 @@ std::string unique_log_filename();
 // calls logging of its own.
 // We overload operator| only because it has lower precedence than operator<<
 // Any other lower-precedence operator would have worked just as well.
-class log_in_progress {
+class log_in_progress
+{
 	std::ostream& stream_;
 	int indent_ = 0;
 	bool timestamp_ = false;
 	std::string prefix_;
 	bool auto_newline_ = true;
+
 public:
 	log_in_progress(std::ostream& stream);
 	void operator|(const formatter& message);
@@ -204,13 +200,23 @@ public:
 	void set_auto_newline(bool enabled);
 };
 
-class logger {
-	char const *name_;
-    severity severity_;
+class logger
+{
+	char const* name_;
+	severity severity_;
+
 public:
-	logger(char const *name, severity severity): name_(name), severity_(severity) {}
+	logger(char const* name, severity severity)
+		: name_(name)
+		, severity_(severity)
+	{
+	}
 	log_in_progress operator()(const log_domain& domain,
-		bool show_names = true, bool do_indent = false, bool show_timestamps = true, bool break_strict = true, bool auto_newline = true) const;
+		bool show_names = true,
+		bool do_indent = false,
+		bool show_timestamps = true,
+		bool break_strict = true,
+		bool auto_newline = true) const;
 
 	bool dont_log(const log_domain& domain) const
 	{
@@ -241,25 +247,30 @@ class scope_logger
 	std::chrono::steady_clock::time_point start_;
 	const log_domain& domain_;
 	std::string str_;
+
 public:
 	scope_logger(const log_domain& domain, const char* str)
 		: start_()
 		, domain_(domain)
 		, str_()
 	{
-		if (!debug().dont_log(domain)) do_log_entry(str);
+		if(!debug().dont_log(domain))
+			do_log_entry(str);
 	}
 	scope_logger(const log_domain& domain, const std::string& str)
 		: start_()
 		, domain_(domain)
 		, str_()
 	{
-		if (!debug().dont_log(domain)) do_log_entry(str);
+		if(!debug().dont_log(domain))
+			do_log_entry(str);
 	}
 	~scope_logger()
 	{
-		if (!str_.empty()) do_log_exit();
+		if(!str_.empty())
+			do_log_exit();
 	}
+
 private:
 	void do_log_entry(const std::string& str) noexcept;
 	void do_log_exit() noexcept;
@@ -274,18 +285,34 @@ std::stringstream& log_to_chat();
 } // namespace lg
 
 #define log_scope(description) lg::scope_logger scope_logging_object__(lg::general(), description);
-#define log_scope2(domain,description) lg::scope_logger scope_logging_object__(domain, description);
+#define log_scope2(domain, description) lg::scope_logger scope_logging_object__(domain, description);
 
-#define LOG_STREAM(level, domain) if (lg::level().dont_log(domain)) ; else lg::level()(domain) | formatter()
+#define LOG_STREAM(level, domain)                                                                                      \
+	if(lg::level().dont_log(domain))                                                                                   \
+		;                                                                                                              \
+	else                                                                                                               \
+		lg::level()(domain) | formatter()
 
 // Don't prefix the logdomain to messages on this stream
-#define LOG_STREAM_NAMELESS(level, domain) if (lg::level().dont_log(domain)) ; else lg::level()(domain, false) | formatter()
+#define LOG_STREAM_NAMELESS(level, domain)                                                                             \
+	if(lg::level().dont_log(domain))                                                                                   \
+		;                                                                                                              \
+	else                                                                                                               \
+		lg::level()(domain, false) | formatter()
 
 // Like LOG_STREAM_NAMELESS except doesn't add newlines automatically
-#define LOG_STREAM_NAMELESS_STREAMING(level, domain) if (lg::level().dont_log(domain)) ; else lg::level()(domain, false, false, true, true, false) | formatter()
+#define LOG_STREAM_NAMELESS_STREAMING(level, domain)                                                                   \
+	if(lg::level().dont_log(domain))                                                                                   \
+		;                                                                                                              \
+	else                                                                                                               \
+		lg::level()(domain, false, false, true, true, false) | formatter()
 
 // When using log_scope/log_scope2 it is nice to have all output indented.
-#define LOG_STREAM_INDENT(level,domain) if (lg::level().dont_log(domain)) ; else lg::level()(domain, true, true) | formatter()
+#define LOG_STREAM_INDENT(level, domain)                                                                               \
+	if(lg::level().dont_log(domain))                                                                                   \
+		;                                                                                                              \
+	else                                                                                                               \
+		lg::level()(domain, true, true) | formatter()
 
 // If you have an explicit logger object and want to ignore the logging level, use this.
 // Meant for cases where you explicitly call dont_log to avoid an expensive operation if the logging is disabled.

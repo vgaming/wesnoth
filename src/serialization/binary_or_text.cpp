@@ -51,7 +51,7 @@ config_writer::config_writer(std::ostream& out, compression::format compress)
 config_writer::config_writer(std::ostream& out, bool compress, int level)
 	: filter_()
 	, out_ptr_(compress ? &filter_ : &out) // ternary indirection creates a temporary
-	, out_(*out_ptr_) // now MSVC will allow binding to the reference member
+	, out_(*out_ptr_)                      // now MSVC will allow binding to the reference member
 	, compress_(compress ? compression::format::gzip : compression::format::none)
 	, level_(0)
 	, textdomain_(PACKAGE)

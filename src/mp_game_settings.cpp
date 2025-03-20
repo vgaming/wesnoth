@@ -19,8 +19,8 @@
  *  Container for multiplayer game-creation parameters.
  */
 
-#include "log.hpp"
 #include "mp_game_settings.hpp"
+#include "log.hpp"
 #include "serialization/string_utils.hpp"
 
 static lg::log_domain log_engine("engine");
@@ -29,36 +29,37 @@ static lg::log_domain log_engine("engine");
 #define LOG_NG LOG_STREAM(info, log_engine)
 #define DBG_NG LOG_STREAM(debug, log_engine)
 
-mp_game_settings::mp_game_settings() :
-	name(),
-	password(),
-	hash(),
-	mp_era_name(),
-	mp_scenario(),
-	mp_scenario_name(),
-	mp_campaign(),
-	side_users(),
-	num_turns(0),
-	village_gold(0),
-	village_support(1),
-	xp_modifier(100),
-	mp_countdown_init_time(0),
-	mp_countdown_reservoir_time(0),
-	mp_countdown_turn_bonus(0),
-	mp_countdown_action_bonus(0),
-	mp_countdown(false),
-	use_map_settings(false),
-	random_start_time(false),
-	fog_game(false),
-	shroud_game(false),
-	allow_observers(true),
-	private_replay(false),
-	shuffle_sides(false),
-	saved_game(saved_game_mode::type::no),
-	mode(random_faction_mode::type::independent),
-	options(),
-	addons()
-{}
+mp_game_settings::mp_game_settings()
+	: name()
+	, password()
+	, hash()
+	, mp_era_name()
+	, mp_scenario()
+	, mp_scenario_name()
+	, mp_campaign()
+	, side_users()
+	, num_turns(0)
+	, village_gold(0)
+	, village_support(1)
+	, xp_modifier(100)
+	, mp_countdown_init_time(0)
+	, mp_countdown_reservoir_time(0)
+	, mp_countdown_turn_bonus(0)
+	, mp_countdown_action_bonus(0)
+	, mp_countdown(false)
+	, use_map_settings(false)
+	, random_start_time(false)
+	, fog_game(false)
+	, shroud_game(false)
+	, allow_observers(true)
+	, private_replay(false)
+	, shuffle_sides(false)
+	, saved_game(saved_game_mode::type::no)
+	, mode(random_faction_mode::type::independent)
+	, options()
+	, addons()
+{
+}
 
 mp_game_settings::mp_game_settings(const config& cfg)
 	: name(cfg["scenario"].str())
@@ -86,12 +87,13 @@ mp_game_settings::mp_game_settings(const config& cfg)
 	, private_replay(cfg["private_replay"].to_bool())
 	, shuffle_sides(cfg["shuffle_sides"].to_bool())
 	, saved_game(saved_game_mode::get_enum(cfg["savegame"].str()).value_or(saved_game_mode::type::no))
-	, mode(random_faction_mode::get_enum(cfg["random_faction_mode"].str()).value_or(random_faction_mode::type::independent))
+	, mode(random_faction_mode::get_enum(cfg["random_faction_mode"].str())
+			  .value_or(random_faction_mode::type::independent))
 	, options(cfg.child_or_empty("options"))
 	, addons()
 {
-	for (const config & a : cfg.child_range("addon")) {
-		if (!a["id"].empty()) {
+	for(const config& a : cfg.child_range("addon")) {
+		if(!a["id"].empty()) {
 			addons.emplace(a["id"].str(), addon_version_info(a));
 		}
 	}
@@ -129,7 +131,7 @@ config mp_game_settings::to_config() const
 	cfg.add_child("options", options);
 
 	for(auto& p : addons) {
-		config & c = cfg.add_child("addon");
+		config& c = cfg.add_child("addon");
 		p.second.write(c);
 		c["id"] = p.first;
 	}
@@ -137,33 +139,34 @@ config mp_game_settings::to_config() const
 	return cfg;
 }
 
-mp_game_settings::addon_version_info::addon_version_info(const config & cfg)
+mp_game_settings::addon_version_info::addon_version_info(const config& cfg)
 	: version()
 	, min_version()
 	, name(cfg["name"])
 	, required(cfg["required"].to_bool(false))
 	, content()
 {
-	if (!cfg["version"].empty()) {
+	if(!cfg["version"].empty()) {
 		version = cfg["version"].str();
 	}
-	if (!cfg["min_version"].empty()) {
+	if(!cfg["min_version"].empty()) {
 		min_version = cfg["min_version"].str();
 	}
 	for(const auto& child : cfg.child_range("content")) {
-		content.emplace_back(addon_content{ child["id"].str(), child["name"].str(), child["type"].str() });
+		content.emplace_back(addon_content{child["id"].str(), child["name"].str(), child["type"].str()});
 	}
 }
 
-void mp_game_settings::addon_version_info::write(config & cfg) const {
-	if (version) {
+void mp_game_settings::addon_version_info::write(config& cfg) const
+{
+	if(version) {
 		cfg["version"] = *version;
 	}
-	if (min_version) {
+	if(min_version) {
 		cfg["min_version"] = *min_version;
 	}
 
-	cfg["name"]	= name;
+	cfg["name"] = name;
 	cfg["required"] = required;
 	for(const auto& item : content) {
 		config& c = cfg.add_child("content");
@@ -173,8 +176,9 @@ void mp_game_settings::addon_version_info::write(config & cfg) const {
 	}
 }
 
-void mp_game_settings::update_addon_requirements(const config & cfg) {
-	if (cfg["id"].empty()) {
+void mp_game_settings::update_addon_requirements(const config& cfg)
+{
+	if(cfg["id"].empty()) {
 		WRN_NG << "Tried to add add-on metadata to a game, missing mandatory id field... skipping.\n" << cfg.debug();
 		return;
 	}
@@ -185,32 +189,36 @@ void mp_game_settings::update_addon_requirements(const config & cfg) {
 	if(!new_data.required) {
 		new_data.min_version = {};
 	}
-	// else if it is required and no min_version was explicitly specified, default the min_version to the add-on's version
+	// else if it is required and no min_version was explicitly specified, default the min_version to the add-on's
+	// version
 	else if(new_data.required && !new_data.min_version) {
 		new_data.min_version = new_data.version;
 	}
 
 	std::map<std::string, addon_version_info>::iterator it = addons.find(cfg["id"].str());
-	// Check if this add-on already has an entry as a dependency for this scenario. If so, try to reconcile their version info,
-	// by taking the larger of the min versions. The version should be the same for all WML from the same add-on...
-	if (it != addons.end()) {
+	// Check if this add-on already has an entry as a dependency for this scenario. If so, try to reconcile their
+	// version info, by taking the larger of the min versions. The version should be the same for all WML from the same
+	// add-on...
+	if(it != addons.end()) {
 		addon_version_info& addon = it->second;
 
 		// an add-on can contain multiple types of content
 		// for example, an era and a scenario
 		for(const auto& item : new_data.content) {
-			addon.content.emplace_back(addon_content{ item.id, item.name, item.type });
+			addon.content.emplace_back(addon_content{item.id, item.name, item.type});
 		}
 
 		if(addon.version != new_data.version) {
-			ERR_NG << "Addon version data mismatch! Not all local WML has same version of the addon: '" << cfg["id"].str() << "'.";
+			ERR_NG << "Addon version data mismatch! Not all local WML has same version of the addon: '"
+				   << cfg["id"].str() << "'.";
 		}
 
 		if(new_data.required) {
 			addon.required = true;
 
-			// if the existing entry for the add-on didn't have a min_version or had a lower min_version, update it to this min_version
-			if (!addon.min_version || *new_data.min_version > *addon.min_version) {
+			// if the existing entry for the add-on didn't have a min_version or had a lower min_version, update it to
+			// this min_version
+			if(!addon.min_version || *new_data.min_version > *addon.min_version) {
 				addon.min_version = new_data.min_version;
 			}
 		}

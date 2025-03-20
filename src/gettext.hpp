@@ -35,80 +35,89 @@
 
 // gettext-related declarations
 #include "wesconfig.h"
+#include <boost/locale/info.hpp>
+#include <ctime>
 #include <string>
 #include <vector>
-#include <ctime>
-#include <boost/locale/info.hpp>
 
 #ifdef __cpp_lib_span
 #include <span>
 #endif
 
 #ifndef GETTEXT_DOMAIN
-# define GETTEXT_DOMAIN PACKAGE
+#define GETTEXT_DOMAIN PACKAGE
 #endif
 
-//A Hack to make the eclipse-cdt parser happy.
+// A Hack to make the eclipse-cdt parser happy.
 #ifdef __CDT_PARSER__
-# define GETTEXT_DOMAIN ""
+#define GETTEXT_DOMAIN ""
 #endif
 
 namespace translation
 {
-	std::string dgettext(const char* domain, const char* msgid);
-	std::string egettext(const char*);
-	std::string dsgettext(const char * domainname, const char *msgid);
-	//const char* sngettext(const char *singular, const char *plural, int n);
-	std::string dsngettext(const char * domainname, const char *singular, const char *plural, int n);
+std::string dgettext(const char* domain, const char* msgid);
+std::string egettext(const char*);
+std::string dsgettext(const char* domainname, const char* msgid);
+// const char* sngettext(const char *singular, const char *plural, int n);
+std::string dsngettext(const char* domainname, const char* singular, const char* plural, int n);
 
-	[[maybe_unused]] inline static std::string gettext(const char* str)
-	{ return translation::dgettext(GETTEXT_DOMAIN, str); }
-	[[maybe_unused]] inline static std::string sgettext(const char* str)
-	{ return translation::dsgettext(GETTEXT_DOMAIN, str); }
-	[[maybe_unused]] inline static std::string sngettext(const char* str1, const char* str2, int n)
-	{ return translation::dsngettext(GETTEXT_DOMAIN, str1, str2 , n); }
-
-
-	void bind_textdomain(const char* domain, const char* directory, const char* encoding);
-	void set_default_textdomain(const char* domain);
-
-	void set_language(const std::string& language, const std::vector<std::string>* alternates);
-
-	/** Case-sensitive lexicographical comparison. */
-	int compare(const std::string& s1,const std::string& s2);
-
-	/** Case-insensitive lexicographical comparison. */
-	int icompare(const std::string& s1,const std::string& s2);
-
-	std::string strftime(const std::string& format, const std::tm* time);
-
-	/** Case-insensitive search. @a s2 will be checked against @a s1. */
-	bool ci_search(const std::string& s1, const std::string& s2);
-
-	/** Case-insensitive search. @a s2 will be checked against any element of @a s1. */
-#ifdef __cpp_lib_span
-	bool ci_search(std::span<std::string> s1, const std::string& s2);
-#else
-	bool ci_search(const std::vector<std::string>& s1, const std::string& s2);
-#endif
-
-	/**
-	 * A facet that holds general information about the effective locale.
-	 * This describes the actual translation target language,
-	 * unlike language_def.localename in language.hpp, where the "System
-	 * default language" is represented by an empty string.
-	 */
-	const boost::locale::info& get_effective_locale_info();
+[[maybe_unused]] inline static std::string gettext(const char* str)
+{
+	return translation::dgettext(GETTEXT_DOMAIN, str);
+}
+[[maybe_unused]] inline static std::string sgettext(const char* str)
+{
+	return translation::dsgettext(GETTEXT_DOMAIN, str);
+}
+[[maybe_unused]] inline static std::string sngettext(const char* str1, const char* str2, int n)
+{
+	return translation::dsngettext(GETTEXT_DOMAIN, str1, str2, n);
 }
 
-//#define _(String) translation::dsgettext(GETTEXT_DOMAIN,String)
-[[maybe_unused]] inline static std::string _(const char* str)
-{ return translation::dsgettext(GETTEXT_DOMAIN, str); }
+void bind_textdomain(const char* domain, const char* directory, const char* encoding);
+void set_default_textdomain(const char* domain);
 
-//#define _n(String1, String2, Int) translation::dsngettext(GETTEXT_DOMAIN, String1,String2,Int)
+void set_language(const std::string& language, const std::vector<std::string>* alternates);
+
+/** Case-sensitive lexicographical comparison. */
+int compare(const std::string& s1, const std::string& s2);
+
+/** Case-insensitive lexicographical comparison. */
+int icompare(const std::string& s1, const std::string& s2);
+
+std::string strftime(const std::string& format, const std::tm* time);
+
+/** Case-insensitive search. @a s2 will be checked against @a s1. */
+bool ci_search(const std::string& s1, const std::string& s2);
+
+/** Case-insensitive search. @a s2 will be checked against any element of @a s1. */
+#ifdef __cpp_lib_span
+bool ci_search(std::span<std::string> s1, const std::string& s2);
+#else
+bool ci_search(const std::vector<std::string>& s1, const std::string& s2);
+#endif
+
+/**
+ * A facet that holds general information about the effective locale.
+ * This describes the actual translation target language,
+ * unlike language_def.localename in language.hpp, where the "System
+ * default language" is represented by an empty string.
+ */
+const boost::locale::info& get_effective_locale_info();
+} // namespace translation
+
+// #define _(String) translation::dsgettext(GETTEXT_DOMAIN,String)
+[[maybe_unused]] inline static std::string _(const char* str)
+{
+	return translation::dsgettext(GETTEXT_DOMAIN, str);
+}
+
+// #define _n(String1, String2, Int) translation::dsngettext(GETTEXT_DOMAIN, String1,String2,Int)
 [[maybe_unused]] inline static std::string _n(const char* str1, const char* str2, int n)
-{ return translation::dsngettext(GETTEXT_DOMAIN, str1, str2, n); }
+{
+	return translation::dsngettext(GETTEXT_DOMAIN, str1, str2, n);
+}
 
 #define gettext_noop(String) String
-#define N_(String) gettext_noop (String)
+#define N_(String) gettext_noop(String)
 #define N_n(String1, String2) String1, String2

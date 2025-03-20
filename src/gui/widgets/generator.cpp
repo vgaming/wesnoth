@@ -19,8 +19,8 @@
 
 #include "wml_exception.hpp"
 
-#include <numeric>
 #include <cmath>
+#include <numeric>
 
 namespace gui2
 {
@@ -168,8 +168,7 @@ void horizontal_list::place(const point& origin, const point& size)
 
 	if(current_origin.x != origin.x + size.x) {
 		ERR_GUI_L << "Failed to fit horizontal list to requested rect; expected right edge was " << origin.x + size.x
-		          << ", actual right edge was " << current_origin.x
-		          << " (left edge is " << origin.x << ")\n";
+				  << ", actual right edge was " << current_origin.x << " (left edge is " << origin.x << ")\n";
 	}
 }
 
@@ -379,8 +378,7 @@ void vertical_list::place(const point& origin, const point& size)
 
 	if(current_origin.y != origin.y + size.y) {
 		ERR_GUI_L << "Failed to fit vertical list to requested rect; expected bottom edge was " << origin.y + size.y
-		          << ", actual bottom edge was " << current_origin.y
-		          << " (top edge is " << origin.y << ")\n";
+				  << ", actual bottom edge was " << current_origin.y << " (top edge is " << origin.y << ")\n";
 	}
 }
 
@@ -566,17 +564,14 @@ point table::calculate_best_size() const
 	std::vector<point> best_sizes(1);
 
 	best_sizes[0] = std::accumulate(item_sizes.begin(), item_sizes.end(), point(),
-		[](point a, point b) { return point(std::max(a.x, b.x), a.y + b.y); }
-	);
+		[](point a, point b) { return point(std::max(a.x, b.x), a.y + b.y); });
 
-	int max_xtra = std::min_element(item_sizes.begin(), item_sizes.end(),
-		[](point a, point b) { return a.x < b.x; }
-	)->x / 2;
+	int max_xtra
+		= std::min_element(item_sizes.begin(), item_sizes.end(), [](point a, point b) { return a.x < b.x; })->x / 2;
 
 	for(std::size_t cells_in_1st_row = 2; cells_in_1st_row <= max_cols; cells_in_1st_row++) {
-		int row_min_width = std::accumulate(item_sizes.begin(), item_sizes.begin() + cells_in_1st_row, 0,
-			[](int a, point b) { return a + b.x; }
-		);
+		int row_min_width = std::accumulate(
+			item_sizes.begin(), item_sizes.begin() + cells_in_1st_row, 0, [](int a, point b) { return a + b.x; });
 
 		int row_max_width = row_min_width + max_xtra;
 
@@ -584,7 +579,6 @@ point table::calculate_best_size() const
 
 		for(const auto& item_size : item_sizes) {
 			if(row_size.x + item_size.x > row_max_width) {
-
 				total_size.y += row_size.y;
 
 				if(total_size.x < row_size.x) {
@@ -611,9 +605,8 @@ point table::calculate_best_size() const
 	}
 
 	return *std::min_element(best_sizes.begin(), best_sizes.end(), [](point p1, point p2) {
-		return
-			std::max<double>(p1.x, p1.y) / std::min<double>(p1.x, p1.y) <
-			std::max<double>(p2.x, p2.y) / std::min<double>(p2.x, p2.y);
+		return std::max<double>(p1.x, p1.y) / std::min<double>(p1.x, p1.y)
+			< std::max<double>(p2.x, p2.y) / std::min<double>(p2.x, p2.y);
 	});
 }
 
@@ -1025,15 +1018,13 @@ namespace select_action
 void selection::select(grid& grid, const bool select)
 {
 	selectable_item* selectable = dynamic_cast<selectable_item*>(grid.get_widget(0, 0));
-	//the check in selection::init is not strict enouth to guaranetee this.
+	// the check in selection::init is not strict enouth to guaranetee this.
 	VALIDATE(selectable, "Only toggle buttons and panels are allowed as the cells of a list definition.");
 
 	selectable->set_value(select);
 }
 
-void selection::init(grid* g,
-		const widget_data& data,
-		const std::function<void(widget&)>& callback)
+void selection::init(grid* g, const widget_data& data, const std::function<void(widget&)>& callback)
 {
 	for(unsigned row = 0; row < g->get_rows(); ++row) {
 		for(unsigned col = 0; col < g->get_cols(); ++col) {
@@ -1062,15 +1053,14 @@ void selection::init(grid* g,
 			} else if(child_grid) {
 				init(child_grid, data, callback);
 			} else {
-				FAIL("In widget '" + widget->id() + "': only toggle buttons and panels are allowed as the cells of a list definition.");
+				FAIL("In widget '" + widget->id()
+					+ "': only toggle buttons and panels are allowed as the cells of a list definition.");
 			}
 		}
 	}
 }
 
-void show::init(grid* grid,
-		const widget_data& data,
-		const std::function<void(widget&)>& /*callback*/)
+void show::init(grid* grid, const widget_data& data, const std::function<void(widget&)>& /*callback*/)
 {
 	for(const auto& item : data) {
 		if(item.first.empty()) {
@@ -1158,7 +1148,7 @@ static_assert(false, "GUI2/Generator: GENERATE_BODY already defined!");
 #endif
 
 std::unique_ptr<generator_base> generator_base::build(
-		const bool has_minimum, const bool has_maximum, const placement placement, const bool select)
+	const bool has_minimum, const bool has_maximum, const placement placement, const bool select)
 {
 	std::unique_ptr<generator_base> result = nullptr;
 	GENERATE_BODY;

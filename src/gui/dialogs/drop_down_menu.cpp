@@ -59,27 +59,28 @@ drop_down_menu::entry_data::entry_data(const config& cfg)
 
 namespace
 {
-	void callback_flip_embedded_toggle(window& window)
-	{
-		listbox& list = window.find_widget<listbox>("list", true);
+void callback_flip_embedded_toggle(window& window)
+{
+	listbox& list = window.find_widget<listbox>("list", true);
 
-		/* If the currently selected row has a toggle button, toggle it.
-		 * Note this cannot be handled in mouse_up_callback since at that point the new row selection has not registered,
-		 * meaning the currently selected row's button is toggled.
-		 */
-		grid* row_grid = list.get_row_grid(list.get_selected_row());
-		if(toggle_button* checkbox = row_grid->find_widget<toggle_button>("checkbox", false, false)) {
-			checkbox->set_value_bool(!checkbox->get_value_bool(), true);
-		}
-	}
-
-	void resize_callback(window& window)
-	{
-		window.set_retval(retval::CANCEL);
+	/* If the currently selected row has a toggle button, toggle it.
+	 * Note this cannot be handled in mouse_up_callback since at that point the new row selection has not registered,
+	 * meaning the currently selected row's button is toggled.
+	 */
+	grid* row_grid = list.get_row_grid(list.get_selected_row());
+	if(toggle_button* checkbox = row_grid->find_widget<toggle_button>("checkbox", false, false)) {
+		checkbox->set_value_bool(!checkbox->get_value_bool(), true);
 	}
 }
 
-drop_down_menu::drop_down_menu(styled_widget* parent, const std::vector<config>& items, int selected_item, bool keep_open)
+void resize_callback(window& window)
+{
+	window.set_retval(retval::CANCEL);
+}
+} // namespace
+
+drop_down_menu::drop_down_menu(
+	styled_widget* parent, const std::vector<config>& items, int selected_item, bool keep_open)
 	: modal_dialog(window_id())
 	, parent_(parent)
 	, items_(items.begin(), items.end())
@@ -92,7 +93,8 @@ drop_down_menu::drop_down_menu(styled_widget* parent, const std::vector<config>&
 {
 }
 
-drop_down_menu::drop_down_menu(SDL_Rect button_pos, const std::vector<config>& items, int selected_item, bool use_markup, bool keep_open)
+drop_down_menu::drop_down_menu(
+	SDL_Rect button_pos, const std::vector<config>& items, int selected_item, bool use_markup, bool keep_open)
 	: modal_dialog(window_id())
 	, parent_(nullptr)
 	, items_(items.begin(), items.end())
@@ -132,7 +134,8 @@ void drop_down_menu::mouse_up_callback(bool&, bool&, const point& coordinate)
 
 	/* FIXME: This dialog uses a listbox with 'has_minimum = false'. This allows a listbox to have 0 or 1 selections,
 	 * and selecting the same entry toggles that entry's state (ie, if it was selected, it will be deselected). Because
-	 * of this, selecting the same entry in the dropdown list essentially sets the list's selected row to -1, causing problems.
+	 * of this, selecting the same entry in the dropdown list essentially sets the list's selected row to -1, causing
+	 * problems.
 	 *
 	 * In order to work around this, we first manually deselect the selected entry here. This handler is called *before*
 	 * the listbox's click handler, and as such the selected item will remain toggled on when the click handler fires.
@@ -221,22 +224,23 @@ void drop_down_menu::pre_show()
 	keyboard_capture(&list);
 
 	// Dismiss on clicking outside the window.
-	connect_signal<event::SDL_LEFT_BUTTON_UP>(
-		std::bind(&drop_down_menu::mouse_up_callback, this, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5), event::dispatcher::front_child);
+	connect_signal<event::SDL_LEFT_BUTTON_UP>(std::bind(&drop_down_menu::mouse_up_callback, this, std::placeholders::_3,
+												  std::placeholders::_4, std::placeholders::_5),
+		event::dispatcher::front_child);
 
-	connect_signal<event::SDL_RIGHT_BUTTON_UP>(
-		std::bind(&drop_down_menu::mouse_up_callback, this, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5), event::dispatcher::front_child);
+	connect_signal<event::SDL_RIGHT_BUTTON_UP>(std::bind(&drop_down_menu::mouse_up_callback, this,
+												   std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
+		event::dispatcher::front_child);
 
 	connect_signal<event::SDL_LEFT_BUTTON_DOWN>(
 		std::bind(&drop_down_menu::mouse_down_callback, this), event::dispatcher::front_child);
 
 	// Dismiss on resize.
 	connect_signal<event::SDL_VIDEO_RESIZE>(
-		[this](auto&&...){ resize_callback(*this); }, event::dispatcher::front_child);
+		[this](auto&&...) { resize_callback(*this); }, event::dispatcher::front_child);
 
 	// Handle embedded button toggling.
-	connect_signal_notify_modified(list,
-		[this](auto&&...){ callback_flip_embedded_toggle(*this); });
+	connect_signal_notify_modified(list, [this](auto&&...) { callback_flip_embedded_toggle(*this); });
 }
 
 void drop_down_menu::post_show()
@@ -273,4 +277,4 @@ boost::dynamic_bitset<> drop_down_menu::get_toggle_states() const
 	return states;
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

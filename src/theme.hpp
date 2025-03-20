@@ -26,12 +26,15 @@
 #include "global.hpp"
 #include "sdl/rect.hpp"
 
-#include <memory>
 #include <SDL2/SDL_rect.h>
+#include <memory>
 
 class game_config_view;
 
-struct _rect { std::size_t x1,y1,x2,y2; };
+struct _rect
+{
+	std::size_t x1, y1, x2, y2;
+};
 
 struct theme_info
 {
@@ -42,17 +45,24 @@ struct theme_info
 
 class theme
 {
-
 	class object
 	{
 	public:
 		object();
 		object(std::size_t sw, std::size_t sh, const config& cfg);
-		virtual ~object() { }
+		virtual ~object()
+		{
+		}
 
 		virtual rect& location(const SDL_Rect& screen) const;
-		const rect& get_location() const { return loc_; }
-		const std::string& get_id() const { return id_; }
+		const rect& get_location() const
+		{
+			return loc_;
+		}
+		const std::string& get_id() const
+		{
+			return id_;
+		}
 
 		// This supports relocating of theme elements ingame.
 		// It is needed for [change] tags in theme WML.
@@ -84,7 +94,6 @@ class theme
 
 	struct border_t
 	{
-
 		border_t();
 		border_t(const config& cfg);
 
@@ -97,7 +106,6 @@ class theme
 	};
 
 public:
-
 	class label : public object
 	{
 	public:
@@ -106,15 +114,37 @@ public:
 
 		using object::location;
 
-		const std::string& text() const { return text_; }
-		void set_text(const std::string& text) { text_ = text; }
-		const std::string& icon() const { return icon_; }
+		const std::string& text() const
+		{
+			return text_;
+		}
+		void set_text(const std::string& text)
+		{
+			text_ = text;
+		}
+		const std::string& icon() const
+		{
+			return icon_;
+		}
 
-		bool empty() const { return text_.empty() && icon_.empty(); }
+		bool empty() const
+		{
+			return text_.empty() && icon_.empty();
+		}
 
-		std::size_t font_size() const { return font_; }
-		color_t font_rgb() const { return font_rgb_; }
-		bool font_rgb_set() const { return font_rgb_set_; }
+		std::size_t font_size() const
+		{
+			return font_;
+		}
+		color_t font_rgb() const
+		{
+			return font_rgb_;
+		}
+		bool font_rgb_set() const
+		{
+			return font_rgb_set_;
+		}
+
 	private:
 		std::string text_, icon_;
 		std::size_t font_;
@@ -125,20 +155,37 @@ public:
 	class status_item : public object
 	{
 	public:
-
 		explicit status_item(std::size_t sw, std::size_t sh, const config& cfg);
 
 		using object::location;
 
-		const std::string& prefix() const { return prefix_; }
-		const std::string& postfix() const { return postfix_; }
+		const std::string& prefix() const
+		{
+			return prefix_;
+		}
+		const std::string& postfix() const
+		{
+			return postfix_;
+		}
 
 		// If the item has a label associated with it, Show where the label is
-		const label* get_label() const { return label_.empty() ? nullptr : &label_; }
+		const label* get_label() const
+		{
+			return label_.empty() ? nullptr : &label_;
+		}
 
-		std::size_t font_size() const { return font_; }
-		color_t font_rgb() const { return font_rgb_; }
-		bool font_rgb_set() const { return font_rgb_set_; }
+		std::size_t font_size() const
+		{
+			return font_;
+		}
+		color_t font_rgb() const
+		{
+			return font_rgb_;
+		}
+		bool font_rgb_set() const
+		{
+			return font_rgb_set_;
+		}
 
 	private:
 		std::string prefix_, postfix_;
@@ -155,7 +202,10 @@ public:
 
 		using object::location;
 
-		const std::string& image() const { return image_; }
+		const std::string& image() const
+		{
+			return image_;
+		}
 
 	private:
 		std::string image_;
@@ -169,24 +219,46 @@ public:
 
 		using object::location;
 
-		bool is_context() const  { return context_; }
+		bool is_context() const
+		{
+			return context_;
+		}
 
-		const std::string& title() const { return title_; }
+		const std::string& title() const
+		{
+			return title_;
+		}
 
 		const std::string tooltip(std::size_t index) const;
 
-		const std::string& type() const { return type_; }
+		const std::string& type() const
+		{
+			return type_;
+		}
 
-		const std::string& image() const { return image_; }
+		const std::string& image() const
+		{
+			return image_;
+		}
 
-		const std::string& overlay() const { return overlay_; }
+		const std::string& overlay() const
+		{
+			return overlay_;
+		}
 
-		const std::vector<std::string>& items() const { return items_; }
+		const std::vector<std::string>& items() const
+		{
+			return items_;
+		}
 
-		void set_title(const std::string& new_title) { title_ = new_title; }
+		void set_title(const std::string& new_title)
+		{
+			title_ = new_title;
+		}
+
 	private:
 		bool context_, auto_tooltip_, tooltip_name_prepend_;
-		std::string title_, tooltip_, image_, overlay_,  type_;
+		std::string title_, tooltip_, image_, overlay_, type_;
 		std::vector<std::string> items_;
 	};
 
@@ -198,17 +270,36 @@ public:
 
 		using object::location;
 
-		const std::string& title() const { return title_; }
+		const std::string& title() const
+		{
+			return title_;
+		}
 
-		const std::string& tooltip() const { return tooltip_; }
+		const std::string& tooltip() const
+		{
+			return tooltip_;
+		}
 
-		const std::string& image() const { return image_; }
+		const std::string& image() const
+		{
+			return image_;
+		}
 
-		const std::string& overlay() const { return overlay_; }
+		const std::string& overlay() const
+		{
+			return overlay_;
+		}
 
-		bool black_line() const { return black_line_; }
+		bool black_line() const
+		{
+			return black_line_;
+		}
 
-		void set_title(const std::string& new_title) { title_ = new_title; }
+		void set_title(const std::string& new_title)
+		{
+			title_ = new_title;
+		}
+
 	private:
 		std::string title_, tooltip_, image_, overlay_;
 		bool black_line_;
@@ -222,21 +313,46 @@ public:
 
 		using object::location;
 
-		bool is_button() const { return button_; }
+		bool is_button() const
+		{
+			return button_;
+		}
 
-		bool is_context() const  { return context_; }
+		bool is_context() const
+		{
+			return context_;
+		}
 
-		const std::string& title() const { return title_; }
+		const std::string& title() const
+		{
+			return title_;
+		}
 
-		const std::string& tooltip() const { return tooltip_; }
+		const std::string& tooltip() const
+		{
+			return tooltip_;
+		}
 
-		const std::string& image() const { return image_; }
+		const std::string& image() const
+		{
+			return image_;
+		}
 
-		const std::string& overlay() const { return overlay_; }
+		const std::string& overlay() const
+		{
+			return overlay_;
+		}
 
-		const std::vector<config>& items() const { return items_; }
+		const std::vector<config>& items() const
+		{
+			return items_;
+		}
 
-		void set_title(const std::string& new_title) { title_ = new_title; }
+		void set_title(const std::string& new_title)
+		{
+			title_ = new_title;
+		}
+
 	private:
 		bool button_;
 		bool context_;
@@ -250,39 +366,70 @@ public:
 	theme& operator=(theme&&);
 
 	bool set_resolution(const SDL_Rect& screen);
-	void modify(const config &cfg);
+	void modify(const config& cfg);
 
-	const std::vector<panel>& panels() const { return panels_; }
-	const std::vector<label>& labels() const { return labels_; }
-	const std::vector<menu>& menus() const { return menus_; }
-	const std::vector<slider>& sliders() const { return sliders_; }
-	const std::vector<action>& actions() const { return actions_; }
+	const std::vector<panel>& panels() const
+	{
+		return panels_;
+	}
+	const std::vector<label>& labels() const
+	{
+		return labels_;
+	}
+	const std::vector<menu>& menus() const
+	{
+		return menus_;
+	}
+	const std::vector<slider>& sliders() const
+	{
+		return sliders_;
+	}
+	const std::vector<action>& actions() const
+	{
+		return actions_;
+	}
 
 	const menu* context_menu() const
-		{ return context_.is_context() ? &context_ : nullptr; }
+	{
+		return context_.is_context() ? &context_ : nullptr;
+	}
 
-	//refresh_title2 changes the title of a menu entry, identified by id.
-	//If no menu entry is found, an empty menu object is returned.
+	// refresh_title2 changes the title of a menu entry, identified by id.
+	// If no menu entry is found, an empty menu object is returned.
 	object* refresh_title(const std::string& id, const std::string& new_title);
 	object* refresh_title2(const std::string& id, const std::string& title_tag);
 	void modify_label(const std::string& id, const std::string& text);
 
 	const status_item* get_status_item(const std::string& item) const;
-	const menu *get_menu_item(const std::string &key) const;
-	const action* get_action_item(const std::string &key) const;
+	const menu* get_menu_item(const std::string& key) const;
+	const action* get_action_item(const std::string& key) const;
 
 	const rect& main_map_location(const SDL_Rect& screen) const
-		{ return main_map_.location(screen); }
+	{
+		return main_map_.location(screen);
+	}
 	const rect& mini_map_location(const SDL_Rect& screen) const
-		{ return mini_map_.location(screen); }
+	{
+		return mini_map_.location(screen);
+	}
 	const rect& unit_image_location(const SDL_Rect& screen) const
-		{ return unit_image_.location(screen); }
+	{
+		return unit_image_.location(screen);
+	}
 	const rect& palette_location(const SDL_Rect& screen) const
-		{ return palette_.location(screen); }
+	{
+		return palette_.location(screen);
+	}
 
-	const border_t& border() const { return border_; }
+	const border_t& border() const
+	{
+		return border_;
+	}
 
-	events::generic_event& theme_reset_event() { return theme_reset_event_; }
+	events::generic_event& theme_reset_event()
+	{
+		return theme_reset_event_;
+	}
 
 private:
 	theme::object& find_element(const std::string& id);
@@ -290,8 +437,8 @@ private:
 	void remove_object(const std::string& id);
 	void set_object_location(theme::object& element, const std::string& rect_str, std::string ref_id);
 
-	//notify observers that the theme has been rebuilt completely
-	//atm this is used for replay_controller to add replay controls to the standard theme
+	// notify observers that the theme has been rebuilt completely
+	// atm this is used for replay_controller to add replay controls to the standard theme
 	events::generic_event theme_reset_event_;
 
 	std::string cur_theme;

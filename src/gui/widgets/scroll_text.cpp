@@ -17,11 +17,11 @@
 
 #include "gui/widgets/scroll_text.hpp"
 
-#include "gui/widgets/multiline_text.hpp"
-#include "gui/core/window_builder/helper.hpp"
-#include "gui/core/register_widget.hpp"
-#include "gui/widgets/scrollbar.hpp"
 #include "gettext.hpp"
+#include "gui/core/register_widget.hpp"
+#include "gui/core/window_builder/helper.hpp"
+#include "gui/widgets/multiline_text.hpp"
+#include "gui/widgets/scrollbar.hpp"
 #include "wml_exception.hpp"
 
 #include <functional>
@@ -42,7 +42,7 @@ scroll_text::scroll_text(const implementation::builder_scroll_text& builder)
 	, wrap_on_(false)
 	, text_alignment_(builder.text_alignment)
 	, editable_(builder.editable)
-	, max_size_(point(0,0))
+	, max_size_(point(0, 0))
 	, link_aware_(builder.link_aware)
 {
 	connect_signal<event::LEFT_BUTTON_DOWN>(
@@ -130,31 +130,32 @@ void scroll_text::finalize_subclass()
 	text->set_use_markup(get_use_markup());
 }
 
-void scroll_text::place(const point& origin, const point& size) {
+void scroll_text::place(const point& origin, const point& size)
+{
 	scrollbar_container::place(origin, size);
 
 	if(multiline_text* widget = get_internal_text_box()) {
 		const SDL_Rect& visible_area = content_visible_area();
 
-		if (widget->get_cursor_pos().x < visible_area.w/2.0) {
+		if(widget->get_cursor_pos().x < visible_area.w / 2.0) {
 			scroll_horizontal_scrollbar(scrollbar_base::BEGIN);
 		} else {
-			scroll_horizontal_scrollbar_by(widget->get_cursor_pos().x - visible_area.w/2.0);
+			scroll_horizontal_scrollbar_by(widget->get_cursor_pos().x - visible_area.w / 2.0);
 		}
 
-		if (widget->get_cursor_pos().y >= (widget->get_text_end_pos().y - visible_area.h/2.0)) {
-			if (widget->get_lines_count() > 1) {
+		if(widget->get_cursor_pos().y >= (widget->get_text_end_pos().y - visible_area.h / 2.0)) {
+			if(widget->get_lines_count() > 1) {
 				scroll_vertical_scrollbar(scrollbar_base::END);
 			} else {
 				scroll_vertical_scrollbar(scrollbar_base::BEGIN);
 			}
-		} else if (widget->get_cursor_pos().y < visible_area.h/2.0) {
+		} else if(widget->get_cursor_pos().y < visible_area.h / 2.0) {
 			scroll_vertical_scrollbar(scrollbar_base::BEGIN);
 		} else {
-			scroll_vertical_scrollbar_by(widget->get_cursor_pos().y - visible_area.h/2.0);
+			scroll_vertical_scrollbar_by(widget->get_cursor_pos().y - visible_area.h / 2.0);
 		}
 
-		if (widget->get_length() == 0) {
+		if(widget->get_length() == 0) {
 			scroll_horizontal_scrollbar(scrollbar_base::BEGIN);
 			scroll_vertical_scrollbar(scrollbar_base::BEGIN);
 		}
@@ -167,11 +168,11 @@ point scroll_text::calculate_best_size() const
 {
 	point calc_size = scrollbar_container::calculate_best_size();
 
-	if ((calc_size.x > max_size_.x) && (max_size_.x != 0)) {
+	if((calc_size.x > max_size_.x) && (max_size_.x != 0)) {
 		calc_size.x = max_size_.x;
 	}
 
-	if ((calc_size.y > max_size_.y) && (max_size_.y != 0)) {
+	if((calc_size.y > max_size_.y) && (max_size_.y != 0)) {
 		calc_size.y = max_size_.y;
 	}
 
@@ -193,8 +194,6 @@ void scroll_text::set_max_size(point max_size)
 	// padding = 3
 	max_size_ = point(max_size.x + vertical_scrollbar.x + 3, max_size.y + horizontal_scrollbar.y + 3);
 }
-
-
 
 void scroll_text::set_can_wrap(bool can_wrap)
 {
@@ -224,11 +223,14 @@ scroll_text_definition::scroll_text_definition(const config& cfg)
 }
 
 scroll_text_definition::resolution::resolution(const config& cfg)
-	: resolution_definition(cfg), grid(nullptr)
+	: resolution_definition(cfg)
+	, grid(nullptr)
 {
 	// Note the order should be the same as the enum state_t is scroll_text.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("scroll_text", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("scroll_text", "state_disabled")));
+	state.emplace_back(
+		VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("scroll_text", "state_enabled")));
+	state.emplace_back(
+		VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("scroll_text", "state_disabled")));
 
 	auto child = VALIDATE_WML_CHILD(cfg, "grid", missing_mandatory_wml_tag("scroll_text", "grid"));
 	grid = std::make_shared<builder_grid>(child);
@@ -246,11 +248,11 @@ builder_scroll_text::builder_scroll_text(const config& cfg)
 	, link_aware(cfg["link_aware"].to_bool(false))
 {
 	// Scrollbar default to auto. AUTO_VISIBLE_FIRST_RUN doesn't work.
-	if (horizontal_scrollbar_mode == scrollbar_container::AUTO_VISIBLE_FIRST_RUN) {
+	if(horizontal_scrollbar_mode == scrollbar_container::AUTO_VISIBLE_FIRST_RUN) {
 		horizontal_scrollbar_mode = scrollbar_container::AUTO_VISIBLE;
 	}
 
-	if (vertical_scrollbar_mode == scrollbar_container::AUTO_VISIBLE_FIRST_RUN) {
+	if(vertical_scrollbar_mode == scrollbar_container::AUTO_VISIBLE_FIRST_RUN) {
 		vertical_scrollbar_mode = scrollbar_container::AUTO_VISIBLE;
 	}
 }
@@ -265,8 +267,7 @@ std::unique_ptr<widget> builder_scroll_text::build() const
 	widget->init_grid(*conf->grid);
 	widget->finalize_setup();
 
-	DBG_GUI_G << "Window builder: placed scroll text '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed scroll text '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

@@ -17,17 +17,17 @@
 
 #include "build_info.hpp"
 
+#include "addon/manager.hpp"
 #include "desktop/version.hpp"
 #include "filesystem.hpp"
 #include "formatter.hpp"
+#include "game_version.hpp"
 #include "gettext.hpp"
+#include "sdl/point.hpp"
 #include "serialization/string_utils.hpp"
 #include "serialization/unicode.hpp"
-#include "game_version.hpp"
 #include "sound.hpp"
 #include "video.hpp"
-#include "addon/manager.hpp"
-#include "sdl/point.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -60,7 +60,8 @@
 namespace game_config
 {
 
-namespace {
+namespace
+{
 
 struct version_table_manager
 {
@@ -79,18 +80,15 @@ std::string format_version(unsigned a, unsigned b, unsigned c)
 
 std::string format_version(const SDL_version& v)
 {
-	return formatter() << static_cast<unsigned>(v.major) << '.'
-						<< static_cast<unsigned>(v.minor) << '.'
-						<< static_cast<unsigned>(v.patch);
+	return formatter() << static_cast<unsigned>(v.major) << '.' << static_cast<unsigned>(v.minor) << '.'
+					   << static_cast<unsigned>(v.patch);
 }
 
 #ifndef __APPLE__
 
 std::string format_openssl_patch_level(uint8_t p)
 {
-	return p <= 26
-		? std::string(1, 'a' + static_cast<char>(p) - 1)
-		: "patch" + std::to_string(p);
+	return p <= 26 ? std::string(1, 'a' + static_cast<char>(p) - 1) : "patch" + std::to_string(p);
 }
 
 std::string format_openssl_version(long v)
@@ -107,7 +105,7 @@ std::string format_openssl_version(long v)
 	if(v < 0x0930L) {
 		// Pre-0.9.3 seems simpler times overall.
 		minor = v & 0x0F00L >> 8;
-		fix   = v & 0x00F0L >> 4;
+		fix = v & 0x00F0L >> 4;
 		patch = v & 0x000FL;
 
 		fmt << "0." << minor << '.' << fix;
@@ -121,10 +119,10 @@ std::string format_openssl_version(long v)
 		// 15.x.x, or they expect long to be always > 32-bits by then. Who the hell
 		// knows, really.
 		//
-		major  = (v & 0xF0000000L) >> 28;
-		minor  = (v & 0x0FF00000L) >> 20;
-		fix    = (v & 0x000FF000L) >> 12;
-		patch  = (v & 0x00000FF0L) >> 4;
+		major = (v & 0xF0000000L) >> 28;
+		minor = (v & 0x0FF00000L) >> 20;
+		fix = (v & 0x000FF000L) >> 12;
+		patch = (v & 0x00000FF0L) >> 4;
 		status = (v & 0x0000000FL);
 
 		if(v < 0x00905100L) {
@@ -251,10 +249,8 @@ version_table_manager::version_table_manager()
 	//
 
 	compiled[LIB_CURL] = format_version(
-		(LIBCURL_VERSION_NUM & 0xFF0000) >> 16,
-		(LIBCURL_VERSION_NUM & 0x00FF00) >> 8,
-		LIBCURL_VERSION_NUM & 0x0000FF);
-	curl_version_info_data *curl_ver = curl_version_info(CURLVERSION_NOW);
+		(LIBCURL_VERSION_NUM & 0xFF0000) >> 16, (LIBCURL_VERSION_NUM & 0x00FF00) >> 8, LIBCURL_VERSION_NUM & 0x0000FF);
+	curl_version_info_data* curl_ver = curl_version_info(CURLVERSION_NOW);
 	if(curl_ver && curl_ver->version) {
 		linked[LIB_CURL] = curl_ver->version;
 	}
@@ -311,7 +307,7 @@ version_table_manager::version_table_manager()
 
 const std::string empty_version = "";
 
-} // end anonymous namespace 1
+} // namespace
 
 std::string build_arch()
 {
@@ -334,7 +330,7 @@ std::string build_arch()
 #elif BOOST_ARCH_SPARC
 	return "sparc";
 #else
-	#warning Unrecognized platform or Boost.Predef broken/unavailable
+#warning Unrecognized platform or Boost.Predef broken/unavailable
 	// Congratulations, you're running Wesnoth on an exotic platform -- either that or you live in
 	// the foretold future where x86 and ARM stopped being the dominant CPU architectures for the
 	// general-purpose consumer market. If you want to add label support for your platform, check
@@ -410,7 +406,8 @@ std::string dist_channel_id()
 	return info;
 }
 
-namespace {
+namespace
+{
 
 /**
  * Formats items into a tidy 2-column list with a fixed-length first column.
@@ -421,7 +418,8 @@ public:
 	using list_entry = std::pair<std::string, std::string>;
 	using contents_list = std::vector<list_entry>;
 
-	list_formatter(const std::string& heading, const contents_list& contents = {}, const std::string& empty_placeholder = "")
+	list_formatter(
+		const std::string& heading, const contents_list& contents = {}, const std::string& empty_placeholder = "")
 		: heading_(heading)
 		, placeholder_(empty_placeholder)
 		, contents_(contents)
@@ -462,15 +460,13 @@ void list_formatter::stream_put(std::ostream& os) const
 	if(contents_.empty() && !placeholder_.empty()) {
 		os << placeholder_ << '\n';
 	} else if(!contents_.empty()) {
-		auto label_length_comparator = [](const list_entry& a, const list_entry& b)
-		{
-			return utf8::size(a.first) < utf8::size(b.first);
-		};
+		auto label_length_comparator
+			= [](const list_entry& a, const list_entry& b) { return utf8::size(a.first) < utf8::size(b.first); };
 
 		const auto longest_entry_label = std::max_element(contents_.begin(), contents_.end(), label_length_comparator);
 		const std::size_t min_length = longest_entry_label != contents_.end()
-				? utf8::size(label_delimiter) + utf8::size(longest_entry_label->first)
-				: 0;
+			? utf8::size(label_delimiter) + utf8::size(longest_entry_label->first)
+			: 0;
 
 		// Save stream attributes for resetting them later after completing the loop
 		const std::size_t prev_width = os.width();
@@ -499,8 +495,7 @@ list_formatter library_versions_report_internal(const std::string& heading = "")
 {
 	list_formatter fmt{heading};
 
-	for(unsigned n = 0; n < LIB_COUNT; ++n)
-	{
+	for(unsigned n = 0; n < LIB_COUNT; ++n) {
 		if(versions.names[n].empty()) {
 			continue;
 		}
@@ -585,9 +580,7 @@ list_formatter video_settings_report_internal(const std::string& heading = "")
 	const auto& dpi = video::get_dpi();
 	std::string dpi_report;
 
-	dpi_report = dpi.first == 0.0f || dpi.second == 0.0f ?
-				 "<unknown>" :
-				 geometry_to_string(dpi.first, dpi.second);
+	dpi_report = dpi.first == 0.0f || dpi.second == 0.0f ? "<unknown>" : geometry_to_string(dpi.first, dpi.second);
 
 	fmt.insert("SDL video drivers", format_sdl_driver_list(drivers, current_driver));
 	fmt.insert("Window size", geometry_to_string(video::current_resolution()));
@@ -622,25 +615,26 @@ list_formatter sound_settings_report_internal(const std::string& heading = "")
 
 	static std::map<uint16_t, std::string> audio_format_names = {
 		// 8 bits
-		{ AUDIO_U8,     "unsigned 8 bit" },
-		{ AUDIO_S8,     "signed 8 bit" },
+		{AUDIO_U8, "unsigned 8 bit"},
+		{AUDIO_S8, "signed 8 bit"},
 		// 16 bits
-		{ AUDIO_U16LSB, "unsigned 16 bit little-endian" },
-		{ AUDIO_U16MSB, "unsigned 16 bit big-endian" },
-		{ AUDIO_S16LSB, "signed 16 bit little-endian" },
-		{ AUDIO_S16MSB, "signed 16 bit big-endian" },
+		{AUDIO_U16LSB, "unsigned 16 bit little-endian"},
+		{AUDIO_U16MSB, "unsigned 16 bit big-endian"},
+		{AUDIO_S16LSB, "signed 16 bit little-endian"},
+		{AUDIO_S16MSB, "signed 16 bit big-endian"},
 		// 32 bits
-		{ AUDIO_S32LSB, "signed 32 bit little-endian" },
-		{ AUDIO_S32MSB, "signed 32 bit big-endian" },
-		{ AUDIO_F32LSB, "signed 32 bit floating point little-endian" },
-		{ AUDIO_F32MSB, "signed 32 bit floating point big-endian" },
+		{AUDIO_S32LSB, "signed 32 bit little-endian"},
+		{AUDIO_S32MSB, "signed 32 bit big-endian"},
+		{AUDIO_F32LSB, "signed 32 bit floating point little-endian"},
+		{AUDIO_F32MSB, "signed 32 bit floating point big-endian"},
 	};
 
 	auto fmt_names_it = audio_format_names.find(driver_status.format);
 	// If we don't recognize the format id just print the raw number
-	const std::string fmt_name = fmt_names_it != audio_format_names.end()
-			? fmt_names_it->second
-			: formatter() << "0x" << std::setfill('0') << std::setw(2*sizeof(driver_status.format)) << std::hex << std::uppercase << driver_status.format;
+	const std::string fmt_name = fmt_names_it != audio_format_names.end() ? fmt_names_it->second
+																		  : formatter()
+			<< "0x" << std::setfill('0') << std::setw(2 * sizeof(driver_status.format)) << std::hex << std::uppercase
+			<< driver_status.format;
 
 	fmt.insert("SDL audio drivers", format_sdl_driver_list(drivers, current_driver));
 	fmt.insert("Number of channels", std::to_string(driver_status.channels));
@@ -651,7 +645,7 @@ list_formatter sound_settings_report_internal(const std::string& heading = "")
 	return fmt;
 }
 
-} // end anonymous namespace 2
+} // namespace
 
 std::string library_versions_report()
 {
@@ -666,12 +660,12 @@ std::string optional_features_report()
 std::string full_build_report()
 {
 	list_formatter::contents_list paths{
-		{"Data dir",        game_config::path},
-		{"User data dir",   filesystem::get_user_data_dir()},
-		{"Saves dir",       filesystem::get_saves_dir()},
-		{"Add-ons dir",     filesystem::get_addons_dir()},
-		{"Cache dir",       filesystem::get_cache_dir()},
-		{"Logs dir",        filesystem::get_logs_dir()},
+		{"Data dir", game_config::path},
+		{"User data dir", filesystem::get_user_data_dir()},
+		{"Saves dir", filesystem::get_saves_dir()},
+		{"Add-ons dir", filesystem::get_addons_dir()},
+		{"Cache dir", filesystem::get_cache_dir()},
+		{"Logs dir", filesystem::get_logs_dir()},
 	};
 
 	// Obfuscate usernames in paths
@@ -691,10 +685,8 @@ std::string full_build_report()
 	  << "Running on " << desktop::os_version() << '\n'
 	  << "Distribution channel: " << dist_channel_id() << '\n'
 	  << '\n'
-	  << list_formatter{"Game paths", paths}
-	  << library_versions_report_internal("Libraries")
-	  << optional_features_report_internal("Features")
-	  << video_settings_report_internal("Current video settings")
+	  << list_formatter{"Game paths", paths} << library_versions_report_internal("Libraries")
+	  << optional_features_report_internal("Features") << video_settings_report_internal("Current video settings")
 	  << sound_settings_report_internal("Current audio settings")
 	  << list_formatter("Installed add-ons", addons, "No add-ons installed.");
 

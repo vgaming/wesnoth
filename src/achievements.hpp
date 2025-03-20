@@ -77,7 +77,8 @@ struct achievement
 };
 
 /**
- * A set of achievements tied to a particular content. Achievements can be added to any content from any add-on, even if it's entirely unrelated.
+ * A set of achievements tied to a particular content. Achievements can be added to any content from any add-on, even if
+ * it's entirely unrelated.
  */
 struct achievement_group
 {
@@ -92,7 +93,8 @@ struct achievement_group
 };
 
 /**
- * This class is responsible for reading all available achievements from mainline's and any add-ons' achievements.cfg files for use in achievements_dialog.
+ * This class is responsible for reading all available achievements from mainline's and any add-ons' achievements.cfg
+ * files for use in achievements_dialog.
  */
 class achievements
 {

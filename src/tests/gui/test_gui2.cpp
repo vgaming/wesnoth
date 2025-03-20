@@ -33,13 +33,13 @@
 #include "generators/map_create.hpp"
 #include "gettext.hpp"
 #include "gui/core/layout_exception.hpp"
+#include "gui/dialogs/achievements_dialog.hpp"
 #include "gui/dialogs/addon/addon_auth.hpp"
 #include "gui/dialogs/addon/addon_server_info.hpp"
 #include "gui/dialogs/addon/connect.hpp"
 #include "gui/dialogs/addon/install_dependencies.hpp"
 #include "gui/dialogs/addon/license_prompt.hpp"
 #include "gui/dialogs/addon/manager.hpp"
-#include "gui/dialogs/achievements_dialog.hpp"
 #include "gui/dialogs/attack_predictions.hpp"
 #include "gui/dialogs/campaign_difficulty.hpp"
 #include "gui/dialogs/campaign_selection.hpp"
@@ -86,6 +86,7 @@
 #include "gui/dialogs/migrate_version_selection.hpp"
 #include "gui/dialogs/multiplayer/faction_select.hpp"
 #include "gui/dialogs/multiplayer/lobby.hpp"
+#include "gui/dialogs/multiplayer/match_history.hpp"
 #include "gui/dialogs/multiplayer/mp_alerts_options.hpp"
 #include "gui/dialogs/multiplayer/mp_change_control.hpp"
 #include "gui/dialogs/multiplayer/mp_connect.hpp"
@@ -93,16 +94,15 @@
 #include "gui/dialogs/multiplayer/mp_join_game.hpp"
 #include "gui/dialogs/multiplayer/mp_join_game_password_prompt.hpp"
 #include "gui/dialogs/multiplayer/mp_login.hpp"
-#include "gui/dialogs/multiplayer/match_history.hpp"
 #include "gui/dialogs/multiplayer/mp_method_selection.hpp"
 #include "gui/dialogs/multiplayer/mp_report.hpp"
 #include "gui/dialogs/multiplayer/mp_staging.hpp"
 #include "gui/dialogs/multiplayer/player_info.hpp"
 #include "gui/dialogs/outro.hpp"
 #include "gui/dialogs/prompt.hpp"
+#include "gui/dialogs/reachmap_options.hpp"
 #include "gui/dialogs/screenshot_notification.hpp"
 #include "gui/dialogs/select_orb_colors.hpp"
-#include "gui/dialogs/reachmap_options.hpp"
 #include "gui/dialogs/simple_item_selector.hpp"
 #include "gui/dialogs/sp_options_configure.hpp"
 #include "gui/dialogs/statistics_dialog.hpp"
@@ -139,10 +139,11 @@
 
 using namespace gui2::dialogs;
 
-struct test_gui2_fixture {
+struct test_gui2_fixture
+{
 	test_gui2_fixture()
-	: config_manager()
-	, dummy_args({"wesnoth", "--noaddons"})
+		: config_manager()
+		, dummy_args({"wesnoth", "--noaddons"})
 	{
 		/** The main config, which contains the entire WML tree. */
 		game_config_view game_config_view_ = game_config_view::wrap(main_config);
@@ -153,7 +154,7 @@ struct test_gui2_fixture {
 		cache.clear_defines();
 		cache.add_define("EDITOR");
 		cache.add_define("MULTIPLAYER");
-		cache.get_config(game_config::path +"/data", main_config);
+		cache.get_config(game_config::path + "/data", main_config);
 
 		const filesystem::binary_paths_manager bin_paths_manager(game_config_view_);
 
@@ -171,9 +172,11 @@ struct test_gui2_fixture {
 config test_gui2_fixture::main_config;
 const std::string test_gui2_fixture::widgets_file = "widgets_tested.log";
 
-namespace gui2 {
+namespace gui2
+{
 
-namespace dialogs {
+namespace dialogs
+{
 
 std::string get_modal_dialog_id(const modal_dialog& dialog)
 {
@@ -188,39 +191,87 @@ std::string get_modeless_dialog_id(const modeless_dialog& dialog)
 } // namespace dialogs
 } // namespace gui2
 
-namespace {
+namespace
+{
 
-	/**
-	 * Helper class to generate a dialog.
-	 *
-	 * This class makes sure the dialog is properly created and initialized.
-	 * The specialized versions are at the end of this file.
-	 */
-	template<class T>
-	struct dialog_tester
+/**
+ * Helper class to generate a dialog.
+ *
+ * This class makes sure the dialog is properly created and initialized.
+ * The specialized versions are at the end of this file.
+ */
+template<class T>
+struct dialog_tester
+{
+	T* create()
 	{
-		T* create() { return new T(); }
-	};
+		return new T();
+	}
+};
 
-	typedef std::pair<unsigned, unsigned> resolution;
-	typedef std::vector<std::pair<unsigned, unsigned>> resolution_list;
+typedef std::pair<unsigned, unsigned> resolution;
+typedef std::vector<std::pair<unsigned, unsigned>> resolution_list;
 
-	template<class T>
-	void test_resolutions(const resolution_list& resolutions)
-	{
+template<class T>
+void test_resolutions(const resolution_list& resolutions)
+{
+	for(const resolution& resolution : resolutions) {
+		test_utils::get_fake_display(resolution.first, resolution.second);
+
+		dialog_tester<T> ctor;
+		const std::unique_ptr<modal_dialog> dlg(ctor.create());
+		BOOST_REQUIRE_MESSAGE(dlg.get(), "Failed to create a dialog.");
+
+		std::string id = get_modal_dialog_id(*dlg.get());
+		filesystem::write_file(test_gui2_fixture::widgets_file, "," + id, std::ios_base::app);
+
+		std::string exception;
+		try {
+			dlg->show(1);
+		} catch(const gui2::layout_exception_width_modified&) {
+			exception = "gui2::layout_exception_width_modified";
+		} catch(const gui2::layout_exception_width_resize_failed&) {
+			exception = "gui2::layout_exception_width_resize_failed";
+		} catch(const gui2::layout_exception_height_resize_failed&) {
+			exception = "gui2::layout_exception_height_resize_failed";
+		} catch(const wml_exception& e) {
+			exception = e.dev_message;
+		} catch(const std::exception& e) {
+			exception = e.what();
+		} catch(...) {
+			exception = utils::get_unknown_exception_type();
+		}
+		BOOST_CHECK_MESSAGE(exception.empty(),
+			"Test for '" << id << "' Failed\nnew widgets = " << gui2::new_widgets << " resolution = "
+						 << resolution.first << 'x' << resolution.second << "\nException caught: " << exception << '.');
+	}
+}
+
+template<class T>
+void test_popup_resolutions(const resolution_list& resolutions)
+{
+	bool interact = false;
+	for(int i = 0; i < 2; ++i) {
 		for(const resolution& resolution : resolutions) {
+			// debug clock doesn't work at 800x600
+			if(resolution.first == 800 && resolution.second == 600) {
+				continue;
+			}
 			test_utils::get_fake_display(resolution.first, resolution.second);
 
 			dialog_tester<T> ctor;
-			const std::unique_ptr<modal_dialog> dlg(ctor.create());
+			const std::unique_ptr<modeless_dialog> dlg(ctor.create());
 			BOOST_REQUIRE_MESSAGE(dlg.get(), "Failed to create a dialog.");
 
-			std::string id = get_modal_dialog_id(*dlg.get());
-			filesystem::write_file(test_gui2_fixture::widgets_file, ","+id, std::ios_base::app);
+			std::string id = get_modeless_dialog_id(*dlg.get());
+			filesystem::write_file(test_gui2_fixture::widgets_file, "," + id, std::ios_base::app);
 
 			std::string exception;
 			try {
-				dlg->show(1);
+				dlg->show(interact);
+				gui2::window* window = dlg.get();
+				BOOST_REQUIRE_NE(window, static_cast<void*>(nullptr));
+				window->draw();
 			} catch(const gui2::layout_exception_width_modified&) {
 				exception = "gui2::layout_exception_width_modified";
 			} catch(const gui2::layout_exception_width_resize_failed&) {
@@ -235,112 +286,57 @@ namespace {
 				exception = utils::get_unknown_exception_type();
 			}
 			BOOST_CHECK_MESSAGE(exception.empty(),
-					"Test for '" << id
-					<< "' Failed\nnew widgets = " << gui2::new_widgets
-					<< " resolution = " << resolution.first
-					<< 'x' << resolution.second
-					<< "\nException caught: " << exception << '.');
+				"Test for '" << id << "' Failed\nnew widgets = " << gui2::new_widgets
+							 << " resolution = " << resolution.first << 'x' << resolution.second
+							 << "\nException caught: " << exception << '.');
 		}
+
+		interact = true;
 	}
-
-	template<class T>
-	void test_popup_resolutions(const resolution_list& resolutions)
-	{
-		bool interact = false;
-		for(int i = 0; i < 2; ++i) {
-			for(const resolution& resolution : resolutions) {
-				// debug clock doesn't work at 800x600
-				if(resolution.first == 800 && resolution.second == 600) {
-					continue;
-				}
-				test_utils::get_fake_display(resolution.first, resolution.second);
-
-				dialog_tester<T> ctor;
-				const std::unique_ptr<modeless_dialog> dlg(ctor.create());
-				BOOST_REQUIRE_MESSAGE(dlg.get(), "Failed to create a dialog.");
-
-				std::string id = get_modeless_dialog_id(*dlg.get());
-				filesystem::write_file(test_gui2_fixture::widgets_file, ","+id, std::ios_base::app);
-
-				std::string exception;
-				try {
-					dlg->show(interact);
-					gui2::window* window = dlg.get();
-					BOOST_REQUIRE_NE(window, static_cast<void*>(nullptr));
-					window->draw();
-				} catch(const gui2::layout_exception_width_modified&) {
-					exception = "gui2::layout_exception_width_modified";
-				} catch(const gui2::layout_exception_width_resize_failed&) {
-					exception = "gui2::layout_exception_width_resize_failed";
-				} catch(const gui2::layout_exception_height_resize_failed&) {
-					exception = "gui2::layout_exception_height_resize_failed";
-				} catch(const wml_exception& e) {
-					exception = e.dev_message;
-				} catch(const std::exception& e) {
-					exception = e.what();
-				} catch(...) {
-					exception = utils::get_unknown_exception_type();
-				}
-				BOOST_CHECK_MESSAGE(exception.empty(),
-						"Test for '" << id
-						<< "' Failed\nnew widgets = " << gui2::new_widgets
-						<< " resolution = " << resolution.first
-						<< 'x' << resolution.second
-						<< "\nException caught: " << exception << '.');
-			}
-
-			interact = true;
-		}
-	}
+}
 
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable: 4702)
+#pragma warning(disable : 4702)
 #endif
-	void test_tip_resolutions(const resolution_list& resolutions
-			, const std::string& id)
-	{
-		for(const auto& resolution : resolutions) {
-			test_utils::get_fake_display(resolution.first, resolution.second);
+void test_tip_resolutions(const resolution_list& resolutions, const std::string& id)
+{
+	for(const auto& resolution : resolutions) {
+		test_utils::get_fake_display(resolution.first, resolution.second);
 
-			filesystem::write_file(test_gui2_fixture::widgets_file, ","+id, std::ios_base::app);
+		filesystem::write_file(test_gui2_fixture::widgets_file, "," + id, std::ios_base::app);
 
-			std::string exception;
-			try {
-				tip::show(id
-						, "Test message for a tooltip."
-						, point(0, 0)
-						, {0,0,0,0});
-				tip::remove();
-			} catch(const gui2::layout_exception_width_modified&) {
-				exception = "gui2::layout_exception_width_modified";
-			} catch(const gui2::layout_exception_width_resize_failed&) {
-				exception = "gui2::layout_exception_width_resize_failed";
-			} catch(const gui2::layout_exception_height_resize_failed&) {
-				exception = "gui2::layout_exception_height_resize_failed";
-			} catch(const wml_exception& e) {
-				exception = e.dev_message;
-			} catch(const std::exception& e) {
-				exception = e.what();
-			} catch(...) {
-				exception = utils::get_unknown_exception_type();
-			}
-			BOOST_CHECK_MESSAGE(exception.empty(),
-					"Test for tip '" << id
-					<< "' Failed\nnew widgets = " << gui2::new_widgets
-					<< " resolution = " << resolution.first
-					<< 'x' << resolution.second
-					<< "\nException caught: " << exception << '.');
+		std::string exception;
+		try {
+			tip::show(id, "Test message for a tooltip.", point(0, 0), {0, 0, 0, 0});
+			tip::remove();
+		} catch(const gui2::layout_exception_width_modified&) {
+			exception = "gui2::layout_exception_width_modified";
+		} catch(const gui2::layout_exception_width_resize_failed&) {
+			exception = "gui2::layout_exception_width_resize_failed";
+		} catch(const gui2::layout_exception_height_resize_failed&) {
+			exception = "gui2::layout_exception_height_resize_failed";
+		} catch(const wml_exception& e) {
+			exception = e.dev_message;
+		} catch(const std::exception& e) {
+			exception = e.what();
+		} catch(...) {
+			exception = utils::get_unknown_exception_type();
 		}
+		BOOST_CHECK_MESSAGE(exception.empty(),
+			"Test for tip '" << id << "' Failed\nnew widgets = " << gui2::new_widgets
+							 << " resolution = " << resolution.first << 'x' << resolution.second
+							 << "\nException caught: " << exception << '.');
 	}
+}
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 
 const resolution_list& get_gui_resolutions()
 {
-	static resolution_list result {
-		{800,  600},
+	static resolution_list result{
+		{800, 600},
 		{1024, 768},
 		{1280, 1024},
 		{1680, 1050},
@@ -354,13 +350,13 @@ void test()
 {
 	gui2::new_widgets = false;
 
-//	for(std::size_t i = 0; i < 2; ++i) {
+	//	for(std::size_t i = 0; i < 2; ++i) {
 
-		test_resolutions<T>(get_gui_resolutions());
+	test_resolutions<T>(get_gui_resolutions());
 
-//		break; // FIXME: New widgets break
-//		gui2::new_widgets = true;
-//	}
+	//		break; // FIXME: New widgets break
+	//		gui2::new_widgets = true;
+	//	}
 }
 
 template<class T>
@@ -369,7 +365,6 @@ void test_popup()
 	gui2::new_widgets = false;
 
 	for(std::size_t i = 0; i < 2; ++i) {
-
 		test_popup_resolutions<T>(get_gui_resolutions());
 
 		gui2::new_widgets = true;
@@ -381,7 +376,6 @@ void test_tip(const std::string& id)
 	gui2::new_widgets = false;
 
 	for(std::size_t i = 0; i < 2; ++i) {
-
 		test_tip_resolutions(get_gui_resolutions(), id);
 
 		gui2::new_widgets = true;
@@ -390,7 +384,7 @@ void test_tip(const std::string& id)
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE( test_gui2, test_gui2_fixture )
+BOOST_FIXTURE_TEST_SUITE(test_gui2, test_gui2_fixture)
 
 BOOST_AUTO_TEST_CASE(modal_dialog_test_addon_auth)
 {
@@ -667,7 +661,7 @@ BOOST_AUTO_TEST_CASE(test_last)
 {
 	std::set<std::string> widget_list = gui2::registered_window_types();
 	std::vector<std::string> widgets_tested = utils::split(filesystem::read_file(test_gui2_fixture::widgets_file));
-	std::set<std::string> omitted {
+	std::set<std::string> omitted{
 		/*
 		 * The unit attack unit test are disabled for now, they calling parameters
 		 * don't allow 'nullptr's needs to be fixed.
@@ -703,25 +697,23 @@ BOOST_AUTO_TEST_CASE(test_last)
 		"help_browser",
 		"story_viewer",
 		"outro",
-		"mp_change_control", // Basically useless without a game_board object, so disabling
-		"game_stats", // segfault with LTO
+		"mp_change_control",   // Basically useless without a game_board object, so disabling
+		"game_stats",          // segfault with LTO
 		"gamestate_inspector", // segfault with LTO
 		"server_info",
-		"sp_options_configure",// segfault with LTO
-		"campaign_selection",// segfault with LTO
-		"game_load",// segfault after disabling the above tests
+		"sp_options_configure", // segfault with LTO
+		"campaign_selection",   // segfault with LTO
+		"game_load",            // segfault after disabling the above tests
 		"file_progress",
 	};
 	filesystem::delete_file(test_gui2_fixture::widgets_file);
 
-	for(const std::string& item : widgets_tested)
-	{
+	for(const std::string& item : widgets_tested) {
 		widget_list.erase(item);
 		PLAIN_LOG << "Checking widget " << item;
 		BOOST_CHECK_EQUAL(omitted.count(item), 0);
 	}
-	for(const std::string& item : omitted)
-	{
+	for(const std::string& item : omitted) {
 		widget_list.erase(item);
 	}
 
@@ -750,7 +742,8 @@ BOOST_AUTO_TEST_CASE(test_make_test_fake)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-namespace {
+namespace
+{
 
 template<>
 struct dialog_tester<addon_server_info>
@@ -787,7 +780,8 @@ struct dialog_tester<addon_connect>
 template<>
 struct dialog_tester<addon_license_prompt>
 {
-	std::string license_terms = R"(Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ante nibh, dignissim ullamcorper tristique eget, condimentum sit amet enim. Aenean dictum pulvinar lacinia. Etiam eleifend, leo sed efficitur consectetur, augue nulla ornare lectus, vitae molestie lacus risus vitae libero. Quisque odio nunc, porttitor eget fermentum sit amet, faucibus eu risus. Praesent sit amet lacus tortor. Suspendisse volutpat quam vitae ipsum fermentum, in vulputate metus egestas. Nulla id consequat ex. Nulla ac dignissim nisl, nec euismod lectus. Duis vitae dolor ornare, convallis justo in, porta dui.
+	std::string license_terms
+		= R"(Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ante nibh, dignissim ullamcorper tristique eget, condimentum sit amet enim. Aenean dictum pulvinar lacinia. Etiam eleifend, leo sed efficitur consectetur, augue nulla ornare lectus, vitae molestie lacus risus vitae libero. Quisque odio nunc, porttitor eget fermentum sit amet, faucibus eu risus. Praesent sit amet lacus tortor. Suspendisse volutpat quam vitae ipsum fermentum, in vulputate metus egestas. Nulla id consequat ex. Nulla ac dignissim nisl, nec euismod lectus. Duis vitae dolor ornare, convallis justo in, porta dui.
 
 Sed faucibus nibh sit amet ligula porta, non malesuada nibh tristique. Maecenas aliquam diam non eros convallis mattis. Proin rhoncus condimentum leo, sed condimentum magna. Phasellus cursus condimentum lacus, sed sodales lacus. Sed pharetra dictum metus, eget dictum nibh lobortis imperdiet. Nunc tempus sollicitudin bibendum. In porttitor interdum orci. Curabitur vitae nibh vestibulum, condimentum lectus quis, condimentum dui. In quis cursus nisl. Maecenas semper neque eu ipsum aliquam, id porta ligula lacinia. Integer sed blandit ex, eu accumsan magna.)";
 	addon_license_prompt* create()
@@ -826,7 +820,9 @@ struct dialog_tester<campaign_selection>
 {
 	saved_game state;
 	ng::create_engine ng;
-	dialog_tester() : state(config {"campaign_type", "scenario"}), ng(state)
+	dialog_tester()
+		: state(config{"campaign_type", "scenario"})
+		, ng(state)
 	{
 	}
 	campaign_selection* create()
@@ -842,7 +838,11 @@ struct dialog_tester<chat_log>
 	vconfig vcfg;
 	replay_recorder_base rbase;
 	replay r;
-	dialog_tester() : vcfg(cfg), r(rbase) {}
+	dialog_tester()
+		: vcfg(cfg)
+		, r(rbase)
+	{
+	}
 	chat_log* create()
 	{
 		return new chat_log(vcfg, r);
@@ -972,7 +972,10 @@ struct dialog_tester<editor_edit_side>
 {
 	team t;
 	editor::editor_team_info info;
-	dialog_tester() : info(t) {}
+	dialog_tester()
+		: info(t)
+	{
+	}
 	editor_edit_side* create()
 	{
 		return new editor_edit_side(info);
@@ -1006,7 +1009,6 @@ struct dialog_tester<game_load>
 		view = game_config_view::wrap(cfg);
 		return new game_load(view, data);
 	}
-
 };
 
 template<>
@@ -1018,7 +1020,6 @@ struct dialog_tester<game_save>
 	{
 		return new game_save(title, filename);
 	}
-
 };
 
 template<>
@@ -1031,7 +1032,6 @@ struct dialog_tester<game_save_message>
 	{
 		return new game_save_message(title, filename, message);
 	}
-
 };
 
 template<>
@@ -1045,7 +1045,6 @@ struct dialog_tester<game_save_oos>
 	{
 		return new game_save_oos(ignore_all, title, filename, message);
 	}
-
 };
 
 template<>
@@ -1076,7 +1075,9 @@ struct dialog_tester<mp_lobby>
 	wesnothd_connection connection;
 	mp::lobby_info li;
 	int selected_game;
-	dialog_tester() : connection("", ""), li()
+	dialog_tester()
+		: connection("", "")
+		, li()
 	{
 	}
 	mp_lobby* create()
@@ -1089,7 +1090,8 @@ template<>
 struct dialog_tester<mp_match_history>
 {
 	wesnothd_connection connection;
-	dialog_tester() : connection("", "")
+	dialog_tester()
+		: connection("", "")
 	{
 	}
 	mp_match_history* create()
@@ -1107,13 +1109,20 @@ struct dialog_tester<gui2::dialogs::migrate_version_selection>
 	}
 };
 
-class fake_chat_handler : public events::chat_handler {
-	void add_chat_message(const std::time_t&,
-		const std::string&, int, const std::string&,
-		MESSAGE_TYPE) {}
-	void send_chat_message(const std::string&, bool) {}
-	void send_to_server(const config&) {}
-	void clear_messages() {}
+class fake_chat_handler : public events::chat_handler
+{
+	void add_chat_message(const std::time_t&, const std::string&, int, const std::string&, MESSAGE_TYPE)
+	{
+	}
+	void send_chat_message(const std::string&, bool)
+	{
+	}
+	void send_to_server(const config&)
+	{
+	}
+	void clear_messages()
+	{
+	}
 };
 
 template<>
@@ -1126,7 +1135,8 @@ struct dialog_tester<lobby_player_info>
 	mp::lobby_info li;
 	dialog_tester()
 		: connection("", "")
-		, ui(c), li()
+		, ui(c)
+		, li()
 	{
 	}
 	lobby_player_info* create()
@@ -1157,7 +1167,8 @@ template<>
 struct dialog_tester<mp_create_game>
 {
 	saved_game state;
-	dialog_tester() : state(config {"campaign_type", "multiplayer"})
+	dialog_tester()
+		: state(config{"campaign_type", "multiplayer"})
 	{
 	}
 	mp_create_game* create()
@@ -1186,7 +1197,7 @@ struct dialog_tester<mp_report>
 	}
 };
 
-static std::vector<std::string> depcheck_mods {"mod_one", "some other", "more"};
+static std::vector<std::string> depcheck_mods{"mod_one", "some other", "more"};
 
 template<>
 struct dialog_tester<depcheck_confirm_change>
@@ -1250,7 +1261,8 @@ struct dialog_tester<theme_list>
 		return new theme_list(themes, 0);
 	}
 };
-std::vector<theme_info> dialog_tester<theme_list>::themes {make_theme("classic"), make_theme("new"), make_theme("more"), make_theme("themes")};
+std::vector<theme_info> dialog_tester<theme_list>::themes{
+	make_theme("classic"), make_theme("new"), make_theme("more"), make_theme("themes")};
 
 template<>
 struct dialog_tester<editor_generate_map>
@@ -1258,10 +1270,10 @@ struct dialog_tester<editor_generate_map>
 	std::vector<std::unique_ptr<map_generator>> map_generators;
 	editor_generate_map* create()
 	{
-		for(const config &i : test_gui2_fixture::main_config.child_range("multiplayer")) {
+		for(const config& i : test_gui2_fixture::main_config.child_range("multiplayer")) {
 			if(i["scenario_generation"] == "default") {
 				auto generator_cfg = i.optional_child("generator");
-				if (generator_cfg) {
+				if(generator_cfg) {
 					map_generators.emplace_back(create_map_generator("", *generator_cfg));
 				}
 			}
@@ -1332,7 +1344,11 @@ struct dialog_tester<title_screen>
 	std::vector<std::string> args;
 	commandline_options opts;
 	game_launcher game;
-	dialog_tester() : opts(args), game(opts) {}
+	dialog_tester()
+		: opts(args)
+		, game(opts)
+	{
+	}
 	title_screen* create()
 	{
 		return new title_screen(game);
@@ -1348,7 +1364,7 @@ struct dialog_tester<wml_error>
 		return new wml_error("Summary", "Post summary", files, "Details");
 	}
 };
-std::vector<std::string> dialog_tester<wml_error>::files {"some", "files", "here"};
+std::vector<std::string> dialog_tester<wml_error>::files{"some", "files", "here"};
 
 template<>
 struct dialog_tester<wml_message_left>
@@ -1385,11 +1401,15 @@ struct dialog_tester<faction_select>
 	ng::flg_manager flg;
 	std::string color;
 	dialog_tester()
-		: era_cfg(), side_cfg(), eras(1, &era_cfg) // TODO: Add an actual era definition
+		: era_cfg()
+		, side_cfg()
+		, eras(1, &era_cfg) // TODO: Add an actual era definition
 		, flg(eras, side_cfg, false, false, false)
 		, color("teal")
-	{}
-	faction_select* create() {
+	{
+	}
+	faction_select* create()
+	{
 		return new faction_select(flg, color, 1);
 	}
 };
@@ -1399,7 +1419,10 @@ struct dialog_tester<generator_settings>
 {
 	config cfg;
 	generator_data data;
-	dialog_tester() : data(cfg) {}
+	dialog_tester()
+		: data(cfg)
+	{
+	}
 	generator_settings* create()
 	{
 		return new generator_settings(data);
@@ -1411,7 +1434,10 @@ struct dialog_tester<sp_options_configure>
 {
 	saved_game state;
 	ng::create_engine create_eng;
-	dialog_tester() : create_eng(state) {}
+	dialog_tester()
+		: create_eng(state)
+	{
+	}
 	sp_options_configure* create()
 	{
 		return new sp_options_configure(create_eng);
@@ -1424,7 +1450,12 @@ struct dialog_tester<statistics_dialog>
 	team t;
 	statistics_record::campaign_stats_t stats_record;
 	statistics_t stats;
-	dialog_tester() : t() , stats_record(), stats(stats_record) {}
+	dialog_tester()
+		: t()
+		, stats_record()
+		, stats(stats_record)
+	{
+	}
 	statistics_dialog* create()
 	{
 		return new statistics_dialog(stats, t);
@@ -1434,7 +1465,9 @@ struct dialog_tester<statistics_dialog>
 template<>
 struct dialog_tester<surrender_quit>
 {
-	dialog_tester() {}
+	dialog_tester()
+	{
+	}
 	surrender_quit* create()
 	{
 		return new surrender_quit();
@@ -1446,7 +1479,9 @@ struct dialog_tester<tod_new_schedule>
 {
 	std::string id = "id";
 	t_string name = "name";
-	dialog_tester() {}
+	dialog_tester()
+	{
+	}
 	tod_new_schedule* create()
 	{
 		return new tod_new_schedule(id, name);
@@ -1459,7 +1494,9 @@ struct dialog_tester<editor_edit_unit>
 	config cfg;
 	game_config_view view;
 
-	dialog_tester() {}
+	dialog_tester()
+	{
+	}
 	editor_edit_unit* create()
 	{
 		config& units = cfg.add_child("units");
@@ -1477,7 +1514,9 @@ struct dialog_tester<editor_edit_unit>
 template<>
 struct dialog_tester<gui_test_dialog>
 {
-	dialog_tester() {}
+	dialog_tester()
+	{
+	}
 	gui_test_dialog* create()
 	{
 		return new gui_test_dialog();

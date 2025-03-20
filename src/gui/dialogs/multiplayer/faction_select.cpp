@@ -58,24 +58,23 @@ void faction_select::pre_show()
 	toggle_button& gender_male = find_widget<toggle_button>("gender_male");
 	toggle_button& gender_female = find_widget<toggle_button>("gender_female");
 
-	gender_toggle_.add_member(&gender_rand,   "random");
-	gender_toggle_.add_member(&gender_male,   unit_race::s_male);
+	gender_toggle_.add_member(&gender_rand, "random");
+	gender_toggle_.add_member(&gender_male, unit_race::s_male);
 	gender_toggle_.add_member(&gender_female, unit_race::s_female);
 
 	gender_toggle_.set_member_states("random");
 
-	gender_toggle_.on_modified(
-		std::bind(&faction_select::on_gender_select, this, std::placeholders::_2));
+	gender_toggle_.on_modified(std::bind(&faction_select::on_gender_select, this, std::placeholders::_2));
 
 	//
 	// Set up leader menu button
 	//
-	connect_signal_notify_modified(find_widget<menu_button>("leader_menu"),
-		std::bind(&faction_select::on_leader_select, this));
+	connect_signal_notify_modified(
+		find_widget<menu_button>("leader_menu"), std::bind(&faction_select::on_leader_select, this));
 
 	// Leader's profile button
-	find_widget<button>("type_profile").connect_click_handler(
-		std::bind(&faction_select::profile_button_callback, this));
+	find_widget<button>("type_profile")
+		.connect_click_handler(std::bind(&faction_select::profile_button_callback, this));
 
 	//
 	// Set up faction list
@@ -84,10 +83,9 @@ void faction_select::pre_show()
 
 	keyboard_capture(&list);
 
-	connect_signal_notify_modified(list,
-		std::bind(&faction_select::on_faction_select, this));
+	connect_signal_notify_modified(list, std::bind(&faction_select::on_faction_select, this));
 
-	for(const config *s : flg_manager_.choosable_factions()) {
+	for(const config* s : flg_manager_.choosable_factions()) {
 		const config& side = *s;
 
 		widget_data data;
@@ -131,7 +129,8 @@ void faction_select::on_faction_select()
 		const unit_type* unit = unit_types.find(leader);
 
 		if(unit) {
-			const std::string icon = formatter() << unit->image() << "~RC(" << unit->flag_rgb() << ">" << tc_color_ << ")";
+			const std::string icon = formatter()
+				<< unit->image() << "~RC(" << unit->flag_rgb() << ">" << tc_color_ << ")";
 			leaders.emplace_back("label", unit->type_name(), "icon", icon);
 		} else if(leader == "random") {
 			leaders.emplace_back("label", _("Random"), "icon", ng::random_enemy_picture);
@@ -157,9 +156,8 @@ void faction_select::on_faction_select()
 		}
 	}
 
-	std::sort(recruit_names.begin(), recruit_names.end(), [](const std::string& s1, const std::string& s2) {
-		return translation::compare(s1, s2) < 0;
-	});
+	std::sort(recruit_names.begin(), recruit_names.end(),
+		[](const std::string& s1, const std::string& s2) { return translation::compare(s1, s2) < 0; });
 
 	find_widget<styled_widget>("recruits").set_label(utils::bullet_list(recruit_names, 0));
 }
@@ -170,7 +168,7 @@ void faction_select::on_leader_select()
 
 	// TODO: should we decouple this from the flg manager and instead just check the unit type directly?
 	// If that's done so, we'd need to come up with a different check for Random availability.
-	gender_toggle_.set_members_enabled([this](const std::string& gender)->bool {
+	gender_toggle_.set_members_enabled([this](const std::string& gender) -> bool {
 		const std::vector<std::string>& genders = flg_manager_.choosable_genders();
 		return std::find(genders.begin(), genders.end(), gender) != genders.end();
 	});
@@ -228,4 +226,4 @@ void faction_select::post_show()
 	}
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

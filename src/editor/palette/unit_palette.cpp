@@ -26,15 +26,17 @@
 #include "team.hpp"
 #include "units/types.hpp"
 
-namespace editor {
+namespace editor
+{
 
-std::string unit_palette::get_help_string() const {
+std::string unit_palette::get_help_string() const
+{
 	return selected_fg_item().type_name();
 }
 
 void unit_palette::setup(const game_config_view& /*cfg*/)
 {
-	for(const unit_type_data::unit_type_map::value_type &i : unit_types.types()) {
+	for(const unit_type_data::unit_type_map::value_type& i : unit_types.types()) {
 		if(i.second.do_not_list())
 			continue;
 		item_map_.emplace(i.second.id(), i.second);
@@ -43,7 +45,7 @@ void unit_palette::setup(const game_config_view& /*cfg*/)
 		group_map_["all"].push_back(i.second.id());
 	}
 
-	for(const race_map::value_type &i : unit_types.races()) {
+	for(const race_map::value_type& i : unit_types.races()) {
 		if(group_map_[i.second.id()].empty())
 			continue;
 		config cfg;
@@ -54,9 +56,9 @@ void unit_palette::setup(const game_config_view& /*cfg*/)
 		groups_.emplace_back(cfg);
 	}
 
-	//TODO
-	//move "invalid" items to the end
-	//std::stable_partition(items.begin(), items.end(), is_valid_terrain);
+	// TODO
+	// move "invalid" items to the end
+	// std::stable_partition(items.begin(), items.end(), is_valid_terrain);
 
 	select_fg_item(item_map_.begin()->second.id());
 	select_bg_item(item_map_.begin()->second.id());
@@ -70,14 +72,11 @@ void unit_palette::setup(const game_config_view& /*cfg*/)
 }
 
 void unit_palette::setup_item(
-	const unit_type& u,
-	texture& base_image,
-	texture& /*overlay_image*/,
-	std::stringstream& tooltip_text)
+	const unit_type& u, texture& base_image, texture& /*overlay_image*/, std::stringstream& tooltip_text)
 {
 	std::stringstream filename;
-	filename << u.image() << "~RC(" << u.flag_rgb() << '>'
-			 << team::get_side_color_id(gui_.viewing_team().side()) << ')';
+	filename << u.image() << "~RC(" << u.flag_rgb() << '>' << team::get_side_color_id(gui_.viewing_team().side())
+			 << ')';
 
 	base_image = image::get_texture(filename.str());
 	if(!base_image) {
@@ -93,8 +92,8 @@ void unit_palette::setup_item(
 	tooltip_text << u.type_name();
 }
 
-unit_palette::unit_palette(editor_display &gui, editor_toolkit &toolkit)
-//TODO avoid magic numbers
+unit_palette::unit_palette(editor_display& gui, editor_toolkit& toolkit)
+	// TODO avoid magic numbers
 	: editor_palette<const unit_type&>(gui, 36, 4, toolkit)
 	, selected_bg_items_()
 {
@@ -110,8 +109,8 @@ bool unit_palette::is_selected_bg_item(const std::string& id)
 	return selected_bg_items_.count(id) != 0;
 }
 
-void unit_palette::select_bg_item(const std::string& item_id) {
-
+void unit_palette::select_bg_item(const std::string& item_id)
+{
 	if(selected_bg_items_.count(item_id) != 0) {
 		selected_bg_items_.erase(item_id);
 	} else {
@@ -121,4 +120,4 @@ void unit_palette::select_bg_item(const std::string& item_id) {
 	set_dirty();
 }
 
-}
+} // namespace editor

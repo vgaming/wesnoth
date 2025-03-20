@@ -37,10 +37,10 @@ server_info::server_info(const std::string& info, const std::string& announcemen
 
 void server_info::pre_show()
 {
-   find_widget<label>("server_information").set_label(server_information_);
-   find_widget<label>("announcements").set_label(announcements_);
+	find_widget<label>("server_information").set_label(server_information_);
+	find_widget<label>("announcements").set_label(announcements_);
 
-   stacked_widget& pager = find_widget<stacked_widget>("tabs_container");
+	stacked_widget& pager = find_widget<stacked_widget>("tabs_container");
 	pager.select_layer(0);
 
 	listbox& tab_bar = find_widget<listbox>("tab_bar");
@@ -58,4 +58,4 @@ void server_info::tab_switch_callback()
 	pager.select_layer(std::max<int>(0, tab_bar.get_selected_row()));
 }
 
-}
+} // namespace gui2::dialogs

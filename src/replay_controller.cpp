@@ -15,9 +15,9 @@
 #include "replay_controller.hpp"
 
 #include "log.hpp"
+#include "playsingle_controller.hpp"
 #include "replay.hpp"
 #include "resources.hpp"
-#include "playsingle_controller.hpp"
 
 static lg::log_domain log_engine("engine");
 #define DBG_NG LOG_STREAM(debug, log_engine)
@@ -31,37 +31,73 @@ namespace
 {
 struct replay_play_nostop : public replay_controller::replay_stop_condition
 {
-	replay_play_nostop() {}
-	virtual bool should_stop() { return false; }
+	replay_play_nostop()
+	{
+	}
+	virtual bool should_stop()
+	{
+		return false;
+	}
 };
 
 struct replay_play_moves : public replay_controller::replay_stop_condition
 {
 	int moves_todo_;
-	replay_play_moves(int moves_todo) : moves_todo_(moves_todo) {}
-	virtual void move_done() { --moves_todo_; }
-	virtual bool should_stop() { return moves_todo_ == 0; }
+	replay_play_moves(int moves_todo)
+		: moves_todo_(moves_todo)
+	{
+	}
+	virtual void move_done()
+	{
+		--moves_todo_;
+	}
+	virtual bool should_stop()
+	{
+		return moves_todo_ == 0;
+	}
 };
 
 struct replay_play_turn : public replay_controller::replay_stop_condition
 {
 	int turn_begin_;
 	int turn_current_;
-	replay_play_turn(int turn_begin) : turn_begin_(turn_begin), turn_current_(turn_begin) {}
-	virtual void new_side_turn(int , int turn) { turn_current_ = turn; }
-	virtual bool should_stop() { return turn_begin_ != turn_current_; }
+	replay_play_turn(int turn_begin)
+		: turn_begin_(turn_begin)
+		, turn_current_(turn_begin)
+	{
+	}
+	virtual void new_side_turn(int, int turn)
+	{
+		turn_current_ = turn;
+	}
+	virtual bool should_stop()
+	{
+		return turn_begin_ != turn_current_;
+	}
 };
 
 struct replay_play_side : public replay_controller::replay_stop_condition
 {
 	bool next_side_;
-	replay_play_side() : next_side_(false) {}
-	virtual void new_side_turn(int , int) { next_side_ = true; }
-	virtual bool should_stop() { return next_side_; }
+	replay_play_side()
+		: next_side_(false)
+	{
+	}
+	virtual void new_side_turn(int, int)
+	{
+		next_side_ = true;
+	}
+	virtual bool should_stop()
+	{
+		return next_side_;
+	}
 };
-}
+} // namespace
 
-replay_controller::replay_controller(play_controller& controller, bool control_view, const std::shared_ptr<config>& reset_state, const std::function<void()>& on_end_replay)
+replay_controller::replay_controller(play_controller& controller,
+	bool control_view,
+	const std::shared_ptr<config>& reset_state,
+	const std::function<void()>& on_end_replay)
 	: controller_(controller)
 	, stop_condition_(new replay_stop_condition())
 	, disabler_()
@@ -87,9 +123,8 @@ replay_controller::~replay_controller()
 void replay_controller::add_replay_theme()
 {
 	const config& theme_cfg = theme::get_theme_config(controller_.theme());
-	if (const auto res = theme_cfg.optional_child("resolution"))
-	{
-		if (const auto replay_theme_cfg = res->optional_child("replay")) {
+	if(const auto res = theme_cfg.optional_child("resolution")) {
+		if(const auto replay_theme_cfg = res->optional_child("replay")) {
 			controller_.get_display().get_theme().modify(replay_theme_cfg.value());
 		}
 	}
@@ -119,7 +154,7 @@ void replay_controller::replay_next_move()
 	update_enabled_buttons();
 }
 
-//move all sides till stop/end
+// move all sides till stop/end
 void replay_controller::play_replay()
 {
 	stop_condition_.reset(new replay_play_nostop());
@@ -142,7 +177,8 @@ void replay_controller::handle_generic_event(const std::string& name)
 	if(name == "theme_reset") {
 		add_replay_theme();
 	}
-	if(std::shared_ptr<gui::button> skip_animation_button = controller_.get_display().find_action_button("skip-animation")) {
+	if(std::shared_ptr<gui::button> skip_animation_button
+		= controller_.get_display().find_action_button("skip-animation")) {
 		skip_animation_button->set_check(controller_.is_skipping_replay());
 	}
 }
@@ -155,15 +191,12 @@ bool replay_controller::recorder_at_end() const
 void replay_controller::play_side_impl()
 {
 	update_enabled_buttons();
-	while(!return_to_play_side_ && !static_cast<playsingle_controller&>(controller_).get_player_type_changed())
-	{
-		if(!stop_condition_->should_stop())
-		{
+	while(!return_to_play_side_ && !static_cast<playsingle_controller&>(controller_).get_player_type_changed()) {
+		if(!stop_condition_->should_stop()) {
 			if(resources::recorder->at_end()) {
-				//Gather more replay data
+				// Gather more replay data
 				on_end_replay_();
-			}
-			else {
+			} else {
 				REPLAY_RETURN res = do_replay(true);
 				if(controller_.is_regular_game_end()) {
 					return;
@@ -172,9 +205,9 @@ void replay_controller::play_side_impl()
 					return;
 				}
 				stop_condition_->move_done();
-				if(res == REPLAY_FOUND_INIT_TURN)
-				{
-					stop_condition_->new_side_turn(controller_.current_side(), controller_.gamestate().tod_manager_.turn());
+				if(res == REPLAY_FOUND_INIT_TURN) {
+					stop_condition_->new_side_turn(
+						controller_.current_side(), controller_.gamestate().tod_manager_.turn());
 				}
 			}
 			controller_.play_slice();
@@ -183,9 +216,7 @@ void replay_controller::play_side_impl()
 			if(stop_condition_->should_stop()) {
 				update_enabled_buttons();
 			}
-		}
-		else
-		{
+		} else {
 			// Don't move the update_enabled_buttons() call here. This play_slice() should block
 			// until the next event occurs, but on X11/Linux update_enabled_buttons() seems to put
 			// an event in the queue, turning this into a busy loop.
@@ -203,15 +234,16 @@ bool replay_controller::can_execute_command(const hotkey::ui_command& cmd) const
 	case hotkey::HOTKEY_REPLAY_SHOW_EACH:
 	case hotkey::HOTKEY_REPLAY_SHOW_TEAM1:
 		return is_controlling_view();
-	//commands we only can do before the end of the replay
+	// commands we only can do before the end of the replay
 	case hotkey::HOTKEY_REPLAY_STOP:
 		return !recorder_at_end();
 	case hotkey::HOTKEY_REPLAY_PLAY:
 	case hotkey::HOTKEY_REPLAY_NEXT_TURN:
 	case hotkey::HOTKEY_REPLAY_NEXT_SIDE:
 	case hotkey::HOTKEY_REPLAY_NEXT_MOVE:
-		//we have one events_disabler when starting the replay_controller and a second when entering the synced context.
-		return should_stop() && (events::commands_disabled <= 1 ) && !recorder_at_end();
+		// we have one events_disabler when starting the replay_controller and a second when entering the synced
+		// context.
+		return should_stop() && (events::commands_disabled <= 1) && !recorder_at_end();
 	case hotkey::HOTKEY_REPLAY_RESET:
 		return allow_reset_replay() && events::commands_disabled <= 1;
 	default:

@@ -20,8 +20,8 @@
 #include "config.hpp"
 #include "config_cache.hpp"
 #include "gui/auxiliary/iterator/iterator.hpp"
-#include "gui/widgets/label.hpp"
 #include "gui/widgets/grid.hpp"
+#include "gui/widgets/label.hpp"
 
 #include <sstream>
 #include <typeinfo>
@@ -41,95 +41,85 @@
 
 static std::string top_down_t_t_t_result()
 {
-	static const std::string result =
-		"At '0'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: proceed. Down and visit '1'.\n"
-		"At '1'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: proceed. Down and visit '5'.\n"
-		"At '5'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: reached the end. Up widget '5'. "
-			"Iterate: reached '6'. Down and visit '6'.\n"
-		"At '6'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: reached the end. Up widget '6'. "
-			"Iterate: reached '7'. Down and visit '7'.\n"
-		"At '7'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: reached the end. Up widget '7'. "
-			"Iterate: reached '8'. Down and visit '8'.\n"
-		"At '8'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: reached the end. Up widget '8'. "
-			"Iterate: failed. Up widget '1'. "
-			"Iterate: reached '2'. Down and visit '2'.\n"
-		"At '2'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: reached the end. Up widget '2'. "
-			"Iterate: reached '3'. Down and visit '3'.\n"
-		"At '3'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: reached the end. Up widget '3'. "
-			"Iterate: reached '4'. Down and visit '4'.\n"
-		"At '4'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: reached the end. Up widget '4'. "
-			"Iterate: failed. Finished iteration.\n";
+	static const std::string result = "At '0'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: proceed. Down and visit '1'.\n"
+									  "At '1'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: proceed. Down and visit '5'.\n"
+									  "At '5'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: reached the end. Up widget '5'. "
+									  "Iterate: reached '6'. Down and visit '6'.\n"
+									  "At '6'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: reached the end. Up widget '6'. "
+									  "Iterate: reached '7'. Down and visit '7'.\n"
+									  "At '7'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: reached the end. Up widget '7'. "
+									  "Iterate: reached '8'. Down and visit '8'.\n"
+									  "At '8'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: reached the end. Up widget '8'. "
+									  "Iterate: failed. Up widget '1'. "
+									  "Iterate: reached '2'. Down and visit '2'.\n"
+									  "At '2'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: reached the end. Up widget '2'. "
+									  "Iterate: reached '3'. Down and visit '3'.\n"
+									  "At '3'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: reached the end. Up widget '3'. "
+									  "Iterate: reached '4'. Down and visit '4'.\n"
+									  "At '4'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: reached the end. Up widget '4'. "
+									  "Iterate: failed. Finished iteration.\n";
 
 	return result;
 }
 
 static std::string bottom_up_t_t_t_result()
 {
-	static const std::string result =
-		"Constructor:  Down widget '1'. Down widget '5'. Finished at '5'.\n"
-		"At '5'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: Up '1'. Iterate child: visit '1'. "
-			"Down widget '6'. Visit '6'.\n"
-		"At '6'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: Up '1'. Iterate child: visit '1'. "
-			"Down widget '7'. Visit '7'.\n"
-		"At '7'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: Up '1'. Iterate child: visit '1'. "
-			"Down widget '8'. Visit '8'.\n"
-		"At '8'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: Up '1'. Iterate child: reached the end. Visit '1'.\n"
-		"At '1'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: Up '0'. Iterate child: visit '0'. "
-			"Down widget '2'. Visit '2'.\n"
-		"At '2'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: Up '0'. Iterate child: visit '0'. "
-			"Down widget '3'. Visit '3'.\n"
-		"At '3'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: Up '0'. Iterate child: visit '0'. "
-			"Down widget '4'. Visit '4'.\n"
-		"At '4'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: Up '0'. Iterate child: reached the end. Visit '0'.\n"
-		"At '0'. Iterate widget: reached the end. Iterate grid: failed. "
-			"Iterate child: Finished iteration.\n";
+	static const std::string result = "Constructor:  Down widget '1'. Down widget '5'. Finished at '5'.\n"
+									  "At '5'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: Up '1'. Iterate child: visit '1'. "
+									  "Down widget '6'. Visit '6'.\n"
+									  "At '6'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: Up '1'. Iterate child: visit '1'. "
+									  "Down widget '7'. Visit '7'.\n"
+									  "At '7'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: Up '1'. Iterate child: visit '1'. "
+									  "Down widget '8'. Visit '8'.\n"
+									  "At '8'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: Up '1'. Iterate child: reached the end. Visit '1'.\n"
+									  "At '1'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: Up '0'. Iterate child: visit '0'. "
+									  "Down widget '2'. Visit '2'.\n"
+									  "At '2'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: Up '0'. Iterate child: visit '0'. "
+									  "Down widget '3'. Visit '3'.\n"
+									  "At '3'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: Up '0'. Iterate child: visit '0'. "
+									  "Down widget '4'. Visit '4'.\n"
+									  "At '4'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: Up '0'. Iterate child: reached the end. Visit '0'.\n"
+									  "At '0'. Iterate widget: reached the end. Iterate grid: failed. "
+									  "Iterate child: Finished iteration.\n";
 
 	return result;
 }
 
-static void add_widget(gui2::grid& grid
-		, std::unique_ptr<gui2::widget> widget
-		, const std::string& id
-		, const unsigned row
-		, const unsigned column)
+static void add_widget(gui2::grid& grid,
+	std::unique_ptr<gui2::widget> widget,
+	const std::string& id,
+	const unsigned row,
+	const unsigned column)
 {
 	BOOST_REQUIRE_NE(widget.get(), static_cast<gui2::widget*>(nullptr));
 
 	widget->set_id(id);
-	grid.set_child(std::move(widget)
-			, row
-			, column
-			, gui2::grid::VERTICAL_GROW_SEND_TO_CLIENT
-				| gui2::grid::HORIZONTAL_GROW_SEND_TO_CLIENT
-			, 0);
+	grid.set_child(std::move(widget), row, column,
+		gui2::grid::VERTICAL_GROW_SEND_TO_CLIENT | gui2::grid::HORIZONTAL_GROW_SEND_TO_CLIENT, 0);
 }
 
 template<class T>
 static void test_control(T&& control)
 {
 	{
-		gui2::iteration::iterator< gui2::iteration::policy::order::top_down<
-				true
-				, true
-				, true>>
-			iterator(control);
+		gui2::iteration::iterator<gui2::iteration::policy::order::top_down<true, true, true>> iterator(control);
 
 		/***** INITIAL STATE *****/
 
@@ -142,14 +132,9 @@ static void test_control(T&& control)
 		BOOST_CHECK_EQUAL(iterator.next(), false);
 
 		BOOST_CHECK_EQUAL(iterator.at_end(), true);
-
 	}
 	{
-		gui2::iteration::iterator< gui2::iteration::policy::order::top_down<
-				false
-				, true
-				, true>>
-			iterator(control);
+		gui2::iteration::iterator<gui2::iteration::policy::order::top_down<false, true, true>> iterator(control);
 
 		/***** INITIAL STATE *****/
 
@@ -170,7 +155,6 @@ static void test_control()
 {
 	/* Could add more widgets to the list. */
 	test_control(gui2::label(gui2::implementation::builder_label(config())));
-
 }
 
 static void test_grid()
@@ -179,7 +163,7 @@ static void test_grid()
 	test_control(gui2::grid());
 
 	/* Test the child part here. */
-	gui2::grid grid(2 ,2);
+	gui2::grid grid(2, 2);
 	grid.set_id("0");
 
 	auto g = std::make_unique<gui2::grid>(2, 2);
@@ -199,11 +183,7 @@ static void test_grid()
 		std::stringstream sstr;
 		lg::redirect_output_setter redirect_output(sstr);
 
-		gui2::iteration::iterator<gui2::iteration::policy::order::top_down<
-				true
-				, true
-				, true>>
-			iterator(grid);
+		gui2::iteration::iterator<gui2::iteration::policy::order::top_down<true, true, true>> iterator(grid);
 
 		while(iterator.next()) {
 			/* DO NOTHING */
@@ -215,13 +195,9 @@ static void test_grid()
 		std::stringstream sstr;
 		lg::redirect_output_setter redirect_output(sstr);
 
-		gui2::iteration::iterator<gui2::iteration::policy::order::top_down<
-				true
-				, true
-				, true>>
-			iterator(grid);
+		gui2::iteration::iterator<gui2::iteration::policy::order::top_down<true, true, true>> iterator(grid);
 
-		for( ; !iterator.at_end(); ++iterator) {
+		for(; !iterator.at_end(); ++iterator) {
 			/* DO NOTHING */
 		}
 
@@ -231,11 +207,7 @@ static void test_grid()
 		std::stringstream sstr;
 		lg::redirect_output_setter redirect_output(sstr);
 
-		gui2::iteration::iterator<gui2::iteration::policy::order::bottom_up<
-				true
-				, true
-				, true>>
-			iterator(grid);
+		gui2::iteration::iterator<gui2::iteration::policy::order::bottom_up<true, true, true>> iterator(grid);
 
 		while(iterator.next()) {
 			/* DO NOTHING */
@@ -247,13 +219,9 @@ static void test_grid()
 		std::stringstream sstr;
 		lg::redirect_output_setter redirect_output(sstr);
 
-		gui2::iteration::iterator<gui2::iteration::policy::order::bottom_up<
-				true
-				, true
-				, true>>
-			iterator(grid);
+		gui2::iteration::iterator<gui2::iteration::policy::order::bottom_up<true, true, true>> iterator(grid);
 
-		for( ; !iterator.at_end(); ++iterator) {
+		for(; !iterator.at_end(); ++iterator) {
 			/* DO NOTHING */
 		}
 

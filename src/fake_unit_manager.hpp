@@ -21,27 +21,49 @@ class display;
 class unit;
 
 /** Manages a list of fake units for the display object. */
-class fake_unit_manager {
+class fake_unit_manager
+{
 public:
 	/** Construct a fake unit manager from a display which owns it. */
-	fake_unit_manager(display & disp) : fake_units_(), my_display_(disp) {}
+	fake_unit_manager(display& disp)
+		: fake_units_()
+		, my_display_(disp)
+	{
+	}
 
-	//Anticipate making place_temporary_unit and remove_temporary_unit private to force exception safety
+	// Anticipate making place_temporary_unit and remove_temporary_unit private to force exception safety
 	friend class fake_unit_ptr;
 
-	//Typedef internal_ptr_type is the object held internally. It should point to a const unit, since const units are drawable.
-	typedef unit const * internal_ptr_type;
+	// Typedef internal_ptr_type is the object held internally. It should point to a const unit, since const units are
+	// drawable.
+	typedef unit const* internal_ptr_type;
 
-	//Typedefs and iterator methods which make this object "boost_foreachable"
+	// Typedefs and iterator methods which make this object "boost_foreachable"
 	typedef std::deque<internal_ptr_type>::const_iterator iterator;
 	typedef std::deque<internal_ptr_type>::const_iterator const_iterator;
 
-	iterator begin() { return fake_units_.begin(); }
-	iterator end() { return fake_units_.end(); }
+	iterator begin()
+	{
+		return fake_units_.begin();
+	}
+	iterator end()
+	{
+		return fake_units_.end();
+	}
 
-	const_iterator begin() const { return fake_units_.begin(); }
-	const_iterator end() const { return fake_units_.end(); }
-	bool empty() const { return fake_units_.empty(); }
+	const_iterator begin() const
+	{
+		return fake_units_.begin();
+	}
+	const_iterator end() const
+	{
+		return fake_units_.end();
+	}
+	bool empty() const
+	{
+		return fake_units_.empty();
+	}
+
 private:
 	/** Register a unit with this manager. private, should only be called by fake_unit_ptr. */
 	void place_temporary_unit(internal_ptr_type);
@@ -54,5 +76,5 @@ private:
 	/** collection of units destined to be drawn but not put into the unit map */
 	std::deque<internal_ptr_type> fake_units_;
 	/** Reference to my display */
-	display & my_display_;
+	display& my_display_;
 };

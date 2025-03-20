@@ -17,34 +17,63 @@
 
 #include "chat_events.hpp"
 
-#include <cstdint>
 #include <chrono>
+#include <cstdint>
 #include <set>
 #include <string>
 #include <vector>
 
 class display;
 
-class display_chat_manager {
+class display_chat_manager
+{
 public:
-	display_chat_manager(display & disp) : my_disp_(disp) {}
+	display_chat_manager(display& disp)
+		: my_disp_(disp)
+	{
+	}
 
-	void add_observer(const std::string& name) { observers_.insert(name); }
-	void remove_observer(const std::string& name) { observers_.erase(name); }
-	const std::set<std::string>& observers() const { return observers_; }
+	void add_observer(const std::string& name)
+	{
+		observers_.insert(name);
+	}
+	void remove_observer(const std::string& name)
+	{
+		observers_.erase(name);
+	}
+	const std::set<std::string>& observers() const
+	{
+		return observers_;
+	}
 
-	void add_whisperer(const std::string& nick) { whisperers_.insert(nick); }
-	void remove_whisperer(const std::string& nick) { whisperers_.erase(nick); }
-	const std::set<std::string>& whisperers() const { return whisperers_; }
+	void add_whisperer(const std::string& nick)
+	{
+		whisperers_.insert(nick);
+	}
+	void remove_whisperer(const std::string& nick)
+	{
+		whisperers_.erase(nick);
+	}
+	const std::set<std::string>& whisperers() const
+	{
+		return whisperers_;
+	}
 
-	void add_chat_message(const std::time_t& time, const std::string& speaker,
-		int side, const std::string& msg, events::chat_handler::MESSAGE_TYPE type, bool bell);
-	void clear_chat_messages() { prune_chat_messages(true); }
+	void add_chat_message(const std::time_t& time,
+		const std::string& speaker,
+		int side,
+		const std::string& msg,
+		events::chat_handler::MESSAGE_TYPE type,
+		bool bell);
+	void clear_chat_messages()
+	{
+		prune_chat_messages(true);
+	}
 
-	friend class game_display; //needed because it calls prune_chat_message
+	friend class game_display; // needed because it calls prune_chat_message
 private:
 	std::set<std::string> observers_;
-	std::set<std::string> whisperers_; //nicks who whisper you for tab-completition purpose
+	std::set<std::string> whisperers_; // nicks who whisper you for tab-completition purpose
 
 	struct chat_message
 	{
@@ -55,9 +84,9 @@ private:
 		std::chrono::steady_clock::time_point created_at;
 	};
 
-	void prune_chat_messages(bool remove_all=false);
+	void prune_chat_messages(bool remove_all = false);
 
 	std::vector<chat_message> chat_messages_;
 
-	display & my_disp_;
+	display& my_disp_;
 };

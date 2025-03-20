@@ -17,12 +17,12 @@
 
 #include "draw.hpp"
 #include "draw_manager.hpp"
-#include "gui/widgets/grid.hpp"
-#include "gui/widgets/settings.hpp"
-#include "gui/widgets/window.hpp"
 #include "gui/core/event/message.hpp"
 #include "gui/core/log.hpp"
 #include "gui/core/window_builder/helper.hpp"
+#include "gui/widgets/grid.hpp"
+#include "gui/widgets/settings.hpp"
+#include "gui/widgets/window.hpp"
 #include "sdl/rect.hpp"
 
 namespace gui2
@@ -47,7 +47,7 @@ widget::widget()
 	, redraw_action_(redraw_action::full)
 	, clipping_rectangle_()
 	, debug_border_mode_(debug_border::none)
-	, debug_border_color_(0,0,0,0)
+	, debug_border_color_(0, 0, 0, 0)
 {
 	DBG_GUI_LF << "widget create: " << static_cast<void*>(this);
 }
@@ -76,9 +76,7 @@ widget::widget(const builder_widget& builder)
 
 widget::~widget()
 {
-	DBG_GUI_LF
-	<< "widget destroy: " << static_cast<void*>(this)
-	<< " (id: " << id_ << ')';
+	DBG_GUI_LF << "widget destroy: " << static_cast<void*>(this) << " (id: " << id_ << ')';
 
 	widget* p = parent();
 	while(p) {
@@ -99,10 +97,9 @@ void widget::set_id(const std::string& id)
 {
 	styled_widget* this_ctrl = dynamic_cast<styled_widget*>(this);
 
-	DBG_GUI_LF
-	<< "set id of " << static_cast<void*>(this) << " to '" << id << "' "
-	<< "(was '" << id_ << "'). Widget type: "
-	<< (this_ctrl ? this_ctrl->get_control_type() : typeid(widget).name());
+	DBG_GUI_LF << "set id of " << static_cast<void*>(this) << " to '" << id << "' "
+			   << "(was '" << id_
+			   << "'). Widget type: " << (this_ctrl ? this_ctrl->get_control_type() : typeid(widget).name());
 
 	id_ = id;
 }
@@ -207,11 +204,11 @@ point widget::get_best_size() const
 	point result = layout_size_;
 	if(result == point()) {
 		result = calculate_best_size();
-		//Adjust to linked widget size if linked widget size was already calculated.
-		if (get_window() && !get_window()->get_need_layout() && !linked_group_.empty()) {
-				point linked_size = get_window()->get_linked_size(linked_group_);
-				result.x = std::max(result.x, linked_size.x);
-				result.y = std::max(result.y, linked_size.y);
+		// Adjust to linked widget size if linked widget size was already calculated.
+		if(get_window() && !get_window()->get_need_layout() && !linked_group_.empty()) {
+			point linked_size = get_window()->get_linked_size(linked_group_);
+			result.x = std::max(result.x, linked_size.x);
+			result.y = std::max(result.y, linked_size.y);
 		}
 	}
 
@@ -287,7 +284,7 @@ void widget::set_horizontal_alignment(const std::string& alignment)
 	parent_grid->set_child_alignment(this, implementation::get_h_align(alignment), grid::HORIZONTAL_MASK);
 
 	// TODO: evaluate necessity
-	//get_window()->invalidate_layout();
+	// get_window()->invalidate_layout();
 }
 
 void widget::set_vertical_alignment(const std::string& alignment)
@@ -300,7 +297,7 @@ void widget::set_vertical_alignment(const std::string& alignment)
 	parent_grid->set_child_alignment(this, implementation::get_v_align(alignment), grid::VERTICAL_MASK);
 
 	// TODO: evaluate necessity
-	//get_window()->invalidate_layout();
+	// get_window()->invalidate_layout();
 }
 
 void widget::layout_children()
@@ -444,8 +441,7 @@ bool widget::draw_foreground()
 
 SDL_Rect widget::get_dirty_rectangle() const
 {
-	return redraw_action_ == redraw_action::full ? get_rectangle()
-												  : clipping_rectangle_;
+	return redraw_action_ == redraw_action::full ? get_rectangle() : clipping_rectangle_;
 }
 
 void widget::set_visible_rectangle(const SDL_Rect& rectangle)
@@ -463,7 +459,7 @@ void widget::set_visible_rectangle(const SDL_Rect& rectangle)
 
 void widget::queue_redraw()
 {
-	if (!width_ && !height_) {
+	if(!width_ && !height_) {
 		// Do nothing if the widget hasn't yet been placed.
 		return;
 	}
@@ -484,8 +480,8 @@ void widget::set_visible(const visibility visible)
 
 	// Switching to or from invisible should invalidate the layout
 	// if the widget has already been laid out.
-	const bool need_resize = visible_ == visibility::invisible
-		|| (visible == visibility::invisible && get_size() != point());
+	const bool need_resize
+		= visible_ == visibility::invisible || (visible == visibility::invisible && get_size() != point());
 	visible_ = visible;
 
 	if(need_resize) {
@@ -510,8 +506,7 @@ widget::visibility widget::get_visible() const
 
 widget::redraw_action widget::get_drawing_action() const
 {
-	return (width_ == 0 || height_ == 0) ? redraw_action::none
-										 : redraw_action_;
+	return (width_ == 0 || height_ == 0) ? redraw_action::none : redraw_action_;
 }
 
 void widget::set_debug_border_mode(const debug_border debug_border_mode)
@@ -527,20 +522,20 @@ void widget::set_debug_border_color(const color_t debug_border_color)
 void widget::draw_debug_border()
 {
 	switch(debug_border_mode_) {
-		case debug_border::none:
-			/* DO NOTHING */
-			break;
+	case debug_border::none:
+		/* DO NOTHING */
+		break;
 
-		case debug_border::outline:
-			draw::rect(rect{{0, 0}, get_size()}, debug_border_color_);
-			break;
+	case debug_border::outline:
+		draw::rect(rect{{0, 0}, get_size()}, debug_border_color_);
+		break;
 
-		case debug_border::fill:
-			draw::fill(rect{{0, 0}, get_size()}, debug_border_color_);
-			break;
+	case debug_border::fill:
+		draw::fill(rect{{0, 0}, get_size()}, debug_border_color_);
+		break;
 
-		default:
-			assert(false);
+	default:
+		assert(false);
 	}
 }
 
@@ -551,8 +546,7 @@ widget* widget::find_at(const point& coordinate, const bool must_be_active)
 	return is_at(coordinate, must_be_active) ? this : nullptr;
 }
 
-const widget* widget::find_at(const point& coordinate,
-								const bool must_be_active) const
+const widget* widget::find_at(const point& coordinate, const bool must_be_active) const
 {
 	return is_at(coordinate, must_be_active) ? this : nullptr;
 }
@@ -580,8 +574,7 @@ bool widget::is_at(const point& coordinate) const
 bool widget::recursive_is_visible(const widget* widget, const bool must_be_active) const
 {
 	while(widget) {
-		if(widget->visible_ == visibility::invisible
-		   || (widget->visible_ == visibility::hidden && must_be_active)) {
+		if(widget->visible_ == visibility::invisible || (widget->visible_ == visibility::hidden && must_be_active)) {
 			return false;
 		}
 

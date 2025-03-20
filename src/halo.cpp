@@ -19,15 +19,15 @@
  * Examples: white mage, lighthouse.
  */
 
+#include "halo.hpp"
 #include "animated.hpp"
 #include "display.hpp"
 #include "draw.hpp"
 #include "draw_manager.hpp"
-#include "halo.hpp"
 #include "log.hpp"
-#include "serialization/string_utils.hpp"
 #include "sdl/rect.hpp"
 #include "sdl/texture.hpp"
+#include "serialization/string_utils.hpp"
 
 static lg::log_domain log_halo("halo");
 #define ERR_HL LOG_STREAM(err, log_halo)
@@ -40,15 +40,15 @@ namespace halo
 
 class halo_impl
 {
-
 	class effect
 	{
 	public:
-		effect(
-			int xpos, int ypos,
+		effect(int xpos,
+			int ypos,
 			const animated<image::locator>::anim_description& img,
-			const map_location& loc, ORIENTATION, bool infinite
-		);
+			const map_location& loc,
+			ORIENTATION,
+			bool infinite);
 
 		void set_location(int x, int y);
 		rect get_draw_location();
@@ -61,15 +61,26 @@ class halo_impl
 		void update();
 		bool render();
 
-		bool expired()     const { return !images_.cycles() && images_.animation_finished(); }
-		bool need_update() const { return images_.need_update(); }
-		bool does_change() const { return !images_.does_not_change(); }
+		bool expired() const
+		{
+			return !images_.cycles() && images_.animation_finished();
+		}
+		bool need_update() const
+		{
+			return images_.need_update();
+		}
+		bool does_change() const
+		{
+			return !images_.does_not_change();
+		}
 		bool on_location(const std::set<map_location>& locations) const;
 		bool location_not_known() const;
 
 	private:
-
-		const image::locator& current_image() const { return images_.get_current_frame(); }
+		const image::locator& current_image() const
+		{
+			return images_.get_current_frame();
+		}
 
 		animated<image::locator> images_;
 
@@ -117,22 +128,26 @@ class halo_impl
 	 */
 	std::set<int> changing_haloes;
 
-	public:
+public:
 	/**
 	 * impl's of exposed functions
 	 */
 
-	explicit halo_impl() :
-		haloes(),
-		halo_id(1),
-		invalidated_haloes(),
-		deleted_haloes(),
-		changing_haloes()
-	{}
+	explicit halo_impl()
+		: haloes()
+		, halo_id(1)
+		, invalidated_haloes()
+		, deleted_haloes()
+		, changing_haloes()
+	{
+	}
 
-
-	int add(int x, int y, const std::string& image, const map_location& loc,
-			ORIENTATION orientation=NORMAL, bool infinite=true);
+	int add(int x,
+		int y,
+		const std::string& image,
+		const map_location& loc,
+		ORIENTATION orientation = NORMAL,
+		bool infinite = true);
 
 	/** Set the position of an existing haloing effect, according to its handle. */
 	void set_location(int handle, int x, int y);
@@ -145,15 +160,18 @@ class halo_impl
 	/** Render all halos overlapping the given region */
 	void render(const rect&);
 
-}; //end halo_impl
+}; // end halo_impl
 
-halo_impl::effect::effect(int xpos, int ypos,
-		const animated<image::locator>::anim_description& img,
-		const map_location& loc, ORIENTATION orientation, bool infinite) :
-	images_(img),
-	orientation_(orientation),
-	map_loc_(loc),
-	disp(display::get_singleton())
+halo_impl::effect::effect(int xpos,
+	int ypos,
+	const animated<image::locator>::anim_description& img,
+	const map_location& loc,
+	ORIENTATION orientation,
+	bool infinite)
+	: images_(img)
+	, orientation_(orientation)
+	, map_loc_(loc)
+	, disp(display::get_singleton())
 {
 	assert(disp != nullptr);
 
@@ -179,7 +197,6 @@ rect halo_impl::effect::get_draw_location()
 {
 	return screen_loc_;
 }
-
 
 /** Update the current location, animation frame, etc. */
 void halo_impl::effect::update()
@@ -216,8 +233,8 @@ void halo_impl::effect::update()
 
 	const auto [zero_x, zero_y] = disp->get_location(map_location::ZERO());
 
-	const int xpos = zero_x + abs_mid_.x - w/2;
-	const int ypos = zero_y + abs_mid_.y - h/2;
+	const int xpos = zero_x + abs_mid_.x - w / 2;
+	const int ypos = zero_y + abs_mid_.y - h / 2;
 
 	screen_loc_ = {xpos, ypos, w, h};
 
@@ -263,11 +280,10 @@ bool halo_impl::effect::render()
 
 	DBG_HL << "drawing halo at " << screen_loc_;
 
-	if (orientation_ == NORMAL) {
+	if(orientation_ == NORMAL) {
 		draw::blit(tex_, screen_loc_);
 	} else {
-		draw::flipped(tex_, screen_loc_,
-			orientation_ == HREVERSE || orientation_ == HVREVERSE,
+		draw::flipped(tex_, screen_loc_, orientation_ == HREVERSE || orientation_ == HVREVERSE,
 			orientation_ == VREVERSE || orientation_ == HVREVERSE);
 	}
 
@@ -294,15 +310,12 @@ void halo_impl::effect::queue_redraw()
 	draw_manager::invalidate_region(screen_loc_);
 }
 
-
-
 /*************/
 /* halo_impl */
 /*************/
 
-
-int halo_impl::add(int x, int y, const std::string& image, const map_location& loc,
-		ORIENTATION orientation, bool infinite)
+int halo_impl::add(
+	int x, int y, const std::string& image, const map_location& loc, ORIENTATION orientation, bool infinite)
 {
 	const int id = halo_id++;
 	DBG_HL << "adding halo " << id;
@@ -322,8 +335,7 @@ int halo_impl::add(int x, int y, const std::string& image, const map_location& l
 				ERR_HL << "Invalid time value found when constructing halo: " << sub_items.back();
 			}
 		}
-		image_vector.push_back(animated<image::locator>::frame_description(time,image::locator(str)));
-
+		image_vector.push_back(animated<image::locator>::frame_description(time, image::locator(str)));
 	}
 	haloes.emplace(id, effect(x, y, image_vector, loc, orientation, infinite));
 	invalidated_haloes.insert(id);
@@ -335,9 +347,9 @@ int halo_impl::add(int x, int y, const std::string& image, const map_location& l
 
 void halo_impl::set_location(int handle, int x, int y)
 {
-	const std::map<int,effect>::iterator itor = haloes.find(handle);
+	const std::map<int, effect>::iterator itor = haloes.find(handle);
 	if(itor != haloes.end()) {
-		itor->second.set_location(x,y);
+		itor->second.set_location(x, y);
 	}
 }
 
@@ -345,7 +357,7 @@ void halo_impl::remove(int handle)
 {
 	// Silently ignore invalid haloes.
 	// This happens when Wesnoth is being terminated as well.
-	if(handle == NO_HALO || haloes.find(handle) == haloes.end())  {
+	if(handle == NO_HALO || haloes.find(handle) == haloes.end()) {
 		return;
 	}
 
@@ -379,7 +391,8 @@ void halo_impl::update()
 	deleted_haloes.clear();
 
 	// Update the location and animation frame of the remaining halos
-	for(auto& [id, halo] : haloes) { (void)id;
+	for(auto& [id, halo] : haloes) {
+		(void)id;
 		halo.update();
 	}
 
@@ -407,31 +420,30 @@ void halo_impl::render(const rect& region)
 	}
 }
 
-
-
 /*****************/
 /* halo::manager */
 /*****************/
 
-
-manager::manager() : impl_(new halo_impl())
-{}
-
-handle manager::add(int x, int y, const std::string& image, const map_location& loc,
-		ORIENTATION orientation, bool infinite)
+manager::manager()
+	: impl_(new halo_impl())
 {
-	int new_halo = impl_->add(x,y,image, loc, orientation, infinite);
+}
+
+handle manager::add(
+	int x, int y, const std::string& image, const map_location& loc, ORIENTATION orientation, bool infinite)
+{
+	int new_halo = impl_->add(x, y, image, loc, orientation, infinite);
 	return handle(new halo_record(new_halo, impl_));
 }
 
 /** Set the position of an existing haloing effect, according to its handle. */
-void manager::set_location(const handle & h, int x, int y)
+void manager::set_location(const handle& h, int x, int y)
 {
-	impl_->set_location(h->id_,x,y);
+	impl_->set_location(h->id_, x, y);
 }
 
 /** Remove the halo with the given handle. */
-void manager::remove(const handle & h)
+void manager::remove(const handle& h)
 {
 	impl_->remove(h->id_);
 	h->id_ = NO_HALO;
@@ -449,24 +461,27 @@ void manager::render(const rect& r)
 
 // end halo::manager implementation
 
-
 /**
  * halo::halo_record implementation
  */
 
-halo_record::halo_record() :
-	id_(NO_HALO), //halo::NO_HALO
+halo_record::halo_record()
+	: id_(NO_HALO)
+	, // halo::NO_HALO
 	my_manager_()
-{}
+{
+}
 
-halo_record::halo_record(int id, const std::shared_ptr<halo_impl> & my_manager) :
-	id_(id),
-	my_manager_(my_manager)
-{}
+halo_record::halo_record(int id, const std::shared_ptr<halo_impl>& my_manager)
+	: id_(id)
+	, my_manager_(my_manager)
+{
+}
 
 halo_record::~halo_record()
 {
-	if (!valid()) return;
+	if(!valid())
+		return;
 
 	std::shared_ptr<halo_impl> man = my_manager_.lock();
 
@@ -475,4 +490,4 @@ halo_record::~halo_record()
 	}
 }
 
-} //end namespace halo
+} // end namespace halo

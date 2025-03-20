@@ -27,7 +27,10 @@
 struct is_translatable
 {
 	bool empty;
-	is_translatable(bool b) : empty(b) {}
+	is_translatable(bool b)
+		: empty(b)
+	{
+	}
 	bool operator()(const std::string& str) const
 	{
 		return str.empty() ? empty : false;
@@ -64,12 +67,14 @@ std::shared_ptr<wml_type> wml_type::from_config(const config& cfg)
 		const config& list_cfg = cfg.mandatory_child("list");
 		int list_min = list_cfg["min"].to_int();
 		int list_max = list_cfg["max"].str() == "infinite" ? -1 : list_cfg["max"].to_int(-1);
-		if(list_max < 0) list_max = std::numeric_limits<int>::max();
+		if(list_max < 0)
+			list_max = std::numeric_limits<int>::max();
 		type = std::make_shared<wml_type_list>(cfg["name"], list_cfg["split"].str("\\s*,\\s*"), list_min, list_max);
 		composite_range.emplace(list_cfg.child_range("element"));
 	} else if(cfg.has_attribute("value")) {
 		auto t = std::make_shared<wml_type_simple>(cfg["name"], cfg["value"]);
-		if(cfg["allow_translatable"].to_bool()) t->allow_translatable();
+		if(cfg["allow_translatable"].to_bool())
+			t->allow_translatable();
 		type = t;
 	} else if(cfg.has_attribute("link")) {
 		type = std::make_shared<wml_type_alias>(cfg["name"], cfg["link"]);
@@ -85,7 +90,8 @@ std::shared_ptr<wml_type> wml_type::from_config(const config& cfg)
 
 bool wml_type_simple::matches(const config_attribute_value& value, const map&) const
 {
-	if(!allow_translatable_ && value.apply_visitor(is_translatable(false))) return false;
+	if(!allow_translatable_ && value.apply_visitor(is_translatable(false)))
+		return false;
 	boost::smatch sub;
 	return boost::regex_match(value.str(), sub, pattern_);
 }
@@ -128,9 +134,10 @@ bool wml_type_list::matches(const config_attribute_value& value_attr, const map&
 	auto value = value_attr.str();
 	boost::sregex_token_iterator it(value.begin(), value.end(), split_, -1), end;
 	int n = 0;
-	bool result = std::all_of(it, end, [this, &type_map, &n](const boost::ssub_match& match){
+	bool result = std::all_of(it, end, [this, &type_map, &n](const boost::ssub_match& match) {
 		// Not sure if this is necessary?
-		if(!match.matched) return true;
+		if(!match.matched)
+			return true;
 		n++;
 		config_attribute_value elem;
 		elem = std::string(match.first, match.second);

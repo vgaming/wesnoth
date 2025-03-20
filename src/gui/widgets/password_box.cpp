@@ -115,7 +115,8 @@ namespace implementation
 {
 
 builder_password_box::builder_password_box(const config& cfg)
-	: builder_styled_widget(cfg), history_(cfg["history"])
+	: builder_styled_widget(cfg)
+	, history_(cfg["history"])
 {
 }
 
@@ -127,8 +128,7 @@ std::unique_ptr<widget> builder_password_box::build() const
 	// It also has no history.
 	widget->set_value(label_string);
 
-	DBG_GUI_G << "Window builder: placed password box '" << id
-			  << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed password box '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

@@ -35,7 +35,7 @@ namespace
 // How long text fading should take - currently a hardcoded value.
 constexpr auto fade_duration = 500ms;
 
-}
+} // namespace
 
 namespace gui2::dialogs
 {
@@ -169,4 +169,4 @@ double outro::get_fade_progress(const std::chrono::steady_clock::time_point& now
 	return chrono::normalize_progress(now - stage_start_, fade_duration);
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

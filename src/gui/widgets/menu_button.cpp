@@ -18,8 +18,8 @@
 #include "gui/widgets/menu_button.hpp"
 
 #include "gui/core/log.hpp"
-#include "gui/core/widget_definition.hpp"
 #include "gui/core/register_widget.hpp"
+#include "gui/core/widget_definition.hpp"
 #include "gui/widgets/settings.hpp"
 #include "gui/widgets/window.hpp"
 #include "sound.hpp"
@@ -209,7 +209,7 @@ void menu_button::set_selected(unsigned selected, bool fire_event)
 	selected_ = selected;
 
 	set_label(values_[selected_]["label"]);
-	if (fire_event) {
+	if(fire_event) {
 		fire(event::NOTIFY_MODIFIED, *this, nullptr);
 	}
 }
@@ -228,10 +228,14 @@ menu_button_definition::resolution::resolution(const config& cfg)
 	: resolution_definition(cfg)
 {
 	// Note the order should be the same as the enum state_t in menu_button.hpp.
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_enabled", missing_mandatory_wml_tag("menu_button_definition][resolution", "state_enabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_disabled", missing_mandatory_wml_tag("menu_button_definition][resolution", "state_disabled")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_pressed", missing_mandatory_wml_tag("menu_button_definition][resolution", "state_pressed")));
-	state.emplace_back(VALIDATE_WML_CHILD(cfg, "state_focused", missing_mandatory_wml_tag("menu_button_definition][resolution", "state_focused")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_enabled", missing_mandatory_wml_tag("menu_button_definition][resolution", "state_enabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_disabled", missing_mandatory_wml_tag("menu_button_definition][resolution", "state_disabled")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_pressed", missing_mandatory_wml_tag("menu_button_definition][resolution", "state_pressed")));
+	state.emplace_back(VALIDATE_WML_CHILD(
+		cfg, "state_focused", missing_mandatory_wml_tag("menu_button_definition][resolution", "state_focused")));
 }
 
 // }---------- BUILDER -----------{
@@ -256,8 +260,7 @@ std::unique_ptr<widget> builder_menu_button::build() const
 		widget->set_values(options_);
 	}
 
-	DBG_GUI_G << "Window builder: placed menu_button '" << id
-	          << "' with definition '" << definition << "'.";
+	DBG_GUI_G << "Window builder: placed menu_button '" << id << "' with definition '" << definition << "'.";
 
 	return widget;
 }

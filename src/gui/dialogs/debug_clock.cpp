@@ -19,10 +19,9 @@
 
 #include "gui/dialogs/modal_dialog.hpp"
 #include "gui/widgets/integer_selector.hpp"
-#include "gui/widgets/window.hpp"
 #include "gui/widgets/pane.hpp"
 #include "gui/widgets/progress_bar.hpp"
-
+#include "gui/widgets/window.hpp"
 
 #include <ctime>
 
@@ -41,15 +40,16 @@ debug_clock::debug_clock()
 	second_percentage_ = find_widget<progress_bar>("second_percentage", false, false);
 
 	hour_ = find_widget<integer_selector>("hour", false, false);
-	if(styled_widget *hour = dynamic_cast<styled_widget*>(hour_)) { //Note that the standard specifies that a dynamic cast of a null pointer is null
+	if(styled_widget* hour = dynamic_cast<styled_widget*>(
+		   hour_)) { // Note that the standard specifies that a dynamic cast of a null pointer is null
 		hour->set_active(false);
 	}
 	minute_ = find_widget<integer_selector>("minute", false, false);
-	if(styled_widget *minute = dynamic_cast<styled_widget*>(minute_)) {
+	if(styled_widget* minute = dynamic_cast<styled_widget*>(minute_)) {
 		minute->set_active(false);
 	}
 	second_ = find_widget<integer_selector>("second", false, false);
-	if(styled_widget *second = dynamic_cast<styled_widget*>(second_)) {
+	if(styled_widget* second = dynamic_cast<styled_widget*>(second_)) {
 		second->set_active(false);
 	}
 
@@ -98,8 +98,7 @@ void debug_clock::update_time(const bool force)
 	}
 
 	if(clock_) {
-		for(auto & canvas : clock_->get_canvases())
-		{
+		for(auto& canvas : clock_->get_canvases()) {
 			canvas.set_variable("hour", wfl::variant(hour_stamp));
 			canvas.set_variable("minute", wfl::variant(minute_stamp));
 			canvas.set_variable("second", wfl::variant(second_stamp));
@@ -119,7 +118,11 @@ void debug_clock::update_time(const bool force)
 	}
 }
 
-debug_clock::time::time() : hour(0), minute(0), second(0), millisecond(0)
+debug_clock::time::time()
+	: hour(0)
+	, minute(0)
+	, second(0)
+	, millisecond(0)
 {
 }
 
@@ -164,4 +167,4 @@ bool debug_clock::time::step(const unsigned milliseconds)
 	return true;
 }
 
-} // namespace dialogs
+} // namespace gui2::dialogs

@@ -15,15 +15,15 @@
 
 #pragma once
 
-#include "log.hpp"                      // for logger, set_strict_severity, etc
+#include "log.hpp" // for logger, set_strict_severity, etc
 
 #include "utils/optional_fwd.hpp"
 
 #include <boost/program_options/options_description.hpp>
-#include <iosfwd>                       // for ostream
-#include <string>                       // for string
+#include <iosfwd> // for ostream
+#include <string> // for string
 #include <tuple>
-#include <vector>                       // for vector
+#include <vector> // for vector
 
 class bad_commandline_resolution : public boost::program_options::error
 {
@@ -34,8 +34,7 @@ public:
 class bad_commandline_tuple : public boost::program_options::error
 {
 public:
-	bad_commandline_tuple(const std::string& str,
-						  const std::string& expected_format);
+	bad_commandline_tuple(const std::string& str, const std::string& expected_format);
 };
 
 class config;
@@ -43,23 +42,27 @@ class config;
 class commandline_options
 {
 	/** To be used for printing help to the commandline. */
-	friend std::ostream& operator<<(std::ostream &os, const commandline_options& cmdline_opts);
+	friend std::ostream& operator<<(std::ostream& os, const commandline_options& cmdline_opts);
 
 public:
 	commandline_options(const std::vector<std::string>& args);
 
-	config to_config() const; /* Used by lua scrips. Not all of the options need to be exposed here, just those exposed to lua */
+	config to_config()
+		const; /* Used by lua scrips. Not all of the options need to be exposed here, just those exposed to lua */
 
 	/** True if the --validate or any of the --validate-*  options are given. */
 	bool any_validation_option() const;
 
 	/** Non-empty if --campaign was given on the command line. ID of the campaign we want to start. */
 	utils::optional<std::string> campaign;
-	/** Non-empty if --campaign-difficulty was given on the command line. Numerical difficulty of the campaign to be played. Dependent on --campaign. */
+	/** Non-empty if --campaign-difficulty was given on the command line. Numerical difficulty of the campaign to be
+	 * played. Dependent on --campaign. */
 	utils::optional<int> campaign_difficulty;
-	/** Non-empty if --campaign-scenario was given on the command line. Chooses starting scenario in the campaign to be played. Dependent on --campaign. */
+	/** Non-empty if --campaign-scenario was given on the command line. Chooses starting scenario in the campaign to be
+	 * played. Dependent on --campaign. */
 	utils::optional<std::string> campaign_scenario;
-	/** True if --skip-story was given on the command line. Skips [story] and [message]s through the end of the "start" event. Dependent on --campaign. */
+	/** True if --skip-story was given on the command line. Skips [story] and [message]s through the end of the "start"
+	 * event. Dependent on --campaign. */
 	bool campaign_skip_story;
 	/** True if --clock was given on the command line. Enables */
 	bool clock;
@@ -88,7 +91,8 @@ public:
 	/** Non-empty if --debug-dot-level was given on the command line. */
 	utils::optional<std::string> debug_dot_level;
 #endif
-	/** Non-empty if --editor was given on the command line. Goes directly into editor. If string is longer than 0, it contains path to the file to edit. */
+	/** Non-empty if --editor was given on the command line. Goes directly into editor. If string is longer than 0, it
+	 * contains path to the file to edit. */
 	utils::optional<std::string> editor;
 	/** True if --fps was given on the command line. Shows number of fps. */
 	bool fps;
@@ -107,17 +111,21 @@ public:
 	utils::optional<int> log_strict_level;
 	/** Non-empty if --load was given on the command line. Savegame specified to load after start. */
 	utils::optional<std::string> load;
-	/** Non-empty if --logdomains was given on the command line. Prints possible logdomains filtered by given string and exits. */
+	/** Non-empty if --logdomains was given on the command line. Prints possible logdomains filtered by given string and
+	 * exits. */
 	utils::optional<std::string> logdomains;
 	/** True if --log-precise was given on the command line. Shows timestamps in log with more precision. */
 	bool log_precise_timestamps;
 	/** True if --multiplayer was given on the command line. Goes directly into multiplayer mode. */
 	bool multiplayer;
-	/** Non-empty if --ai-config was given on the command line. Vector of pairs (side number, value). Dependent on --multiplayer. */
+	/** Non-empty if --ai-config was given on the command line. Vector of pairs (side number, value). Dependent on
+	 * --multiplayer. */
 	utils::optional<std::vector<std::pair<unsigned int, std::string>>> multiplayer_ai_config;
-	/** Non-empty if --algorithm was given on the command line. Vector of pairs (side number, value). Dependent on --multiplayer. */
+	/** Non-empty if --algorithm was given on the command line. Vector of pairs (side number, value). Dependent on
+	 * --multiplayer. */
 	utils::optional<std::vector<std::pair<unsigned int, std::string>>> multiplayer_algorithm;
-	/** Non-empty if --controller was given on the command line. Vector of pairs (side number, controller). Dependent on --multiplayer. */
+	/** Non-empty if --controller was given on the command line. Vector of pairs (side number, controller). Dependent on
+	 * --multiplayer. */
 	utils::optional<std::vector<std::pair<unsigned int, std::string>>> multiplayer_controller;
 	/** Non-empty if --era was given on the command line. Dependent on --multiplayer. */
 	utils::optional<std::string> multiplayer_era;
@@ -127,13 +135,16 @@ public:
 	bool multiplayer_ignore_map_settings;
 	/** Non-empty if --label was given on the command line. Dependent on --multiplayer. */
 	utils::optional<std::string> multiplayer_label;
-	/** Non-empty if --parm was given on the command line. Vector of pairs (side number, parm name, parm value). Dependent on --multiplayer. */
+	/** Non-empty if --parm was given on the command line. Vector of pairs (side number, parm name, parm value).
+	 * Dependent on --multiplayer. */
 	utils::optional<std::vector<std::tuple<unsigned int, std::string, std::string>>> multiplayer_parm;
-	/** Repeats specified by --multiplayer-repeat option. Repeats a multiplayer game after it is finished. Dependent on --multiplayer. */
+	/** Repeats specified by --multiplayer-repeat option. Repeats a multiplayer game after it is finished. Dependent on
+	 * --multiplayer. */
 	utils::optional<unsigned int> multiplayer_repeat;
 	/** Non-empty if --scenario was given on the command line. Dependent on --multiplayer. */
 	utils::optional<std::string> multiplayer_scenario;
-	/** Non-empty if --side was given on the command line. Vector of pairs (side number, faction id). Dependent on --multiplayer. */
+	/** Non-empty if --side was given on the command line. Vector of pairs (side number, faction id). Dependent on
+	 * --multiplayer. */
 	utils::optional<std::vector<std::pair<unsigned int, std::string>>> multiplayer_side;
 	/** Non-empty if --turns was given on the command line. Dependent on --multiplayer. */
 	utils::optional<std::string> multiplayer_turns;
@@ -157,9 +168,11 @@ public:
 	bool preprocess;
 	/** Defines that were given to the --preprocess option. */
 	utils::optional<std::vector<std::string>> preprocess_defines;
-	/** Non-empty if --preprocess-input-macros was given on the command line. Specifies a file that contains [preproc_define]s to be included before preprocessing. Dependent on --preprocess. */
+	/** Non-empty if --preprocess-input-macros was given on the command line. Specifies a file that contains
+	 * [preproc_define]s to be included before preprocessing. Dependent on --preprocess. */
 	utils::optional<std::string> preprocess_input_macros;
-	/** Non-empty if --preprocess-output-macros was given on the command line. Outputs all preprocessed macros to the specified file. Dependent on --preprocess. */
+	/** Non-empty if --preprocess-output-macros was given on the command line. Outputs all preprocessed macros to the
+	 * specified file. Dependent on --preprocess. */
 	utils::optional<std::string> preprocess_output_macros;
 	/** Path to parse that was given to the --preprocess option. */
 	utils::optional<std::string> preprocess_path;
@@ -168,10 +181,11 @@ public:
 	/** String to preprocess */
 	utils::optional<std::string> preprocess_source_string;
 	/** Pair of AxB values specified after --resolution. Changes Wesnoth resolution. */
-	utils::optional<std::pair<int,int>> resolution;
+	utils::optional<std::pair<int, int>> resolution;
 	/** RNG seed specified by --rng-seed option. Initializes RNG with given seed. */
 	utils::optional<unsigned int> rng_seed;
-	/** Non-empty if --server was given on the command line.  Connects Wesnoth to specified server. If no server was specified afterwards, contains an empty string. */
+	/** Non-empty if --server was given on the command line.  Connects Wesnoth to specified server. If no server was
+	 * specified afterwards, contains an empty string. */
 	utils::optional<std::string> server;
 	/** Non-empty if --username was given on the command line. Forces Wesnoth to use this network username. */
 	utils::optional<std::string> username;
@@ -191,13 +205,17 @@ public:
 	utils::optional<std::string> screenshot_output_file;
 	/** File to load a lua plugin script from. */
 	utils::optional<std::string> plugin_file;
-	/** Whether to load the "package" package for the scripting environment. (This allows to load arbitrary lua packages, and gives untrusted lua the same permissions as wesnoth executable) */
+	/** Whether to load the "package" package for the scripting environment. (This allows to load arbitrary lua
+	 * packages, and gives untrusted lua the same permissions as wesnoth executable) */
 	bool script_unsafe_mode;
-	/** True if --strict-validation was given on the command line. Makes Wesnoth trust validation errors as fatal WML errors and create WML exception, if so. */
+	/** True if --strict-validation was given on the command line. Makes Wesnoth trust validation errors as fatal WML
+	 * errors and create WML exception, if so. */
 	bool strict_validation;
-	/** Non-empty if --test was given on the command line. Goes directly into test mode, into a scenario, if specified. */
+	/** Non-empty if --test was given on the command line. Goes directly into test mode, into a scenario, if specified.
+	 */
 	utils::optional<std::string> test;
-	/** Non-empty if --unit was given on the command line. Goes directly into unit test mode, into a scenario, if specified. */
+	/** Non-empty if --unit was given on the command line. Goes directly into unit test mode, into a scenario, if
+	 * specified. */
 	std::vector<std::string> unit_test;
 	/** True if --unit is used and --showgui is not present. */
 	bool headless_unit_test;
@@ -241,28 +259,36 @@ public:
 	/** True if --with-replay was given on the command line. Shows replay of the loaded file. */
 	bool with_replay;
 #ifdef _WIN32
-	/** True if --wnoconsole was given on the command line. Prevents logs from being written to the console window if Wesnoth is launched from the command prompt on Windows. */
+	/** True if --wnoconsole was given on the command line. Prevents logs from being written to the console window if
+	 * Wesnoth is launched from the command prompt on Windows. */
 	bool no_console;
 #endif
-	/** True if --no-log-sanitize was given on the command line. Prevents removal of OS user from file paths in log files. */
+	/** True if --no-log-sanitize was given on the command line. Prevents removal of OS user from file paths in log
+	 * files. */
 	bool no_log_sanitize;
 	/**
 	 * True if --log-to-file was given on the command line.
-	 * Forces output to be written to a log file. Takes priority over any arguments that implicitly prevent logging to file.
+	 * Forces output to be written to a log file. Takes priority over any arguments that implicitly prevent logging to
+	 * file.
 	 */
 	bool log_to_file;
 	/** True if --no-log-to-file was given on the command line. Results in logs not being redirected to a log file. */
 	bool no_log_to_file;
 	/** Non-empty if --all-translations or --translations-over is given on the command line. */
 	utils::optional<unsigned int> translation_percent;
+
 private:
-	void parse_log_domains_(const std::string &domains_string, const lg::severity severity);
-	void parse_log_strictness (const std::string &severity);
-	void parse_resolution_ (const std::string &resolution_string);
-	/** A helper function splitting vector of strings of format unsigned int:string to vector of tuples (unsigned int,string) */
-	std::vector<std::pair<unsigned int,std::string>> parse_to_uint_string_tuples_(const std::vector<std::string> &strings, char separator = ':');
-	/** A helper function splitting vector of strings of format unsigned int:string:string to vector of tuples (unsigned int,string,string) */
-	std::vector<std::tuple<unsigned int,std::string,std::string>> parse_to_uint_string_string_tuples_(const std::vector<std::string> &strings, char separator = ':');
+	void parse_log_domains_(const std::string& domains_string, const lg::severity severity);
+	void parse_log_strictness(const std::string& severity);
+	void parse_resolution_(const std::string& resolution_string);
+	/** A helper function splitting vector of strings of format unsigned int:string to vector of tuples (unsigned
+	 * int,string) */
+	std::vector<std::pair<unsigned int, std::string>> parse_to_uint_string_tuples_(
+		const std::vector<std::string>& strings, char separator = ':');
+	/** A helper function splitting vector of strings of format unsigned int:string:string to vector of tuples (unsigned
+	 * int,string,string) */
+	std::vector<std::tuple<unsigned int, std::string, std::string>> parse_to_uint_string_string_tuples_(
+		const std::vector<std::string>& strings, char separator = ':');
 	std::vector<std::string> args_;
 	std::string args0_;
 	boost::program_options::options_description all_;

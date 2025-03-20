@@ -22,7 +22,8 @@
 #include "map_command_handler.hpp"
 #include "preferences/preferences.hpp"
 
-namespace events {
+namespace events
+{
 
 bool chat_command_handler::is_enabled(const map_command_handler<chat_command_handler>::command& c) const
 {
@@ -51,14 +52,17 @@ void chat_command_handler::do_network_send(const std::string& data)
 
 void chat_command_handler::do_network_send_req_arg()
 {
-	if (get_data(1).empty()) return command_failed_need_arg(1);
+	if(get_data(1).empty())
+		return command_failed_need_arg(1);
 	do_network_send();
 }
 
 void chat_command_handler::do_whisper()
 {
-	if (get_data(1).empty()) return command_failed_need_arg(1);
-	if (get_data(2).empty()) return command_failed_need_arg(2);
+	if(get_data(1).empty())
+		return command_failed_need_arg(1);
+	if(get_data(2).empty())
+		return command_failed_need_arg(2);
 	chat_handler_.send_whisper(get_arg(1), get_data(2));
 	chat_handler_.add_whisper_sent(get_arg(1), get_data(2));
 }
@@ -70,18 +74,16 @@ void chat_command_handler::do_log()
 
 void chat_command_handler::do_ignore()
 {
-	if (get_arg(1).empty()) {
+	if(get_arg(1).empty()) {
 		do_display();
-	}
-	else {
+	} else {
 		utils::string_map symbols;
 		symbols["nick"] = get_arg(1);
 
-		if (prefs::get().add_acquaintance(get_arg(1), "ignore", get_data(2)).first) {
+		if(prefs::get().add_acquaintance(get_arg(1), "ignore", get_data(2)).first) {
 			print(_("ignores list"), VGETTEXT("Added to ignore list: $nick", symbols));
 			chat_handler_.user_relation_changed(get_arg(1));
-		}
-		else {
+		} else {
 			command_failed(VGETTEXT("Invalid username: $nick", symbols));
 		}
 	}
@@ -89,18 +91,16 @@ void chat_command_handler::do_ignore()
 
 void chat_command_handler::do_friend()
 {
-	if (get_arg(1).empty()) {
+	if(get_arg(1).empty()) {
 		do_display();
-	}
-	else {
+	} else {
 		utils::string_map symbols;
 		symbols["nick"] = get_arg(1);
 
-		if (prefs::get().add_acquaintance(get_arg(1), "friend", get_data(2)).first) {
+		if(prefs::get().add_acquaintance(get_arg(1), "friend", get_data(2)).first) {
 			print(_("friends list"), VGETTEXT("Added to friends list: $nick", symbols));
 			chat_handler_.user_relation_changed(get_arg(1));
-		}
-		else {
+		} else {
 			command_failed(VGETTEXT("Invalid username: $nick", symbols));
 		}
 	}
@@ -108,7 +108,7 @@ void chat_command_handler::do_friend()
 
 void chat_command_handler::do_remove()
 {
-	for (int i = 1;!get_arg(i).empty();i++) {
+	for(int i = 1; !get_arg(i).empty(); i++) {
 		prefs::get().remove_acquaintance(get_arg(i));
 		chat_handler_.user_relation_changed(get_arg(i));
 		utils::string_map symbols;
@@ -122,12 +122,15 @@ void chat_command_handler::do_display()
 	gui2::dialogs::preferences_dialog::display(pref_constants::VIEW_FRIENDS);
 }
 
-void chat_command_handler::do_version() {
+void chat_command_handler::do_version()
+{
 	print(_("version"), game_config::revision);
 }
 
-void chat_command_handler::do_info() {
-	if (get_data(1).empty()) return command_failed_need_arg(1);
+void chat_command_handler::do_info()
+{
+	if(get_data(1).empty())
+		return command_failed_need_arg(1);
 
 	config data;
 	config& nickserv = data.add_child("nickserv");
@@ -140,11 +143,13 @@ void chat_command_handler::do_info() {
 	chat_handler_.send_to_server(data);
 }
 
-void chat_command_handler::do_clear_messages() {
+void chat_command_handler::do_clear_messages()
+{
 	chat_handler_.clear_messages();
 }
 
-void chat_command_handler::do_mp_report() {
+void chat_command_handler::do_mp_report()
+{
 	std::string report_text;
 	gui2::dialogs::mp_report::execute(report_text);
 
@@ -153,4 +158,4 @@ void chat_command_handler::do_mp_report() {
 	}
 }
 
-}
+} // namespace events

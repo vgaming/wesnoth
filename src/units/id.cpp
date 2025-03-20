@@ -13,8 +13,8 @@
 	See the COPYING file for more details.
 */
 
-#include "log.hpp"
 #include "units/id.hpp"
+#include "log.hpp"
 
 #include <cassert>
 
@@ -23,42 +23,42 @@ static lg::log_domain log_unit("unit");
 
 namespace n_unit
 {
-	id_manager id_manager::manager_(0);
+id_manager id_manager::manager_(0);
 
-	unit_id id_manager::next_id()
-	{
-		assert(next_id_ < unit_id::highest_bit);
-		DBG_UT << "id: " << next_id_;
-		return unit_id::create_real(++next_id_);
-	}
-
-	unit_id id_manager::next_fake_id()
-	{
-		assert(fake_id_ < unit_id::highest_bit);
-		DBG_UT << "fake id: " << fake_id_;
-		return unit_id::create_fake(++fake_id_);
-	}
-
-	std::size_t id_manager::get_save_id() const
-	{
-		return next_id_;
-	}
-
-	void id_manager::set_save_id(std::size_t id)
-	{
-		clear();
-		DBG_UT << "set save id: " << id;
-		next_id_ = id;
-	}
-
-	void id_manager::reset_fake()
-	{
-		fake_id_ = 0;
-	}
-
-	void id_manager::clear()
-	{
-		next_id_ = 0;
-		reset_fake();
-	}
+unit_id id_manager::next_id()
+{
+	assert(next_id_ < unit_id::highest_bit);
+	DBG_UT << "id: " << next_id_;
+	return unit_id::create_real(++next_id_);
 }
+
+unit_id id_manager::next_fake_id()
+{
+	assert(fake_id_ < unit_id::highest_bit);
+	DBG_UT << "fake id: " << fake_id_;
+	return unit_id::create_fake(++fake_id_);
+}
+
+std::size_t id_manager::get_save_id() const
+{
+	return next_id_;
+}
+
+void id_manager::set_save_id(std::size_t id)
+{
+	clear();
+	DBG_UT << "set save id: " << id;
+	next_id_ = id;
+}
+
+void id_manager::reset_fake()
+{
+	fake_id_ = 0;
+}
+
+void id_manager::clear()
+{
+	next_id_ = 0;
+	reset_fake();
+}
+} // namespace n_unit

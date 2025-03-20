@@ -18,19 +18,20 @@
 #include <boost/test/unit_test.hpp>
 #include <sstream>
 
+#include "color_range.hpp"
+#include "config.hpp"
+#include "config_cache.hpp"
+#include "filesystem.hpp"
 #include "game_config.hpp"
 #include "game_config_view.hpp"
-#include "config_cache.hpp"
-#include "config.hpp"
-#include "color_range.hpp"
-#include "picture.hpp"
 #include "image_modifications.hpp"
 #include "log.hpp"
-#include "filesystem.hpp"
+#include "picture.hpp"
 
 using namespace image;
 
-namespace {
+namespace
+{
 /** Sets up the environment for every test */
 class environment_setup
 {
@@ -53,14 +54,8 @@ private:
 	void set_up_color_info()
 	{
 		config cfg;
-		cfg.add_child("color_range",
-			       create_color_range("red",
-						  "FF0000,FFFFFF,000000,FF0000",
-						  "Red"));
-		cfg.add_child("color_range",
-			       create_color_range("blue",
-						  "2E419B,FFFFFF,0F0F0F,0000FF",
-						  "Blue"));
+		cfg.add_child("color_range", create_color_range("red", "FF0000,FFFFFF,000000,FF0000", "Red"));
+		cfg.add_child("color_range", create_color_range("blue", "2E419B,FFFFFF,0F0F0F,0000FF", "Blue"));
 
 		game_config::add_color_info(game_config_view::wrap(cfg));
 	}
@@ -74,16 +69,12 @@ private:
 	{
 		config cfg;
 		game_config_view v = game_config_view::wrap(cfg);
-		cfg.add_child("binary_path",
-			      create_path_config("data/core"));
-
+		cfg.add_child("binary_path", create_path_config("data/core"));
 
 		paths_manager_.set_paths(v);
 	}
 
-	static config create_color_range(const std::string& id,
-				  const std::string& rgb,
-				  const std::string& name)
+	static config create_color_range(const std::string& id, const std::string& rgb, const std::string& name)
 	{
 		config cfg;
 
@@ -225,8 +216,7 @@ BOOST_AUTO_TEST_CASE(test_pal_modification_decoding)
 {
 	environment_setup env_setup;
 
-	modification_queue queue =
-		modification::decode("~PAL(000000,005000 > FFFFFF,FF00FF)");
+	modification_queue queue = modification::decode("~PAL(000000,005000 > FFFFFF,FF00FF)");
 
 	BOOST_REQUIRE_EQUAL(queue.size(), 1);
 
@@ -240,7 +230,7 @@ BOOST_AUTO_TEST_CASE(test_pal_modification_decoding)
 	color_range_map expected;
 
 	for(std::size_t i = 0; i < old_palette.size() && i < new_palette.size(); ++i) {
-	environment_setup env_setup;
+		environment_setup env_setup;
 
 		expected[old_palette[i]] = new_palette[i];
 	}
@@ -253,8 +243,7 @@ BOOST_AUTO_TEST_CASE(test_pal_modification_decoding_invalid_args)
 {
 	environment_setup env_setup;
 
-	modification_queue queue =
-		modification::decode("~PAL()~PAL(>)");
+	modification_queue queue = modification::decode("~PAL()~PAL(>)");
 
 	BOOST_REQUIRE_EQUAL(queue.size(), 0);
 }
@@ -493,12 +482,11 @@ BOOST_AUTO_TEST_CASE(test_blit_modification_decoding_invalid_args)
 {
 	environment_setup env_setup;
 
-	modification_queue queue =
-		modification::decode("~BLIT()"
-				     "~BLIT(wesnoth-icon.png,1,-2)"
-				     "~BLIT(wesnoth-icon.png,-1,2)"
-				     "~BLIT(wesnoth-icon.png,-1,-2)"
-				     "~BLIT(wesnoth-icon.png,1,2,3)");
+	modification_queue queue = modification::decode("~BLIT()"
+													"~BLIT(wesnoth-icon.png,1,-2)"
+													"~BLIT(wesnoth-icon.png,-1,2)"
+													"~BLIT(wesnoth-icon.png,-1,-2)"
+													"~BLIT(wesnoth-icon.png,1,2,3)");
 
 	BOOST_CHECK_EQUAL(queue.size(), 3);
 }
@@ -552,11 +540,10 @@ BOOST_AUTO_TEST_CASE(test_mask_modification_decoding_invalid_args)
 {
 	environment_setup env_setup;
 
-	modification_queue queue =
-		modification::decode("~MASK()"
-				     "~MASK(wesnoth-icon.png,3,-4)"
-				     "~MASK(wesnoth-icon.png,-3,4)"
-				     "~MASK(wesnoth-icon.png,-3,-4)");
+	modification_queue queue = modification::decode("~MASK()"
+													"~MASK(wesnoth-icon.png,3,-4)"
+													"~MASK(wesnoth-icon.png,-3,4)"
+													"~MASK(wesnoth-icon.png,-3,-4)");
 
 	BOOST_CHECK_EQUAL(queue.size(), 0);
 }
@@ -717,7 +704,7 @@ BOOST_AUTO_TEST_CASE(test_rgb_modification_decoding_no_args)
 	BOOST_REQUIRE_EQUAL(queue.size(), 3);
 
 	for(int i = 0; i < 3; i++) {
-	environment_setup env_setup;
+		environment_setup env_setup;
 
 		cs_modification* mod = dynamic_cast<cs_modification*>(queue.top());
 

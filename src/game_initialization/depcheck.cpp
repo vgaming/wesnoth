@@ -17,16 +17,16 @@
 
 #include <algorithm>
 
-#include "serialization/string_utils.hpp"
 #include "game_initialization/component_availability.hpp"
 #include "gettext.hpp"
 #include "log.hpp"
+#include "serialization/string_utils.hpp"
 #include "utils/general.hpp"
 
+#include "game_config_view.hpp"
 #include "gui/dialogs/depcheck_confirm_change.hpp"
 #include "gui/dialogs/depcheck_select_new.hpp"
 #include "gui/dialogs/message.hpp"
-#include "game_config_view.hpp"
 
 static lg::log_domain log_mp_create_depcheck("mp/create/depcheck");
 #define DBG_MP LOG_STREAM(debug, log_mp_create_depcheck)
@@ -70,7 +70,8 @@ manager::manager(const game_config_view& gamecfg, bool mp)
 	DBG_MP << "Initializing the dependency manager";
 
 	for(const config& cfg : gamecfg.child_range("modification")) {
-		component_availability::type type = component_availability::get_enum(cfg["type"].str()).value_or(component_availability::type::hybrid);
+		component_availability::type type
+			= component_availability::get_enum(cfg["type"].str()).value_or(component_availability::type::hybrid);
 
 		if((type != component_availability::type::mp || mp) && (type != component_availability::type::sp || !mp)) {
 			config info;
@@ -86,7 +87,8 @@ manager::manager(const game_config_view& gamecfg, bool mp)
 	}
 
 	for(const config& cfg : gamecfg.child_range("era")) {
-		component_availability::type type = component_availability::get_enum(cfg["type"].str()).value_or(component_availability::type::mp);
+		component_availability::type type
+			= component_availability::get_enum(cfg["type"].str()).value_or(component_availability::type::mp);
 
 		if((type != component_availability::type::mp || mp) && (type != component_availability::type::sp || !mp)) {
 			config info;
@@ -250,7 +252,8 @@ bool manager::does_conflict(const elem& elem1, const elem& elem2, bool directonl
 		}
 	}
 
-	if((elem1.type == "era" && data2["allow_era_choice"].to_bool(false)) ||(elem2.type == "era" && data1["allow_era_choice"].to_bool(false))) {
+	if((elem1.type == "era" && data2["allow_era_choice"].to_bool(false))
+		|| (elem2.type == "era" && data1["allow_era_choice"].to_bool(false))) {
 		return false;
 	}
 

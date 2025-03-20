@@ -24,6 +24,7 @@
 #include "game_events/handlers.hpp"
 #include "game_events/pump.hpp"
 
+#include "deprecation.hpp"
 #include "game_config.hpp"
 #include "game_version.hpp"
 #include "hotkey/hotkey_handler.hpp"
@@ -32,7 +33,6 @@
 #include "resources.hpp"
 #include "synced_context.hpp"
 #include "terrain/filter.hpp"
-#include "deprecation.hpp"
 
 static lg::log_domain log_engine("engine");
 #define ERR_NG LOG_STREAM(err, log_engine)
@@ -143,7 +143,6 @@ const std::string& wml_menu_item::image() const
 	return image_.empty() ? game_config::images::wml_menu : image_;
 }
 
-
 bool wml_menu_item::can_show(const map_location& hex, const game_data& data, filter_context& filter_con) const
 {
 	// Failing the [show_if] tag means no show.
@@ -185,8 +184,7 @@ void wml_menu_item::fire_event(const map_location& event_hex, const game_data& d
 	// note that there couldn't be a user choice during the last "select" event because it didn't run in a synced
 	// context.
 	if(needs_select_ && last_select.valid()) {
-		synced_context::run_and_throw(
-			"fire_event", replay_helper::get_event(event_name_, event_hex, &last_select));
+		synced_context::run_and_throw("fire_event", replay_helper::get_event(event_name_, event_hex, &last_select));
 	} else {
 		synced_context::run_in_synced_context_if_not_already(
 			"fire_event", replay_helper::get_event(event_name_, event_hex, nullptr));
@@ -245,7 +243,7 @@ void wml_menu_item::to_config(config& cfg) const
 
 	if(!use_hotkey_ && !use_wml_menu_) {
 		ERR_NG << "Bad data: wml_menu_item with both use_wml_menu and "
-		          "use_hotkey set to false is not supposed to be possible.";
+				  "use_hotkey set to false is not supposed to be possible.";
 		cfg["use_hotkey"] = false;
 	}
 

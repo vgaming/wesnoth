@@ -46,7 +46,8 @@ struct point;
  * as needed when relevant configuration parameters change in a way that would
  * be expected to alter the output (e.g. Time of Day-tinted images).
  */
-namespace image {
+namespace image
+{
 /**
  * Generic locator abstracting the location of an image.
  *
@@ -66,7 +67,11 @@ public:
 
 	locator(const std::string& filename);
 	locator(const std::string& filename, const std::string& modifications);
-	locator(const std::string& filename, const map_location& loc, int center_x, int center_y, const std::string& modifications = "");
+	locator(const std::string& filename,
+		const map_location& loc,
+		int center_x,
+		int center_y,
+		const std::string& modifications = "");
 
 	locator& operator=(const locator& a) = default;
 	locator& operator=(locator&&) = default;
@@ -75,22 +80,49 @@ public:
 	locator clone(const std::string& mods) const;
 
 	bool operator==(const locator& a) const;
-	bool operator!=(const locator& a) const { return !operator==(a); }
+	bool operator!=(const locator& a) const
+	{
+		return !operator==(a);
+	}
 
 	bool operator<(const locator& a) const;
 
-	const std::string& get_filename() const { return filename_; }
-	bool is_data_uri() const { return is_data_uri_; }
-	const map_location& get_loc() const { return loc_ ; }
-	int get_center_x() const { return center_x_; }
-	int get_center_y() const { return center_y_; }
-	const std::string& get_modifications() const { return modifications_; }
-	type get_type() const { return type_; }
+	const std::string& get_filename() const
+	{
+		return filename_;
+	}
+	bool is_data_uri() const
+	{
+		return is_data_uri_;
+	}
+	const map_location& get_loc() const
+	{
+		return loc_;
+	}
+	int get_center_x() const
+	{
+		return center_x_;
+	}
+	int get_center_y() const
+	{
+		return center_y_;
+	}
+	const std::string& get_modifications() const
+	{
+		return modifications_;
+	}
+	type get_type() const
+	{
+		return type_;
+	}
 
 	/**
 	 * Returns @a true if the locator does not correspond to an actual image.
 	 */
-	bool is_void() const { return type_ == NONE; }
+	bool is_void() const
+	{
+		return type_ == NONE;
+	}
 
 private:
 	locator::type type_ = NONE;
@@ -158,8 +190,7 @@ void set_color_adjustment(int r, int g, int b);
 /**
  * Used to specify the rendering format of images.
  */
-enum TYPE
-{
+enum TYPE {
 	/** Unmodified original-size image. */
 	UNSCALED,
 	/** Standard hexagonal tile mask applied, removing portions that don't fit. */
@@ -182,8 +213,7 @@ enum class scale_quality { nearest, linear };
  * @param type                 Rendering format.
  * @param skip_cache           Skip adding the result to the surface cache.
  */
-surface get_surface(const locator& i_locator, TYPE type = UNSCALED,
-	bool skip_cache = false);
+surface get_surface(const locator& i_locator, TYPE type = UNSCALED, bool skip_cache = false);
 
 /**
  * Returns an image texture suitable for hardware-accelerated rendering.
@@ -200,11 +230,10 @@ surface get_surface(const locator& i_locator, TYPE type = UNSCALED,
  * @param type                 Rendering format.
  * @param skip_cache           Skip adding the result to the surface cache.
  */
-texture get_texture(const locator& i_locator, TYPE type = UNSCALED,
-	bool skip_cache = false);
+texture get_texture(const locator& i_locator, TYPE type = UNSCALED, bool skip_cache = false);
 
-texture get_texture(const image::locator& i_locator, scale_quality quality,
-	TYPE type = UNSCALED, bool skip_cache = false);
+texture get_texture(
+	const image::locator& i_locator, scale_quality quality, TYPE type = UNSCALED, bool skip_cache = false);
 
 /**
  * Caches and returns an image with a lightmap applied to it.
@@ -258,15 +287,9 @@ void precache_file_existence(const std::string& subdir = "");
 
 bool precached_file_exists(const std::string& file);
 
-enum class save_result
-{
-	success,
-	unsupported_format,
-	save_failed,
-	no_image
-};
+enum class save_result { success, unsupported_format, save_failed, no_image };
 
 save_result save_image(const locator& i_locator, const std::string& outfile);
 save_result save_image(const surface& surf, const std::string& outfile);
 
-}
+} // namespace image

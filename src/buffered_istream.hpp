@@ -41,7 +41,6 @@
 class buffered_istream
 {
 public:
-
 	explicit buffered_istream(std::istream& in)
 		: stream_(in)
 		, buffer_()
@@ -109,7 +108,6 @@ public:
 	}
 
 private:
-
 	/** The input to read from. */
 	std::istream& stream_;
 
@@ -165,7 +163,7 @@ private:
 				eof_ = true;
 			} else {
 				buffer_offset_ = 0;
-				buffer_size_ = static_cast<unsigned> (stream_.readsome(buffer_, sizeof(buffer_)));
+				buffer_size_ = static_cast<unsigned>(stream_.readsome(buffer_, sizeof(buffer_)));
 			}
 		}
 	}

@@ -23,16 +23,20 @@
 
 class scoped_wml_variable;
 
-class game_data  : public variable_set  {
+class game_data : public variable_set
+{
 public:
 	explicit game_data(const config& level);
 	game_data(const game_data& data);
 
 	std::vector<scoped_wml_variable*> scoped_variables;
 
-	const config& get_variables() const { return variables_; }
+	const config& get_variables() const
+	{
+		return variables_;
+	}
 	/** throws invalid_variablename_exception if varname is no valid variable name. */
-	config::attribute_value &get_variable(const std::string &varname);
+	config::attribute_value& get_variable(const std::string& varname);
 	/** returns a blank attribute value if varname is no valid variable name. */
 	virtual config::attribute_value get_variable_const(const std::string& varname) const;
 	/** throws invalid_variablename_exception if varname is no valid variable name. */
@@ -40,7 +44,7 @@ public:
 	/** does nothing if varname is no valid variable name. */
 	void set_variable(const std::string& varname, const t_string& value);
 	/** throws invalid_variablename_exception if varname is no valid variable name. */
-	config& add_variable_cfg(const std::string& varname, const config& value=config());
+	config& add_variable_cfg(const std::string& varname, const config& value = config());
 	/** returns a variable_access that cannot be used to change the game variables */
 	variable_access_const get_variable_access_read(const std::string& varname) const
 	{
@@ -64,15 +68,22 @@ public:
 	 */
 	void clear_variable_cfg(const std::string& varname);
 
-	const randomness::mt_rng& rng() const { return rng_; }
-	randomness::mt_rng& rng() { return rng_; }
+	const randomness::mt_rng& rng() const
+	{
+		return rng_;
+	}
+	randomness::mt_rng& rng()
+	{
+		return rng_;
+	}
 
 	enum PHASE {
 		/// creating intitial [unit]s, executing toplevel [lua] etc.
 		/// next phase: PRELOAD
 		INITIAL,
 		/// the preload [event] is fired
-		/// next phase: PRESTART (normal game), TURN_STARTING_WAITING (reloaded game), TURN_PLAYING (reloaded game) or GAME_ENDED (reloadedgame)
+		/// next phase: PRESTART (normal game), TURN_STARTING_WAITING (reloaded game), TURN_PLAYING (reloaded game) or
+		/// GAME_ENDED (reloadedgame)
 		PRELOAD,
 		/// the prestart [event] is fired
 		/// next phase: START (default), GAME_ENDING
@@ -102,8 +113,14 @@ public:
 		GAME_ENDED,
 	};
 
-	PHASE phase() const { return phase_; }
-	void set_phase(PHASE phase) { phase_ = phase; }
+	PHASE phase() const
+	{
+		return phase_;
+	}
+	void set_phase(PHASE phase)
+	{
+		phase_ = phase;
+	}
 	/// returns where there is currently a well defiend "current player",
 	/// that is for example not the case during start events or during linger mode.
 	bool has_current_player() const;
@@ -113,11 +130,16 @@ public:
 	static PHASE read_phase(const config& cfg);
 	static void write_phase(config& cfg, game_data::PHASE phase);
 
-	const t_string& cannot_end_turn_reason() {
+	const t_string& cannot_end_turn_reason()
+	{
 		return cannot_end_turn_reason_;
 	}
-	bool allow_end_turn() const { return can_end_turn_; }
-	void set_allow_end_turn(bool value, const t_string& reason = "") {
+	bool allow_end_turn() const
+	{
+		return can_end_turn_;
+	}
+	void set_allow_end_turn(bool value, const t_string& reason = "")
+	{
 		can_end_turn_ = value;
 		cannot_end_turn_reason_ = reason;
 	}
@@ -127,23 +149,60 @@ public:
 
 	void write_snapshot(config& cfg) const;
 
-	const std::string& next_scenario() const { return next_scenario_; }
-	void set_next_scenario(const std::string& next_scenario) { next_scenario_ = next_scenario; }
+	const std::string& next_scenario() const
+	{
+		return next_scenario_;
+	}
+	void set_next_scenario(const std::string& next_scenario)
+	{
+		next_scenario_ = next_scenario;
+	}
 
-	const std::string& get_id() const { return id_; }
-	void set_id(const std::string& value) { id_ = value; }
+	const std::string& get_id() const
+	{
+		return id_;
+	}
+	void set_id(const std::string& value)
+	{
+		id_ = value;
+	}
 
-	const std::string& get_theme() const { return theme_; }
-	void set_theme(const std::string& value) { theme_ = value; }
+	const std::string& get_theme() const
+	{
+		return theme_;
+	}
+	void set_theme(const std::string& value)
+	{
+		theme_ = value;
+	}
 
-	const std::vector<std::string>& get_defeat_music() const { return defeat_music_; }
-	void set_defeat_music(std::vector<std::string> value) { defeat_music_ = std::move(value); }
+	const std::vector<std::string>& get_defeat_music() const
+	{
+		return defeat_music_;
+	}
+	void set_defeat_music(std::vector<std::string> value)
+	{
+		defeat_music_ = std::move(value);
+	}
 
-	const std::vector<std::string>& get_victory_music() const { return victory_music_; }
-	void set_victory_music(std::vector<std::string> value) { victory_music_ = std::move(value); }
+	const std::vector<std::string>& get_victory_music() const
+	{
+		return victory_music_;
+	}
+	void set_victory_music(std::vector<std::string> value)
+	{
+		victory_music_ = std::move(value);
+	}
 
-	void set_end_turn_forced(bool v) { end_turn_forced_ = v; }
-	bool end_turn_forced() const { return end_turn_forced_; }
+	void set_end_turn_forced(bool v)
+	{
+		end_turn_forced_ = v;
+	}
+	bool end_turn_forced() const
+	{
+		return end_turn_forced_;
+	}
+
 private:
 	void activate_scope_variable(std::string var_name) const;
 	/** Used to delete variables. */

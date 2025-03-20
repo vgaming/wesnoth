@@ -15,13 +15,13 @@
 
 #include "storyscreen/parser.hpp"
 
+#include "deprecation.hpp"
 #include "game_data.hpp"
 #include "game_events/conditional_wml.hpp"
 #include "game_events/pump.hpp"
+#include "game_version.hpp"
 #include "resources.hpp"
 #include "variable.hpp"
-#include "deprecation.hpp"
-#include "game_version.hpp"
 
 namespace storyscreen
 {
